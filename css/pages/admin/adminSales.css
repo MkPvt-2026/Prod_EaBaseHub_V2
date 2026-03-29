@@ -1,0 +1,156 @@
+/* ============================================================
+   adminSales.css  —  Dark Theme
+   ธีม: Dark Navy  ตาม managerDashboard.css
+   ⚠️  style พื้นฐาน (layout, table, modal ฯลฯ) อยู่ใน admintor.css
+       ไฟล์นี้มีแค่ style unique ของหน้า Sales เท่านั้น
+   ============================================================ */
+
+
+/* ============================================================
+   SEARCH ROW
+   ============================================================ */
+
+.search-row {
+  display:     flex;
+  align-items: center;
+  gap:         14px;
+  margin-bottom: 16px;
+  flex-wrap:   wrap;
+}
+
+.edit-tip {
+  font-size:   0.8rem;
+  color:       #7a9cc0;
+  white-space: nowrap;
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+}
+
+
+/* ============================================================
+   USERNAME CHIP
+   สีเขียว accent ตาม dark theme
+   ============================================================ */
+
+.username-chip {
+  display:       inline-block;
+  background:    rgba(0,212,170,0.12);
+  color:         #00d4aa;
+  font-weight:   600;
+  padding:       4px 12px;
+  border-radius: 20px;
+  font-size:     0.85rem;
+  border:        1px solid rgba(0,212,170,0.25);
+}
+
+
+/* ============================================================
+   EDITABLE CELLS
+   ============================================================ */
+
+.editable-cell {
+  display:       inline-block;
+  padding:       5px 12px;
+  border-radius: 6px;
+  cursor:        pointer;
+  transition:    box-shadow 0.15s, background 0.15s;
+  min-width:     60px;
+  position:      relative;
+}
+
+.editable-cell::after {
+  content:    " ✏️";
+  font-size:  11px;
+  opacity:    0;
+  transition: opacity 0.15s;
+}
+
+.editable-cell:hover::after { opacity: 1; }
+
+.editable-cell:hover {
+  box-shadow: 0 0 0 2px rgba(0,212,170,0.4);
+}
+
+/* ชื่อ Sales */
+.editable-name {
+  color:       #4d9fff;
+  font-weight: 500;
+  background:  transparent;
+}
+
+.editable-name:hover { background: rgba(77,159,255,0.1); }
+
+/* พื้นที่ */
+.badge-area {
+  background:  rgba(77,159,255,0.12);
+  color:       #4d9fff;
+  font-weight: 500;
+  font-size:   0.87rem;
+}
+
+.badge-area:hover { background: rgba(77,159,255,0.2); }
+
+
+/* ============================================================
+   INLINE INPUT
+   ============================================================ */
+
+.inline-input {
+  border:        2px solid rgba(0,212,170,0.5);
+  border-radius: 6px;
+  padding:       5px 10px;
+  font-family:   'Kanit', 'Sarabun', sans-serif;
+  font-size:     0.92rem;
+  color:         #e8f0fe;
+  background:    #1e2d42;
+  outline:       none;
+  box-shadow:    0 0 0 3px rgba(0,212,170,0.12);
+  min-width:     120px;
+  max-width:     200px;
+}
+
+.inline-input:disabled {
+  opacity: 0.5;
+  cursor:  wait;
+}
+
+
+/* ============================================================
+   SHOP COUNT BADGE
+   ============================================================ */
+
+.badge-count {
+  display:       inline-block;
+  background:    rgba(0,212,170,0.1);
+  color:         #00d4aa;
+  border:        1px solid rgba(0,212,170,0.25);
+  padding:       4px 14px;
+  border-radius: 20px;
+  font-weight:   600;
+  font-size:     0.87rem;
+  white-space:   nowrap;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 680px) {
+  .card-header-row {
+    flex-direction: column;
+    align-items:    flex-start;
+    gap:            10px;
+  }
+
+  .data-table th:nth-child(4),
+  .data-table td:nth-child(4) { display: none; }
+
+  .edit-tip { display: none; }
+}
+
+
+/* ============================================================
+   END OF FILE
+   ============================================================ */

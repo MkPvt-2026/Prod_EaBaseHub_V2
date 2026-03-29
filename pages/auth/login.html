@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EABaseHub Login</title>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- PNG icon -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/icons/icon-192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/assets/icons/icon-512.png"
+    />
+
+    <!-- Apple -->
+    <link rel="apple-touch-icon" href="/assets/icons/icon-512.png" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/pages/auth/login.css" />
+  </head>
+
+  <body>
+    <!-- ================================
+     SPLASH SCREEN (ก่อน login card)
+================================= -->
+    <div id="splash-screen">
+      <div class="splash-logo">
+        <img src="/assets/icons/icon-192.png" alt="logo" />
+      </div>
+      <div class="splash-title">EABaseHub</div>
+      <div class="splash-sub">ศูนย์รวมข้อมูลและระบบงาน</div>
+      <div class="splash-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- ================================
+     LOGIN SUCCESS OVERLAY (หลัง login)
+================================= -->
+    <div id="login-overlay">
+      <div class="overlay-box">
+        <div class="overlay-ring"></div>
+        <h3>กำลังเข้าสู่ระบบ...</h3>
+        <p>กรุณารอสักครู่</p>
+      </div>
+    </div>
+
+    <!-- ================================
+     LOGIN CARD
+================================= -->
+    <div class="login-wrapper">
+      <div class="login-card">
+        <!-- Logo -->
+        <div class="logo">
+          <img src="/assets/icons/icon-192.png" alt="logo" />
+          <h1>EABaseHub</h1>
+          <p>ศูนย์รวมข้อมูลและระบบงาน</p>
+        </div>
+
+        <!-- Form -->
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">Email หรือ Username</label>
+            <div class="input-box">
+              <i class="fa-regular fa-user icon-left"></i>
+              <input
+                type="text"
+                id="email"
+                name="email"
+                placeholder="กรอก Email หรือ Username"
+                autocomplete="username"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">รหัสผ่าน</label>
+            <div class="input-box">
+              <i class="fa-solid fa-lock icon-left"></i>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="กรอกรหัสผ่าน"
+                autocomplete="current-password"
+                required
+              />
+              <button type="button" id="togglePassword" class="icon-btn">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="forgot">
+            <a href="forgot-password.html">ลืมรหัสผ่าน?</a>
+          </div>
+
+          <button type="submit" id="loginBtn" class="btn-login">
+            <span class="btn-text">เข้าสู่ระบบ</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+
+        <div class="register">
+          ยังไม่มีบัญชี? <a href="/pages/auth/register.html">สมัครสมาชิก</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/auth/login.js"></script>
+
+    <!-- Toggle Password -->
+    <script>
+      const toggle = document.getElementById("togglePassword");
+      const passwordField = document.getElementById("password");
+
+      toggle.addEventListener("click", () => {
+        const type = passwordField.type === "password" ? "text" : "password";
+        passwordField.type = type;
+        toggle.innerHTML =
+          type === "password"
+            ? '<i class="fa-regular fa-eye"></i>'
+            : '<i class="fa-regular fa-eye-slash"></i>';
+      });
+    </script>
+  </body>
+</html>

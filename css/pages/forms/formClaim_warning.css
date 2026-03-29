@@ -1,0 +1,466 @@
+/* =====================================================
+   FORM CLAIM — WARNING THEME OVERRIDE
+   ใช้ครอบ .container ลงไปเท่านั้น (header/nav คงธีมบริษัทเดิม)
+   วิธีใช้: ครอบ <div class="claim-scope"> รอบ .container
+   ===================================================== */
+
+/* ================= CSS VARIABLES (override) ================= */
+.claim-scope {
+  /* === Warning Amber ramp === */
+  --w-50:  #fffbf2;
+  --w-100: #fff3d6;
+  --w-200: #ffe9b0;
+  --w-400: #fbbf24;
+  --w-500: #f59e0b;
+  --w-700: #b45309;
+  --w-900: #5c2d0e;
+
+  /* === Danger Orange ramp === */
+  --d-400: #fb923c;
+  --d-500: #f97316;
+  --d-700: #c2410c;
+
+  /* === Semantic overrides === */
+  --bg-base:        #fffdf7;
+  --bg-card:        #ffffff;
+  --bg-subtle:      var(--w-50);
+  --bg-muted:       var(--w-100);
+
+  --border:         #fde9bb;
+  --border-strong:  var(--w-200);
+
+  --text-primary:   #431407;
+  --text-secondary: #92400e;
+  --text-muted:     #ca8a04;
+  --text-light:     #d97706;
+
+  /* remap teal → amber (ใช้กับ component ที่อ้าง --teal-*) */
+  --teal-50:  var(--w-50);
+  --teal-100: var(--w-100);
+  --teal-200: var(--w-200);
+  --teal-400: var(--w-400);
+  --teal-500: var(--w-500);
+  --teal-700: var(--w-700);
+  --teal-900: var(--w-900);
+
+  --mint-50:  var(--w-50);
+  --mint-100: var(--w-100);
+  --mint-200: var(--w-200);
+  --mint-400: #fbbf24;
+
+  --shadow-sm: 0 1px 4px rgba(249,115,22,0.06);
+  --shadow-md: 0 4px 16px rgba(249,115,22,0.10);
+  --shadow-lg: 0 8px 32px rgba(249,115,22,0.18);
+}
+
+/* ================= ANIMATIONS ================= */
+
+/* 1. warnPulse — ไอคอน ⚠️ เต้นช้าๆ */
+@keyframes warnPulse {
+  0%,100% { transform: scale(1);    opacity: 1; }
+  50%     { transform: scale(1.18); opacity: 0.75; }
+}
+
+/* 2. shimmer — แถบแสงไหลผ่าน header และปุ่ม submit */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+/* 3. pulseBorder — เส้นขอบ card-cause กระพริบ */
+@keyframes pulseBorder {
+  0%,100% {
+    border-color: #fde9bb;
+    box-shadow: 0 1px 4px rgba(249,115,22,0.06);
+  }
+  50% {
+    border-color: var(--d-400);
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.10);
+  }
+}
+
+/* 4. badgePop — claim-item.selected โผล่แบบ pop */
+@keyframes badgePop {
+  0%   { transform: scale(0.88); opacity: 0.6; }
+  60%  { transform: scale(1.06); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+/* 5. wiggle — upload box เขย่าเมื่อ hover */
+@keyframes wiggle {
+  0%,100% { transform: rotate(0deg); }
+  25%     { transform: rotate(-3deg); }
+  75%     { transform: rotate(3deg); }
+}
+
+/* 6. rowPing — แถว draft highlight เมื่อโหลด */
+@keyframes rowPing {
+  0%   { background: rgba(251,191,36,0.18); }
+  100% { background: transparent; }
+}
+
+/* ================= WARN ICON ================= */
+.claim-scope .warn-icon {
+  display: inline-block;
+  animation: warnPulse 2s ease-in-out infinite;
+}
+
+/* ================= PAGE HEADER ================= */
+.claim-scope .page-header {
+  background: linear-gradient(135deg, var(--w-900) 0%, var(--d-500) 55%, var(--w-400) 100%);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(249,115,22,0.22);
+}
+
+/* shimmer overlay บน header */
+.claim-scope .page-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.14) 50%,
+    transparent 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 3s linear infinite;
+  pointer-events: none;
+}
+
+.claim-scope .page-header::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 50%;
+}
+
+.claim-scope .page-header h1 {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.claim-scope .page-header p {
+  font-size: var(--font-base);
+  color: rgba(255,255,255,0.88);
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+/* ================= CARDS ================= */
+.claim-scope .card,
+.claim-scope .section-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  animation: fadeUp 0.35s ease-out both;
+}
+
+.claim-scope .card:hover,
+.claim-scope .section-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+/* card-cause — pulse border + accent left */
+.claim-scope .card-cause {
+  background: linear-gradient(to right, #fff8ee 0%, #ffffff 55%);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--d-500);
+  animation: fadeUp 0.35s ease-out both,
+             pulseBorder 2.8s ease-in-out infinite;
+}
+
+.claim-scope .card-cause:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ================= HEADINGS ================= */
+.claim-scope h2 {
+  color: var(--w-700);
+}
+
+.claim-scope h3 {
+  color: var(--d-500);
+}
+
+.claim-scope h4 {
+  color: var(--text-muted);
+}
+
+/* ================= SECTION ELEMENTS ================= */
+.claim-scope .section-title {
+  color: var(--w-700);
+  border-bottom-color: var(--border);
+}
+
+.claim-scope .section-divider {
+  background: linear-gradient(90deg, var(--w-200) 0%, transparent 100%);
+}
+
+/* ================= FORM ELEMENTS ================= */
+.claim-scope input,
+.claim-scope select,
+.claim-scope textarea {
+  border-color: var(--border);
+  background: #fffdf9;
+  color: var(--text-primary);
+}
+
+.claim-scope input:focus,
+.claim-scope select:focus,
+.claim-scope textarea:focus {
+  border-color: var(--w-400);
+  box-shadow: 0 0 0 3px rgba(251,191,36,0.18);
+  background: #fff;
+}
+
+.claim-scope input:read-only,
+.claim-scope input[data-user-readonly] {
+  background: var(--w-100);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+/* ================= PRODUCT GRID ================= */
+.claim-scope .product-item {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.claim-scope .product-item:hover {
+  background: var(--w-50);
+  border-color: var(--w-400);
+  box-shadow: 0 6px 16px rgba(251,191,36,0.18);
+}
+
+.claim-scope .product-item.active {
+  background: linear-gradient(135deg, var(--w-400) 0%, var(--w-700) 100%);
+  border-color: var(--w-700);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(251,191,36,0.28);
+}
+
+.claim-scope .product-item.active .product-icon .material-symbols-outlined {
+  color: #fff;
+}
+
+/* ================= CLAIM TYPE GRID ================= */
+.claim-scope .claim-item {
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.claim-scope .claim-item:hover {
+  background: var(--w-50);
+  border-color: var(--w-400);
+  color: var(--w-700);
+}
+
+.claim-scope .claim-item.selected {
+  background: linear-gradient(135deg, var(--d-400) 0%, var(--w-700) 100%);
+  border-color: var(--w-700);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(249,115,22,0.22);
+  animation: badgePop 0.3s ease-out;
+}
+
+/* ================= UPLOAD ================= */
+.claim-scope .upload-box {
+  border-color: var(--w-200);
+  color: var(--w-500);
+  background: var(--w-50);
+}
+
+.claim-scope .upload-box:hover {
+  background: var(--w-100);
+  border-color: var(--w-400);
+  box-shadow: var(--shadow-md);
+  transform: none;
+  animation: wiggle 0.35s ease-in-out;
+}
+
+/* ================= SCROLLBAR ================= */
+.claim-scope ::-webkit-scrollbar-track {
+  background: var(--w-50);
+}
+
+.claim-scope ::-webkit-scrollbar-thumb {
+  background: var(--w-200);
+}
+
+.claim-scope ::-webkit-scrollbar-thumb:hover {
+  background: var(--w-400);
+}
+
+/* ================= BUTTONS ================= */
+.claim-scope .btn-draft {
+  background: #40aef8;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(251,191,36,0.24);
+}
+
+.claim-scope .btn-draft:hover {
+  box-shadow: 0 6px 18px rgba(251,191,36,0.36);
+}
+
+.claim-scope .btn-submit {
+  background: #fbbf24;
+  color: #5a2d00;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+/* shimmer บนปุ่ม submit */
+.claim-scope .btn-submit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.20) 50%,
+    transparent 100%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 2.2s linear infinite;
+  pointer-events: none;
+}
+
+.claim-scope .btn-submit:hover {
+  box-shadow: 0 6px 20px rgba(249,115,22,0.38);
+}
+
+/* ================= TABLE ================= */
+.claim-scope thead {
+  background: linear-gradient(to right, var(--w-900), var(--w-700));
+}
+
+.claim-scope tbody tr {
+  animation: rowPing 2s ease-out both;
+}
+
+.claim-scope tbody tr:hover {
+  background: var(--w-50);
+}
+
+.claim-scope td {
+  border-bottom-color: var(--border);
+}
+
+.claim-scope .draft-type-tag {
+  background: var(--w-100);
+  border-color: var(--w-200);
+  color: var(--w-700);
+}
+
+.claim-scope .btn-draft-edit {
+  background: var(--w-50);
+  color: var(--w-700);
+  border-color: var(--w-200);
+}
+
+.claim-scope .btn-draft-edit:hover {
+  background: var(--w-100);
+}
+
+.claim-scope .btn-draft-submit {
+  background: linear-gradient(135deg, var(--d-400), var(--w-700));
+  box-shadow: 0 2px 8px rgba(249,115,22,0.22);
+}
+
+.claim-scope .btn-draft-submit:hover {
+  box-shadow: 0 4px 12px rgba(249,115,22,0.36);
+}
+
+/* ================= MODAL (scoped) ================= */
+.claim-scope .modal-header {
+  background: linear-gradient(135deg, var(--w-900) 0%, var(--w-500) 100%);
+}
+
+.claim-scope .modal-list-item:hover {
+  background: var(--w-50);
+  border-color: var(--w-400);
+}
+
+.claim-scope .modal-arrow {
+  color: var(--w-400);
+}
+
+.claim-scope .modal-attr-group {
+  background: var(--w-50);
+  border-color: var(--border);
+}
+
+.claim-scope .modal-attr-group:focus-within {
+  border-color: var(--w-400);
+  box-shadow: 0 0 0 3px rgba(251,191,36,0.14);
+}
+
+.claim-scope .modal-chip:hover {
+  background: var(--w-50);
+  border-color: var(--w-400);
+}
+
+.claim-scope .modal-chip.selected {
+  background: linear-gradient(135deg, var(--w-400), var(--w-700));
+  border-color: var(--w-700);
+  box-shadow: 0 3px 10px rgba(251,191,36,0.28);
+}
+
+.claim-scope .modal-back-btn {
+  background: var(--w-100);
+  color: var(--w-700);
+  border-color: var(--w-200);
+}
+
+.claim-scope .modal-back-btn:hover {
+  background: var(--w-200);
+}
+
+.claim-scope .modal-confirm-btn {
+  background: linear-gradient(135deg, var(--w-400), var(--w-700));
+  box-shadow: 0 4px 14px rgba(251,191,36,0.28);
+}
+
+.claim-scope .modal-confirm-btn:hover {
+  box-shadow: 0 6px 20px rgba(251,191,36,0.40);
+}
+
+/* ================= RESPONSIVE (scoped) ================= */
+@media (max-width: 767px) {
+  .claim-scope .page-header { padding: 20px; }
+  .claim-scope .card,
+  .claim-scope .section-card,
+  .claim-scope .card-cause { padding: 18px 16px; }
+}
+
+@media (max-width: 480px) {
+  .claim-scope .page-header { padding: 14px 12px; }
+  .claim-scope .card,
+  .claim-scope .section-card,
+  .claim-scope .card-cause { padding: 16px 12px; }
+}

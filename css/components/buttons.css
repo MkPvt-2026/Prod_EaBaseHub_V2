@@ -1,0 +1,430 @@
+/* =====================================================
+BUTTON SYSTEM
+ใช้กับระบบ Admin ทั้งหมด
+
+โทนสี : Azure Blue
+ใช้กับ
+
+* form
+* table action
+* toolbar
+* modal
+  ===================================================== */
+:root {
+
+/* ================= PRIMARY (BLUE) ================= */
+
+--primary-1:#3FB7AE;
+--Dark-Teal: #2FA39A;
+--Light-Mint: #8FD3CD;
+
+--primary-500: #4caf50;
+--primary-700: #388e3c;
+--primary-900: #1b5e20;
+
+--secondary-300: #81d4fa;
+--secondary-500: #03a9f4;
+--secondary-700: #0288d1;
+--secondary-900: #01579b;
+
+--blue: #bcdbeb;
+
+--green1: #03624c;
+--green2: #030f0f;
+--green3: #00df82;
+--green4: #03A791;
+
+--text: #01579b;
+
+--gray-200: #e0e0e0;
+--white: #ffffff;
+
+/* ================= HEADER ================= */
+
+--header-blue:#1c86c8;
+--header-blue1:#90ceff;
+--header-blue2:#50aefc;
+--header-blue3:#044cbe;
+--header-blue4:#4aaefe;
+--orenge:#fdb177;
+
+/* ================= BACKGROUND ================= */
+
+--bg-page:#f4f7fb;
+--bg-card:#ffffff;
+--bg-soft:#eef6fc;
+
+/* ================= TEXT ================= */
+
+--text-main:#1e293b;
+--text-sub:#64748b;
+
+/* ================= BORDER ================= */
+
+--border-soft:#e5e7eb;
+
+/* ================= STATUS ================= */
+
+--success-bg:#e7f7ef;
+--success-text:#198754;
+
+--danger-bg:#fdeaea;
+--danger-text:#dc3545;
+
+/* ================= SHADOW ================= */
+
+--shadow-soft:0 4px 14px rgba(0,0,0,0.05);
+
+/* ================= RADIUS ================= */
+
+--radius-sm:8px;
+--radius-md:12px;
+--radius-lg:16px;
+
+/* ================= BACKGROUND ================= */
+
+--bg-page:#f5f8ff;
+--bg-card:#ffffff;
+--bg-soft:#eff6ff;
+
+/* ================= TEXT ================= */
+
+--text-main:#1e293b;
+--text-sub:#64748b;
+--text-soft:#94a3b8;
+
+/* ================= BORDER ================= */
+
+--border-soft:#e2e8f0;
+
+/* ================= STATUS ================= */
+
+--success-bg:#ecfdf5;
+--success-text:#065f46;
+
+--info-bg:#eff6ff;
+--info-text:#1d4ed8;
+
+--danger-bg:#fef2f2;
+--danger-text:#b91c1c;
+
+/* ================= SHADOW ================= */
+
+--shadow-soft:0 4px 14px rgba(0,0,0,0.05);
+
+/* ================= RADIUS ================= */
+
+--radius-sm:8px;
+--radius-md:12px;
+--radius-lg:16px;
+
+}
+/* =====================================================
+
+1. BASE BUTTON
+
+---
+
+ปุ่มพื้นฐานที่ทุกปุ่มจะ inherit
+===================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-family: "Kanit", sans-serif;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+/* icon ภายในปุ่ม */
+
+.btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* =====================================================
+2. PRIMARY BUTTON
+-----------------
+
+ปุ่มหลักของระบบ
+ใช้กับ
+
+* Save
+* Submit
+* Add
+  ===================================================== */
+
+.btn-primary {
+  background: #1e88c9;
+
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #197bb6;
+
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* =====================================================
+3. SECONDARY BUTTON
+-------------------
+
+ปุ่มรอง
+===================================================== */
+
+.btn-secondary {
+  background: #eef6fc;
+
+  color: #1e88c9;
+
+  border: 1px solid #d4e7f5;
+}
+
+.btn-secondary:hover {
+  background: #e1f1fb;
+}
+
+/* =====================================================
+4. OUTLINE BUTTON
+-----------------
+
+ปุ่มเส้นขอบ
+===================================================== */
+
+.btn-outline {
+  background: white;
+
+  border: 1px solid #dfe6ee;
+
+  color: #475569;
+}
+
+.btn-outline:hover {
+  background: #f5f8fc;
+}
+
+/* =====================================================
+5. SUCCESS BUTTON
+-----------------
+
+ปุ่มสถานะสำเร็จ
+===================================================== */
+
+.btn-success {
+  background: #2fb980;
+
+  color: white;
+}
+
+.btn-success:hover {
+  background: #26a66f;
+}
+
+/* =====================================================
+6. DANGER BUTTON
+----------------
+
+ปุ่มลบ
+===================================================== */
+
+.btn-danger {
+  background: #e5484d;
+
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #d13438;
+}
+
+/* =====================================================
+7. SMALL BUTTON
+===================================================== */
+
+.btn-sm {
+  padding: 6px 12px;
+
+  font-size: 13px;
+}
+
+/* =====================================================
+8. LARGE BUTTON
+===================================================== */
+
+.btn-lg {
+  padding: 10px 22px;
+
+  font-size: 15px;
+}
+
+/* =====================================================
+9. ICON BUTTON
+--------------
+
+ปุ่มที่เป็น icon อย่างเดียว
+===================================================== */
+
+.btn-icon {
+  width: 36px;
+
+  height: 36px;
+
+  padding: 0;
+
+  border-radius: 8px;
+}
+
+/* =====================================================
+10. TABLE ACTION BUTTON
+-----------------------
+
+ปุ่มที่ใช้ในตาราง
+===================================================== */
+
+.btn-manage {
+  background: #1e88c9;
+
+  color: white;
+
+  padding: 6px 14px;
+
+  border-radius: 7px;
+
+  font-size: 13px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+.btn-manage:hover {
+  background: #197bb6;
+}
+
+.btn-manageA {
+  background: #a6d5f3;  
+  color: var(--header-blue3);
+  padding: 6px 14px;
+  font-weight: 600;
+  border-radius: 7px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-manageA:hover {
+  background: #d5e9f5;
+}
+
+/* ── Manage Button ──────────────────────────────────────── */
+.btn-manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--Dark-Teal);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 16px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn-manage:hover {
+  background: #2d6435;
+  transform: translateY(-1px);
+}
+
+.btn-manage:active {
+  transform: translateY(0);
+}
+
+/* =====================================================
+11. BACK BUTTON
+---------------
+
+ปุ่ม "กลับหน้าหลัก"
+===================================================== */
+
+.btn-back {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 8px 16px;
+
+  background: white;
+
+  border: 1px solid #dfe6ee;
+
+  border-radius: 8px;
+
+  color: #475569;
+
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+.btn-back:hover {
+  background: #f4f7fb;
+}
+
+/* =====================================================
+12. DISABLED STATE
+===================================================== */
+
+.btn:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+
+/* =====================================================
+12. LOGOUT BUTTON
+===================================================== */
+
+
+.btn-logout {
+  background: #a6d5f3;  
+  color: var(--header-blue3);
+  padding: 6px 14px;
+  font-weight: 600;
+  border-radius: 7px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-logout:hover {
+  background: #d5e9f5;
+}
+/* =====================================================
+END
+===================================================== */

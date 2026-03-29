@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ใบเดินทางจริงและเคลียร์ค่าใช้จ่าย ๒</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pages/forms/formActual.css">
+  <link rel="icon" href="/assets/icons/icon-192.png">
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <span class="logo-text">EABaseHub</span>
+    </div>
+    <nav class="sidebar-menu">
+      <a href="/pages/index.html"><span class="material-symbols-outlined">home</span>หน้าแรก</a>
+      <a href="/pages/reports/report.html"><span class="material-symbols-outlined">assignment</span>รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formPlan.html"><span class="material-symbols-outlined">map</span>ฟอร์ม ๑ แผนการเดินทาง</a>
+      <a href="/pages/forms/formActual.html" class="active"><span class="material-symbols-outlined">check_circle</span>ฟอร์ม ๒ เคลียร์ค่าใช้จ่าย</a>
+    </nav>
+    <div class="sidebar-logout">
+      <span id="sidebarEmail" class="sidebar-email"></span>
+      <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page">
+
+      <!-- Banner แจ้งพบแผน -->
+      <div id="planBanner" class="plan-banner" style="display:none">
+        <span class="material-symbols-outlined">event_note</span>
+        <span id="planBannerText">พบข้อมูลแผนการเดินทาง (ฟอร์ม ๑)</span>
+        <button class="btn-import" onclick="importFromPlan()">
+          <span class="material-symbols-outlined">download</span> นำข้อมูลมาใช้
+        </button>
+        <button class="btn-banner-dismiss" onclick="dismissBanner()">✕</button>
+      </div>
+
+      <div class="paper">
+        <h2>ใบเดินทางจริงและเคลียร์ค่าใช้จ่าย ๒</h2>
+      </div>
+
+        <!-- SECTION: ข้อมูลพนักงาน -->
+        <div class="section">
+          <h3>ข้อมูลพนักงาน</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empName">พนักงานขาย</label>
+              <input id="empName" readonly>
+            </div>
+            <div class="form-group">
+              <label for="empZone">เขตการขาย</label>
+              <input id="empZone" readonly>
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:4px; align-items:flex-end">
+            <div class="form-group">
+              <label for="refPlanId">อ้างอิงแผน ฟอร์ม ๑ (Plan ID)</label>
+              <input id="refPlanId" placeholder="โหลดอัตโนมัติ หรือวาง ID แล้วกดโหลด">
+            </div>
+            <div class="form-group" style="max-width:160px">
+              <label>&nbsp;</label>
+              <button class="btn-load-plan" onclick="loadPlanById()">
+                <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px">sync</span>
+                โหลดแผน
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: ตารางค่าใช้จ่าย -->
+<div class="section">
+  <h3>รายการค่าใช้จ่ายจริง</h3>
+
+  <div class="import-hint" id="importHint" style="display:none">
+    <span class="material-symbols-outlined">lightbulb</span>
+    นำข้อมูลจากแผนการเดินทางมาแล้ว — แก้ไข เพิ่ม หรือลบแถวได้อิสระค่ะ
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:130px">ว/ด/ป</th>
+        <th>เส้นทางจริง</th>
+        <th style="width:120px">หมายเหตุ</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <div class="btn-group">
+    <button class="btn-add"    onclick="addRow()">➕ เพิ่มแถว</button>
+    <button class="btn-delete" onclick="deleteRow()">➖ ลบแถว</button>
+  </div>
+</div>
+
+<!-- SECTION: สรุปค่าใช้จ่าย -->
+<div class="section summary-section">
+  <h3>สรุปแผนการเดินทางและเบิกจ่าย</h3>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <label>เบี้ยเลี้ยง</label>
+      <input type="number" id="allowanceRate" placeholder="บาท/วัน">
+    </div>
+    <div class="summary-item">
+      <label>ค่าที่พัก(ราคา)</label>
+      <input type="number" id="hotelRate" placeholder="บาท/คืน">
+    </div>
+    <div class="summary-item">
+      <label>ค่าใช้จ่ายอื่นๆ</label>
+      <input type="number" id="otherCost" placeholder="บาท">
+    </div>
+    <div class="summary-item">
+      <label>จำนวน(วัน)</label>
+      <input type="number" id="allowanceDays" placeholder="จำนวน(วัน)">
+    </div>
+    <div class="summary-item">
+      <label>รวมพัก(คืน)</label>
+      <input type="number" id="hotelNights" placeholder="จำนวน(คืน)">
+    </div>
+    <div class="summary-item total">
+      <label>รวมเบิกทั้งหมด</label>
+      <input type="text" id="grandTotal" placeholder="บาท" readonly>
+    </div>
+  </div>
+
+  <div class="btn-group" style="margin-top:20px">
+    <button class="btn-save"    onclick="saveDraft()">💾 Save Draft</button>
+    <button class="btn-preview" onclick="openPreview()">🔍 บันทึกและดูตัวอย่าง</button>
+    <button class="btn-export"  onclick="exportCSV()">📤 Export CSV</button>
+  </div>
+</div>
+
+      <!-- </div>      CLASS PEPER -->
+    </div>
+  </main>
+</div>
+
+<footer class="footer">© 2026 EABaseHub</footer>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="preview-modal">
+  <div class="preview-wrapper">
+    <div class="preview-actions">
+      <button onclick="saveAndClose()">💾 บันทึก</button>
+      <button onclick="printPreview()">🖨 พิมพ์</button>
+      <button onclick="exportPDF()">📤 Export PDF</button>
+      <button onclick="closePreview()">✕ ปิด</button>
+    </div>
+    <div id="previewContent" class="a4-page"></div>
+  </div>
+</div>
+
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/auth.js"></script>
+<script src="/js/pages/forms/formActual.js"></script>
+
+
+<script src="/js/core/splash.js"></script> 
+  <script src="/js/core/loadingSplash.js"></script>
+</body>
+</html>

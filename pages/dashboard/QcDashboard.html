@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EABaseHub | QC Dashboard</title>
+
+  <!-- ป้องกัน flash: อ่านค่าก่อน render -->
+  <script>
+    (function(){ var t=localStorage.getItem('ea-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();
+  </script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/base/adminBase.css">
+  <link rel="stylesheet" href="/css/pages/dashboard/QcDashboard.css">
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-circle">
+        <span class="logo-fallback">EA</span>
+      </div>
+      <div class="header-divider"></div>
+      <div>
+        <h1 class="header-title">EABaseHub</h1>
+        <p class="header-sub">QC Dashboard</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="date-label" id="currentDate">—</span>
+      <span class="badge-live">
+        <span class="live-dot"></span>Live
+      </span>
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle theme">
+        <span class="theme-icon material-symbols-outlined">light_mode</span>
+        <span class="theme-label">Light</span>
+      </button>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── NAV ── -->
+  <nav class="app-nav">
+    <a href="/pages/dashboard/QcDashboard.html" class="active">Dashboard</a>
+    <a href="/pages/admin/adminQc.html">จัดการสินค้าส่งเคลม</a>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="page-wrapper">
+
+    <!-- KPI CARDS -->
+    <section class="kpi-grid">
+      <div class="kpi-card" id="kpi-total">
+        <span class="material-symbols-outlined kpi-icon">inventory_2</span>
+        <span class="kpi-label">ตรวจสอบทั้งหมด</span>
+        <span class="kpi-val">—</span>
+        <span class="kpi-sub">กำลังโหลด...</span>
+      </div>
+      <div class="kpi-card" id="kpi-pass">
+        <span class="material-symbols-outlined kpi-icon">check_circle</span>
+        <span class="kpi-label">Pass (อนุมัติ)</span>
+        <span class="kpi-val pass">—</span>
+        <span class="kpi-sub">—</span>
+      </div>
+      <div class="kpi-card" id="kpi-fail">
+        <span class="material-symbols-outlined kpi-icon">cancel</span>
+        <span class="kpi-label">Fail (ปฏิเสธ)</span>
+        <span class="kpi-val fail">—</span>
+        <span class="kpi-sub">—</span>
+      </div>
+      <div class="kpi-card" id="kpi-pending">
+        <span class="material-symbols-outlined kpi-icon">pending</span>
+        <span class="kpi-label">รอตรวจสอบ</span>
+        <span class="kpi-val warn">—</span>
+        <span class="kpi-sub">—</span>
+      </div>
+      <div class="kpi-card" id="kpi-claims">
+        <span class="material-symbols-outlined kpi-icon">inbox</span>
+        <span class="kpi-label">เคลมรับเข้า</span>
+        <span class="kpi-val">—</span>
+        <span class="kpi-sub">—</span>
+      </div>
+      <div class="kpi-card" id="kpi-approved">
+        <span class="material-symbols-outlined kpi-icon">task_alt</span>
+        <span class="kpi-label">อนุมัติเคลม</span>
+        <span class="kpi-val pass">—</span>
+        <span class="kpi-sub">—</span>
+      </div>
+    </section>
+
+    <!-- PIE + SUMMARY -->
+    <section class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span>สถานะ Pass / Fail / รอดำเนินการ</div>
+        <div class="pie-wrap">
+          <div class="pie-chart-wrap">
+            <canvas id="pfPieChart"></canvas>
+            <div class="pie-center-label">
+              <span class="pie-center-num" id="pieCenterNum">—</span>
+              <span class="pie-center-sub">รายการ</span>
+            </div>
+          </div>
+          <div class="pf-legend" id="pfLegend">
+            <div class="legend-item">
+              <div class="legend-left"><span class="dot dot-pass"></span><span class="legend-label">กำลังโหลด...</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span>สรุปประเภทปัญหา</div>
+        <div id="claimSummary">
+          <div class="sum-row"><span class="sum-label" style="color:var(--text-2);font-size:.75rem">กำลังโหลด...</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOP PRODUCTS CHART -->
+<section class="card">
+  <div class="card-title"><span class="card-title-dot"></span>สินค้าที่เคลมบ่อย (Top 8)</div>
+  <div class="chart-legend">
+    <span><span class="legend-sq" style="background:#3fb950"></span>อนุมัติ</span>
+    <span><span class="legend-sq" style="background:#f85149"></span>ปฏิเสธ</span>
+  </div>
+  <div class="chart-wrap chart-wrap--tall"><canvas id="topProductChart"></canvas></div>
+</section>
+
+    <!-- CHART + RECENT -->
+    <section class="row3">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span>แนวโน้มการเคลมรายเดือน (6 เดือนย้อนหลัง)</div>
+        <div class="chart-legend">
+          <span><span class="legend-sq" style="background:var(--pass)"></span>Pass (อนุมัติ)</span>
+          <span><span class="legend-sq" style="background:var(--fail)"></span>Fail (ปฏิเสธ)</span>
+        </div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span>เคลมล่าสุด</div>
+        <div class="claim-list" id="claimList">
+          <div style="color:var(--text-2);font-size:.78rem;padding:10px 0">⏳ กำลังโหลด...</div>
+        </div>
+      </div>
+    </section>
+
+    
+
+    <!-- TABLE -->
+    <section class="card table-card">
+      <div class="card-header-row">
+        <div class="card-title"><span class="card-title-dot"></span>รายการเคลมสินค้า</div>
+        <div class="filter-wrap">
+          <select id="filterStatus">
+            <option value="">ทุกสถานะ</option>
+            <option value="pass">Pass (อนุมัติ)</option>
+            <option value="fail">Fail (ปฏิเสธ)</option>
+            <option value="pending">รอตรวจ</option>
+          </select>
+          <a class="btn-goto-qc" href="/pages/admin/adminQc.html">
+            <span class="material-symbols-outlined">open_in_new</span>จัดการเคลม
+          </a>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>รหัส</th><th>สินค้า</th><th>วันที่เคลม</th>
+              <th class="text-right">จำนวน</th><th>ผลตรวจ</th><th>สถานะ</th><th>พนักงาน</th>
+            </tr>
+          </thead>
+          <tbody id="productTable">
+            <tr><td colspan="7" style="text-align:center;padding:36px;color:var(--text-2)">⏳ กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── SCRIPTS ── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/pages/dashboard/QcDashboard.js"></script>
+  <script src="/js/core/splash.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+  <script src="/js/core/themeToggle.js"></script>
+
+</body>
+</html>

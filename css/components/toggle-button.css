@@ -1,0 +1,127 @@
+/* ============================================
+   Toggle Button Pattern
+   3 Styles: Bold | Subtle | Minimal
+   2 States: Enabled (unselected) | Selected
+   13 Color Themes
+   ============================================ */
+
+/* --- Base toggle button --- */
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.toggle-btn:active {
+  transform: scale(0.96);
+}
+
+/* ============================================
+   ENABLED STATE (ปุ่มที่ยังไม่ได้เลือก)
+   เหมือนกันทุก style
+   ============================================ */
+
+.toggle-btn.is-enabled {
+  background-color: #e8eaed;
+  color: #6b7280;
+  border: 1.5px solid transparent;
+}
+
+.toggle-btn.is-enabled:hover {
+  background-color: #dde0e4;
+}
+
+/* ============================================
+   BOLD STYLE — Selected: solid filled, white text
+   ============================================ */
+
+.bold.is-selected { color: #ffffff; border: 1.5px solid transparent; }
+
+.bold.color-gray     { background-color: #4b5563; }
+.bold.color-blue     { background-color: #2563eb; }
+.bold.color-red      { background-color: #dc2626; }
+.bold.color-green    { background-color: #16a34a; }
+.bold.color-yellow   { background-color: #ca8a04; }
+.bold.color-orange   { background-color: #ea580c; }
+.bold.color-lime     { background-color: #4d7c0f; }
+.bold.color-teal     { background-color: #0f766e; }
+.bold.color-cyan     { background-color: #0e7490; }
+.bold.color-sky      { background-color: #0284c7; }
+.bold.color-indigo   { background-color: #4338ca; }
+.bold.color-purple   { background-color: #9333ea; }
+.bold.color-pink     { background-color: #db2777; }
+
+/* ============================================
+   SUBTLE STYLE — Selected: soft bg, colored text
+   ============================================ */
+
+.subtle.is-selected { border: 1.5px solid transparent; font-weight: 600; }
+
+.subtle.color-gray.is-selected   { background-color: #d1d5db; color: #374151; }
+.subtle.color-blue.is-selected   { background-color: #bfdbfe; color: #1d4ed8; }
+.subtle.color-red.is-selected    { background-color: #fecaca; color: #b91c1c; }
+.subtle.color-green.is-selected  { background-color: #bbf7d0; color: #15803d; }
+.subtle.color-yellow.is-selected { background-color: #fef08a; color: #a16207; }
+.subtle.color-orange.is-selected { background-color: #fed7aa; color: #c2410c; }
+.subtle.color-lime.is-selected   { background-color: #d9f99d; color: #3f6212; }
+.subtle.color-teal.is-selected   { background-color: #99f6e4; color: #0f766e; }
+.subtle.color-cyan.is-selected   { background-color: #a5f3fc; color: #0e7490; }
+.subtle.color-sky.is-selected    { background-color: #bae6fd; color: #0369a1; }
+.subtle.color-indigo.is-selected { background-color: #c7d2fe; color: #3730a3; }
+.subtle.color-purple.is-selected { background-color: #e9d5ff; color: #7e22ce; }
+.subtle.color-pink.is-selected   { background-color: #fbcfe8; color: #be185d; }
+
+/* ============================================
+   MINIMAL STYLE — Selected: outline only, colored text
+   ============================================ */
+
+.minimal.is-selected {
+  background-color: transparent;
+  font-weight: 600;
+}
+
+/* Enabled state override for minimal — white bg */
+.minimal.is-enabled {
+  background-color: #ffffff;
+  border: 1.5px solid #d1d5db;
+  color: #6b7280;
+}
+
+.minimal.color-gray.is-selected   { border: 1.5px solid #9ca3af; color: #374151; background-color: #f9fafb; }
+.minimal.color-blue.is-selected   { border: 1.5px solid #93c5fd; color: #2563eb; background-color: #eff6ff; }
+.minimal.color-red.is-selected    { border: 1.5px solid #fca5a5; color: #dc2626; background-color: #fff5f5; }
+.minimal.color-green.is-selected  { border: 1.5px solid #86efac; color: #16a34a; background-color: #f0fdf4; }
+.minimal.color-yellow.is-selected { border: 1.5px solid #fde047; color: #ca8a04; background-color: #fefce8; }
+.minimal.color-orange.is-selected { border: 1.5px solid #fdba74; color: #ea580c; background-color: #fff7ed; }
+.minimal.color-lime.is-selected   { border: 1.5px solid #bef264; color: #65a30d; background-color: #f7fee7; }
+.minimal.color-teal.is-selected   { border: 1.5px solid #5eead4; color: #0f766e; background-color: #f0fdfa; }
+.minimal.color-cyan.is-selected   { border: 1.5px solid #67e8f9; color: #0e7490; background-color: #ecfeff; }
+.minimal.color-sky.is-selected    { border: 1.5px solid #7dd3fc; color: #0284c7; background-color: #f0f9ff; }
+.minimal.color-indigo.is-selected { border: 1.5px solid #a5b4fc; color: #4338ca; background-color: #eef2ff; }
+.minimal.color-purple.is-selected { border: 1.5px solid #d8b4fe; color: #9333ea; background-color: #faf5ff; }
+.minimal.color-pink.is-selected   { border: 1.5px solid #f9a8d4; color: #db2777; background-color: #fdf2f8; }
+
+/* ============================================
+   Size Variants
+   ============================================ */
+
+.toggle-btn.btn-sm {
+  padding: 5px 13px;
+  font-size: 12px;
+}
+
+.toggle-btn.btn-lg {
+  padding: 11px 24px;
+  font-size: 15px;
+}

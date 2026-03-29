@@ -1,0 +1,704 @@
+/* =====================================================
+   FORMS HUB - STYLESHEET
+   ไฟล์ CSS สำหรับหน้า Forms Hub
+   ===================================================== */
+   /* CSS VARIABLES - กำหนดค่าสีและค่าคงที่ */
+   
+:root {
+  --primary:        #0d9488;
+  --primary-light:  #14b8a6;
+  --primary-dark:   #0f766e;
+  --primary-xdark:  #115e59;
+  --accent:         #f59e0b;
+  --accent-light:   #fcd34d;
+  --danger:         #ef4444;
+  --danger-dark:    #dc2626;
+  --success:        #10b981;
+  --info:           #3b82f6;
+
+  --bg-base:        #f0fdfa;
+  --bg-card:        #ffffff;
+  --bg-subtle:      #f0fdf4;
+  --bg-muted:       #ccfbf1;
+
+  --border:         #99f6e4;
+  --border-strong:  #5eead4;
+
+  /* --text-primary:   #134e4a;
+  --text-secondary: #0f766e;
+  --text-muted:     #6b7280; */
+  --text-light:     #9ca3af;
+
+  --shadow-sm:      0 1px 4px rgba(13,148,136,0.08);
+  --shadow-md:      0 4px 16px rgba(13,148,136,0.12);
+  --shadow-lg:      0 8px 32px rgba(13,148,136,0.18);
+
+  --radius-sm:      8px;
+  --radius-md:      12px;
+  --radius-lg:      16px;
+  --radius-xl:      20px;
+
+  /* Tablet base: 14px → scale up */
+  --font-xs:    13px;
+  --font-sm:    14px;
+  --font-base:  15px;
+  --font-md:    16px;
+  --font-lg:    18px;
+  --font-xl:    22px;
+  --font-2xl:   26px;
+
+  /* === Semantic — ใช้ตาม role === */
+  --bg-main:           #f4faf9;   /* mint-50 — พื้นหลังหน้า */
+  --bg-surface:        #ffffff;   /* card / panel */
+  --bg-sidebar:        #2FA39A;   /* teal-500 */
+  --bg-sidebar-hover:  rgba(255,255,255,0.12);
+  --bg-sidebar-active: rgba(255,255,255,0.22);
+
+  --text-primary:   #0f3330;    /* teal-900 ปรับอ่าน */
+  --text-secondary: #3d6e6a;    /* teal กลาง */
+  --text-muted:     #7aaba7;    /* mint กลาง */
+  --text-on-dark:   #daf1ef;    /* mint-100 บน sidebar */
+
+  --accent:        var(--teal-400);
+  --accent-light:  var(--teal-50);
+  --accent-border: var(--teal-100);
+
+  /* === Border === */
+  --border:        1px solid #cde8e5;   /* mint-200 ปรับ */
+  --border-accent: 1px solid var(--teal-100);
+
+  /* === Shadow — flat minimal === */
+  --shadow-xs: 0 1px 3px rgba(47,163,154,0.08);
+  --shadow-sm: 0 2px 8px rgba(47,163,154,0.10);
+  --shadow-md: 0 4px 16px rgba(47,163,154,0.12);
+
+  /* === Radius === */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* === Transition === */
+  --transition: 0.18s ease;
+}
+
+
+
+/* ==============================================================
+PAGE BOX (เนื้อหาด้าใน)
+============================================================== */
+
+.page-header {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30px; left: 30%;
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+
+.page-header h1 {
+  font-family: 'Kanit', sans-serif;
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header p {
+  font-size: var(--font-base);
+  color: rgba(255,255,255,0.8);
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+
+/* ==============================================================
+   PAGE BOX (เนื้อหาด้าใน)
+   ============================================================== */
+
+   /* ================= CARDS ================= */
+
+.card,
+.section-card,
+.card-cause {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover,
+.section-card:hover,
+.card-cause:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+/* ================= HEADINGS ================= */
+
+h1 {
+  font-family: 'Kanit', sans-serif;
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h2 {
+  font-family: 'Kanit', sans-serif;
+  font-size: var(--font-lg);
+  font-weight: 400;
+  color: var(--primary-dark);
+  margin-bottom: 0px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h3 {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--primary);
+  margin: 20px 0 14px;
+  /* display: flex; */
+  align-items: center;
+  gap: 8px;
+}
+
+h4 {
+  font-size: var(--font-sm);
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+/* ================= ACTION BUTTONS ================= */
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--font-base);
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  /* min-width: 100px;   /*ขนาดปุ่ม logout*/
+  /* min-height: 32px;   ขนาดปุ่ม logout */
+} 
+
+button:hover { transform: translateY(-2px); }
+button:active { transform: translateY(0); }
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+ /* =========================
+   LOGOUT BTN
+   ========================= */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--bg-base);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Kanit', sans-serif;
+  font-size: 13px;
+  color: var(--primary-xdark);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.logout-btn:hover {
+  border-color: #e07070;
+  color: #c0392b;
+  background: #fff5f5;
+}
+
+
+
+/* ================= PAGE TITLE (หัวเรื่องหน้า) ================= */
+
+.section-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+
+.section-divider {
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--border-strong) 0%, transparent 100%);
+  margin: 20px 0;
+}
+
+.page-title {
+  text-align: center;                  /* จัดข้อความกึ่งกลาง */
+  margin-bottom: 24px;                 /* ระยะห่างด้านล่าง */
+}
+
+/* หัวเรื่อง h1 */
+.page-title h1 {
+  font-size: 22px;                     /* ขนาดตัวอักษร */
+  margin-bottom: 6px;                  /* ระยะห่างด้านล่าง */
+}
+
+/* ข้อความคำอธิบาย */
+.page-title p {
+  font-size: 13px;                     /* ขนาดตัวอักษร */
+  color: #666;                         /* สีเทา */
+}
+
+
+/* ================= GRID (ระบบกริดสำหรับการ์ด) ================= */
+
+.forms-grid {
+  display: grid;                                    /* ใช้ CSS Grid Layout */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+  /* สร้างคอลัมน์อัตโนมัติ ขั้นต่ำ 240px ต่อการ์ด */
+  gap: 16px;                                        /* ระยะห่างระหว่างการ์ด */
+}
+
+
+/* ================= CARD (การ์ดแบบฟอร์ม) ================= */
+
+.form-card {
+  background: #fff;                    /* พื้นหลังสีขาว */
+  border-radius: 14px;                 /* มุมโค้งมน */
+  padding: 20px;                       /* ช่องว่างด้านใน */
+  text-align: center;                  /* จัดข้อความกึ่งกลาง */
+  cursor: pointer;                     /* แสดง cursor แบบมือชี้เมื่อ hover */
+  transition: 0.2s;                    /* เอฟเฟกต์การเปลี่ยนแปลงแบบนุ่มนวล 0.2 วินาที */
+  box-shadow: 0 6px 16px rgba(0,0,0,.08); /* เงาใต้การ์ด */
+}
+
+/* เมื่อ hover การ์ด */
+.form-card:hover {
+  transform: translateY(-4px);         /* เลื่อนการ์ดขึ้นด้านบน 4px */
+}
+
+
+/* ================= ICON (ไอคอนในการ์ด) ================= */
+
+.form-icon {
+  width: 62px;                         /* ความกว้าง */
+  height: 62px;                        /* ความสูง */
+  border-radius: 50%;                  /* ทำให้เป็นวงกลม */
+  display: flex;                       /* ใช้ flexbox */
+  align-items: center;                 /* จัดกึ่งกลางแนวตั้ง */
+  justify-content: center;             /* จัดกึ่งกลางแนวนอน */
+  margin: auto;                        /* จัดกึ่งกลางในการ์ด */
+  color: #fff;                         /* สีไอคอนเป็นสีขาว */
+}
+
+/* คลาสสีน้ำเงิน */
+.blue { 
+  background: #1976d2; 
+}
+
+/* คลาสสีเขียว */
+.green { 
+  background: #2e7d32; 
+}
+
+
+/* ================= CARD TEXT (ข้อความในการ์ด) ================= */
+
+/* หัวเรื่องการ์ด */
+.form-card h3 {
+  font-size: 16px;                     /* ขนาดตัวอักษร */
+  margin: 12px 0 6px;                  /* ระยะห่าง บน 12px ซ้าย-ขวา 0 ล่าง 6px */
+}
+
+/* คำอธิบายการ์ด */
+.form-card p {
+  font-size: 12px;                     /* ขนาดตัวอักษร */
+  color: #777;                         /* สีเทา */
+}
+
+/* ================= TABLET (768px) - PRIMARY BREAKPOINT ================= */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --font-xs:   13px;
+    --font-sm:   14px;
+    --font-base: 15px;
+    --font-md:   16px;
+    --font-lg:   19px;
+    --font-xl:   22px;
+    --font-2xl:  27px;
+  }
+
+  .container { padding: 20px 16px 40px; }
+
+  .app-header { padding: 0 20px; height: 64px; }
+
+  .app-nav a { padding: 13px 18px; }
+
+  .product-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .product-item {
+    padding: 16px 8px 12px;
+    font-size: 12px;
+  }
+
+  .product-icon .material-symbols-outlined {
+    font-size: 26px;
+  }
+
+  .claim-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .upload-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+
+  .upload-box, .upload-box.preview { height: 120px; }
+
+  .card, .section-card, .card-cause {
+    padding: 24px 24px;
+  }
+}
+
+/* ================= MOBILE (< 768px) ================= */
+
+@media (max-width: 767px) {
+  :root {
+    --font-xs:   12px;
+    --font-sm:   13px;
+    --font-base: 14px;
+    --font-md:   15px;
+    --font-lg:   17px;
+    --font-xl:   20px;
+    --font-2xl:  23px;
+  }
+
+  .container { padding: 12px 12px 32px; }
+
+  /* Header */
+  .app-header {
+    padding: 10px 14px;
+    min-height: 64px;
+  }
+
+  app-header .logo h2 {
+    font-size: 16px;
+  }
+  .logo-circle { width: 36px; height: 36px; }
+  .logo-circle img { width: 22px; }
+
+  .user-name {
+    max-width: 80px;
+    font-size: 14px;
+    color: #fff;
+  }
+
+  .logout-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+
+   /* Nav */
+  .app-nav {
+    top: 56px;
+    padding: 7px 12px;
+    gap: 6px;
+  }
+
+  .app-nav a {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .page-header { padding: 20px 20px; border-radius: var(--radius-lg); }
+  /* Page header */
+  .page-header h1 {
+    font-size: 18px;
+  }
+
+  /* Container */
+  .container {
+    padding: 12px 10px;
+  }
+
+  .card, .section-card, .card-cause { padding: 18px 16px; margin-bottom: 14px; }
+
+  h2 { font-size: 16px; }
+  h3 { font-size: 15px; }
+
+  .form-grid { grid-template-columns: 1fr; gap: 14px; }
+
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .product-item {
+    padding: 14px 8px 10px;
+    font-size: 11px;
+  }
+
+  .product-icon .material-symbols-outlined { font-size: 24px; }
+
+  .claim-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  .upload-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .upload-box, .upload-box.preview { height: 100px; font-size: 28px; }
+
+  .actions { flex-direction: column; }
+
+  button { 
+    /* width: 100%; 
+    min-width: unset;  */
+    flex: none; 
+  }
+
+  .btn-back { flex: none; }
+
+  table { font-size: 12px; }
+  th, td { padding: 10px 12px; }
+
+  .draft-thumb { width: 44px; height: 44px; }
+
+  .modal-content { max-width: 100%; border-radius: 16px 16px 0 0; margin: auto 0 0; max-height: 90vh; }
+}
+
+/* ================= SMALL MOBILE (< 480px) ================= */
+
+/* ---- Mobile: ≤ 480px ---- */
+@media (max-width: 480px) {
+
+  /* Header: ซ่อนชื่อผู้ใช้ เหลือแค่ avatar + logout */
+  .app-header {
+    padding: 8px 12px;
+    min-height: 64px;
+  }
+
+  .app-header .logo h2 {
+    font-size: 16px;
+  }
+
+  .logo-circle {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* ซ่อน user-info (ชื่อ) บนมือถือเล็ก */
+  .user-info {
+    display: none;
+  }
+
+  
+  .logout-btn {
+    padding: 4px;
+    /* font-size: 0; */
+  }
+ 
+  /* Nav */
+  .app-nav {
+    top: 52px;
+    padding: 6px 10px;
+  }
+
+  .app-nav a {
+    font-size: 11px;
+    padding: 5px 9px;
+  }
+
+  /* Page header */
+  .page-header {
+    padding: 14px 12px;
+  }
+
+  .page-header h1 {
+    font-size: 16px;
+  }
+
+  /* Card/Section */
+  .card,
+  .section {
+    padding: 16px 12px;
+    border-radius: 10px;
+  }
+
+  .card h2,
+  .section h2 {
+    font-size: 15px;
+  }
+
+  /* Form grid: 1 คอลัมน์บนมือถือ */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .form-group.full {
+    grid-column: span 1;
+  }
+
+  #dynamicAttributes {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* ป้องกัน iOS zoom เมื่อ focus */
+    padding: 10px;
+  }
+
+  /* Buttons */
+  .actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .actions button,
+  .btn-draft,
+  .btn-save {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  /* Table: horizontal scroll */
+  .table-wrapper {
+    margin: 0 -4px; /* ขยายออกนิดหน่อย */
+  }
+
+  table {
+    font-size: 12px;
+    min-width: 480px;
+  }
+
+  th,
+  td {
+    padding: 8px 6px;
+  }
+
+  .detail-text {
+    max-width: 90px;
+  }
+
+  /* Export buttons */
+  .section .actions {
+    flex-direction: column;
+  }
+
+  .section .actions button {
+    width: 100%;
+  }
+
+  /* Modal */
+  .modal {
+    padding: 12px;
+    align-items: flex-end; /* slide up from bottom */
+  }
+
+  .modal-content {
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px;
+    max-height: 85vh;
+  }
+}
+
+/* ---- Very Small: ≤ 360px ---- */
+@media (max-width: 360px) {
+
+  .app-header .logo h2 {
+    display: none; /* ซ่อนชื่อระบบบนจอเล็กมาก */
+  }
+
+  .page-header h1 {
+    font-size: 15px;
+  }
+}
+
+/* ================= PRINT ================= */
+
+@media print {
+  .app-header, .app-nav, .actions,
+  .btn-draft-edit, .btn-draft-del, .remove-btn { display: none !important; }
+
+  body { background: white; }
+  .container { max-width: 100%; padding: 0; }
+
+  .card, .section-card, .card-cause {
+    box-shadow: none;
+    page-break-inside: avoid;
+    border: 1px solid #e5e7eb;
+    animation: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .draft-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+

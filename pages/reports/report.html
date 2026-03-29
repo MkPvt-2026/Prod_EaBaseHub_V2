@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>EABaseHub | รายงานเยี่ยมร้านค้า</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+
+  <link rel="stylesheet" href="/css/components/badgeButtom.css">
+  <link rel="stylesheet" href="/css/base/layout.css">
+  <link rel="stylesheet" href="/css/pages/report/report.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+
+      <div class="group">
+  <span class="badge badge--message-sent">
+    <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:17px">Logout</span></span>
+    Logout
+  </span>
+      </div>
+
+
+  </header>
+
+  <nav class="app-nav">
+    <a href="/index.html">หน้าแรก</a>
+    <a href="/pages/reports/report.html" class="active">รายงานเยี่ยมร้านค้า</a>
+    <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
+    <a href="/pages/forms/formHub.html">แบบฟอร์ม</a>
+    <a href="/pages/forms/shopUser.html">ร้านค้าของฉัน</a>
+  </nav>
+
+  <main>
+  <div class="container">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <h1>📋 Report Management</h1>
+      <p>กรอกข้อมูล • Save Draft (เก็บในเครื่อง) • ส่งรายงานสัปดาห์</p>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- SECTION 1: FORM                                        -->
+    <!-- ===================================================== -->
+    <div class="card">
+      <h2>📝 กรอกข้อมูลรายงาน</h2>
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>วันที่</label>
+          <input type="date" id="reportDate">
+        </div>
+
+        <div class="form-group">
+          <label>จังหวัด</label>
+          <select id="provinceSelect"><option value="">-- เลือกจังหวัด --</option></select>
+        </div>
+
+        <div class="form-group">
+          <label>ร้านค้า</label>
+          <select id="shopSelect" disabled><option value="">-- เลือกจังหวัดก่อน --</option></select>
+        </div>
+
+        <div class="form-group">
+          <label>สถานะการเยี่ยม</label>
+          <select id="status">
+            <option value="เข้าพบลูกค้า">เข้าพบลูกค้า</option>
+            <option value="รอเข้าพบรอบต่อไป">รอเข้าพบรอบต่อไป</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label>รายละเอียด / หมายเหตุ</label>
+          <textarea id="note" rows="3" placeholder="บันทึกสิ่งที่พูดคุย สิ่งที่ต้องติดตาม..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- PRODUCT PICKER SECTION                                 -->
+      <!-- ===================================================== -->
+      <div class="form-section-divider">
+        <span>📦 สินค้าที่ขายกับร้านนี้</span>
+      </div>
+
+      <!-- Picker: เลือกสินค้า 1 ชุด -->
+      <div class="product-picker">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>หมวดสินค้า</label>
+            <select id="pickerCategory">
+              <option value="">-- เลือกหมวดสินค้า --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>สินค้า</label>
+            <select id="pickerProduct">
+              <option value="">-- เลือกสินค้า --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Attributes จะถูก render ตรงนี้ -->
+        <div id="pickerAttributes" class="picker-attributes"></div>
+
+        <button type="button" class="btn-add-product" id="addProductBtn">
+          ➕ เพิ่มสินค้า
+        </button>
+      </div>
+
+      <!-- รายการสินค้าที่เลือกแล้ว -->
+      <div class="selected-products-section">
+        <div class="selected-products-header">
+          <span>🛒 สินค้าที่เลือกแล้ว</span>
+          <span class="selected-count" id="selectedProductCount">0</span>
+        </div>
+        <div id="selectedProductList" class="selected-product-list">
+          <div class="empty-product-list">ยังไม่มีสินค้าที่เลือก — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
+        </div>
+      </div>
+
+      <!-- ปุ่ม Save Draft -->
+      <div class="actions">
+        <button class="btn-draft" onclick="saveDraft()">
+          💾 Save Draft
+          <span class="draft-badge" id="draftCount">0</span>
+        </button>
+      </div>
+
+      <p class="form-hint">
+        💡 <strong>Save Draft</strong> = เก็บในเครื่องนี้ ยังไม่ส่งให้ผู้บริหาร
+      </p>
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- SECTION 2: DRAFT LIST                                  -->
+    <!-- ===================================================== -->
+    <div class="card draft-section" id="draftSection" style="display:none;">
+
+      <h2>📝 Draft ที่รอส่ง (<span id="draftCount2">0</span> รายการ)</h2>
+
+      <div class="draft-hint">
+        ⚠️ Draft เก็บเฉพาะในเบราว์เซอร์นี้ — หากล้าง cache หรือเปลี่ยนอุปกรณ์ข้อมูลจะหาย
+        กรุณาส่งรายงานก่อนสิ้นสัปดาห์
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>ร้านค้า</th>
+              <th>สินค้า</th>
+              <th>รายละเอียด</th>
+              <th>บันทึกเมื่อ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="draftBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-header-row" style="margin-top:16px;">
+        <button class="btn-submit-all" id="submitAllBtn" onclick="submitAllDrafts()">
+          📤 ส่งรายงานประจำสัปดาห์ทั้งหมด
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- SECTION 3: SUBMITTED REPORTS                           -->
+    <!-- ===================================================== -->
+    <div class="section">
+      <h2>✅ รายงานที่ส่งแล้ว</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่ส่ง</th>
+              <th>ร้านค้า</th>
+              <th>สถานะ</th>
+              <th>รายละเอียด</th>
+              <th>สินค้า</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="reportBody">
+            <tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px;">ยังไม่มีข้อมูล</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  </main>
+
+
+  <!-- ===================================================== -->
+  <!-- MODAL                                                  -->
+  <!-- ===================================================== -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeModalBtn">✕</span>
+      <h3 id="modalTitle">รายละเอียดรายงาน</h3>
+
+      <div style="display:grid;gap:10px;font-size:14px;margin-top:4px;">
+        <div class="modal-row"><strong>วันที่:</strong>       <span id="m-date">—</span></div>
+        <div class="modal-row"><strong>ร้านค้า:</strong>      <span id="m-store">—</span></div>
+        <div class="modal-row"><strong>สินค้า:</strong>       <span id="m-product">—</span></div>
+        <div class="modal-row"><strong>แหล่งที่มา:</strong>   <span id="m-source">—</span></div>
+        <div class="modal-row"><strong>สถานะ:</strong>        <span id="m-status">—</span></div>
+        <div id="m-attributes"></div>
+        <div>
+          <label style="font-weight:600;font-size:12px;color:#555;text-transform:uppercase;letter-spacing:0.4px;">หมายเหตุ</label>
+          <textarea id="m-note" rows="3" style="width:100%;margin-top:6px;" disabled></textarea>
+        </div>
+        <div>
+          <label style="font-weight:600;font-size:12px;color:#555;text-transform:uppercase;letter-spacing:0.4px;">💬 Comment จากผู้บริหาร</label>
+          <div id="m-manager-comments" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="saveEditBtn" style="display:none;" onclick="saveEdit()">💾 บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <footer class="footer">© 2026 EABaseHub | บันทึกการเยี่ยมร้านค้า</footer>
+
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/services/shopService.js"></script>
+  <script src="/js/services/categoryService.js"></script>
+  <script src="/js/services/reportService.js"></script>
+  <script src="/js/pages/report/report.js"></script>
+  <script src="/js/core/splash.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+</body>
+</html>

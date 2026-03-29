@@ -1,0 +1,419 @@
+/* ======================================================
+ADMIN BLUE THEME
+ระบบ Design สำหรับหน้า Admin ทั้งระบบ
+โทนสีหลัก : Blue Professional
+
+ใช้กับ
+
+* Dashboard
+* Sales
+* Users
+* Reports
+* Products
+
+จุดประสงค์
+
+* ทำให้ UI เป็น theme เดียวกัน
+* แก้ปัญหาสีปนกัน
+* ทำให้ระบบดู professional
+  ====================================================== */
+
+/* ======================================================
+
+1. ROOT VARIABLES (Design System)
+
+---
+
+สีทั้งหมดของระบบควบคุมจากตรงนี้
+====================================================== */
+
+:root{
+
+/* ================= PRIMARY BLUE ================= */
+
+--primary-100:#e8f4fb;
+--primary-200:#d4ecfa;
+--primary-300:#b6def5;
+
+--primary-500:#1e88c9;
+--primary-600:#197bb6;
+--primary-700:#156aa0;
+
+/* ================= HEADER ================= */
+
+--header-blue:#1c86c8;
+
+/* ================= BACKGROUND ================= */
+
+--bg-page:#f4f7fb;
+--bg-card:#ffffff;
+--bg-soft:#eef6fc;
+
+/* ================= TEXT ================= */
+
+--text-main:#1e293b;
+--text-sub:#64748b;
+
+/* ================= BORDER ================= */
+
+--border-soft:#e5e7eb;
+
+/* ================= STATUS ================= */
+
+--success-bg:#e7f7ef;
+--success-text:#198754;
+
+--danger-bg:#fdeaea;
+--danger-text:#dc3545;
+
+/* ================= SHADOW ================= */
+
+--shadow-soft:0 4px 14px rgba(0,0,0,0.05);
+
+/* ================= RADIUS ================= */
+
+--radius-sm:8px;
+--radius-md:12px;
+--radius-lg:16px;
+
+}
+
+/* ======================================================
+2. RESET
+====================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+
+  font-family: "Kanit", sans-serif;
+
+  background: var(--bg-page);
+
+  color: var(--text-main);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ======================================================
+3. LAYOUT
+====================================================== */
+
+.container {
+  max-width: 1200px;
+
+  margin: auto;
+
+  padding: 24px 16px;
+}
+
+/* ======================================================
+4. HEADER
+====================================================== */
+
+.app-header {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 1000;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 10px 24px;
+
+  background: var(--primary-500);
+
+  color: white;
+
+  box-shadow: var(--shadow-soft);
+}
+
+/* LOGO */
+
+.app-header .logo {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.logo-circle {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.logo-circle img {
+  width: 70%;
+  height: 70%;
+
+  object-fit: contain;
+}
+
+.app-header h2 {
+  margin: 0;
+
+  font-size: 20px;
+
+  font-weight: 500;
+}
+
+/* ======================================================
+5. NAVIGATION
+====================================================== */
+
+.app-nav {
+  position: sticky;
+
+  top: 60px;
+
+  background: white;
+
+  border-bottom: 1px solid var(--border-soft);
+
+  padding: 10px 20px;
+
+  display: flex;
+
+  gap: 10px;
+}
+
+.app-nav a {
+  padding: 6px 14px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 13px;
+
+  color: var(--text-sub);
+
+  transition: 0.2s;
+}
+
+.app-nav a:hover {
+  background: var(--primary-100);
+
+  color: var(--primary-600);
+}
+
+.app-nav a.active {
+  background: var(--primary-600);
+
+  color: white;
+}
+
+/* ======================================================
+6. CARD
+====================================================== */
+
+.card {
+  background: var(--bg-card);
+
+  border-radius: var(--radius-md);
+
+  padding: 24px;
+
+  margin-bottom: 20px;
+
+  box-shadow: var(--shadow-soft);
+}
+
+/* ======================================================
+7. BUTTON SYSTEM
+====================================================== */
+
+.btn {
+  padding: 8px 16px;
+
+  border-radius: var(--radius-sm);
+
+  border: none;
+
+  cursor: pointer;
+
+  font-family: "Kanit", sans-serif;
+
+  font-size: 14px;
+}
+
+/* PRIMARY BUTTON */
+
+.btn-primary {
+  background: var(--primary-600);
+
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-700);
+}
+
+/* SECONDARY BUTTON */
+
+.btn-outline {
+  background: white;
+
+  border: 1px solid var(--border-soft);
+
+  color: var(--text-sub);
+}
+
+.btn-outline:hover {
+  background: var(--bg-soft);
+}
+
+/* DELETE BUTTON */
+
+.btn-danger {
+  background: var(--danger-bg);
+
+  color: var(--danger-text);
+}
+
+.btn-danger:hover {
+  background: #fee2e2;
+}
+
+/* ======================================================
+8. BADGE
+====================================================== */
+
+.badge {
+  display: inline-block;
+
+  padding: 4px 12px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+.badge-success {
+  background: var(--success-bg);
+
+  color: var(--success-text);
+}
+
+.badge-danger {
+  background: var(--danger-bg);
+
+  color: var(--danger-text);
+}
+
+/* ======================================================
+9. TABLE
+====================================================== */
+
+.table-wrap {
+  overflow-x: auto;
+
+  border-radius: var(--radius-md);
+
+  border: 1px solid var(--border-soft);
+}
+
+.data-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 14px;
+}
+
+.data-table thead {
+  background: var(--primary-600);
+
+  color: white;
+}
+
+.data-table th {
+  padding: 12px 16px;
+
+  text-align: left;
+}
+
+.data-table td {
+  padding: 12px 16px;
+
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg-soft);
+}
+
+/* ======================================================
+10. TAB
+====================================================== */
+
+.tab-bar {
+  display: flex;
+
+  gap: 10px;
+
+  margin-bottom: 20px;
+}
+
+.tab-item {
+  padding: 8px 18px;
+
+  border-radius: var(--radius-sm);
+
+  border: 1px solid var(--border-soft);
+
+  background: white;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.tab-item:hover {
+  background: var(--primary-100);
+}
+
+.tab-item.active {
+  background: var(--primary-600);
+
+  color: white;
+}
+
+/* ======================================================
+11. FOOTER
+====================================================== */
+
+.footer {
+  text-align: center;
+
+  font-size: 12px;
+
+  color: var(--text-soft);
+
+  padding: 16px;
+}
+
+/* ================= END ================= */

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Button Pattern Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+
+/* ============================================
+   RESET & BASE
+   ============================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Kanit', sans-serif;
+  background: #f4f6fb;
+  color: #1f2937;
+  min-height: 100vh;
+}
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.page-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 24px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+.page-header p {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 24px 40px 0;
+}
+.tab-btn {
+  padding: 9px 20px;
+  border-radius: 8px 8px 0 0;
+  border: none;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-family: 'Kanit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab-btn.active {
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 -1px 0 0 #e5e7eb inset;
+}
+
+.content {
+  background: #fff;
+  margin: 0 40px 40px;
+  border-radius: 0 12px 12px 12px;
+  border: 1px solid #e5e7eb;
+  padding: 36px;
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #f0f0f0;
+  margin: 28px 0;
+}
+
+/* ============================================
+   SECTION 1 — PILL BUTTONS
+   ============================================ */
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: default;
+  transition: filter 0.2s ease, transform 0.15s ease;
+}
+.pill:hover { filter: brightness(0.96); transform: translateY(-1px); }
+.pill .pill-icon {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pill--blue   { background-color: #ddeeff; color: #2b7fff; }
+.pill--orange { background-color: #fdecd8; color: #e8832a; }
+.pill--green  { background-color: #d9f5e5; color: #1aab5c; }
+.pill--sky    { background-color: #e0f2ff; color: #2c9de8; }
+.pill--red    { background-color: #fde8e8; color: #e84646; }
+.pill--purple { background-color: #ece8fb; color: #6b3fd4; }
+
+/* ============================================
+   SECTION 2 — STATUS BADGES
+   ============================================ */
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid currentColor;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: default;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+.badge:hover { opacity: 0.8; transform: translateY(-1px); }
+.badge .badge-icon {
+  width: 17px; height: 17px;
+  display: flex; align-items: center; justify-content: center;
+}
+.badge--queued        { color: #d94040; background-color: #fff0f0; border-color: #f5aaaa; }
+.badge--scheduled     { color: #d97a20; background-color: #fff6ec; border-color: #f5c98a; }
+.badge--email-sent    { color: #6ea832; background-color: #f4fbea; border-color: #bde58a; }
+.badge--connection    { color: #2aaa6e; background-color: #eafaf3; border-color: #84ddb4; }
+.badge--message-sent  { color: #1ea8a8; background-color: #e8fafa; border-color: #80d8d8; }
+.badge--email-replied { color: #2f6fcf; background-color: #eef4ff; border-color: #9abcf0; }
+.badge--auto-reply    { color: #3d4fbc; background-color: #f0f1fc; border-color: #a8b0e8; }
+.badge--linkedin      { color: #7a3fc0; background-color: #f5f0fc; border-color: #c4a0e8; }
+.badge--completed     { color: #c040a0; background-color: #fdf0fa; border-color: #f0a8e0; }
+.badge--bounced       { color: #e03060; background-color: #fff0f4; border-color: #f5a0b8; }
+
+/* ============================================
+   SECTION 3 — TOGGLE BUTTONS
+   ============================================ */
+.toggle-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+.col-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 14px;
+}
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Kanit', sans-serif;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  outline: none;
+  transition: all 0.18s ease;
+}
+.toggle-btn:active { transform: scale(0.96); }
+
+.toggle-btn.is-enabled {
+  background-color: #e8eaed;
+  color: #6b7280;
+  border: 1.5px solid transparent;
+}
+.toggle-btn.is-enabled:hover { background-color: #dde0e4; }
+
+/* Bold */
+.bold.is-selected { color: #fff; border: 1.5px solid transparent; }
+.bold.color-gray   { background-color: #4b5563; }
+.bold.color-blue   { background-color: #2563eb; }
+.bold.color-red    { background-color: #dc2626; }
+.bold.color-green  { background-color: #16a34a; }
+.bold.color-yellow { background-color: #ca8a04; }
+.bold.color-orange { background-color: #ea580c; }
+.bold.color-lime   { background-color: #4d7c0f; }
+.bold.color-teal   { background-color: #0f766e; }
+.bold.color-cyan   { background-color: #0e7490; }
+.bold.color-sky    { background-color: #0284c7; }
+.bold.color-indigo { background-color: #4338ca; }
+.bold.color-purple { background-color: #9333ea; }
+.bold.color-pink   { background-color: #db2777; }
+
+/* Subtle */
+.subtle.is-selected { border: 1.5px solid transparent; font-weight: 600; }
+.subtle.color-gray.is-selected   { background-color: #d1d5db; color: #374151; }
+.subtle.color-blue.is-selected   { background-color: #bfdbfe; color: #1d4ed8; }
+.subtle.color-red.is-selected    { background-color: #fecaca; color: #b91c1c; }
+.subtle.color-green.is-selected  { background-color: #bbf7d0; color: #15803d; }
+.subtle.color-yellow.is-selected { background-color: #fef08a; color: #a16207; }
+.subtle.color-orange.is-selected { background-color: #fed7aa; color: #c2410c; }
+.subtle.color-lime.is-selected   { background-color: #d9f99d; color: #3f6212; }
+.subtle.color-teal.is-selected   { background-color: #99f6e4; color: #0f766e; }
+.subtle.color-cyan.is-selected   { background-color: #a5f3fc; color: #0e7490; }
+.subtle.color-sky.is-selected    { background-color: #bae6fd; color: #0369a1; }
+.subtle.color-indigo.is-selected { background-color: #c7d2fe; color: #3730a3; }
+.subtle.color-purple.is-selected { background-color: #e9d5ff; color: #7e22ce; }
+.subtle.color-pink.is-selected   { background-color: #fbcfe8; color: #be185d; }
+
+/* Minimal */
+.minimal.is-enabled {
+  background-color: #fff;
+  border: 1.5px solid #d1d5db;
+  color: #6b7280;
+}
+.minimal.is-selected { background-color: transparent; font-weight: 600; }
+.minimal.color-gray.is-selected   { border: 1.5px solid #9ca3af; color: #374151; background-color: #f9fafb; }
+.minimal.color-blue.is-selected   { border: 1.5px solid #93c5fd; color: #2563eb; background-color: #eff6ff; }
+.minimal.color-red.is-selected    { border: 1.5px solid #fca5a5; color: #dc2626; background-color: #fff5f5; }
+.minimal.color-green.is-selected  { border: 1.5px solid #86efac; color: #16a34a; background-color: #f0fdf4; }
+.minimal.color-yellow.is-selected { border: 1.5px solid #fde047; color: #ca8a04; background-color: #fefce8; }
+.minimal.color-orange.is-selected { border: 1.5px solid #fdba74; color: #ea580c; background-color: #fff7ed; }
+.minimal.color-lime.is-selected   { border: 1.5px solid #bef264; color: #65a30d; background-color: #f7fee7; }
+.minimal.color-teal.is-selected   { border: 1.5px solid #5eead4; color: #0f766e; background-color: #f0fdfa; }
+.minimal.color-cyan.is-selected   { border: 1.5px solid #67e8f9; color: #0e7490; background-color: #ecfeff; }
+.minimal.color-sky.is-selected    { border: 1.5px solid #7dd3fc; color: #0284c7; background-color: #f0f9ff; }
+.minimal.color-indigo.is-selected { border: 1.5px solid #a5b4fc; color: #4338ca; background-color: #eef2ff; }
+.minimal.color-purple.is-selected { border: 1.5px solid #d8b4fe; color: #9333ea; background-color: #faf5ff; }
+.minimal.color-pink.is-selected   { border: 1.5px solid #f9a8d4; color: #db2777; background-color: #fdf2f8; }
+
+@media (max-width: 640px) {
+  .tabs { padding: 16px 16px 0; }
+  .content { margin: 0 16px 24px; padding: 20px; }
+  .toggle-columns { grid-template-columns: 1fr; }
+  .page-header { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Button Pattern Library</h1>
+  <p>Pill Buttons · Status Badges · Toggle Buttons</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="pills">🟢 Pill Buttons</button>
+  <button class="tab-btn" data-tab="badges">🔴 Status Badges</button>
+  <button class="tab-btn" data-tab="toggles">🔵 Toggle Buttons</button>
+</div>
+
+<div class="content">
+
+  <!-- ===== SECTION 1: PILL BUTTONS ===== -->
+  <div class="section active" id="pills">
+    <div class="section-title">Pill Buttons — Info Tags</div>
+    <div class="pill-grid">
+      <span class="pill pill--blue">
+        <span class="pill-icon"><span class="material-symbols-rounded" style="font-size:17px">calendar_month</span></span>
+        March 09 — 16
+      </span>
+      <span class="pill pill--orange">
+        <span class="pill-icon"><span class="material-symbols-rounded" style="font-size:17px">autorenew</span></span>
+        Weekly
+      </span>
+      <span class="pill pill--green">
+        <span class="pill-icon"><span class="material-symbols-rounded" style="font-size:17px">videocam</span></span>
+        Zoom
+      </span>
+      <span class="pill pill--sky">
+        <span class="pill-icon"><span class="material-symbols-rounded" style="font-size:17px">near_me</span></span>
+        Herengracht 133, Amsterdam
+      </span>
+      <span class="pill pill--red">
+        <span class="pill-icon"><span class="material-symbols-rounded" style="font-size:17px">person</span></span>
+        Participants
+      </span>
+      <span class="pill pill--purple">
+        <span class="pill-icon"><span class="material-symbols-rounded" style="font-size:17px">schedule</span></span>
+        12:00 — 13:00
+      </span>
+    </div>
+
+    <hr class="divider"/>
+    <div class="section-title">Color Classes</div>
+    <div class="pill-grid">
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">pill--blue</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">pill--orange</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">pill--green</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">pill--sky</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">pill--red</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">pill--purple</code>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 2: STATUS BADGES ===== -->
+  <div class="section" id="badges">
+    <div class="section-title">Status Badges — Outlined</div>
+    <div class="badge-grid">
+      <span class="badge badge--queued">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">timer</span></span>
+        Queued
+      </span>
+      <span class="badge badge--scheduled">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">schedule</span></span>
+        Scheduled
+      </span>
+      <span class="badge badge--email-sent">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">send</span></span>
+        Email Sent
+      </span>
+      <span class="badge badge--connection">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">link</span></span>
+        Connection Made
+      </span>
+      <span class="badge badge--message-sent">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">forward_to_inbox</span></span>
+        Message Sent
+      </span>
+      <span class="badge badge--email-replied">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">mark_email_read</span></span>
+        Email Replied
+      </span>
+      <span class="badge badge--auto-reply">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">reply</span></span>
+        Automated Reply
+      </span>
+      <span class="badge badge--linkedin">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">reply</span></span>
+        LinkedIn Reply
+      </span>
+      <span class="badge badge--completed">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">check</span></span>
+        Completed
+      </span>
+      <span class="badge badge--bounced">
+        <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:16px">chat_error</span></span>
+        Bounced
+      </span>
+    </div>
+
+    <hr class="divider"/>
+    <div class="section-title">Color Classes</div>
+    <div class="badge-grid">
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--queued</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--scheduled</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--email-sent</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--connection</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--message-sent</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--email-replied</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--auto-reply</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--linkedin</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--completed</code>
+      <code style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:4px 10px;border-radius:6px">badge--bounced</code>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 3: TOGGLE BUTTONS ===== -->
+  <div class="section" id="toggles">
+    <div class="section-title">Toggle Buttons — 3 Styles × 13 Colors (กดได้จริง)</div>
+    <div class="toggle-columns">
+
+      <!-- BOLD -->
+      <div>
+        <div class="col-label">Bold</div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-gray">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-blue">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-red">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-green">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-yellow">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-orange">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-lime">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-teal">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-cyan">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-sky">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-indigo">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-purple">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn bold is-selected color-pink">Selected</button></div>
+      </div>
+
+      <!-- SUBTLE -->
+      <div>
+        <div class="col-label">Subtle</div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-gray">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-blue">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-red">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-green">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-yellow">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-orange">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-lime">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-teal">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-cyan">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-sky">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-indigo">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-purple">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn is-enabled">Enabled</button><button class="toggle-btn subtle is-selected color-pink">Selected</button></div>
+      </div>
+
+      <!-- MINIMAL -->
+      <div>
+        <div class="col-label">Minimal</div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-gray">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-blue">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-red">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-green">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-yellow">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-orange">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-lime">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-teal">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-cyan">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-sky">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-indigo">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-purple">Selected</button></div>
+        <div class="toggle-row"><button class="toggle-btn minimal is-enabled">Enabled</button><button class="toggle-btn minimal is-selected color-pink">Selected</button></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Toggle button interaction
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('is-enabled')) {
+        const row = btn.closest('.toggle-row');
+        const selected = row.querySelector('.is-selected');
+        if (selected) {
+          selected.classList.replace('is-selected', 'is-enabled');
+          btn.classList.replace('is-enabled', 'is-selected');
+        }
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

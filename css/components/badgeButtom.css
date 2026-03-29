@@ -1,0 +1,151 @@
+/* ============================================
+   Status Badge Pattern — Outlined Style
+   มี border + background อ่อน + icon + text
+   ภาพอ้างอิง: Queued, Scheduled, Email Sent,
+   Connection Made, Message Sent, Email Replied,
+   Automated Reply, LinkedIn Reply, Completed, Bounced
+   ============================================ */
+
+/* --- Base badge --- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid currentColor;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: default;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.badge:hover {
+  opacity: 0.6;
+  transform: translateY(-1px);
+}
+
+.badge .badge-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   Color Variants (outlined — border + soft bg)
+   ============================================ */
+
+/* 🔴 Red — Queued */
+.badge--queued {
+  color: #d94040;
+  background-color: #fff0f0;
+  border-color: #f5aaaa;
+}
+
+/* 🟠 Orange — Scheduled */
+.badge--scheduled {
+  color: #d97a20;
+  background-color: #fff6ec;
+  border-color: #f5c98a;
+}
+
+/* 🟡 Yellow-Green — Email Sent */
+.badge--email-sent {
+  color: #6ea832;
+  background-color: #f4fbea;
+  border-color: #bde58a;
+}
+
+/* 🟢 Green — Connection Made */
+.badge--connection {
+  color: #2aaa6e;
+  background-color: #eafaf3;
+  border-color: #84ddb4;
+}
+
+/* 🩵 Teal — Message Sent */
+.badge--message-sent {
+  color: #1ea8a8;
+  background-color: #e8fafa;
+  border-color: #80d8d8;
+}
+
+/* 🔵 Blue — Email Replied */
+.badge--email-replied {
+  color: #2f6fcf;
+  background-color: #eef4ff;
+  border-color: #9abcf0;
+}
+
+/* 🔷 Indigo — Automated Reply */
+.badge--auto-reply {
+  color: #3d4fbc;
+  background-color: #f0f1fc;
+  border-color: #a8b0e8;
+}
+
+/* 🟣 Purple — LinkedIn Reply */
+.badge--linkedin {
+  color: #7a3fc0;
+  background-color: #f5f0fc;
+  border-color: #c4a0e8;
+}
+
+/* 🩷 Pink — Completed */
+.badge--completed {
+  color: #c040a0;
+  background-color: #fdf0fa;
+  border-color: #f0a8e0;
+}
+
+/* 🔴 Hot Pink — Bounced */
+.badge--bounced {
+  color: #e03060;
+  background-color: #fff0f4;
+  border-color: #f5a0b8;
+}
+
+/* ============================================
+   Size Variants
+   ============================================ */
+
+.badge--sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  gap: 6px;
+  border-radius: 8px;
+}
+.badge--sm .badge-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.badge--lg {
+  padding: 11px 20px;
+  font-size: 15px;
+  gap: 10px;
+  border-radius: 12px;
+}
+.badge--lg .badge-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   Clickable Variant
+   ============================================ */
+
+.badge--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.badge--clickable:active {
+  transform: scale(0.97);
+  opacity: 0.7;
+}

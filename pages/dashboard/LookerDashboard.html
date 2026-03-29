@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — EABaseHub</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/pages/dashboard/LookerDashboard.css" />
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-left">
+    <span class="logo-badge">EA</span>
+    <span class="page-title">EABaseHub</span>
+  </div>
+  <div class="header-right">
+    <button class="btn-icon" title="รีเฟรช" onclick="reloadEmbed()">
+      <span class="material-icons-round" style="font-size:18px">refresh</span>
+    </button>
+    <button class="btn-icon" title="เต็มจอ" onclick="toggleFullscreen()">
+      <span class="material-icons-round" style="font-size:18px">open_in_full</span>
+    </button>
+    <button class="btn-primary" onclick="openModal()">
+      <span class="material-icons-round" style="font-size:16px">add_link</span>
+      ใส่ Looker URL
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside>
+    <div class="sidebar-section">เมนูหลัก</div>
+    <a class="nav-item" href="#"><span class="material-icons-round">home</span> หน้าหลัก</a>
+    <a class="nav-item active" href="#"><span class="material-icons-round">bar_chart</span> Dashboard <span class="nav-badge">Looker</span></a>
+    <a class="nav-item" href="#"><span class="material-icons-round">receipt_long</span> รายงานยอดขาย</a>
+    <a class="nav-item" href="#"><span class="material-icons-round">inventory_2</span> สต็อกสินค้า</a>
+    <a class="nav-item" href="#"><span class="material-icons-round">store</span> จัดการร้านค้า</a>
+
+    <div class="sidebar-section">อื่นๆ</div>
+    <a class="nav-item" href="#"><span class="material-icons-round">settings</span> ตั้งค่า</a>
+    <a class="nav-item" href="#"><span class="material-icons-round">help_outline</span> ช่วยเหลือ</a>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="toolbar-label">Looker Dashboard</span>
+        <span class="toolbar-sub" id="subLabel">ยังไม่ได้ตั้งค่า URL — กด "ใส่ Looker URL" เพื่อเริ่ม</span>
+      </div>
+      <div class="toolbar-right">
+        <div class="date-range">
+          <span class="material-icons-round" style="font-size:16px;color:var(--muted)">calendar_today</span>
+          <span id="dateLabel">วันนี้</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME -->
+    <div class="frame-wrapper">
+      <div class="frame-header">
+        <div class="frame-title">
+          <div class="dot" id="statusDot" style="background:var(--muted)"></div>
+          <span id="frameTitle">รอ URL</span>
+        </div>
+        <div class="frame-actions">
+          <button class="btn-icon" title="คัดลอก URL" onclick="copyUrl()">
+            <span class="material-icons-round" style="font-size:16px">content_copy</span>
+          </button>
+          <button class="btn-icon" title="เปิดใน Looker" onclick="openInLooker()">
+            <span class="material-icons-round" style="font-size:16px">open_in_new</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="iframe-zone">
+
+        <!-- Placeholder (แสดงก่อนมี URL) -->
+        <div class="placeholder" id="placeholder">
+          <div class="placeholder-icon">
+            <span class="material-icons-round">insert_chart</span>
+          </div>
+          <h2>ยังไม่มี Dashboard</h2>
+          <p>วาง URL หรือ Embed Code จาก Looker Studio แล้วกดโหลด เพื่อแสดง Dashboard ในหน้านี้</p>
+          <div class="url-input-row">
+            <input class="url-input" id="inlineUrlInput" type="url"
+              placeholder="https://lookerstudio.google.com/embed/..." />
+            <button class="btn-primary" onclick="loadFromInline()">
+              <span class="material-icons-round" style="font-size:16px">play_arrow</span>
+              โหลด
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div class="loading-overlay hidden" id="loadingOverlay">
+          <div class="spinner"></div>
+          <span class="loading-text">กำลังโหลด Dashboard...</span>
+        </div>
+
+        <!-- Iframe จริง (ซ่อนจนกว่าจะมี URL) -->
+        <iframe
+          class="looker-embed"
+          id="lookerFrame"
+          src="about:blank"
+          allowfullscreen
+          style="display:none"
+          onload="onFrameLoad()"
+        ></iframe>
+
+      </div>
+
+      <div class="status-bar">
+        <div class="status-left">
+          <div class="status-dot" id="connDot" style="background:var(--muted)"></div>
+          <span id="connStatus">ไม่ได้เชื่อมต่อ</span>
+        </div>
+        <span id="lastUpdate">—</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">🔗 ตั้งค่า Looker Dashboard</div>
+    <div class="modal-desc">
+      ใส่ URL จาก Looker Studio<br>
+      <strong>วิธีรับ URL:</strong> เปิด Dashboard → Share → Embed → คัดลอก iframe src
+    </div>
+    <div class="form-group">
+      <label class="form-label">LOOKER EMBED URL</label>
+      <input class="form-input" id="modalUrlInput" type="url"
+        placeholder="https://lookerstudio.google.com/embed/reporting/..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">ชื่อ Dashboard (ไม่บังคับ)</label>
+      <input class="form-input" id="modalNameInput" type="text"
+        placeholder="เช่น ยอดขายรายเดือน Q2 2025" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="applyUrl()">
+        <span class="material-icons-round" style="font-size:16px">check</span>
+        โหลด Dashboard
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Script -->
+<script src="/js/pages/dashboard/LookerDashboard.js"></script>
+</body>
+</html>

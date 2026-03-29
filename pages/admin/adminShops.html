@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EABaseHub | จัดการสิทธิ์ร้านค้า</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base/adminBase.css">
+  <link rel="stylesheet" href="/css/pages/admin/adminShops.css">
+  <link rel="stylesheet" href="/css/pages/admin/admintor.css">
+</head>
+
+<body>
+
+  <!-- APP HEADER -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="app-nav">
+    <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>
+    <a href="/pages/admin/adminShops.html" class="active">การจัดการสิทธิ์</a>    
+    <a href="/pages/admin/AddProductSpec.html">การจัดการสินค้า</a>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="page-wrapper">
+    <div class="admin-card">
+
+      <!-- CARD HEADER -->
+      <div class="card-header-row">
+        <div class="card-title">
+          <span class="material-symbols-outlined">storefront</span>
+          จัดการผู้ใช้และสิทธิ์
+        </div>
+        <button onclick="goHome()" class="btn-back">
+          <span class="material-symbols-outlined">arrow_back</span>
+          กลับหน้าหลัก
+        </button>
+      </div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <a class="tab-item" href="/pages/admin/admintor.html">
+          <span class="material-symbols-outlined">people</span>
+          ผู้ใช้งาน
+        </a>
+        <a class="tab-item" href="/pages/admin/adminSales.html">
+          <span class="material-symbols-outlined">badge</span>
+          Sales
+        </a>
+        <a class="tab-item tab-active" href="/pages/admin/adminShops.html">
+          <span class="material-symbols-outlined">storefront</span>
+          สิทธิ์ร้านค้า
+        </a>
+      </div>
+
+      <!-- SALES SELECTOR -->
+      <div class="selector-row">
+        <label class="selector-label">
+          <span class="material-symbols-outlined">badge</span>
+          เลือก Sales
+        </label>
+        <select id="selectSaleForPerm" onchange="loadSaleShops()">
+          <option value="">-- เลือก Sales --</option>
+        </select>
+      </div>
+
+      <!-- TOOLBAR (ค้นหา + filter จังหวัด + เพิ่ม) -->
+      <div class="shop-toolbar" id="shopToolbar" style="display:none">
+        <div class="search-wrap">
+          <span class="material-symbols-outlined search-ic">search</span>
+          <input
+            type="text"
+            id="searchShop"
+            placeholder="ค้นหาร้านค้า..."
+            oninput="filterShops()"
+          >
+        </div>
+        <!-- ★ NEW: filter จังหวัด -->
+        <div class="search-wrap" style="min-width:160px;flex:0 0 auto">
+          <span class="material-symbols-outlined search-ic">location_on</span>
+          <select id="filterProvince" onchange="filterShops()" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:0.92rem;padding-left:4px;width:100%">
+            <option value="">ทุกจังหวัด</option>
+            <option>กระบี่</option><option>กรุงเทพมหานคร</option><option>กาญจนบุรี</option>
+            <option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option>
+            <option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option>
+            <option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option>
+            <option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option>
+            <option>ตราด</option><option>ตาก</option><option>นครนายก</option>
+            <option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option>
+            <option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option>
+            <option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option>
+            <option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option>
+            <option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option>
+            <option>พะเยา</option><option>พังงา</option><option>พัทลุง</option>
+            <option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option>
+            <option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option>
+            <option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option>
+            <option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option>
+            <option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option>
+            <option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option>
+            <option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option>
+            <option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option>
+            <option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option>
+            <option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option>
+            <option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option>
+            <option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option>
+            <option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option>
+            <option>อุทัยธานี</option><option>อุบลราชธานี</option>
+          </select>
+        </div>
+        <button class="btn-add" onclick="openAddModal(window.currentSaleId)">
+          <span class="material-symbols-outlined">add</span>
+          เพิ่มร้านค้า
+        </button>
+      </div>
+
+      <!-- SHOP COUNT BAR -->
+      <div id="shopCountBar" style="display:none" class="shop-count-bar">
+        <span class="material-symbols-outlined">store</span>
+        <span id="shopCountText">0 ร้านค้า</span>
+      </div>
+
+      <!-- ★ NEW: BULK ACTION BAR (ซ่อนอยู่ จนกว่าจะเลือก) -->
+      <div id="bulkBar" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="material-symbols-outlined" style="color:#2563eb">check_box</span>
+        <span id="bulkCount" style="font-weight:600;color:#1e40af;font-size:0.95rem">เลือก 0 ร้าน</span>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-icon btn-transfer" onclick="bulkTransfer()" style="font-size:0.85rem">
+            <span class="material-symbols-outlined">swap_horiz</span>โอนที่เลือก
+          </button>
+          <button class="btn-icon btn-unlink" onclick="bulkUnlink()" style="font-size:0.85rem">
+            <span class="material-symbols-outlined">link_off</span>ยกเลิกสิทธิ์ที่เลือก
+          </button>
+          <button class="btn-icon btn-delete" onclick="bulkDelete()" style="font-size:0.85rem">
+            <span class="material-symbols-outlined">delete_sweep</span>ลบที่เลือก
+          </button>
+          <button class="btn-icon" onclick="clearSelection()" style="font-size:0.85rem;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb">
+            <span class="material-symbols-outlined">deselect</span>ยกเลิกเลือก
+          </button>
+        </div>
+      </div>
+
+      <!-- SHOP TABLE -->
+      <div id="permissionsContainer">
+        <div class="empty-state">
+          <span class="material-symbols-outlined empty-icon">storefront</span>
+          <div>เลือก Sales เพื่อดูสิทธิ์ร้านค้า</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL เพิ่ม/แก้ไขร้านค้า -->
+  <div id="shopModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">เพิ่มร้านค้า</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="shopId">
+        <div class="form-group">
+          <label>รหัสร้าน</label>
+          <input type="text" id="shopCode" placeholder="กรอกรหัสร้าน (ถ้ามี)">
+        </div>
+        <div class="form-group">
+          <label>ชื่อร้านค้า <span class="req">*</span></label>
+          <input type="text" id="shopName" placeholder="กรอกชื่อร้าน">
+        </div>
+        <div class="form-group">
+          <label>จังหวัด</label>
+          <select id="shopProvince">
+            <option value="">-- เลือกจังหวัด --</option>
+            <option>กระบี่</option><option>กรุงเทพมหานคร</option><option>กาญจนบุรี</option>
+            <option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option>
+            <option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option>
+            <option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option>
+            <option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option>
+            <option>ตราด</option><option>ตาก</option><option>นครนายก</option>
+            <option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option>
+            <option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option>
+            <option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option>
+            <option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option>
+            <option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option>
+            <option>พะเยา</option><option>พังงา</option><option>พัทลุง</option>
+            <option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option>
+            <option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option>
+            <option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option>
+            <option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option>
+            <option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option>
+            <option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option>
+            <option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option>
+            <option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option>
+            <option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option>
+            <option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option>
+            <option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option>
+            <option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option>
+            <option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option>
+            <option>อุทัยธานี</option><option>อุบลราชธานี</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn-save" onclick="saveShop()">
+          <span class="material-symbols-outlined">save</span>
+          บันทึก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL โอนร้านค้า (รองรับทั้ง single + bulk) -->
+  <div id="transferModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>โอนร้านค้าไปยัง Sales อื่น</h3>
+        <button class="modal-close" onclick="closeTransferModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- hidden: เก็บ mode (single|bulk) และ shopId เดี่ยว -->
+        <input type="hidden" id="transferMode" value="single">
+        <input type="hidden" id="transferShopId">
+        <!-- แสดงจำนวนร้านที่จะโอน (bulk) -->
+        <div id="transferBulkInfo" style="display:none;margin-bottom:12px;padding:8px 12px;background:#eff6ff;border-radius:8px;color:#1e40af;font-size:0.9rem">
+          <span class="material-symbols-outlined" style="vertical-align:middle;font-size:16px">info</span>
+          <span id="transferBulkCount"></span>
+        </div>
+        <div class="form-group">
+          <label>เลือก Sales ใหม่</label>
+          <select id="transferSaleSelect">
+            <option value="">-- เลือก Sales --</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeTransferModal()">ยกเลิก</button>
+        <button class="btn-save" onclick="confirmTransfer()">
+          <span class="material-symbols-outlined">swap_horiz</span>
+          ยืนยันโอน
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/pages/admin/adminShops.js"></script>
+
+</body>
+</html>
