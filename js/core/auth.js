@@ -1,5 +1,6 @@
 // ======================================================
 // auth.js
+// SUPABASE MkPvt-2026 [Prod]
 // ไฟล์นี้ใช้สำหรับจัดการระบบ Authentication ของระบบ
 // เช่น Login / Register / Protect Page / Logout
 // โดยใช้ Supabase Authentication
