@@ -14,8 +14,8 @@ if (typeof supabase === 'undefined') {
 // สร้าง Supabase Client
 // ใช้ตัวแปร global เพื่อให้เข้าถึงได้จากทุกไฟล์
 const supabaseClient = supabase.createClient(
-  "https://avtlvhrxqcivtiiwcjxg.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dGx2aHJ4cWNpdnRpaXdjanhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODI4MzIsImV4cCI6MjA5MDM1ODgzMn0.CBIwKdj7kcnSMSFZoM3uu2L5YtJ_0zm8Tfa-0lu0Bbg"
+  "https://kdgmilagtpizwnhwapgl.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZ21pbGFndHBpenduaHdhcGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTYzMjgsImV4cCI6MjA5MDQzMjMyOH0.v-TtDtF7RfwxA-qxpvIBquTI8lBaTkiHQ-M7Maf5jeU"
 );
 
 
