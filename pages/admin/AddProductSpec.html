@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EABaseHub | จัดการข้อมูลสินค้า</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <link rel="stylesheet" href="/css/pages/admin/AddProductSpec.css"/>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"/></div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div class="user-name" id="userName">Admin</div>
+      <button class="logout-btn" id="logoutBtn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+
+  <!-- NAV -->
+  <nav class="app-nav">
+    <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>    
+    <a href="/pages/admin/admintor.html">การจัดการสิทธิ์</a>
+    <a href="/pages/admin/AddProductSpec.html" class="active">การจัดการสินค้า</a>    
+  </nav>
+
+  <!-- MODAL OVERLAY -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+  <!-- MODAL -->
+  <div class="am-modal" id="amModal">
+    <div class="am-modal-header">
+      <h3 id="modalTitle">เพิ่มข้อมูล</h3>
+      <button class="am-modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="am-modal-body" id="modalBody"></div>
+    <div class="am-modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-save" id="modalSaveBtn" onclick="modalSave()">💾 บันทึก</button>
+    </div>
+  </div>
+
+  <!-- PAGE -->
+  <div class="am-page">
+
+    <div class="am-page-header">
+      <div>
+        <h1>🗂️ จัดการข้อมูลสินค้า</h1>
+        <p>เพิ่ม แก้ไข ลบ ข้อมูลในตารางทั้งหมด — ไม่ต้องเข้า Supabase โดยตรง</p>
+      </div>
+    </div>
+
+    <!-- TAB NAV -->
+    <div class="am-tabs">
+      <button class="am-tab active" data-tab="cat">📂 หมวดหมู่</button>
+      <button class="am-tab" data-tab="prod">📦 สินค้า</button>
+      <button class="am-tab" data-tab="attr">🏷️ Attributes</button>
+      <!-- <button class="am-tab" data-tab="var">🔩 Variants</button> -->
+      <button class="am-tab" data-tab="opt">⚙️ Options</button>
+    </div>
+
+    <!-- ═══ TAB: CATEGORIES ═══ -->
+    <div class="am-panel active" id="tab-cat">
+      <div class="am-toolbar">
+        <span class="am-count" id="cat-count">0 รายการ</span>
+        <button class="btn-add" onclick="openAdd('cat')">+ เพิ่มหมวดหมู่</button>
+      </div>
+      <div class="am-table-wrap">
+        <table class="am-table">
+          <thead><tr>
+            <th>ชื่อหมวดหมู่</th>
+            <th>วันที่สร้าง</th>
+            <th style="width:120px">จัดการ</th>
+          </tr></thead>
+          <tbody id="cat-body">
+            <tr><td colspan="3" class="am-empty">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: PRODUCTS ═══ -->
+    <div class="am-panel" id="tab-prod">
+      <div class="am-toolbar">
+        <div class="am-filters">
+          <select id="prod-filter-cat" onchange="loadProducts()">
+            <option value="">ทุกหมวดหมู่</option>
+          </select>
+        </div>
+        <span class="am-count" id="prod-count">0 รายการ</span>
+        <button class="btn-add" onclick="openAdd('prod')">+ เพิ่มสินค้า</button>
+      </div>
+      <div class="am-table-wrap">
+        <table class="am-table">
+          <thead><tr>
+            <th>ชื่อสินค้า</th>
+            <th>หมวดหมู่</th>
+            <th>SKU</th>
+            <th>คำอธิบาย</th>
+            <th style="width:120px">จัดการ</th>
+          </tr></thead>
+          <tbody id="prod-body">
+            <tr><td colspan="5" class="am-empty">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: ATTRIBUTES ═══ -->
+    <!-- FIX #1/#2: เปลี่ยน header คอลัมน์ 2 จาก "หมวดหมู่" → "สินค้า" ให้ตรงกับ JS -->
+    <div class="am-panel" id="tab-attr">
+      <div class="am-toolbar">
+        <div class="am-filters">
+          <select id="attr-filter-cat" onchange="loadAttributes()">
+            <option value="">ทุกหมวดหมู่</option>
+          </select>
+        </div>
+        <span class="am-count" id="attr-count">0 รายการ</span>
+        <button class="btn-add" onclick="openAdd('attr')">+ เพิ่ม Attribute</button>
+      </div>
+      <div class="am-table-wrap">
+        <table class="am-table">
+          <thead><tr>
+            <th>ชื่อ Attribute</th>
+            <th>สินค้า</th><!-- แก้จาก "หมวดหมู่" → "สินค้า" -->
+            <th>ประเภท Input</th>
+            <th>ลำดับ</th>
+            <th style="width:120px">จัดการ</th>
+          </tr></thead>
+          <tbody id="attr-body">
+            <tr><td colspan="5" class="am-empty">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: VARIANTS ═══ -->
+    <div class="am-panel" id="tab-var">
+      <div class="am-toolbar">
+        <div class="am-filters">
+          <select id="var-filter-cat" onchange="onVarFilterCat()">
+            <option value="">ทุกหมวด</option>
+          </select>
+          <select id="var-filter-prod" onchange="loadVariants()">
+            <option value="">ทุกสินค้า</option>
+          </select>
+        </div>
+        <span class="am-count" id="var-count">0 รายการ</span>
+        <button class="btn-add" onclick="openAdd('var')">+ เพิ่ม Variant</button>
+      </div>
+      <div class="am-table-wrap">
+        <table class="am-table">
+          <thead><tr>
+            <th>สินค้า</th>
+            <th>SKU</th>
+            <th>สี</th>
+            <th>ยาว</th>
+            <th>กว้าง</th>
+            <th>หนา</th>
+            <th>ยี่ห้อ</th>
+            <th>Feature</th>
+            <th>Status</th>
+            <th style="width:120px">จัดการ</th>
+          </tr></thead>
+          <tbody id="var-body">
+            <tr><td colspan="10" class="am-empty">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: OPTIONS ═══ -->
+    <div class="am-panel" id="tab-opt">
+      <div class="am-toolbar">
+        <div class="am-filters">
+          <select id="opt-filter-cat" onchange="onOptFilterCat()">
+            <option value="">ทุกหมวด</option>
+          </select>
+          <select id="opt-filter-attr" onchange="loadOptions()">
+            <option value="">ทุก Attribute</option>
+          </select>
+        </div>
+        <span class="am-count" id="opt-count">0 รายการ</span>
+        <button class="btn-add" onclick="openAdd('opt')">+ เพิ่ม Option</button>
+      </div>
+      <div class="am-table-wrap">
+        <table class="am-table">
+          <thead><tr>
+            <th>ค่า (Value)</th>
+            <th>Attribute</th>
+            <th>หมวดหมู่</th>
+            <th style="width:100px">จัดการ</th>
+          </tr></thead>
+          <tbody id="opt-body">
+            <tr><td colspan="4" class="am-empty">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- end am-page -->
+
+  <!-- TOAST -->
+  <div id="amToast" class="am-toast"></div>
+
+  <footer class="footer">© 2026 EABaseHub | จัดการข้อมูลสินค้า</footer>
+
+  <script src="/js/pages/admin/AddProductSpec.js"></script>
+</body>
+</html>

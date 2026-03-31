@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EABaseHub | Clims QC</title>
+
+  <!-- ป้องกัน flash: อ่านค่าก่อน render -->
+  <script>
+    (function(){ var t=localStorage.getItem('ea-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();
+  </script>
+
+  <!-- Fonts -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"> -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/base/adminBase.css">
+  <link rel="stylesheet" href="/css/pages/admin/adminQc.css">
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+
+      <div class="group">
+  <span class="badge badge--message-sent">
+    <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:17px">Logout</span></span>
+    ออกจจากระบบ
+  </span>
+      </div>
+
+  </header>
+  
+
+  <!-- ── NAV ── -->
+  <nav class="app-nav">
+    <a href="/pages/dashboard/QcDashboard.html">Dashboard</a>
+    <a href="/pages/admin/adminQc.html" class="active">จัดการสินค้าส่งเคลม</a>
+    <a href="/UnderDev.html">ผลการพิจารณา</a>
+  </nav>
+
+  <!-- ── PAGE HEADER ── -->
+  <header class="page-header">
+    <h1>ระบบจัดการสินค้าส่งเคลม</h1>
+    <p>ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main class="container">
+
+    <!-- SUMMARY CARDS -->
+    <div class="qc-summary">
+      <div class="summary-card total">
+        <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
+        <div class="summary-info">
+          <div class="summary-num" id="sumTotal">—</div>
+          <div class="summary-label">ทั้งหมด</div>
+        </div>
+      </div>
+      <div class="summary-card pending">
+        <div class="summary-icon"><span class="material-symbols-outlined">pending</span></div>
+        <div class="summary-info">
+          <div class="summary-num" id="sumPending">—</div>
+          <div class="summary-label">รออนุมัติ</div>
+        </div>
+      </div>
+      <div class="summary-card approved">
+        <div class="summary-icon"><span class="material-symbols-outlined">check_circle</span></div>
+        <div class="summary-info">
+          <div class="summary-num" id="sumApproved">—</div>
+          <div class="summary-label">อนุมัติแล้ว</div>
+        </div>
+      </div>
+      <div class="summary-card rejected">
+        <div class="summary-icon"><span class="material-symbols-outlined">cancel</span></div>
+        <div class="summary-info">
+          <div class="summary-num" id="sumRejected">—</div>
+          <div class="summary-label">ปฏิเสธ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="qc-filter-bar">
+      <div class="filter-group" style="flex:2;min-width:220px;">
+        <span class="material-symbols-outlined filter-icon">search</span>
+        <input type="text" id="searchInput" placeholder="ค้นหาสินค้า / ร้านค้า / พนักงาน...">
+      </div>
+      <div class="filter-group">
+        <span class="material-symbols-outlined filter-icon">calendar_month</span>
+        <input type="date" id="filterDateFrom" title="จากวันที่">
+        <span class="filter-sep">–</span>
+        <input type="date" id="filterDateTo" title="ถึงวันที่">
+      </div>
+      <div class="filter-group" style="min-width:140px;flex:0;">
+        <span class="material-symbols-outlined filter-icon">flag</span>
+        <select id="filterStatus">
+          <option value="">ทุกสถานะ</option>
+          <option value="submitted">รออนุมัติ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ปฏิเสธ</option>
+        </select>
+      </div>
+      <button class="btn-filter-reset" onclick="resetFilters()">
+        <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+      </button>
+      <button class="btn-export-excel" onclick="exportExcel()">
+        <span class="material-symbols-outlined">table_view</span> Excel
+      </button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="qc-main">
+      <div class="table-wrap">
+        <table class="qc-table" id="qcTable">
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>พนักงาน / เขต</th>
+              <th>ร้านค้า</th>
+              <th>สินค้า</th>
+              <th>ประเภทปัญหา</th>
+              <th>ไฟล์</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="qcTableBody">
+            <tr>
+              <td colspan="8" class="table-loading">
+                <span class="material-symbols-outlined spin">progress_activity</span>
+                กำลังโหลด...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── MODAL ── -->
+  <div class="qc-modal" id="qcModal">
+    <div class="qc-modal-box">
+
+      <div class="qc-modal-header">
+        <div class="qc-modal-title">
+          <span class="material-symbols-outlined">manage_search</span>
+          <span id="modalTitle">รายละเอียดเคลม</span>
+        </div>
+        <div class="qc-modal-header-actions">
+          <button class="btn-export-pdf" onclick="exportPDF()">
+            <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+          </button>
+          <button class="modal-close-btn" onclick="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="qc-modal-body">
+
+        <div class="modal-section">
+          <div class="modal-info-grid" id="modalInfoGrid"></div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">warning</span> ประเภทปัญหา
+          </div>
+          <div class="modal-claim-types" id="modalClaimTypes"></div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">notes</span> รายละเอียด
+          </div>
+          <div class="modal-detail-box" id="modalDetail">—</div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">photo_library</span> รูปภาพ / วิดีโอ
+          </div>
+          <div class="modal-media-grid" id="modalMediaGrid"></div>
+        </div>
+
+        <div class="modal-section qc-action-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">rate_review</span> ผลการพิจารณา QC
+          </div>
+          <div class="qc-status-current" id="qcStatusCurrent"></div>
+          <textarea id="qcComment" rows="3" placeholder="หมายเหตุ / ความเห็น QC (ถ้ามี)..."></textarea>
+          <div class="qc-action-btns">
+            <button class="btn-approve" onclick="updateClaimStatus('approved')">
+              <span class="material-symbols-outlined">check_circle</span> อนุมัติ
+            </button>
+            <button class="btn-reject" onclick="updateClaimStatus('rejected')">
+              <span class="material-symbols-outlined">cancel</span> ปฏิเสธ
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIGHTBOX ── -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  </div>
+
+  <footer class="footer">© 2026 EABaseHub | ระบบจัดการเคลมสินค้า</footer>
+
+  <!-- ── SCRIPTS ── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/pages/admin/renderUsers.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/confirm-dialog.js"></script>
+  <script src="/js/pages/admin/adminQc.js"></script>
+  <script src="/js/core/splash.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+  <script src="/js/core/themeToggle.js"></script>
+
+</body>
+</html>

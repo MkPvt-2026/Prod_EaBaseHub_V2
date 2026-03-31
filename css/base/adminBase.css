@@ -1,0 +1,805 @@
+/* =====================================================
+   1. VARIABLES
+   ตัวแปรหลักของระบบ (Design System)
+
+   ใช้เก็บสี เงา radius และ background
+   เพื่อให้ทั้งระบบใช้ theme เดียวกัน
+   ถ้าต้องการเปลี่ยนสีทั้งระบบให้แก้ที่นี่ที่เดียว
+   ===================================================== */
+
+:root {
+
+/* ================= COLORS ================= */
+/* สีหลักของระบบ */
+
+--primary-1:#3FB7AE;      /* สีหลัก teal */
+--Dark-Teal: #2FA39A;     /* teal เข้ม */
+--Light-Mint: #8FD3CD;    /* mint อ่อน */
+
+/* สีเขียวสำหรับ action / success */
+
+--primary-500: #4caf50;
+--primary-700: #388e3c;
+--primary-900: #1b5e20;
+
+/* สีฟ้าระบบ secondary */
+
+--secondary-300: #81d4fa;
+--secondary-500: #03a9f4;
+--secondary-700: #0288d1;
+--secondary-900: #01579b;
+
+/* สีฟ้าอ่อน */
+
+--blue: #bcdbeb;
+
+/* green palette เพิ่มเติม */
+
+--green1: #03624c;
+--green2: #030f0f;
+--green3: #00df82;
+--green4: #03A791;
+
+/* สี text */
+
+--text: #01579b;
+
+/* gray และ white */
+
+--gray-200: #e0e0e0;
+--white: #ffffff;
+
+
+/* ================= HEADER ================= */
+/* สีเฉพาะส่วน header */
+
+--header-blue:#1c86c8;
+--header-blue1:#90ceff;
+--header-blue2:#50aefc;
+--header-blue3:#044cbe;
+--header-blue4:#4aaefe;
+
+--orenge:#fdb177;
+
+
+/* ================= SHADOW ================= */
+/* เงาของ card หรือ component */
+
+--shadow-soft: 0 4px 12px rgba(0,0,0,0.06);
+--shadow-hover: 0 8px 24px rgba(0,0,0,0.12);
+
+
+/* ================= RADIUS ================= */
+/* มุมโค้งของ component */
+
+--radius-sm: 8px;
+--radius-md: 12px;
+--radius-lg: 16px;
+--radius-xl: 20px;
+
+
+/* ================= BACKGROUND ================= */
+/* background หลักของหน้า */
+
+--bg-A: #f5f9fc;
+--bg-B: #edffed;
+--bg-C: #eff4fe;
+--bg-D: #f7f9fd;
+--bg-Soft:#E7F4F2;
+
+
+/* gradient backgrounds */
+
+--bg-AB: linear-gradient(180deg,#3FB7AE,#2FA39A);
+--bg-AC: linear-gradient(135deg, #8FD3CD, #3FB7AE);
+
+}
+
+
+
+/* =====================================================
+   2. RESET
+   รีเซ็ตค่า default ของ browser
+   เพื่อให้ layout ควบคุมง่ายขึ้น
+   ===================================================== */
+
+* {
+
+  /* ทำให้ padding และ border
+     ไม่เพิ่มขนาด element */
+
+  box-sizing: border-box;
+
+}
+
+body {
+
+margin: 0;
+
+/* font หลักของระบบ */
+
+font-family: 'kanit', sans-serif;
+
+/* background หน้าเว็บ */
+
+background:var(--bg-D);
+
+}
+
+a {
+
+/* เอา underline ออก */
+
+text-decoration: none;
+
+/* ใช้สีเดียวกับ parent */
+
+color: inherit;
+
+}
+
+
+
+/* =====================================================
+   3. LAYOUT
+   โครงสร้าง container หลักของหน้าเว็บ
+   ===================================================== */
+
+.container {
+
+/* จำกัดความกว้างหน้าเว็บ */
+
+max-width: 1200px;
+
+/* จัดให้อยู่ตรงกลาง */
+
+margin: auto;
+
+/* padding รอบ content */
+
+padding: 24px 16px;
+
+}
+
+
+
+/* =====================================================
+   4. HEADER
+   ส่วน header หลักของระบบ
+   ===================================================== */
+
+.app-header {
+
+/* sticky header */
+
+position: sticky;
+
+/* ติดด้านบน */
+
+top: 0;
+
+/* ให้อยู่เหนือ element อื่น */
+
+z-index: 1000;
+
+/* layout */
+
+display: flex;
+justify-content: space-between;
+align-items: center;
+
+/* spacing */
+
+padding: 10px 24px;
+
+/* background header */
+
+background: linear-gradient(135deg, #1d4ed8 0%, #0288d1 100%);
+
+/* เส้นแบ่ง */
+
+border-bottom: 1px solid #ddd;
+
+/* เงา */
+
+box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+
+}
+
+
+
+/* =====================================================
+   LOGO
+   ส่วนโลโก้ของระบบ
+   ===================================================== */
+
+.app-header .logo {
+
+display: flex;
+
+align-items: center;
+
+gap: 12px;
+
+/* น้ำหนักตัวอักษร */
+
+font-weight: 400;
+
+/* ขนาดตัวอักษร */
+
+font-size: 14px;
+
+/* จัดเรียงแนวนอน */
+
+flex-direction: row;
+
+}
+
+
+/* logo image */
+
+.app-header .logo img {
+
+width: 32px;
+
+height: 32px;
+
+object-fit: contain;
+
+position: relative;
+
+}
+
+
+
+/* =====================================================
+   LOGO CIRCLE
+   วงกลมโลโก้
+   ===================================================== */
+
+.logo-circle {
+width:45px;
+height:45px;
+border-radius:50%;  /* background วงกลม */
+background:white;  /* center logo */
+display:flex;
+align-items:center;
+justify-content:center; /* shadow */
+box-shadow:0 15px 30px rgba(0,0,0,0.15); /* ป้องกัน overflow */
+overflow:hidden;
+}
+
+.logo-circle img {
+width:65%;
+height:65%;
+object-fit:contain;
+display:block;
+}
+
+
+
+/* =====================================================
+   SYSTEM NAME
+   ชื่อระบบใน header
+   ===================================================== */
+
+.app-header .logo h2 {
+
+margin: 0;
+
+font-size: 22px;
+
+font-weight: 400;
+
+color: #fff;
+
+letter-spacing: 0.5px;
+
+}
+
+
+
+/* =====================================================
+   5. NAVIGATION
+   เมนู navigation ด้านบน
+   ===================================================== */
+
+.app-nav {
+
+/* sticky ใต้ header */
+
+position: sticky;
+
+top: 52px;
+
+z-index: 999;
+
+background: #f0f0f0;
+
+border-bottom: 1px solid #ddd;
+
+padding: 10px 20px;
+
+/* menu layout */
+
+display: flex;
+
+gap: 10px;
+
+}
+
+
+
+/* menu link */
+
+.app-nav a {
+
+padding: 6px 12px;
+
+border-radius: 6px;
+
+font-size: 13px;
+
+}
+
+
+
+/* hover menu */
+
+.app-nav a:hover {
+
+background: #e0e0e0;
+
+}
+
+
+
+/* active menu */
+
+.app-nav a.active {
+
+background: #1976d2;
+
+color: #fff;
+
+}
+
+
+
+/* =====================================================
+   6. USER BAR
+   แถบแสดงข้อมูล user
+   ===================================================== */
+
+.topbar {
+
+height:60px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:0 20px;
+
+background:white;
+
+border-bottom:1px solid #eee;
+
+}
+
+
+
+/* กล่อง user */
+
+.user-box {
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+
+
+/* avatar user */
+
+.user-avatar {
+
+width:40px;
+height:40px;
+
+border-radius:50%;
+
+background:var(--white);
+
+color:white;
+
+font-weight:600;
+
+font-size:20px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+}
+
+
+
+/* user info */
+
+.user-info {
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.user-name {
+
+font-weight:400;
+
+font-size:16px;
+
+color:#fff;
+
+}
+
+.user-role {
+
+font-size:13px;
+
+color:#777;
+
+}
+
+
+
+/* =====================================================
+   7. PAGE HEADER
+   ส่วนหัวของแต่ละหน้า
+   ===================================================== */
+
+.page-header {
+
+background: var(--white);
+
+padding: 24px 20px;
+
+border-bottom: 1px solid #eee;
+
+}
+
+.page-header h1 {
+
+margin: 0 0 6px;
+
+font-size: 22px;
+
+}
+
+.page-header p {
+
+margin: 0;
+
+font-size: 13px;
+
+color: #666;
+
+}
+
+
+
+/* =====================================================
+   8. CARD
+   กล่อง content ของระบบ
+   ===================================================== */
+
+.card,
+.section-card,
+.card-cause {
+
+/* background */
+
+background: #fff;
+
+/* มุมโค้ง */
+
+border-radius: 12px;
+
+/* spacing */
+
+padding: 24px;
+
+margin-bottom: 20px;
+
+/* shadow */
+
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+}
+
+
+
+/* icon label */
+
+.selector-label .material-symbols-outlined {
+
+font-size: 20px;
+
+color:  var(--secondary-900);
+
+}
+
+
+
+/* =====================================================
+   9. BUTTON
+   ปุ่มทั่วไปของระบบ
+   ===================================================== */
+
+.btn {
+
+padding: 6px 12px;
+
+border-radius: 8px;
+
+cursor: pointer;
+
+border: none;
+
+}
+
+
+
+/* =====================================================
+   LOGOUT BUTTON
+   ปุ่มออกจากระบบ
+   ===================================================== */
+
+.logout-btn {
+
+padding:12px 30px;
+
+border:none;
+
+border-radius:20px;
+
+background:#fff;
+
+color:var(--secondary-900);
+
+font-size:13px;
+
+font-weight:800;
+
+cursor:pointer;
+
+display:flex;
+
+align-items:center;
+
+gap:4px;
+
+transition:all .2s ease;
+
+}
+
+.logout-btn:hover {
+
+/* เปลี่ยนสี */
+
+background:#d9363e;
+
+/* animation */
+
+transform:translateY(-1px);
+
+/* shadow */
+
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+
+}
+
+
+
+/* =====================================================
+   ACTION BUTTON
+   ปุ่ม action ใน table
+   ===================================================== */
+
+.btn-action {
+
+padding: 6px 12px;
+
+border: none;
+
+border-radius: 6px;
+
+cursor: pointer;
+
+font-size: 12px;
+
+margin: 2px;
+
+transition: all 0.2s;
+
+display: inline-flex;
+
+align-items: center;
+
+gap: 4px;
+
+}
+
+.btn-action .material-symbols-outlined {
+
+font-size: 16px;
+
+}
+
+
+
+/* =====================================================
+   BUTTON COLORS
+   สีของปุ่มแต่ละประเภท
+   ===================================================== */
+
+.btn-link {
+
+background: #E3F2FD;
+
+color: #1976D2;
+
+}
+
+.btn-link:hover {
+
+background: #BBDEFB;
+
+}
+
+.btn-edit {
+
+background: #E8F5E9;
+
+color: #2E7D32;
+
+}
+
+.btn-edit:hover {
+
+background: #C8E6C9;
+
+}
+
+.btn-delete {
+
+background: #FFEBEE;
+
+color: #C62828;
+
+}
+
+.btn-delete:hover {
+
+background: #FFCDD2;
+
+}
+
+.btn-shops {
+
+background: #F3E5F5;
+
+color: #7B1FA2;
+
+}
+
+.btn-shops:hover {
+
+background: #E1BEE7;
+
+}
+
+
+
+/* refresh button */
+
+.btn-refresh {
+
+background: #607D8B;
+
+color: white;
+
+padding: 10px 20px;
+
+border: none;
+
+border-radius: 8px;
+
+cursor: pointer;
+
+display: inline-flex;
+
+align-items: center;
+
+gap: 8px;
+
+font-size: 14px;
+
+margin-bottom: 15px;
+
+}
+
+.btn-refresh:hover {
+
+background: #455A64;
+
+}
+
+
+
+/* =====================================================
+   10. COMPONENTS
+   ส่วน component เพิ่มเติม
+   เช่น modal badge table chart
+   ===================================================== */
+
+/* (เว้นไว้) */
+
+
+
+/* =====================================================
+   11. FORMS
+   input select textarea
+   ===================================================== */
+
+/* (เว้นไว้) */
+
+
+
+/* =====================================================
+   12. TABLE
+   ตารางข้อมูล
+   ===================================================== */
+
+/* (เว้นไว้) */
+
+
+
+/* =====================================================
+   13. MODAL
+   popup dialog
+   ===================================================== */
+
+/* (เว้นไว้) */
+
+
+
+/* =====================================================
+   14. FOOTER
+   ส่วนท้ายของหน้า
+   ===================================================== */
+
+.footer {
+
+text-align: center;
+
+font-size: 12px;
+
+color: #777;
+
+padding: 16px;
+
+}
+
+
+
+/* =====================================================
+   END OF FILE
+   ===================================================== */

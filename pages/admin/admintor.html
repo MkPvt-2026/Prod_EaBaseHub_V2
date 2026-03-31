@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <!-- =====================================================
+       META / PAGE SETTINGS
+       ===================================================== -->
+
+    <!-- กำหนด encoding ให้รองรับภาษาไทย -->
+    <meta charset="UTF-8" />
+
+    <!-- ทำให้ responsive บนมือถือ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ชื่อหน้าเว็บ -->
+    <title>EABaseHub | จัดการผู้ใช้งาน</title>
+
+    <!-- =====================================================
+       EXTERNAL LIBRARIES
+       ===================================================== -->
+
+    <!-- Supabase client สำหรับเชื่อมต่อ database / auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- =====================================================
+       GOOGLE FONTS
+       ===================================================== -->
+
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600"
+      rel="stylesheet"
+    />
+
+    <!-- Kanit font -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+    <!-- =====================================================
+       CSS FILES
+       ===================================================== -->
+
+    <!-- CSS โครงสร้างพื้นฐานของระบบ -->
+    <link rel="stylesheet" href="/css/base/adminBase.css" />
+
+    <!-- CSS เฉพาะหน้า Admin User -->
+    <link rel="stylesheet" href="/css/pages/admin/admintor.css" />
+  </head>
+
+  <body>
+    <!-- =====================================================
+       APP HEADER
+       ส่วน header ด้านบนของระบบ
+       ===================================================== -->
+
+    <header class="app-header">
+      <!-- LOGO + SYSTEM NAME -->
+      <div class="logo">
+        <!-- โลโก้วงกลม -->
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo" />
+        </div>
+
+        <!-- ชื่อระบบ -->
+        <h2>EABaseHub</h2>
+      </div>
+
+      <!-- USER INFO + LOGOUT -->
+      <div class="user-box">
+        <!-- avatar ผู้ใช้ -->
+        <div class="user-avatar" id="userAvatar">👤</div>
+
+        <!-- ข้อมูล user -->
+        <div class="user-info">
+          <div class="user-name" id="userName">กำลังโหลด...</div>
+        </div>
+
+        <!-- ปุ่ม logout -->
+        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="app-nav">
+      <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>
+      <a href="/pages/admin/admintor.html" class="active">การจัดการสิทธิ์</a>
+      <a href="/pages/admin/AddProductSpec.html">การจัดการสินค้า</a>
+    </nav>
+
+    <!-- =====================================================
+       MAIN CONTENT
+       ===================================================== -->
+
+    <main class="page-wrapper">
+      <!-- CARD หลักของหน้า -->
+      <div class="admin-card">
+        <!-- =====================================================
+           CARD HEADER
+           ===================================================== -->
+
+        <div class="card-header-row">
+          <!-- title -->
+          <div class="card-title">
+            <!-- icon -->
+            <span class="material-symbols-outlined"> manage_accounts </span>
+
+            จัดการผู้ใช้และสิทธิ์
+          </div>
+
+          <!-- ปุ่มกลับหน้าหลัก -->
+          <button onclick="goHome()" class="btn-back">
+            <span class="material-symbols-outlined"> arrow_back </span>
+
+            กลับหน้าหลัก
+          </button>
+        </div>
+
+        <!-- =====================================================
+           TABS MENU
+           เมนูเปลี่ยนหน้า admin
+           ===================================================== -->
+
+        <div class="tab-bar">
+          <!-- USER MANAGEMENT -->
+          <a class="tab-item tab-active" href="/pages/admin/admintor.html">
+            <span class="material-symbols-outlined"> people </span>
+
+            ผู้ใช้งาน
+          </a>
+
+          <!-- SALES MANAGEMENT -->
+          <a class="tab-item" href="/pages/admin/adminSales.html">
+            <span class="material-symbols-outlined"> badge </span>
+
+            Sales
+          </a>
+
+          <!-- SHOP PERMISSION -->
+          <a class="tab-item" href="/pages/admin/adminShops.html">
+            <span class="material-symbols-outlined"> storefront </span>
+
+            สิทธิ์ร้านค้า
+          </a>
+        </div>
+
+        <!-- =====================================================
+           STATS BAR
+           แสดงจำนวน user ตาม role
+           ===================================================== -->
+
+        <div class="stats-bar" id="statsBar">
+          <!-- ALL USERS -->
+          <div class="stat-chip" id="statAll">
+            <span class="material-symbols-outlined"> group </span>
+
+            <span id="countAll">-</span>
+            ทั้งหมด
+          </div>
+
+          <!-- ADMIN -->
+          <div class="stat-chip chip-admin" id="statAdmin">
+            <span class="material-symbols-outlined"> shield </span>
+
+            <span id="countAdmin">-</span>
+            Admin
+          </div>
+
+          <!-- Admin QC -->
+          <div class="stat-chip chip-adminqc" id="statAdminQC">
+            <span class="material-symbols-outlined"> verified_user </span>
+
+            <span id="countAdminQC">-</span>
+            Admin QC
+          </div>
+
+          <!-- MANAGER -->
+          <div class="stat-chip chip-manager" id="statManager">
+            <span class="material-symbols-outlined"> supervisor_account </span>
+
+            <span id="countManager">-</span>
+            Manager
+          </div>
+
+          <!-- EXECUTIVE -->
+          <div class="stat-chip chip-executive" id="statExecutive">
+            <span class="material-symbols-outlined"> star </span>
+
+            <span id="countExecutive">-</span>
+            Executive
+          </div>
+
+          <!-- SALES -->
+          <div class="stat-chip chip-sales" id="statSales">
+            <span class="material-symbols-outlined"> badge </span>
+
+            <span id="countSales">-</span>
+            Sales
+          </div>
+
+          <!-- USER -->
+          <div class="stat-chip chip-user" id="statUser">
+            <span class="material-symbols-outlined"> person </span>
+
+            <span id="countUser">-</span>
+            User
+          </div>
+
+          <!-- INACTIVE -->
+          <div class="stat-chip chip-inactive" id="statInactive">
+            <span class="material-symbols-outlined"> block </span>
+
+            <span id="countInactive">-</span>
+            Inactive
+          </div>
+        </div>
+
+        <!-- =====================================================
+           TOOLBAR
+           search + filter
+           ===================================================== -->
+
+        <div class="toolbar-row">
+          <!-- SEARCH BOX -->
+          <div class="search-wrap">
+            <span class="material-symbols-outlined search-ic"> search </span>
+
+            <!-- input search -->
+            <input
+              type="text"
+              id="searchUser"
+              placeholder="ค้นหา email, username, ชื่อ..."
+              oninput="filterUsers()"
+            />
+          </div>
+
+          <!-- FILTER -->
+          <div class="filter-group">
+            <!-- filter role -->
+            <!-- ⚠️ value ต้องตรงกับค่าใน DB: adminQc (ไม่ใช่ adminQC) -->
+            <select id="filterRole" onchange="filterUsers()">
+              <option value="">ทุก Role</option>
+              <option value="admin">Admin</option>
+              <option value="adminQc">AdminQC</option>
+              <option value="manager">Manager</option>
+              <option value="executive">Executive</option>
+              <option value="sales">Sales</option>
+              <option value="user">User</option>
+            </select>
+
+            <!-- filter status -->
+            <select id="filterStatus" onchange="filterUsers()">
+              <option value="">ทุกสถานะ</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- =====================================================
+           USER TABLE
+           ตารางแสดงผู้ใช้ทั้งหมด
+           ===================================================== -->
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Username</th>
+                <th>ชื่อที่แสดง</th>
+                <th>Role</th>
+                <th>สถานะ</th>
+                <th>ดำเนินการ</th>
+              </tr>
+            </thead>
+
+            <!-- ตารางข้อมูล user -->
+            <tbody id="userTable">
+              <!-- loading state -->
+              <tr>
+                <td colspan="6" class="state-cell">⏳ กำลังโหลด...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- =====================================================
+       EDIT USER MODAL
+       modal สำหรับแก้ไข user
+       ===================================================== -->
+
+    <div id="editModal" class="modal-overlay" style="display: none">
+      <div class="modal-box">
+        <!-- modal header -->
+        <div class="modal-header">
+          <h3>แก้ไขข้อมูลผู้ใช้</h3>
+
+          <button class="modal-close" onclick="closeEditModal()">
+            <span class="material-symbols-outlined"> close </span>
+          </button>
+        </div>
+
+        <!-- modal body -->
+        <div class="modal-body">
+          <!-- hidden user id -->
+          <input type="hidden" id="editUserId" />
+
+          <!-- user info -->
+          <div class="modal-user-info" id="modalUserInfo"></div>
+
+          <!-- form row -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username</label>
+
+              <input type="text" id="editUsername" placeholder="username" />
+            </div>
+
+            <div class="form-group">
+              <label>ชื่อที่แสดง</label>
+
+              <input
+                type="text"
+                id="editDisplayName"
+                placeholder="ชื่อ-นามสกุล"
+              />
+            </div>
+          </div>
+
+          <!-- role + status -->
+          <!-- ⚠️ value ต้องตรงกับค่าใน DB: adminQc (ไม่ใช่ adminQC) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>
+                Role
+                <span class="req">*</span>
+              </label>
+
+              <select id="editRole">
+                <option value="user">User</option>
+                <option value="sales">Sales</option>
+                <option value="manager">Manager</option>
+                <option value="executive">Executive</option>
+                <option value="adminQc">AdminQC</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>
+                สถานะ
+                <span class="req">*</span>
+              </label>
+
+              <select id="editStatus">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- area -->
+
+          <div class="form-group">
+            <label>พื้นที่ (Area)</label>
+
+            <input
+              type="text"
+              id="editArea"
+              placeholder="เช่น กรุงเทพฯ, ภาคกลาง"
+            />
+          </div>
+        </div>
+
+        <!-- modal footer -->
+        <div class="modal-footer">
+          <button class="btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+
+          <button class="btn-save" id="saveBtn" onclick="saveUser()">
+            <span class="material-symbols-outlined"> save </span>
+
+            บันทึก
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+       DELETE CONFIRM MODAL
+       modal ยืนยันการลบ user
+       ===================================================== -->
+
+    <div id="deleteModal" class="modal-overlay" style="display: none">
+      <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+          <h3>ยืนยันการลบผู้ใช้</h3>
+
+          <button class="modal-close" onclick="closeDeleteModal()">
+            <span class="material-symbols-outlined"> close </span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="delete-warning">
+            <span class="material-symbols-outlined warn-icon"> warning </span>
+
+            <div>
+              <div class="warn-title">ต้องการลบผู้ใช้นี้ใช่หรือไม่?</div>
+
+              <div class="warn-sub" id="deleteUserLabel"></div>
+            </div>
+          </div>
+
+          <p class="warn-note">
+            การลบจะลบข้อมูล profile ออกจากระบบ แต่ไม่ได้ลบ Auth account
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancel" onclick="closeDeleteModal()">
+            ยกเลิก
+          </button>
+
+          <button class="btn-delete-confirm" onclick="confirmDelete()">
+            <span class="material-symbols-outlined"> delete </span>
+
+            ลบผู้ใช้
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+     USER ROW TEMPLATE
+     JS จะ clone template นี้แล้วเติมข้อมูลลงไป
+     ต้องการแก้ layout / สี / icon → แก้ใน template นี้ได้เลย
+     ไม่ต้องแตะ admintor.js
+     ============================================================ -->
+
+    <template id="tmpl-user-row">
+      <tr class="fade-row">
+        <!-- EMAIL -->
+        <td>
+          <span class="email-text" data-field="email"> </span>
+        </td>
+
+        <!-- USERNAME -->
+        <td>
+          <span class="username-chip" data-field="username"> </span>
+        </td>
+
+        <!-- DISPLAY NAME -->
+        <td>
+          <span class="display-name" data-field="display_name"> </span>
+        </td>
+
+        <!-- ROLE -->
+        <td data-field="role-badge">
+          <!-- JS จะ inject roleBadge() ตรงนี้ -->
+        </td>
+
+        <!-- STATUS -->
+        <td>
+          <span class="status-badge" data-field="status-badge">
+            <!-- JS จะใส่ text Active/Inactive -->
+          </span>
+        </td>
+
+        <!-- ACTION BUTTONS -->
+        <td>
+          <div class="action-group">
+            <!-- ── EDIT ────────────────────────────── -->
+            <button class="btn-action btn-edit" data-action="edit">
+              <span class="material-symbols-outlined"> edit </span>
+
+              แก้ไข
+            </button>
+
+            <!-- ── TOGGLE STATUS ───────────────────── -->
+            <button class="btn-action" data-action="toggle">
+              <span class="material-symbols-outlined" data-field="toggle-icon">
+              </span>
+
+              <span data-field="toggle-label"></span>
+            </button>
+
+            <!-- ── DELETE ─────────────────────────── -->
+            <button class="btn-action btn-del" data-action="delete">
+              <span class="material-symbols-outlined"> delete </span>
+
+              ลบ
+            </button>
+          </div>
+        </td>
+      </tr>
+    </template>
+
+    <!-- =====================================================
+       JAVASCRIPT FILES
+       ===================================================== -->
+
+    <!-- supabase client config -->
+    <script src="/js/core/supabaseClient.js"></script>
+
+    <!-- user service -->
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+
+    <!-- auth check -->
+    <script src="/js/core/auth.js"></script>
+
+    <!-- script ของหน้า admin user -->
+    <!-- ⚠️ ชื่อไฟล์ต้องตรงกับไฟล์จริงบน server (case-sensitive) -->
+    <script src="/js/pages/admin/renderUsers.js"></script>
+    <script src="/js/pages/admin/admintor.js"></script>
+
+    <script src="/js/core/loadingSplash.js"></script>
+  </body>
+</html>

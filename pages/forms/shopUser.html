@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>ร้านของฉัน</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/shopUser.css" />
+  </head>
+
+  <body>
+
+    <header class="app-header">
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo">
+        </div>
+        <h2>EABaseHub</h2>
+      </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">กำลังโหลด...</div>
+        </div>
+        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <nav class="app-nav">
+      <a href="/index.html">หน้าแรก</a>
+      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
+      <a href="/pages/forms/formHub.html">แบบฟอร์ม</a>
+      <a href="/pages/forms/shopUser.html" class="active">ร้านของฉัน</a>
+    </nav>
+
+    <div class="container">
+      <div class="page-header">
+        <h1>ร้านของฉัน</h1>
+        <p>เลือกร้านเพื่อดูและแก้ไขข้อมูล</p>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <input id="searchInput" placeholder="ค้นหาร้าน รหัส หรือจังหวัด..." />
+        </div>
+        <span class="shop-count" id="shopCount">0 ร้าน</span>
+      </div>
+
+      <!-- TABLE -->
+      <div class="panel">
+        <table class="shop-table">
+          <thead>
+            <tr>
+              <th style="width:120px">รหัสร้าน</th>
+              <th>ชื่อร้าน</th>
+              <th style="width:160px">จังหวัด</th>
+              <th style="width:80px"></th>
+            </tr>
+          </thead>
+          <tbody id="shopTableBody">
+            <tr><td colspan="4" class="table-placeholder">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <footer class="footer">© 2026 EABaseHub — ระบบแจ้งเคลมสินค้า</footer>
+
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/shopUser.js"></script>
+
+    <script src="/js/core/splash.js"></script> 
+  <script src="/js/core/loadingSplash.js"></script>
+  </body>
+</html>

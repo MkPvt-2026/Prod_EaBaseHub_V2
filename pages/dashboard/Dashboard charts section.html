@@ -1,0 +1,244 @@
+<!-- ส่วนที่เพิ่มใน managerDashboard.html -->
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<!-- Sales Dashboard Script -->
+<script src="/js/pages/manager/Salesdashboard.js></script>
+
+<!-- =================================== -->
+<!-- ส่วนแสดงกราฟและสถิติ -->
+<!-- =================================== -->
+
+<div class="dashboard-container">
+    <!-- สถิติรวม -->
+    <div class="stats-section">
+        <h2>📊 สถิติยอดขาย</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-content">
+                    <div class="stat-label">ยอดขายรวม</div>
+                    <div class="stat-value" id="totalAmount">0</div>
+                    <div class="stat-unit">บาท</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <div class="stat-label">กำไรรวม</div>
+                    <div class="stat-value" id="totalProfit">0</div>
+                    <div class="stat-unit">บาท</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-content">
+                    <div class="stat-label">ปริมาณขาย</div>
+                    <div class="stat-value" id="totalQty">0</div>
+                    <div class="stat-unit">ชิ้น</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- กราฟ -->
+    <div class="charts-section">
+        <div class="chart-row">
+            <!-- กราฟยอดขายรายวัน -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>ยอดขายรายวัน</h3>
+                    <button class="btn-refresh" onclick="refreshDashboard()">
+                        <span class="material-icons">refresh</span>
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- กราฟกำไรสะสม -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>กำไรสะสม</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- กราฟสินค้าขายดี -->
+        <div class="chart-row">
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3>สินค้าขายดี Top 10</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- เรียกใช้เมื่อหน้าโหลด -->
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // รอให้ Supabase พร้อม
+    while (!window.supabase) {
+        await new Promise(r => setTimeout(r, 100));
+    }
+    
+    // เริ่มต้น Dashboard
+    await initSalesDashboard();
+});
+</script>
+
+<!-- =================================== -->
+<!-- CSS สำหรับกราฟ -->
+<!-- =================================== -->
+
+<style>
+.dashboard-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+/* Stats Section */
+.stats-section {
+    margin-bottom: 2rem;
+}
+
+.stats-section h2 {
+    color: #3a7d44;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.stat-icon {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #3a7d44;
+}
+
+.stat-unit {
+    font-size: 0.875rem;
+    color: #999;
+    margin-top: 0.25rem;
+}
+
+/* Charts Section */
+.charts-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.chart-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chart-header h3 {
+    color: #3a7d44;
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+.btn-refresh {
+    background: none;
+    border: none;
+    color: #3a7d44;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.btn-refresh:hover {
+    background: #f0f7f1;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+}
+</style>

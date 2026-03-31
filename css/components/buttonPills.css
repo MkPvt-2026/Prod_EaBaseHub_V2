@@ -1,0 +1,133 @@
+/* ============================================
+   Pill Button Pattern — Info Tags / Badges
+   ภาพอ้างอิง: date, recurrence, platform, location, participants, time
+   ============================================ */
+
+/* --- Base pill --- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: default;
+  transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+.pill:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.pill .pill-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   Color Variants
+   ============================================ */
+
+/* 🔵 Blue — วันที่ / Date */
+.pill--blue {
+  background-color: #ddeeff;
+  color: #2b7fff;
+}
+.pill--blue .pill-icon {
+  color: #2b7fff;
+}
+
+/* 🟠 Orange — รอบการทำซ้ำ / Recurrence */
+.pill--orange {
+  background-color: #fdecd8;
+  color: #e8832a;
+}
+.pill--orange .pill-icon {
+  color: #e8832a;
+}
+
+/* 🟢 Green — แพลตฟอร์ม / Platform */
+.pill--green {
+  background-color: #d9f5e5;
+  color: #1aab5c;
+}
+.pill--green .pill-icon {
+  color: #1aab5c;
+}
+
+/* 🔷 Light Blue — สถานที่ / Location */
+.pill--sky {
+  background-color: #e0f2ff;
+  color: #2c9de8;
+}
+.pill--sky .pill-icon {
+  color: #2c9de8;
+}
+
+/* 🔴 Red / Pink — ผู้เข้าร่วม / Participants */
+.pill--red {
+  background-color: #fde8e8;
+  transition: 0.20s ease;
+  color: #e84646;
+}
+.pill--red .pill-icon {
+  color: #e84646;
+}
+
+/* 🟣 Purple — เวลา / Time */
+.pill--purple {
+  background-color: #ece8fb;
+  color: #6b3fd4;
+}
+.pill--purple .pill-icon {
+  color: #6b3fd4;
+}
+
+/* ============================================
+   Size Variants
+   ============================================ */
+
+/* เล็ก */
+.pill--sm {
+  padding: 7px 14px;
+  font-size: 13px;
+  gap: 6px;
+}
+.pill--sm .pill-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ใหญ่ */
+.pill--lg {
+  padding: 13px 22px;
+  font-size: 17px;
+  gap: 10px;
+}
+.pill--lg .pill-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* ============================================
+   Clickable / Interactive Variant
+   เพิ่ม role="button" บน element
+   ============================================ */
+
+.pill--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pill--clickable:active {
+  transform: translateY(0px) scale(0.97);
+  filter: brightness(0.92);
+}

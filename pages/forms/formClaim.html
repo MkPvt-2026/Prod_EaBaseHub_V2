@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>EABaseHub | ⚠️ แจ้งเคลมสินค้า</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <!-- เพิ่มบรรทัดนี้ใน <head> ต่อจาก formClaim.css -->  
+  <link rel="stylesheet" href="/css/base/layout.css">
+  <link rel="stylesheet" href="/css/pages/forms/formClaim.css">
+  <link rel="stylesheet" href="/css/pages/forms/formClaim_warning.css">
+</head>
+
+<body>
+
+  <!-- ===================================================== -->
+  <!-- HEADER                                                -->
+  <!-- ===================================================== -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <h2>EABaseHub</h2>
+    </div>
+
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+
+  <!-- ===================================================== -->
+  <!-- NAVIGATION                                            -->
+  <!-- ===================================================== -->
+  <nav class="app-nav">
+    <a href="/index.html">หน้าแรก</a>
+    <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
+    <a href="/pages/forms/formClaim.html" class="active">แจ้งเคลมสินค้า</a>
+    <a href="/pages/forms/formHub.html">แบบฟอร์ม</a>
+    <a href="/pages/forms/shopUser.html">ร้านค้าของฉัน</a> 
+  </nav>
+
+  <!-- ===================================================== -->
+  <!-- PAGE HEADER                                           -->
+  <!-- ===================================================== -->
+   <div class="claim-scope">
+
+
+  <div class="container">
+    <div class="page-header">
+      <h1>⚠️ แจ้งเคลมสินค้า</h1>
+      <p>กรอกข้อมูล • บันทึกแบบร่าง • แนบหลักฐาน • ส่งเคลม</p>
+    </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 1: ข้อมูลพนักงานและลูกค้า                         -->
+  <!-- ===================================================== -->
+  <div class="card">
+    <h2>👤 ข้อมูลพนักงานและลูกค้า</h2>
+    <h4>ข้อมูลจากระบบของคุณ</h4>
+    <div class="section-divider"></div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>พนักงานขาย</label>
+        <input data-user="display_name" data-user-readonly readonly placeholder="กำลังโหลด...">
+      </div>
+      <div class="form-group">
+        <label>เขตการขาย</label>
+        <input data-user="area" data-user-readonly readonly placeholder="กำลังโหลด...">
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="claimDate">📅 วันที่แจ้งเคลม <span style="color:#ef4444">*</span></label>
+        <input type="date" id="claimDate" required>
+      </div>
+      <div class="form-group">
+        <label for="customer">🏪 ลูกค้า / ร้านค้า <span style="color:#ef4444">*</span></label>
+        <select id="customer" required>
+          <option value="">⏳ กำลังโหลด...</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 2: ข้อมูลสินค้า                              -->
+  <!-- ===================================================== -->
+  <div class="section-card">
+    <h2>📦 ข้อมูลสินค้าที่ต้องการเคลม</h2>
+    <h4>กรอกข้อมูลเกี่ยวกับสินค้าที่พบปัญหา</h4>
+    <div class="section-divider"></div>
+
+    <div class="section-title">ℹ️ ข้อมูลทั่วไป</div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="buyDate">📄 วันที่เปิดบิล</label>
+        <input type="date" id="buyDate">
+      </div>
+      <div class="form-group">
+        <label for="mfgDate">🏭 วันที่ผลิตสินค้า</label>
+        <input type="date" id="mfgDate">
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-title">🛍️ เลือกประเภทสินค้า</div>
+
+    <div class="product-grid">
+      <!-- <div class="product-item" onclick="openProductModal('b10f48d6-3909-4396-9df4-19aaef03f823')">
+        <div class="product-icon"><span class="material-symbols-outlined">plumbing</span></div>
+        ท่อพีอี
+      </div>
+      <div class="product-item" onclick="openProductModal('0f4bff06-fc48-4220-bb97-f8ad21415739')">
+        <div class="product-icon"><span class="material-symbols-outlined">grid_on</span></div>
+        ตาข่ายกรองแสง
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">potted_plant</span></div>
+        ถุงเพาะชำ
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">shopping_bag</span></div>
+        ถุงอเนกประสงค์
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">delete</span></div>
+        ถุงขยะ
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">home</span></div>
+        พลาสติกโรงเรือน
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">water</span></div>
+        พลาสติกปูบ่อ
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">grass</span></div>
+        พลาสติกคลุมดิน
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">water_drop</span></div>
+        เทปน้ำพุ่ง
+      </div>
+      <div class="product-item">
+        <div class="product-icon"><span class="material-symbols-outlined">category</span></div>
+        สินค้าอื่นๆ
+      </div> -->
+    </div>
+
+    <div class="section-title">📝 รายละเอียดสินค้า</div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="product">ชื่อสินค้า <span style="color:#ef4444">*</span></label>
+        <input type="text" id="product" placeholder="แตะเลือกประเภทสินค้าด้านบน หรือพิมพ์เอง" required>
+      </div>
+      <div class="form-group">
+        <label for="qty">จำนวน (ระบุหน่วย) <span style="color:#ef4444">*</span></label>
+        <input type="text" id="qty" placeholder="เช่น 10 ม้วน, 5 ถุง, 3 กก." required>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 3: ประเภทปัญหา                               -->
+  <!-- ===================================================== -->
+  <div class="card-cause">
+    <h2>⚠️ ประเภทปัญหา <span style="color:#ef4444;font-size:16px">*</span></h2>
+    <h4>เลือกประเภทปัญหาที่พบ (เลือกได้หลายรายการ)</h4>
+
+    <div class="claim-grid" id="claimTypes">
+      <div class="claim-item">ชำรุดจากขนส่ง</div>
+      <div class="claim-item">ฉีกขาด สภาพไม่สมบูรณ์</div>
+      <div class="claim-item">ซีลไม่ติด</div>
+      <div class="claim-item">อุปกรณ์ไม่ครบ</div>
+      <div class="claim-item">สภาพสินค้า</div>
+      <div class="claim-item">อื่นๆ</div>
+    </div>
+
+    <h3>📝 รายละเอียดเพิ่มเติม</h3>
+    <textarea
+      id="detail"
+      rows="5"
+      placeholder="อธิบายรายละเอียดปัญหาที่พบ เช่น ลักษณะความเสียหาย, จุดที่พบปัญหา, สภาพการใช้งาน..."
+    ></textarea>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 4: แนบไฟล์                                   -->
+  <!-- ===================================================== -->
+  <div class="card">
+    <h2>📷 แนบหลักฐาน <span style="color:#ef4444;font-size:16px">*</span></h2>
+    <h4>แนบรูปภาพหรือวิดีโอแสดงสภาพของสินค้าที่มีปัญหา</h4>
+
+    <div class="form-group" style="margin-bottom:20px">
+      <label>📸 รูปภาพ</label>
+      <div class="upload-grid" id="imageGrid">
+        <label class="upload-box" title="แตะเพื่อเพิ่มรูป">
+          📷
+          <input type="file" id="imageInput" accept="image/*" multiple hidden>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>🎥 วิดีโอ</label>
+      <div class="upload-grid" id="videoGrid">
+        <label class="upload-box" title="แตะเพื่อเพิ่มวิดีโอ">
+          🎬
+          <input type="file" id="videoInput" accept="video/*" multiple hidden>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 5: ปุ่มบันทึกแบบร่าง                        -->
+  <!-- ===================================================== -->
+  <div class="actions">
+    <button class="btn-draft" onclick="saveDraft()">💾 บันทึกแบบร่าง</button>
+    <button class="btn-edit" onclick="submitEdit()">✏️ อัปเดท Draft</button>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 6: ปุ่มส่งเคลมจากฟอร์ม (กรอกข้อมูลใหม่)     -->
+  <!-- ===================================================== -->
+  <div class="actions">
+    <button class="btn-submit" onclick="submitClaim(null)">✅ ส่งเคลมทันที (จากฟอร์มด้านบน)</button>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SECTION 7: ตาราง Draft + ปุ่มส่งแต่ละรายการ          -->
+  <!-- ===================================================== -->
+  <div class="card">
+    <h2>📋 รายการแบบร่าง (Draft)</h2>
+    <h4>เลือกรายการแล้วกด ✅ ส่งเคลม — หรือ ✏️ แก้ไขก่อนส่ง</h4>
+
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่ / ร้านค้า</th>
+            <th>สินค้า / ปัญหา</th>
+            <th>ไฟล์แนบ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="draftBody">
+          <tr>
+            <td colspan="4" style="text-align:center;color:#9ca3af;padding:40px;">
+              ⏳ กำลังโหลด...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  </div><!-- /.container -->
+   </div><!--claim-scope-->
+  <!-- ===================================================== -->
+  <!-- PRODUCT MODAL                                         -->
+  <!-- ===================================================== -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🛍️ เลือกสินค้า</h3>
+        <button class="modal-close-btn" onclick="closeProductModal()">✕</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- FOOTER                                                -->
+  <!-- ===================================================== -->
+  <footer class="footer">
+    © 2026 EABaseHub — ระบบแจ้งเคลมสินค้า
+  </footer>
+
+  <!-- ===================================================== -->
+  <!-- SCRIPTS                                               -->
+  <!-- ===================================================== -->  
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/services/categoryService.js"></script>
+  <script src="/js/pages/forms/formClaim.js" type="module"></script>
+
+  <script src="/js/core/splash.js"></script> 
+  <script src="/js/core/loadingSplash.js"></script>
+
+</body>
+</html>

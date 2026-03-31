@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Admin | แก้ไขผู้ใช้</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+
+<link rel="stylesheet" href="css/admin-base.css">
+<link rel="stylesheet" href="css/admin-edit.css">
+
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">Admin Panel</div>
+  <a href="admintor.html" class="btn">← กลับ</a>
+</header>
+
+<main class="container small">
+
+  <h2>แก้ไขผู้ใช้</h2>
+
+  <!-- Input ต่าง ๆ จะถูกเติมค่าโดย JS -->
+  <label>Email</label>
+  <input id="email" disabled>
+
+  <label>Username</label>
+  <input id="username" disabled>
+
+  <label>ชื่อที่แสดง</label>
+  <input id="displayName">
+
+  <label>พื้นที่</label>
+<input id="area" placeholder="เช่น กรุงเทพ, ภาคเหนือ, ภาคกลาง">
+
+
+  <label>Role</label>
+  <select id="role">
+    <option value="user">User</option>
+    <option value="sales">Sales</option>
+    <option value="manager">Manager</option>
+    <option value="admin">Admin</option>
+  </select>
+
+  <label>Status</label>
+  <select id="status">
+    <option value="Active">Active</option>
+    <option value="Suspended">Suspended</option>
+  </select>
+
+  <button onclick="saveUser()">บันทึก</button>
+
+</main>
+
+<script src="js/core/supabaseClient.js"></script>
+<script src="js/core/auth.js"></script>
+<script src="js/admin-edit.js"></script>
+
+
+</body>
+</html>

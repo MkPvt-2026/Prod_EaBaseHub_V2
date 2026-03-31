@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <!-- กำหนด character encoding เป็น UTF-8 เพื่อรองรับภาษาไทย -->
+    <meta charset="UTF-8" />
+    <!-- กำหนดให้หน้าเว็บแสดงผลได้ดีบนมือถือ (responsive) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- ชื่อหน้าเว็บที่แสดงบน tab เบราว์เซอร์ -->
+    <title>Forms Hub</title>
+
+    <!-- นำเข้า Google Material Icons สำหรับใช้ไอคอนต่างๆ -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet"/>
+
+    <!-- เชื่อมโยงไฟล์ CSS ภายนอก -->
+    <link rel="stylesheet" href="/css/base/layout.css">
+    <link rel="stylesheet" href="/css/pages/forms/formHub.css" />
+  </head>
+
+  <body>
+    <!-- =====================================================
+       HEADER SECTION (ส่วนหัวเว็บไซต์)
+       แสดงโลโก้และชื่อผู้ใช้งาน
+       ===================================================== -->
+     <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <h2>EABaseHub</h2>
+    </div>
+
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+    <!-- =====================================================
+       NAVIGATION SECTION (ส่วนเมนูนำทาง)
+       แสดงลิงก์ไปยังหน้าต่างๆ ในระบบ
+       ===================================================== -->
+    <nav class="app-nav">      
+      <a href="/index.html">หน้าแรก</a>      
+      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>    
+      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a> 
+      <a href="/pages/forms/formHub.html" class="active">แบบฟอร์ม</a>    
+      <a href="/pages/forms/shopUser.html">ร้านค้าของฉัน</a>    
+    </nav>
+
+    <!-- =====================================================
+       MAIN CONTENT (เนื้อหาหลักของหน้า)
+       ===================================================== -->
+      <div class="container">
+       <div class="page-header">
+        <!-- ชื่อหน้า -->
+        <h1>📋 Forms Hub</h1>
+        <p>เลือกแบบฟอร์มที่ต้องการใช้งาน</p>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- MAIN CONTENT CONTAINER                                 -->
+      <!-- ===================================================== -->
+  
+
+        <!-- =====================================================
+        การ์ดที่ 1: แผนการเดินทาง (Trip Plan)
+        คลิกแล้วจะไปหน้า formPlan.html
+        ===================================================== -->
+        <!-- กริดแสดงการ์ดแบบฟอร์มต่างๆ -->
+        <div class="forms-grid">
+        <div class="form-card" onclick="location.href = 'formPlan.html'">
+          <!-- ไอคอนรูปวงกลมสีน้ำเงิน -->
+          <div class="form-icon blue">
+            <!-- Material Icon รูป assignment (เอกสาร/แบบฟอร์ม) -->
+            <span class="material-symbols-outlined">assignment</span>
+          </div>
+
+          <!-- ชื่อแบบฟอร์ม -->
+          <h3>แผนการเดินทาง</h3>
+
+          <!-- คำอธิบายเพิ่มเติม -->
+          <p>และเบิกทดลองจ่าย</p>
+        </div>
+
+        <!-- =====================================================
+           การ์ดที่ 2: ใบเดินทางจริง (Actual Trip)
+           คลิกแล้วจะไปหน้า formActual.html
+           ===================================================== -->
+        <div class="form-card" onclick="location.href = 'formActual.html'">
+          <!-- ไอคอนรูปวงกลมสีเขียว -->
+          <div class="form-icon green">
+            <!-- Material Icon รูป receipt_long (ใบเสร็จ) -->
+            <span class="material-symbols-outlined">receipt_long</span>
+          </div>
+
+          <!-- ชื่อแบบฟอร์ม -->
+          <h3>ใบเดินทางจริง</h3>
+
+          <!-- คำอธิบายเพิ่มเติม -->
+          <p>และเคลียร์ค่าใช้จ่าย</p>
+        </div>
+      </div>
+      <!-- สิ้นสุด forms-grid -->
+    </div>
+    <!-- สิ้นสุด container -->
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/formHub.js"></script>
+
+
+    <script src="/js/core/splash.js"></script> 
+  <script src="/js/core/loadingSplash.js"></script>
+  </body>
+</html>

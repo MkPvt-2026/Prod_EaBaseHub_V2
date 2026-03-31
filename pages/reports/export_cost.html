@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <title>รายงานฟอร์ม 1</title>
+  <style>
+    body { 
+      font-family: Tahoma, sans-serif;
+      padding: 20px; background: #f5f5f5; 
+    }
+    .paper {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 30px; 
+      border-radius: 8px; 
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 20px; 
+    }
+    th, td { 
+      border: 1px solid #ccc; 
+      padding: 8px; 
+      text-align: center; 
+    }
+    th { 
+      background: #eee; 
+    }
+    .info { 
+      background: #e8f5e9; 
+      padding: 15px; 
+      border-radius: 6px; 
+      margin-bottom: 20px; 
+    }
+    .error { 
+      background: #ffebee; 
+      color: #c62828; 
+      padding: 15px; 
+      border-radius: 6px; 
+    }
+    .loading { 
+      text-align: center; 
+      padding: 40px; 
+      color: #666; 
+    }
+    .debug { 
+      background: #fff9c4; 
+      padding: 10px; 
+      margin-bottom: 10px; 
+      font-size: 12px; 
+      border-radius: 4px; 
+    }
+    button { 
+      padding: 10px 20px; 
+      margin: 5px; 
+      cursor: pointer; 
+      border: none; 
+      border-radius: 4px; 
+    }
+    .btn-primary { 
+      background: #1976d2; 
+      color: #fff; 
+    }
+    
+   .btn-secondary1 {
+      display: inline-flex;
+      align-items: center;   /* จัดแนวแกนตั้งให้ตรงกัน */
+      gap: 8px;              /* ระยะห่างไอคอนกับข้อความ */
+      padding: 15px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff7301, #e45e11);
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary1:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 174, 1, 0.4);
+    }
+
+    .btn-secondary1 i {
+      font-size: 20px;
+    }
+
+    
+  </style>
+</head>
+
+<body>
+
+<?!= include('nav'); ?>
+
+<div class="paper">
+  <h1 style="text-align:center;">บริษัท เอิร์นนี่ แอดวานซ์</h1>
+  <h2 style="text-align:center;">แผนการเดินทางและเบิกทดลองจ่าย ๑</h2>
+
+  <!-- Debug info -->
+  <div id="debug" class="debug"></div>
+
+  <div id="content">
+    <div class="loading">⏳ กำลังโหลดข้อมูล...</div>
+  </div>
+
+</div>
+
+<script>
+  var DOC_NO = '';
+  
+  // ดึง doc จาก URL
+  var search = window.location.search;
+  var params = new URLSearchParams(search);
+  DOC_NO = params.get('doc');
+  
+  // ถ้าไม่ได้ ลองวิธีอื่น
+  if (!DOC_NO) {
+    var match = window.location.href.match(/[?&]doc=([^&]*)/);
+    if (match) {
+      DOC_NO = decodeURIComponent(match[1]);
+    }
+  }
+
+  window.onload = function() {
+    var content = document.getElementById('content');
+    var debugEl = document.getElementById('debug');
+    
+    if (debugEl) {
+      debugEl.innerHTML = 'DOC_NO: ' + DOC_NO + '<br>URL: ' + window.location.href;
+    }
+
+    if (!DOC_NO || DOC_NO === 'null' || DOC_NO === 'undefined') {
+      content.innerHTML = '<div class="error">❌ ไม่พบเลขเอกสาร</div>' +
+        '<p>กรุณากลับไปบันทึก Form 1 ใหม่</p>' +
+        '<button class="btn-secondary1" onclick="goForm1()"><i class="material-icons">arrow_back_ios</i>ไป Form 1</button>';
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        showReport(data);
+      })
+      .withFailureHandler(function(err) {
+        content.innerHTML = '<div class="error">❌ ' + err.message + '</div>' +
+          '<button class="btn-secondary1" onclick="goForm1()"><i class="material-icons">arrow_back_ios</i>ไป Form 1</button>';
+      })
+      .getPlanData(DOC_NO);
+  };
+
+  function showReport(data) {
+    var html = '';
+    
+    html += '<div class="info">';
+    html += '<strong>เลขเอกสาร:</strong> ' + data.docNo + '<br>';
+    html += '<strong>พนักงาน:</strong> ' + data.emp + '<br>';
+    html += '<strong>ภาค:</strong> ' + data.zone + '<br>';
+    html += '<strong>วันที่:</strong> ' + data.start + ' ถึง ' + data.end;
+    html += '</div>';
+
+    html += '<table><thead><tr>';
+    html += '<th>วันที่</th><th>จาก</th><th>ไป</th>';
+    html += '<th>ร้าน 1</th><th>ร้าน 2</th><th>ร้าน 3</th><th>หมายเหตุ</th>';
+    html += '</tr></thead><tbody>';
+
+    for (var i = 0; i < data.rows.length; i++) {
+      var r = data.rows[i];
+      html += '<tr>';
+      html += '<td>' + (r.date || '-') + '</td>';
+      html += '<td>' + (r.from || '-') + '</td>';
+      html += '<td>' + (r.to || '-') + '</td>';
+      html += '<td>' + (r.shop1 || '-') + '</td>';
+      html += '<td>' + (r.shop2 || '-') + '</td>';
+      html += '<td>' + (r.shop3 || '-') + '</td>';
+      html += '<td>' + (r.note || '-') + '</td>';
+      html += '</tr>';
+    }
+
+    html += '</tbody></table><br>';
+    html += '<button class="btn-primary" onclick="exportPDF()">📄 Export PDF</button> ';
+    html += '<button class="btn-secondary" onclick="printPage()">🖨 Print</button> ';
+    html += '<button class="btn-primary" onclick="goForm2()">➡ ไป Form 2</button> ';
+    html += '<button class="btn-secondary" onclick="goBack()">← กลับเมนู</button>';
+
+    document.getElementById('content').innerHTML = html;
+  }
+
+  function exportPDF() {
+    google.script.run
+      .withSuccessHandler(function(url) { window.open(url, '_blank'); })
+      .withFailureHandler(function(err) { alert('Export ไม่สำเร็จ: ' + err.message); })
+      .exportPlanPDF(DOC_NO);
+  }
+
+  function printPage() { window.print(); }
+
+  function goForm1() {
+    google.script.run.withSuccessHandler(function(url) {
+      window.top.location.href = url + '?page=form1';
+    }).getBaseUrl();
+  }
+
+  function goForm2() {
+    google.script.run.withSuccessHandler(function(url) {
+      window.top.location.href = url + '?page=form2&doc=' + encodeURIComponent(DOC_NO);
+    }).getBaseUrl();
+  }
+
+  function goBack() {
+    google.script.run.withSuccessHandler(function(url) {
+      window.top.location.href = url + '?page=menu';
+    }).getBaseUrl();
+  }
+</script>
+
+</body>
+</html>

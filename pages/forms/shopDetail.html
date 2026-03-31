@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>ข้อมูลร้านค้า</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/shopDetail.css" />
+  </head>
+
+  <body>
+
+    <header class="app-header">
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo">
+        </div>
+        <h2>EABaseHub</h2>
+      </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">กำลังโหลด...</div>
+        </div>
+        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <nav class="app-nav">
+      <a href="/pages/index.html">หน้าแรก</a>
+      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
+      <a href="/pages/forms/formHub.html">แบบฟอร์ม</a>
+      <a href="/pages/forms/shopUser.html" class="active">ร้านของฉัน</a>
+    </nav>
+
+    <div class="container">
+
+      <!-- BACK + TITLE -->
+      <div class="detail-header">
+        <a href="/pages/forms/shopUser.html" class="back-btn">← กลับ</a>
+        <div class="detail-title-wrap">
+          <h1 id="detailShopName">กำลังโหลด...</h1>
+          <span id="detailShopCode" class="detail-code"></span>
+        </div>
+        <span id="detailProvince" class="detail-province"></span>
+      </div>
+
+      <!-- SECTION: ข้อมูลร้าน -->
+      <div class="detail-grid">
+
+        <!-- LEFT col -->
+        <div class="detail-col">
+
+          <div class="card">
+            <div class="card-label">ชื่อรอง</div>
+            <div class="alias-row">
+              <input id="aliasInput" placeholder="เพิ่มชื่อรอง..." />
+              <button id="addAliasBtn">+ เพิ่ม</button>
+            </div>
+            <div id="aliasList" class="alias-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">ที่อยู่</div>
+            <div class="field">
+              <label>ที่อยู่เต็ม</label>
+              <textarea id="detailAddress" rows="3" placeholder="เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"></textarea>
+            </div>
+            <div class="field">
+              <label>Google Maps URL</label>
+              <div class="input-with-action">
+                <input id="detailMapsUrl" type="url" placeholder="https://maps.google.com/..." />
+                <a id="mapsLink" href="#" target="_blank" class="input-action-btn" style="display:none;">เปิด</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION: รูปภาพ -->       
+    <div class="card">
+          <span class="section-divider-label">รูปภาพ</span>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="imageInput" accept="image/*" multiple hidden />
+          <div class="upload-icon">📷</div>
+          <div>คลิกหรือลากรูปมาวางที่นี่</div>
+          <div class="upload-hint">JPG, PNG, WEBP — ไม่เกิน 5MB ต่อรูป</div>
+        </div>
+        <div id="imageGrid" class="image-grid"></div>
+      </div>
+
+        </div>
+
+        <!-- RIGHT col -->
+        <div class="detail-col">
+
+          <div class="card">
+            <div class="card-label">ผู้ติดต่อ</div>
+            <div class="field-row">
+              <div class="field">
+                <label>เบอร์โทรร้าน</label>
+                <input id="detailPhone" type="tel" placeholder="0XX-XXX-XXXX" />
+              </div>
+              <div class="field">
+                <label>ผู้ติดต่อ</label>
+                <input id="detailContactName" placeholder="ชื่อ-นามสกุล" />
+              </div>
+            </div>
+            <div class="field">
+              <label>LINE ID</label>
+              <input id="detailLineId" placeholder="@line_id หรือชื่อ LINE" />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">ขนส่งประจำ</div>
+            <div class="shipping-chips" id="shippingChips"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">หมายเหตุ</div>
+            <div class="field">
+              <textarea id="detailNote" rows="3" placeholder="ข้อมูลเพิ่มเติมที่อยากบันทึกไว้..."></textarea>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SAVE -->
+      <div class="save-row">
+        <span id="detailSaveStatus" class="save-status"></span>
+        <button class="btn-cancel" id="cancelBtn">ยกเลิก</button>
+        <button id="saveDetailBtn" class="btn-save">💾 บันทึกข้อมูล</button>
+      </div>
+
+      
+
+    </div>
+
+    <footer class="footer">© 2026 EABaseHub — ระบบเพิ่มและแก้ไขข้อมูล</footer>
+
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/services/shopDetailService.js"></script>
+    <script src="/js/pages/forms/shopDetail.js"></script>
+
+    <script src="/js/core/splash.js"></script>
+    <script src="/js/core/loadingOverlay.js"></script>
+  </body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>EABaseHub | Manager Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base/layout.css">
+  <link rel="stylesheet" href="/css/components/badgeButtom.css">
+  <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
+  
+  <style>
+    /* ── Date Range Picker Styles ── */
+    .date-range-section {
+      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    
+    .date-range-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .date-range-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .date-range-title .icon {
+      font-size: 1.25rem;
+    }
+    
+    .date-range-label {
+      background: rgba(0,212,170,0.15);
+      color: var(--accent, #00d4aa);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .date-range-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .date-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .date-input-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted, #7a9cc0);
+      white-space: nowrap;
+    }
+    
+    .date-input-group input[type="date"] {
+      background: transparent;
+      border: none;
+      color: var(--text-primary, #e8f0fe);
+      font-family: 'Kanit', sans-serif;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .date-input-group input[type="date"]:focus {
+      outline: none;
+      background: rgba(0,212,170,0.1);
+    }
+    
+    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+    
+    .quick-range-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    
+    .quick-range-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted, #7a9cc0);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: 'Kanit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .quick-range-btn:hover {
+      background: rgba(0,212,170,0.1);
+      border-color: rgba(0,212,170,0.3);
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .quick-range-btn.active {
+      background: rgba(0,212,170,0.2);
+      border-color: var(--accent, #00d4aa);
+      color: var(--accent, #00d4aa);
+      font-weight: 500;
+    }
+    
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .date-range-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .date-range-controls {
+        width: 100%;
+      }
+      
+      .date-input-group {
+        flex: 1;
+        min-width: 140px;
+      }
+      
+      .quick-range-btns {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <!-- ── NAV ── -->
+  <nav class="app-nav">
+    <a href="/pages/dashboard/managerDashboard.html" class="active">หน้าหลัก</a>
+    <a href="/pages/reports/reportTracker.html">รายงานเยี่ยมร้านค้า</a>
+    <a href="/commingSoon.html">นำเข้าข้อมูล</a>
+  </nav>
+
+  <main>
+  <div class="container">
+
+    <!-- ══════════════════════════════════════════
+         PAGE HEADER
+         ══════════════════════════════════════════ -->
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1>📊 Sales <span class="accent">Intelligence</span></h1>
+        <p>ภาพรวมยอดขาย กำไร และประสิทธิภาพทีม</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         DATE RANGE PICKER — เลือกช่วงวันที่
+         ══════════════════════════════════════════ -->
+    <div class="date-range-section">
+      <div class="date-range-header">
+        <div class="date-range-title">
+          <span class="icon">📅</span>
+          <span>ช่วงเวลา</span>
+          <span class="date-range-label" id="dateRangeLabel">—</span>
+        </div>
+        
+        <div class="date-range-controls">
+          <div class="date-input-group">
+            <label>เริ่ม</label>
+            <input type="date" id="dateStart">
+          </div>
+          <div class="date-input-group">
+            <label>สิ้นสุด</label>
+            <input type="date" id="dateEnd">
+          </div>
+        </div>
+      </div>
+      
+      <div class="quick-range-btns">
+        <button class="quick-range-btn" data-range="today">วันนี้</button>
+        <button class="quick-range-btn" data-range="7days">7 วัน</button>
+        <button class="quick-range-btn active" data-range="30days">30 วัน</button>
+        <button class="quick-range-btn" data-range="thisWeek">สัปดาห์นี้</button>
+        <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
+        <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
+        <button class="quick-range-btn" data-range="thisQuarter">ไตรมาสนี้</button>
+        <button class="quick-range-btn" data-range="thisYear">ปีนี้</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         INSIGHT PILLS — ข้อมูลสำคัญแบบสรุป
+         ══════════════════════════════════════════ -->
+    <div class="insight-row">
+      <div class="insight-pill">
+        <span class="pill-icon">🏆</span>
+        <span class="pill-val" id="topSale">—</span>
+        <span class="pill-label">เซลล์ยอดสูงสุด</span>
+      </div>
+      <div class="insight-pill">
+        <span class="pill-icon">📦</span>
+        <span class="pill-val" id="topProduct">—</span>
+        <span class="pill-label">สินค้าขายดีอันดับ 1</span>
+      </div>
+      <div class="insight-pill">
+        <span class="pill-icon">🏪</span>
+        <span class="pill-val" id="topCustomer">—</span>
+        <span class="pill-label">ลูกค้ายอดสูงสุด</span>
+      </div>
+      <div class="insight-pill">
+        <span class="pill-icon">📈</span>
+        <span class="pill-val" id="growthRate">—</span>
+        <span class="pill-label">เติบโตเทียบช่วงก่อน</span>
+      </div>
+      <div class="insight-pill">
+        <span class="pill-icon">💎</span>
+        <span class="pill-val" id="avgProfitPct">—</span>
+        <span class="pill-label">อัตรากำไรเฉลี่ย</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         KPI CARDS — ตัวเลขหลัก
+         ══════════════════════════════════════════ -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-body">
+          <div class="kpi-number" id="kpiAmount">—</div>
+          <div class="kpi-label">ยอดขายรวม (฿)</div>
+          <div class="kpi-change" id="kpiAmountChange">— vs ช่วงก่อน</div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-body">
+          <div class="kpi-number" id="kpiTargetPct">—</div>
+          <div class="kpi-label">% บรรลุเป้าหมาย</div>
+          <div class="kpi-change" id="kpiTargetSub">เป้า: —</div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">💎</div>
+        <div class="kpi-body">
+          <div class="kpi-number" id="kpiProfit">—</div>
+          <div class="kpi-label">กำไรรวม (฿)</div>
+          <div class="kpi-change" id="kpiProfitChange">— vs ช่วงก่อน</div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-body">
+          <div class="kpi-number" id="kpiSalesCount">—</div>
+          <div class="kpi-label">เซลล์ที่มียอดขาย</div>
+          <div class="kpi-change" id="kpiSalesSub">จากทั้งหมด — คน</div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-pink">
+        <div class="kpi-icon">🏪</div>
+        <div class="kpi-body">
+          <div class="kpi-number" id="kpiCustomers">—</div>
+          <div class="kpi-label">ลูกค้า / ร้านค้า</div>
+          <div class="kpi-change" id="kpiCustomersSub">—</div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-body">
+          <div class="kpi-number" id="kpiProducts">—</div>
+          <div class="kpi-label">จำนวนสินค้าที่ขายได้</div>
+          <div class="kpi-change" id="kpiQtyTotal">รวม — ชิ้น</div>
+        </div>
+      </div>
+    </div>
+
+
+     <!-- ══════════════════════════════════════════
+         ROW 4: ลูกค้า (doughnut) + สินค้า Slow-Moving
+         ══════════════════════════════════════════ -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏪 ยอดขายแยกตามลูกค้า (Top 8)</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartCustomer"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🐌 สินค้า Slow-Moving</div>
+          <span class="card-badge">ขายน้อยที่สุด</span>
+        </div>
+        <div id="slowMovingList">
+          <div class="loading-text">กำลังโหลด...</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════
+         ROW 3: ยอดขายเซลล์ (bar) + ยอดรวมสินค้า (bar)
+         ══════════════════════════════════════════ -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 ยอดขายแยกตามเซลล์</div>
+        </div>
+        <div class="chart-wrap chart-tall">
+          <canvas id="chartSales"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📦 ยอดรวมแยกตามสินค้า</div>
+        </div>
+        <div class="chart-wrap chart-tall">
+          <canvas id="chartProduct"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ROW 1: เป้าหมาย + แนวโน้มยอดขาย
+         ══════════════════════════════════════════ -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎯 เป้าหมาย vs ยอดจริง (รายเซลล์)</div>
+          <span class="card-badge" id="targetBadge">—</span>
+        </div>
+        <div id="targetSection">
+          <div class="loading-text">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 แนวโน้มยอดขาย</div>
+          <span class="card-badge" id="trendBadge">— วัน</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartWeekly"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ROW 2: Leaderboard + สินค้าขายดี + กำไรตามสินค้า
+         ══════════════════════════════════════════ -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏆 Leaderboard เซลล์</div>
+          <span class="card-badge">ยอดขาย</span>
+        </div>
+        <div id="leaderboard">
+          <div class="loading-text">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📦 สินค้าขายดี Top 8</div>
+          <span class="card-badge">จำนวน (ชิ้น)</span>
+        </div>
+        <div id="topProductsList">
+          <div class="loading-text">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💎 กำไรสูงสุดตามสินค้า</div>
+          <span class="card-badge">Top 8</span>
+        </div>
+        <div id="topProfitProducts">
+          <div class="loading-text">กำลังโหลด...</div>
+        </div>
+      </div>
+    </div>
+
+    
+
+   
+    <!-- ══════════════════════════════════════════
+         ROW 5: กำไรแยกเซลล์ + Profit Margin Chart
+         ══════════════════════════════════════════ -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💰 กำไรแยกตามเซลล์</div>
+        </div>
+        <div class="chart-wrap chart-tall">
+          <canvas id="chartProfitBySales"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📉 อัตรากำไร (%) แยกตามเซลล์</div>
+        </div>
+        <div class="chart-wrap chart-tall">
+          <canvas id="chartMarginBySales"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         HEATMAP — การเข้าเยี่ยมร้าน (reports)
+         ══════════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🗓️ Heatmap การเข้าเยี่ยม (30 วัน)</div>
+        <span class="card-badge">Daily Activity</span>
+      </div>
+      <div class="heatmap-wrap" id="heatmapWrap">
+        <div class="loading-text">กำลังโหลด...</div>
+      </div>
+    </div>
+
+  </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <footer class="footer">© 2026 EABaseHub | Sales Intelligence Dashboard</footer>
+
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/services/shopService.js"></script>
+  <script src="/js/services/categoryService.js"></script>
+  <script src="/js/services/reportService.js"></script>
+  <!-- ลบ Salesdashboard.js ออก เพื่อไม่ให้ซ้ำซ้อน -->
+  <script src="/js/pages/dashboard/managerDashboard.js"></script>
+
+  <script src="/js/core/splash.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+</body>
+</html>

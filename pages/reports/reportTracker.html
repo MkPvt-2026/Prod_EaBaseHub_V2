@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายงานการเข้าร้านค้า | Manager</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base/layout.css">
+  <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
+  
+  <style>
+    /* ── Date Range Picker Styles ── */
+    .date-range-section {
+      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    
+    .date-range-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .date-range-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .date-range-title .icon {
+      font-size: 1.25rem;
+    }
+    
+    .date-range-label {
+      background: rgba(0,212,170,0.15);
+      color: var(--accent, #00d4aa);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .date-range-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .date-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .date-input-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted, #7a9cc0);
+      white-space: nowrap;
+    }
+    
+    .date-input-group input[type="date"] {
+      background: transparent;
+      border: none;
+      color: var(--text-primary, #e8f0fe);
+      font-family: 'Kanit', sans-serif;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .date-input-group input[type="date"]:focus {
+      outline: none;
+      background: rgba(0,212,170,0.1);
+    }
+    
+    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+    
+    .quick-range-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    
+    .quick-range-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted, #7a9cc0);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: 'Kanit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .quick-range-btn:hover {
+      background: rgba(0,212,170,0.1);
+      border-color: rgba(0,212,170,0.3);
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .quick-range-btn.active {
+      background: rgba(0,212,170,0.2);
+      border-color: var(--accent, #00d4aa);
+      color: var(--accent, #00d4aa);
+      font-weight: 500;
+    }
+    
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .date-range-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .date-range-controls {
+        width: 100%;
+      }
+      
+      .date-input-group {
+        flex: 1;
+        min-width: 140px;
+      }
+      
+      .quick-range-btns {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="app-nav">       
+    <a href="/pages/dashboard/managerDashboard.html" class="active">หน้าหลัก</a>
+    <a href="/pages/reports/reportManager.html" class="active">รายงานเข้าร้าน</a>
+  </nav>
+
+  <main>
+  <div class="container">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <h1>📋 รายงานการเข้าร้านค้า</h1>
+        <p>ติดตามและอ่านรายงานของทีมเซลล์</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         DATE RANGE PICKER — เลือกช่วงวันที่
+         ══════════════════════════════════════════ -->
+    <div class="date-range-section">
+      <div class="date-range-header">
+        <div class="date-range-title">
+          <span class="icon">📅</span>
+          <span>ช่วงเวลา</span>
+          <span class="date-range-label" id="dateRangeLabel">—</span>
+        </div>
+        
+        <div class="date-range-controls">
+          <div class="date-input-group">
+            <label>เริ่ม</label>
+            <input type="date" id="dateStart">
+          </div>
+          <div class="date-input-group">
+            <label>สิ้นสุด</label>
+            <input type="date" id="dateEnd">
+          </div>
+        </div>
+      </div>
+      
+      <div class="quick-range-btns">
+        <button class="quick-range-btn" data-range="today">วันนี้</button>
+        <button class="quick-range-btn" data-range="7days">7 วัน</button>
+        <button class="quick-range-btn active" data-range="thisWeek">สัปดาห์นี้</button>
+        <button class="quick-range-btn" data-range="lastWeek">สัปดาห์ที่แล้ว</button>
+        <button class="quick-range-btn" data-range="30days">30 วัน</button>
+        <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
+        <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
+      </div>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-cards">
+      <div class="sum-card">
+        <div class="sum-icon">📝</div>
+        <div class="sum-content">
+          <div class="sum-value" id="totalReports">—</div>
+          <div class="sum-label">รายงานทั้งหมด</div>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">🕐</div>
+        <div class="sum-content">
+          <div class="sum-value" id="unreadReports">—</div>
+          <div class="sum-label">ยังไม่อ่าน</div>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">✅</div>
+        <div class="sum-content">
+          <div class="sum-value" id="readReports">—</div>
+          <div class="sum-label">อ่านแล้ว</div>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">👥</div>
+        <div class="sum-content">
+          <div class="sum-value" id="activeSales">—</div>
+          <div class="sum-label">เซลล์ส่งรายงาน</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SALES OVERVIEW -->
+    <div class="card">
+      <div class="card-header">
+        <h2>👥 ภาพรวมทีมเซลล์</h2>
+        <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
+      </div>
+      <div class="sales-grid" id="salesGrid">
+        <div class="loading">กำลังโหลด...</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>เซลล์</label>
+          <select id="filterSales">
+            <option value="">— ทั้งหมด —</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>สถานะ</label>
+          <select id="filterStatus">
+            <option value="">— ทั้งหมด —</option>
+            <option value="unread">🕐 ยังไม่อ่าน</option>
+            <option value="read">✅ อ่านแล้ว</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>ค้นหา</label>
+          <input type="text" id="searchInput" placeholder="ชื่อร้าน, สินค้า...">
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button onclick="applyFilter()" class="btn btn-primary">🔍 กรอง</button>
+        <button onclick="resetFilter()" class="btn btn-secondary">↺ รีเซ็ต</button>
+        <button onclick="exportCSV()" class="btn btn-export">📥 Export</button>
+      </div>
+    </div>
+
+    <!-- REPORTS LIST -->
+    <div class="card">
+      <div class="card-header">
+        <h2>📋 รายการรายงาน</h2>
+        <span id="reportCount" class="card-hint"></span>
+      </div>
+      <div class="reports-container" id="reportsContainer">
+        <div class="loading">กำลังโหลด...</div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+  </div>
+  </main>
+
+  <!-- MODAL -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      
+      <div class="modal-header">
+        <h3 id="modalTitle">รายละเอียดรายงาน</h3>
+        <div class="modal-badges">
+          <span id="modalStatus" class="badge">—</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- ข้อมูลหลัก -->
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">📅 วันที่รายงาน</span>
+            <span id="mReportDate" class="info-value">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">👤 เซลล์</span>
+            <span id="mSalesName" class="info-value">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">🏪 ร้านค้า</span>
+            <span id="mShopName" class="info-value">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">📦 สินค้า</span>
+            <span id="mProduct" class="info-value">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">📊 จำนวน</span>
+            <span id="mQty" class="info-value">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">📍 แหล่งข้อมูล</span>
+            <span id="mSource" class="info-value">—</span>
+          </div>
+        </div>
+
+        <!-- หมายเหตุ -->
+        <div class="info-section">
+          <div class="info-label">📝 หมายเหตุ</div>
+          <div id="mNote" class="note-box">—</div>
+        </div>
+
+        <!-- Comments -->
+        <div class="comment-section">
+          <div class="comment-header">💬 ความคิดเห็นจากผู้จัดการ</div>
+          <div id="commentsHistory" class="comments-list"></div>
+          <textarea id="commentInput" 
+                    placeholder="พิมพ์ความคิดเห็น คำแนะนำ หรือข้อเสนอแนะ..."
+                    rows="3"></textarea>
+          <div class="modal-actions">
+            <button onclick="saveComment()" class="btn btn-primary">💬 บันทึกความคิดเห็น</button>
+            <button onclick="markAsRead()" class="btn btn-success">✅ ทำเครื่องหมายว่าอ่านแล้ว</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <footer class="footer">© 2026 EABaseHub | Report Manager</footer>
+
+  <!-- =====================================================
+       JAVASCRIPT FILES
+       ลำดับโหลด: supabaseClient → userService → roleConfig → auth → page script
+       ===================================================== -->
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+  <script src="/js/pages/report/reportTracker.js"></script>
+
+</body>
+</html>

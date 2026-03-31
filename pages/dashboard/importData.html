@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>นำเข้าข้อมูล - EABaseHub</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/pages/dashboard/importData.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="app-nav">
+        <a href="/pages/dashboard/managerDashboard.html">หน้าหลัก</a>
+        <a href="/pages/reports/reportTracker.html">รายงานเยี่ยมร้านค้า</a>
+        <a href="/pages/reports/importData.html" class="active">นำเข้าข้อมูล</a>
+    </nav>
+
+    <div class="header">
+        <div class="header-content">
+            <button class="btn-back" onclick="history.back()" title="กลับ">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <h1>
+                <span class="material-icons">transform</span> 
+                นำเข้าข้อมูล - แปลงรายงานยอดขาย
+            </h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="material-icons">upload_file</span> 
+                1. อัพโหลดไฟล์รายงาน
+            </h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 4rem; color: #3a7d44; margin-bottom: 1rem">📊</div>
+                <h3>ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก</h3>
+                <p style="margin-top: 0.5rem; color: #666">รองรับ Excel (.xlsx, .xls) และ CSV</p>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+            </div>
+            
+            <div id="alert" class="alert"></div>
+        </div>
+
+        <!-- Process Log Section -->
+        <div class="card hidden" id="processCard">
+            <h2 class="section-title">
+                <span class="material-icons">assignment</span> 
+                2. กำลังประมวลผล
+            </h2>
+            <div id="processLog" class="process-log"></div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="card hidden" id="previewCard">
+            <h2 class="section-title">
+                <span class="material-icons">preview</span> 
+                3. ข้อมูลที่แปลงแล้ว
+            </h2>
+            
+            <!-- Stats Grid -->
+            <div id="statsGrid" class="stats-grid"></div>
+
+            <!-- Column Selector -->
+            <div class="column-selector">
+                <strong>🎯 เลือก Column ที่ต้องการแสดง:</strong>
+                <div id="columnCheckboxes" style="margin-top: 0.5rem;"></div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <span><strong>🔍 กรองข้อมูล:</strong></span>
+                <select id="filterSales">
+                    <option value="">-- ทุกพนักงาน --</option>
+                </select>
+                <select id="filterCustomer">
+                    <option value="">-- ทุกลูกค้า --</option>
+                </select>
+                <input type="text" id="searchProduct" placeholder="ค้นหาสินค้า..." style="min-width: 200px;">
+                <button class="btn btn-small btn-secondary" id="clearFilterBtn">
+                    <span class="material-icons" style="font-size: 1rem;">clear</span> 
+                    ล้าง Filter
+                </button>
+            </div>
+
+            <!-- Display Count -->
+            <p style="color: #666; margin: 0.5rem 0;">
+                แสดง <span id="displayCount">0</span> จาก <span id="totalCount">0</span> รายการ
+            </p>
+            
+            <!-- Table -->
+            <div class="table-wrapper">
+                <table>
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn" id="importToSupabaseBtn">
+                    <span class="material-icons">cloud_upload</span> 
+                    บันทึกลง Supabase
+                </button>
+                <button class="btn" id="exportBtn">
+                    <span class="material-icons">download</span> 
+                    Export CSV
+                </button>
+                <button class="btn btn-danger" id="clearBtn">
+                    <span class="material-icons">clear</span> 
+                    ล้างข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/auth.js"></script>
+    
+    <!-- Main Script -->
+    <script src="/js/pages/dashboard/importData.js"></script>
+</body>
+</html>

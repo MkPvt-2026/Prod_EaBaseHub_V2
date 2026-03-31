@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EABaseHub | การจัดการ Sales</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base/adminBase.css">  
+<link rel="stylesheet" href="/css/pages/admin/admintor.css">
+<link rel="stylesheet" href="/css/pages/admin/adminSales.css">
+</head>
+
+<body>
+
+  <!-- =====================================================
+       APP HEADER
+       ===================================================== -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="app-nav">
+    <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>    
+    <a href="/pages/admin/adminSales.html" class="active">การจัดการสิทธิ์</a>
+    <a href="/pages/admin/AddProductSpec.html">การจัดการสินค้า</a>
+  </nav>
+
+  <!-- =====================================================
+       MAIN CONTENT
+       ===================================================== -->
+  <main class="page-wrapper">
+    <div class="admin-card">
+
+      <!-- ── CARD HEADER ── -->
+      <div class="card-header-row">
+        <div class="card-title">
+          <span class="material-symbols-outlined">badge</span>
+          จัดการผู้ใช้และสิทธิ์
+        </div>
+        <button onclick="goHome()" class="btn-back">
+          <span class="material-symbols-outlined">arrow_back</span>
+          กลับหน้าหลัก
+        </button>
+      </div>
+
+      <!-- ── TABS ── -->
+      <div class="tab-bar">
+        <a class="tab-item" href="/pages/admin/admintor.html">
+          <span class="material-symbols-outlined">people</span>
+          ผู้ใช้งาน
+        </a>
+        
+        <a class="tab-item tab-active" href="/pages/admin/adminSales.html">
+          <span class="material-symbols-outlined">badge</span>
+          Sales
+        </a>
+
+        <a class="tab-item " href="/pages/admin/adminShops.html">
+          <span class="material-symbols-outlined">storefront</span>
+          สิทธิ์ร้านค้า
+        </a>
+      </div>
+
+      <!-- ── SEARCH ── -->
+      <div class="search-row">
+        <div class="search-wrap">
+          <span class="material-symbols-outlined search-ic">search</span>
+          <input
+            type="text"
+            id="searchSales"
+            placeholder="ค้นหา รหัส, ชื่อ Sales, พื้นที่..."
+            oninput="filterSales()"
+          >
+        </div>
+        <span class="edit-tip">
+          <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle">edit</span>
+          คลิกชื่อหรือพื้นที่เพื่อแก้ไขได้เลย
+        </span>
+      </div>
+
+      <!-- ── TABLE ── -->
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>รหัส</th>
+              <th>ชื่อ Sales</th>
+              <th>พื้นที่</th>
+              <th>จำนวนร้านค้า</th>
+              <th>ดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody id="salesTable">
+            <tr><td colspan="5" class="state-cell">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =====================================================
+       SCRIPTS
+       ===================================================== -->
+  
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/pages/admin/adminSales.js"></script>
+
+</body>
+</html>
