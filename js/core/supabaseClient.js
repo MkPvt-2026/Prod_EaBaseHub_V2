@@ -32,3 +32,23 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 // ✅ expose client instance (ไม่ใช่ library) ให้ทุกไฟล์เข้าถึงได้
 window.supabaseClient = supabaseClient; // alias ให้ปลอดภัย
+
+
+const isDev =
+  window.location.hostname.includes("dev") ||
+  window.location.hostname.includes("localhost");
+
+const SUPABASE_URL = isDev
+  ? "https://vhazeytcfyhhikiqpvn.supabase.co"   // DEV
+  : "https://kdgmilagtpizwnhwapgl.supabase.co"; // PROD
+
+const SUPABASE_KEY = isDev
+  ? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYXpneXRjZnZqaGhpa2lxcHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjA1MjgsImV4cCI6MjA4NjIzNjUyOH0.wHHUPop0xMrUgX6X8Jkk-fahVfIMW-iYx4NT0zg5lxM"
+  : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZ21pbGFndHBpenduaHdhcGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTYzMjgsImV4cCI6MjA5MDQzMjMyOH0.v-TtDtF7RfwxA-qxpvIBquTI8lBaTkiHQ-M7Maf5jeU";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+window.supabaseClient = supabaseClient;
