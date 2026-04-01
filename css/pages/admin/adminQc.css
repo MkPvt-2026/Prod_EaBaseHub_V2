@@ -76,10 +76,10 @@ body {
 
 .header-right { display: flex; align-items: center; gap: 10px; }
 
-.user-box {
+/* .user-box {
   display: flex; align-items: center; gap: 8px; padding: 5px 10px;
   background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-lg);
-}
+} */
 .user-avatar {
   width: 26px; height: 26px; border-radius: 50%;
   background: var(--accent-light); border: 1px solid var(--accent);
