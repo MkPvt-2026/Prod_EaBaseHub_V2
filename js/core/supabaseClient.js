@@ -10,9 +10,9 @@ const SUPABASE_CONFIG = {
     url: "https://kdgmilagtpizwnhwapgl.supabase.co",
     anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYXpneXRjZnZqaGhpa2lxcHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjA1MjgsImV4cCI6MjA4NjIzNjUyOH0.wHHUPop0xMrUgX6X8Jkk-fahVfIMW-iYx4NT0zg5lxM"
   },
-  // 🧪 Development - ทดสอบ (TODO: ใส่ค่าจาก dev project)
+  // 🧪 Development - ทดสอบ (แอคเคาท์ส่วนตัว)
   development: {
-    rl: "https://vhazgytcfvjhhikiqpwm.supabase.co",
+    url: "https://vhazgytcfvjhhikiqpwm.supabase.co",  // ✅ แก้จาก rl เป็น url
     anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZ21pbGFndHBpenduaHdhcGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTYzMjgsImV4cCI6MjA5MDQzMjMyOH0.v-TtDtF7RfwxA-qxpvIBquTI8lBaTkiHQ-M7Maf5jeU"
   }
 };
@@ -52,27 +52,28 @@ console.log(`📡 Supabase URL: ${config.url}`);
 
 // แสดง Badge มุมจอ (เฉพาะ Dev)
 if (ENV === 'development') {
-  const badge = document.createElement('div');
-  badge.innerHTML = '🧪 DEV';
-  badge.style.cssText = `
-    position: fixed;
-    top: 8px;
-    right: 8px;
-    background: #f59e0b;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 99999;
-    font-family: sans-serif;
-  `;
-  document.body.appendChild(badge);
+  document.addEventListener('DOMContentLoaded', () => {
+    const badge = document.createElement('div');
+    badge.innerHTML = '🧪 DEV';
+    badge.style.cssText = `
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      background: #f59e0b;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 99999;
+      font-family: sans-serif;
+    `;
+    document.body.appendChild(badge);
+  });
 }
 
 // ===== 5. EXPORT =====
 window.supabaseClient = supabaseClient;
-window.APP_ENV = ENV;  // เผื่อใช้เช็คที่อื่น
+window.APP_ENV = ENV;
 
 console.log('✅ Supabase client initialized');
-
