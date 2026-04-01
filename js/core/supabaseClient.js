@@ -1,54 +1,78 @@
 // ===============================
 // SUPABASE CLIENT SETUP / supabaseClient.js
-// ไฟล์นี้ต้องโหลดก่อนไฟล์อื่นๆ ทั้งหมด
-// ใช้สำหรับสร้าง Supabase client สำหรับทั้งระบบ
+// รองรับ Production และ Development Environment
 // ===============================
 
-// // ตรวจสอบว่ามี Supabase library โหลดแล้วหรือยัง
-// if (typeof supabase === 'undefined') {
-//   console.error('❌ Supabase library ยังไม่ถูกโหลด! ตรวจสอบ CDN script tag');
-//   throw new Error('Supabase library is not loaded');
-// }
+// ===== 1. CONFIG: ใส่ค่าจาก Supabase Projects =====
+const SUPABASE_CONFIG = {
+  // 🏪 Production - ใช้งานจริง
+  production: {
+    url: "https://kdgmilagtpizwnhwapgl.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYXpneXRjZnZqaGhpa2lxcHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjA1MjgsImV4cCI6MjA4NjIzNjUyOH0.wHHUPop0xMrUgX6X8Jkk-fahVfIMW-iYx4NT0zg5lxM"
+  },
+  // 🧪 Development - ทดสอบ (TODO: ใส่ค่าจาก dev project)
+  development: {
+    rl: "https://vhazgytcfvjhhikiqpwm.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZ21pbGFndHBpenduaHdhcGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTYzMjgsImV4cCI6MjA5MDQzMjMyOH0.v-TtDtF7RfwxA-qxpvIBquTI8lBaTkiHQ-M7Maf5jeU"
+  }
+};
 
-// // สร้าง Supabase Client
-// // ใช้ตัวแปร global เพื่อให้เข้าถึงได้จากทุกไฟล์
-// const supabaseClient = supabase.createClient(
-//   "https://kdgmilagtpizwnhwapgl.supabase.co",
-//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZ21pbGFndHBpenduaHdhcGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTYzMjgsImV4cCI6MjA5MDQzMjMyOH0.v-TtDtF7RfwxA-qxpvIBquTI8lBaTkiHQ-M7Maf5jeU"
-// );
+// ===== 2. DETECT ENVIRONMENT อัตโนมัติ =====
+function detectEnvironment() {
+  const hostname = window.location.hostname;
+  
+  // localhost หรือ 127.0.0.1 = Development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'development';
+  }
+  
+  // อื่นๆ = Production
+  return 'production';
+}
 
+// ===== 3. สร้าง CLIENT =====
+const ENV = detectEnvironment();
+const config = SUPABASE_CONFIG[ENV];
 
-// // ตรวจสอบว่าสร้าง client สำเร็จหรือไม่
-// if (!supabaseClient) {
-//   console.error('❌ ไม่สามารถสร้าง Supabase client ได้');
-//   throw new Error('Failed to create Supabase client');
-// }
+// ตรวจสอบ Supabase library
+if (typeof supabase === 'undefined') {
+  console.error('❌ Supabase library ยังไม่ถูกโหลด!');
+  throw new Error('Supabase library is not loaded');
+}
 
-// console.log('✅ Supabase client initialized successfully');
+// สร้าง client
+const supabaseClient = supabase.createClient(config.url, config.anonKey);
 
-// // Export client เพื่อให้ใช้ใน ES6 modules ได้ (ถ้าต้องการ)
-// if (typeof module !== 'undefined' && module.exports) {
-//   module.exports = { supabaseClient };
-// }
-// // ✅ expose client instance (ไม่ใช่ library) ให้ทุกไฟล์เข้าถึงได้
-// window.supabaseClient = supabaseClient; // alias ให้ปลอดภัย
+// ===== 4. LOG และ BADGE =====
+const envEmoji = ENV === 'production' ? '🏪' : '🧪';
+const envLabel = ENV === 'production' ? 'PRODUCTION' : 'DEVELOPMENT';
 
+console.log(`${envEmoji} Environment: ${envLabel}`);
+console.log(`📡 Supabase URL: ${config.url}`);
 
-const isDev =
-  window.location.hostname.includes("dev") ||
-  window.location.hostname.includes("localhost");
+// แสดง Badge มุมจอ (เฉพาะ Dev)
+if (ENV === 'development') {
+  const badge = document.createElement('div');
+  badge.innerHTML = '🧪 DEV';
+  badge.style.cssText = `
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    background: #f59e0b;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 99999;
+    font-family: sans-serif;
+  `;
+  document.body.appendChild(badge);
+}
 
-const SUPABASE_URL = isDev
-  ? "https://vhazeytcfyhhikiqpvn.supabase.co"   // DEV
-  : "https://kdgmilagtpizwnhwapgl.supabase.co"; // PROD
-
-const SUPABASE_KEY = isDev
-  ? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYXpneXRjZnZqaGhpa2lxcHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjA1MjgsImV4cCI6MjA4NjIzNjUyOH0.wHHUPop0xMrUgX6X8Jkk-fahVfIMW-iYx4NT0zg5lxM"
-  : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZ21pbGFndHBpenduaHdhcGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTYzMjgsImV4cCI6MjA5MDQzMjMyOH0.v-TtDtF7RfwxA-qxpvIBquTI8lBaTkiHQ-M7Maf5jeU";
-
-const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
+// ===== 5. EXPORT =====
 window.supabaseClient = supabaseClient;
+window.APP_ENV = ENV;  // เผื่อใช้เช็คที่อื่น
+
+console.log('✅ Supabase client initialized');
+
