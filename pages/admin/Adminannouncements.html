@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการประชาสัมพันธ์ - EABaseHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <!-- Base CSS -->
+    <!-- <link rel="stylesheet" href="css/adminBase.css"> -->
+    <link rel="stylesheet" href="/css/pages/admin/Adminannouncements.css">
+</head>
+<body>
+    <!-- Sidebar (ใช้ sidebar เดียวกับระบบ) -->
+
+    <main class="admin-announce-page">
+        <h1>
+            <span class="material-symbols-outlined">campaign</span>
+            จัดการประชาสัมพันธ์
+        </h1>
+
+        <!-- Toolbar -->
+        <div class="admin-announce-toolbar">
+            <div class="admin-announce-filters">
+                <button class="admin-announce-filter-btn active" data-filter="all">ทั้งหมด</button>
+                <button class="admin-announce-filter-btn" data-filter="published">เผยแพร่แล้ว</button>
+                <button class="admin-announce-filter-btn" data-filter="draft">แบบร่าง</button>
+                <button class="admin-announce-filter-btn" data-filter="archived">เก็บถาวร</button>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="admin-announce-search">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="searchInput" placeholder="ค้นหาประกาศ...">
+                </div>
+                <button class="btn-create-announce" onclick="AdminAnnouncements.openForm()">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    สร้างประกาศใหม่
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="admin-announce-table-wrap">
+            <table class="admin-announce-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px">📌</th>
+                        <th>หัวข้อ</th>
+                        <th>หมวดหมู่</th>
+                        <th>สถานะ</th>
+                        <th>วันที่เผยแพร่</th>
+                        <th>ผู้สร้าง</th>
+                        <th style="width:120px">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="announceTableBody">
+                    <!-- Render by JS -->
+                </tbody>
+            </table>
+            <div class="admin-announce-empty" id="announceEmpty" style="display:none">
+                <span class="material-symbols-outlined">inbox</span>
+                <p>ไม่พบประกาศ</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create/Edit Form Modal -->
+    <div class="announce-form-overlay" id="announceFormOverlay">
+        <div class="announce-form-modal" onclick="event.stopPropagation()">
+            <div class="announce-form-header">
+                <h2>
+                    <span class="material-symbols-outlined">edit_note</span>
+                    <span id="formTitle">สร้างประกาศใหม่</span>
+                </h2>
+                <button class="announce-form-close" onclick="AdminAnnouncements.closeForm()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="announce-form-body">
+                <input type="hidden" id="formId">
+
+                <div class="announce-form-group">
+                    <label>หัวข้อ <span class="required">*</span></label>
+                    <input type="text" id="formAnnounceTitle" placeholder="ระบุหัวข้อประกาศ">
+                </div>
+
+                <div class="announce-form-group">
+                    <label>หมวดหมู่</label>
+                    <select id="formCategory">
+                        <option value="general">ทั่วไป</option>
+                        <option value="important">สำคัญ</option>
+                        <option value="update">อัปเดต</option>
+                        <option value="event">กิจกรรม</option>
+                    </select>
+                </div>
+
+                <div class="announce-form-group">
+                    <label>เนื้อหา</label>
+                    <textarea id="formContent" placeholder="เขียนเนื้อหาประกาศ..."></textarea>
+                </div>
+
+                <div class="announce-form-group">
+                    <label>รูปภาพหน้าปก</label>
+                    <input type="file" id="formCoverImage" accept="image/*" onchange="AdminAnnouncements.previewCover(this)">
+                    <img class="announce-cover-preview" id="coverPreview">
+                </div>
+
+                <div class="announce-form-group">
+                    <label>แนบไฟล์</label>
+                    <input type="file" id="formAttachment">
+                </div>
+
+                <div class="announce-form-group">
+                    <label>ลิงก์ภายนอก</label>
+                    <input type="url" id="formLink" placeholder="https://...">
+                </div>
+
+                <div class="announce-form-group">
+                    <div class="announce-toggle-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="formPinned">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">📌 ปักหมุดประกาศสำคัญ</span>
+                    </div>
+                </div>
+            </div>
+            <div class="announce-form-footer">
+                <button class="btn-form-cancel" onclick="AdminAnnouncements.closeForm()">ยกเลิก</button>
+                <button class="btn-form-draft" onclick="AdminAnnouncements.save('draft')">
+                    บันทึกแบบร่าง
+                </button>
+                <button class="btn-form-publish" onclick="AdminAnnouncements.save('published')">
+                    เผยแพร่ประกาศ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (ปรับ path ตามโครงสร้างจริง) -->
+    <script src="js/core/supabaseClient.js"></script>
+    <script src="js/core/userService.js"></script>
+    <script src="js/core/auth.js"></script>
+    <script src="/js/pages/Adminannouncements.js"></script>
+</body>
+</html>

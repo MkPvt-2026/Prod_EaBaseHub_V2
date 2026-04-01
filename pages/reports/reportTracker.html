@@ -9,6 +9,148 @@
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/base/layout.css">
   <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
+<<<<<<< HEAD
+=======
+  
+  <style>
+    /* ── Date Range Picker Styles ── */
+    .date-range-section {
+      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    
+    .date-range-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .date-range-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .date-range-title .icon {
+      font-size: 1.25rem;
+    }
+    
+    .date-range-label {
+      background: rgba(0,212,170,0.15);
+      color: var(--accent, #00d4aa);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .date-range-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .date-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .date-input-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted, #7a9cc0);
+      white-space: nowrap;
+    }
+    
+    .date-input-group input[type="date"] {
+      background: transparent;
+      border: none;
+      color: var(--text-primary, #e8f0fe);
+      font-family: 'Kanit', sans-serif;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .date-input-group input[type="date"]:focus {
+      outline: none;
+      background: rgba(0,212,170,0.1);
+    }
+    
+    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+    
+    .quick-range-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    
+    .quick-range-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted, #7a9cc0);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: 'Kanit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .quick-range-btn:hover {
+      background: rgba(0,212,170,0.1);
+      border-color: rgba(0,212,170,0.3);
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .quick-range-btn.active {
+      background: rgba(0,212,170,0.2);
+      border-color: var(--accent, #00d4aa);
+      color: var(--accent, #00d4aa);
+      font-weight: 500;
+    }
+    
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .date-range-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .date-range-controls {
+        width: 100%;
+      }
+      
+      .date-input-group {
+        flex: 1;
+        min-width: 140px;
+      }
+      
+      .quick-range-btns {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 </head>
 <body>
 
@@ -29,9 +171,14 @@
 
   <!-- NAV -->
   <nav class="app-nav">       
+<<<<<<< HEAD
     <!-- <a href="/commingSoon.html">หน้าหลัก</a> -->
     <a href="/pages/reports/reportManager.html" class="active">รายงานเข้าร้าน</a>
     <!-- <a href="/commingSoon.html">นำเข้าข้อมูล</a> -->
+=======
+    <a href="/pages/dashboard/managerDashboard.html" class="active">หน้าหลัก</a>
+    <a href="/pages/reports/reportManager.html" class="active">รายงานเข้าร้าน</a>
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   </nav>
 
   <main>
@@ -43,6 +190,7 @@
         <h1>📋 รายงานการเข้าร้านค้า</h1>
         <p>ติดตามและอ่านรายงานของทีมเซลล์</p>
       </div>
+<<<<<<< HEAD
       <div class="week-selector">
         <button onclick="changeWeek(-1)" class="week-btn">‹</button>
         <div class="week-display">
@@ -50,6 +198,41 @@
           <span id="weekRange" class="week-range">—</span>
         </div>
         <button onclick="changeWeek(1)" class="week-btn">›</button>
+=======
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         DATE RANGE PICKER — เลือกช่วงวันที่
+         ══════════════════════════════════════════ -->
+    <div class="date-range-section">
+      <div class="date-range-header">
+        <div class="date-range-title">
+          <span class="icon">📅</span>
+          <span>ช่วงเวลา</span>
+          <span class="date-range-label" id="dateRangeLabel">—</span>
+        </div>
+        
+        <div class="date-range-controls">
+          <div class="date-input-group">
+            <label>เริ่ม</label>
+            <input type="date" id="dateStart">
+          </div>
+          <div class="date-input-group">
+            <label>สิ้นสุด</label>
+            <input type="date" id="dateEnd">
+          </div>
+        </div>
+      </div>
+      
+      <div class="quick-range-btns">
+        <button class="quick-range-btn" data-range="today">วันนี้</button>
+        <button class="quick-range-btn" data-range="7days">7 วัน</button>
+        <button class="quick-range-btn active" data-range="thisWeek">สัปดาห์นี้</button>
+        <button class="quick-range-btn" data-range="lastWeek">สัปดาห์ที่แล้ว</button>
+        <button class="quick-range-btn" data-range="30days">30 วัน</button>
+        <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
+        <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       </div>
     </div>
 
@@ -217,7 +400,10 @@
   <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/auth.js"></script>
   <script src="/js/core/loadingSplash.js"></script>
+<<<<<<< HEAD
   <!-- ⚠️ ลบ renderUsers.js ออก — ไม่เกี่ยวกับหน้านี้ -->
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   <script src="/js/pages/report/reportTracker.js"></script>
 
 </body>

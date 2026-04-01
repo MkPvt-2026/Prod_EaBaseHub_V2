@@ -1,4 +1,5 @@
 /* =====================================================
+<<<<<<< HEAD
    GLOBAL LAYOUT (ใช้ทุกหน้า)
    ===================================================== */
 
@@ -12,6 +13,80 @@
 
   --border:#99f6e4;
   --radius-md:12px;
+=======
+   GLOBAL LAYOUT (Pastel Mint Theme)
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Pastel Mint */
+  --mint-50:  #f4fdf9;
+  --mint-100: #e0f7ed;
+  --mint-200: #b8ebd4;
+  --mint-300: #8fdfba;
+  --mint-400: #6dd3a3;
+  --mint-500: #4caf8a;
+  --mint-600: #3d8c6f;
+  --mint-700: #2f6b54;
+  --mint-800: #234d3d;
+
+  --mint-900: #25A385;
+
+  /* Sage Green */
+  --sage-100: #d9ebd9;
+  --sage-300: #8cc68c;
+  --sage-400: #66b366;
+  --sage-500: #4d994d;
+
+  /* Warm Gray */
+  --gray-50:  #fafaf9;
+  --gray-100: #f5f5f3;
+  --gray-200: #e8e8e5;
+  --gray-300: #d4d4cf;
+  --gray-400: #a8a8a0;
+  --gray-500: #787870;
+  --gray-600: #5a5a52;
+
+  --bg-base:        #f9fcfb;
+  --bg-card:        #ffffff;
+  --bg-subtle:      #e8f7f0;
+  --bg-muted:       var(--mint-100);
+
+  --border:         #e0ede5;
+  --border-strong:  var(--mint-200);
+
+  --text-primary:   #2f5045;
+  --text-secondary: #4a7060;
+  --text-muted:     #7a9b8b;
+  --text-light:     #a0bfbc;
+
+  --accent:         #e8a020;
+  --accent-light:   #f5d98a;
+  --danger:         #d95b5b;
+  --danger-dark:    #b83c3c;
+  --success:        #3a9e6a;
+
+  --shadow-sm:  0 1px 4px rgba(92,189,154,0.06);
+  --shadow-md:  0 4px 16px rgba(92,189,154,0.08);
+  --shadow-lg:  0 8px 32px rgba(92,189,154,0.12);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,0.02);
+
+  --radius-sm:  10px;
+  --radius-md:  14px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+
+  --font-xs:   12px;
+  --font-sm:   13px;
+  --font-base: 14px;
+  --font-md:   15px;
+  --font-lg:   17px;
+  --font-xl:   21px;
+  --font-2xl:  27px;
+
+  --transition: 0.20s ease;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 *,
@@ -40,12 +115,20 @@ body{
   top: 0;
   z-index: 1000;
   display: flex;
+<<<<<<< HEAD
   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-xdark) 100%);
+=======
+  background: var(--mint-900);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   padding: 10px 24px;
   height: 64px;  
   justify-content: space-between;
   align-items: center;
+<<<<<<< HEAD
   box-shadow: 0 2px 12px rgba(13,148,136,0.3);
+=======
+  box-shadow: 0 2px 10px rgba(92,189,154,0.24);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .app-header .logo {
@@ -57,10 +140,13 @@ body{
   flex-direction: row;
 }
 
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .logo{
   display:flex;
   align-items:center;
@@ -76,6 +162,11 @@ body{
 .logo h2 {
   color: #fff;
   font-size: 16px;
+<<<<<<< HEAD
+=======
+  font-weight: 600;
+  letter-spacing: 0.3px;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .logo-circle{
@@ -86,6 +177,10 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+<<<<<<< HEAD
+=======
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .logo-circle img{
@@ -105,6 +200,7 @@ body{
   width:32px;
   height:32px;
   border-radius:50%;
+<<<<<<< HEAD
   background:var(--primary);
   color:#fff;
 
@@ -121,6 +217,33 @@ body{
   color:var(--primary-dark);
   font-size:12px;
   cursor:pointer;
+=======
+  background:var(--bg-card);
+  color: var(--mint-800);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 2px 6px rgba(92,189,154,0.20);
+}
+
+.logout-btn{
+  padding:6px 12px;
+  border:none;
+  border-radius:18px;
+  background:#fff;
+  color:var(--primary-dark);
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+}
+
+.logout-btn:hover{
+  background:#f0f9f8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* ================= NAV ================= */
@@ -130,8 +253,13 @@ body{
   top:64px;
   z-index:999;
 
+<<<<<<< HEAD
   background:#f0f0f0;
   border-bottom:1px solid #ddd;
+=======
+  background:#f5f8f7;
+  border-bottom:1px solid #e0ede5;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
   padding:8px 16px;
 
@@ -143,6 +271,7 @@ body{
 
 .app-nav a{
   padding:6px 12px;
+<<<<<<< HEAD
   border-radius:6px;
   font-size:13px;
   white-space:nowrap;
@@ -151,6 +280,25 @@ body{
 .app-nav a.active{
   background:#1976d2;
   color:#fff;
+=======
+  border-radius:8px;
+  font-size:13px;
+  white-space:nowrap;
+  transition: all 0.2s ease;
+  color: #5a7870;
+}
+
+.app-nav a:hover{
+  background:#e8f7f0;
+  color: var(--mint-700);
+}
+
+.app-nav a.active{
+  background: var(--mint-900);
+  color:#fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(92,189,154,0.20);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* ================= CONTAINER ================= */
@@ -161,11 +309,14 @@ body{
   padding:20px;
 }
 
+<<<<<<< HEAD
 
 
 
 
 
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 /* =====================================================
    RESPONSIVE DESIGN
    ===================================================== */
@@ -291,5 +442,9 @@ body{
   font-size:10px;
 }
 
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86

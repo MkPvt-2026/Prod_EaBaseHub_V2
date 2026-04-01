@@ -1,4 +1,5 @@
 /* =====================================================
+<<<<<<< HEAD
    FORMS HUB - STYLESHEET
    ไฟล์ CSS สำหรับหน้า Forms Hub
    ===================================================== */
@@ -90,12 +91,107 @@ PAGE BOX (เนื้อหาด้าใน)
 
 .page-header {
   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+=======
+   FORMS HUB - Pastel Mint Theme
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Pastel Mint */
+  --mint-50:  #f4fdf9;
+  --mint-100: #e0f7ed;
+  --mint-200: #b8ebd4;
+  --mint-300: #8fdfba;
+  --mint-400: #6dd3a3;
+  --mint-500: #4caf8a;
+  --mint-600: #3d8c6f;
+  --mint-700: #2f6b54;
+  --mint-800: #234d3d;
+
+  --mint-900: #25A385;     /* base */
+
+  --mint-light-50: #E8F6F3;
+  --mint-light-100: #B5E3D9;
+  --mint-light-200: #82D1BF;
+  --mint-light-300: #4FBEA5;
+  --mint-light-400: #25A385;    /* base */
+
+  --mint-dark-500: #1E826A;
+  --mint-dark-600: #176250;
+  --mint-dark-700: #104135;
+  --mint-dark-800: #08211B;
+
+  /* Sage Green */
+  --sage-100: #d9ebd9;
+  --sage-300: #8cc68c;
+  --sage-400: #66b366;
+  --sage-500: #4d994d;
+
+  /* Warm Gray */
+  --gray-50:  #fafaf9;
+  --gray-100: #f5f5f3;
+  --gray-200: #e8e8e5;
+  --gray-300: #d4d4cf;
+  --gray-400: #a8a8a0;
+  --gray-500: #787870;
+  --gray-600: #5a5a52;
+
+  --bg-base:        #f9fcfb;
+  --bg-card:        #ffffff;
+  --bg-subtle:      #e8f7f0;
+  --bg-muted:       var(--mint-100);
+
+  --border:         #e0ede5;
+  --border-strong:  var(--mint-200);
+
+  --text-primary:   #2f5045;
+  --text-secondary: #4a7060;
+  --text-muted:     #7a9b8b;
+  --text-light:     #a0bfbc;
+
+  --accent:         #e8a020;
+  --accent-light:   #f5d98a;
+  --danger:         #d95b5b;
+  --danger-dark:    #b83c3c;
+  --success:        #3a9e6a;
+
+  --shadow-sm:  0 1px 4px rgba(92,189,154,0.06);
+  --shadow-md:  0 4px 16px rgba(92,189,154,0.08);
+  --shadow-lg:  0 8px 32px rgba(92,189,154,0.12);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,0.02);
+
+  --radius-sm:  10px;
+  --radius-md:  14px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+
+  --font-xs:   12px;
+  --font-sm:   13px;
+  --font-base: 14px;
+  --font-md:   15px;
+  --font-lg:   17px;
+  --font-xl:   21px;
+  --font-2xl:  27px;
+
+  --transition: 0.20s ease;
+}
+/* =====================================================
+   PAGE HEADER
+   ===================================================== */
+.page-header {
+  background: var(--mint-light-400);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   border-radius: var(--radius-xl);
   padding: 28px 32px;
   margin-bottom: 24px;
   color: #fff;
   position: relative;
   overflow: hidden;
+<<<<<<< HEAD
+=======
+  box-shadow: 0 4px 20px rgba(92,189,154,0.18);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .page-header::before {
@@ -103,7 +199,11 @@ PAGE BOX (เนื้อหาด้าใน)
   position: absolute;
   top: -40px; right: -40px;
   width: 180px; height: 180px;
+<<<<<<< HEAD
   background: rgba(255,255,255,0.07);
+=======
+  background: rgba(255,255,255,0.10);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   border-radius: 50%;
 }
 
@@ -112,7 +212,11 @@ PAGE BOX (เนื้อหาด้าใน)
   position: absolute;
   bottom: -30px; left: 30%;
   width: 120px; height: 120px;
+<<<<<<< HEAD
   background: rgba(255,255,255,0.05);
+=======
+  background: rgba(255,255,255,0.07);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   border-radius: 50%;
 }
 
@@ -128,12 +232,17 @@ PAGE BOX (เนื้อหาด้าใน)
 
 .page-header p {
   font-size: var(--font-base);
+<<<<<<< HEAD
   color: rgba(255,255,255,0.8);
+=======
+  color: rgba(255,255,255,0.85);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   position: relative;
   z-index: 1;
   margin: 0;
 }
 
+<<<<<<< HEAD
 
 /* ==============================================================
    PAGE BOX (เนื้อหาด้าใน)
@@ -141,6 +250,11 @@ PAGE BOX (เนื้อหาด้าใน)
 
    /* ================= CARDS ================= */
 
+=======
+/* =====================================================
+   CARDS
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .card,
 .section-card,
 .card-cause {
@@ -148,7 +262,11 @@ PAGE BOX (เนื้อหาด้าใน)
   border-radius: var(--radius-lg);
   padding: 28px 32px;
   margin-bottom: 20px;
+<<<<<<< HEAD
   border: 1.5px solid var(--border);
+=======
+  border: 1px solid var(--border);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   box-shadow: var(--shadow-sm);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -160,8 +278,14 @@ PAGE BOX (เนื้อหาด้าใน)
   box-shadow: var(--shadow-md);
 }
 
+<<<<<<< HEAD
 /* ================= HEADINGS ================= */
 
+=======
+/* =====================================================
+   HEADINGS
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 h1 {
   font-family: 'Kanit', sans-serif;
   font-size: var(--font-2xl);
@@ -177,7 +301,11 @@ h2 {
   font-family: 'Kanit', sans-serif;
   font-size: var(--font-lg);
   font-weight: 400;
+<<<<<<< HEAD
   color: var(--primary-dark);
+=======
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   margin-bottom: 0px;
   display: flex;
   align-items: center;
@@ -187,9 +315,14 @@ h2 {
 h3 {
   font-size: var(--font-md);
   font-weight: 600;
+<<<<<<< HEAD
   color: var(--primary);
   margin: 20px 0 14px;
   /* display: flex; */
+=======
+  color: var(--mint-600);
+  margin: 20px 0 14px;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   align-items: center;
   gap: 8px;
 }
@@ -201,8 +334,14 @@ h4 {
   margin-bottom: 18px;
 }
 
+<<<<<<< HEAD
 /* ================= ACTION BUTTONS ================= */
 
+=======
+/* =====================================================
+   ACTION BUTTONS
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .actions {
   display: flex;
   gap: 12px;
@@ -224,8 +363,11 @@ button {
   justify-content: center;
   gap: 8px;
   flex: 1;
+<<<<<<< HEAD
   /* min-width: 100px;   /*ขนาดปุ่ม logout*/
   /* min-height: 32px;   ขนาดปุ่ม logout */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 } 
 
 button:hover { transform: translateY(-2px); }
@@ -237,13 +379,20 @@ button:disabled {
   transform: none !important;
 }
 
+<<<<<<< HEAD
  /* =========================
    LOGOUT BTN
    ========================= */
+=======
+/* =====================================================
+   LOGOUT BTN
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .logout-btn {
   display: flex;
   align-items: center;
   gap: 6px;
+<<<<<<< HEAD
   padding: 7px 14px;
   background: var(--bg-base);
   border: var(--border);
@@ -251,11 +400,21 @@ button:disabled {
   font-family: 'Kanit', sans-serif;
   font-size: 13px;
   color: var(--primary-xdark);
+=======
+  padding: 8px 15px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Kanit', sans-serif;
+  font-size: 13px;
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   cursor: pointer;
   transition: all var(--transition);
 }
 
 .logout-btn:hover {
+<<<<<<< HEAD
   border-color: #e07070;
   color: #c0392b;
   background: #fff5f5;
@@ -269,6 +428,20 @@ button:disabled {
   font-size: var(--font-base);
   font-weight: 600;
   color: var(--primary-dark);
+=======
+  border-color: #f5c2c2;
+  color: #d95858;
+  background: #fff8f8;
+}
+
+/* =====================================================
+   SECTION TITLE
+   ===================================================== */
+.section-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   display: flex;
   align-items: center;
   gap: 8px;
@@ -284,6 +457,7 @@ button:disabled {
 }
 
 .page-title {
+<<<<<<< HEAD
   text-align: center;                  /* จัดข้อความกึ่งกลาง */
   margin-bottom: 24px;                 /* ระยะห่างด้านล่าง */
 }
@@ -343,10 +517,67 @@ button:disabled {
 }
 
 /* คลาสสีน้ำเงิน */
+=======
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.page-title h1 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.page-title p {
+  font-size: 13px;
+  color: #666;
+}
+
+/* =====================================================
+   GRID (Forms Grid)
+   ===================================================== */
+.forms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* =====================================================
+   CARD (Form Card)
+   ===================================================== */
+.form-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+}
+
+.form-card:hover {
+  transform: translateY(-4px);
+}
+
+/* =====================================================
+   ICON
+   ===================================================== */
+.form-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  color: #fff;
+}
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .blue { 
   background: #1976d2; 
 }
 
+<<<<<<< HEAD
 /* คลาสสีเขียว */
 .green { 
   background: #2e7d32; 
@@ -369,6 +600,28 @@ button:disabled {
 
 /* ================= TABLET (768px) - PRIMARY BREAKPOINT ================= */
 
+=======
+.green { 
+  background: var(--sage-500); 
+}
+
+/* =====================================================
+   CARD TEXT
+   ===================================================== */
+.form-card h3 {
+  font-size: 16px;
+  margin: 12px 0 6px;
+}
+
+.form-card p {
+  font-size: 12px;
+  color: #777;
+}
+
+/* =====================================================
+   TABLET (768px) - PRIMARY BREAKPOINT
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 @media (min-width: 768px) and (max-width: 1024px) {
   :root {
     --font-xs:   13px;
@@ -417,8 +670,14 @@ button:disabled {
   }
 }
 
+<<<<<<< HEAD
 /* ================= MOBILE (< 768px) ================= */
 
+=======
+/* =====================================================
+   MOBILE (< 768px)
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 @media (max-width: 767px) {
   :root {
     --font-xs:   12px;
@@ -432,7 +691,10 @@ button:disabled {
 
   .container { padding: 12px 12px 32px; }
 
+<<<<<<< HEAD
   /* Header */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .app-header {
     padding: 10px 14px;
     min-height: 64px;
@@ -455,7 +717,10 @@ button:disabled {
     font-size: 12px;
   }
 
+<<<<<<< HEAD
    /* Nav */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .app-nav {
     top: 56px;
     padding: 7px 12px;
@@ -468,12 +733,19 @@ button:disabled {
   }
 
   .page-header { padding: 20px 20px; border-radius: var(--radius-lg); }
+<<<<<<< HEAD
   /* Page header */
+=======
+  
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .page-header h1 {
     font-size: 18px;
   }
 
+<<<<<<< HEAD
   /* Container */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .container {
     padding: 12px 10px;
   }
@@ -509,8 +781,11 @@ button:disabled {
   .actions { flex-direction: column; }
 
   button { 
+<<<<<<< HEAD
     /* width: 100%; 
     min-width: unset;  */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     flex: none; 
   }
 
@@ -524,12 +799,20 @@ button:disabled {
   .modal-content { max-width: 100%; border-radius: 16px 16px 0 0; margin: auto 0 0; max-height: 90vh; }
 }
 
+<<<<<<< HEAD
 /* ================= SMALL MOBILE (< 480px) ================= */
 
 /* ---- Mobile: ≤ 480px ---- */
 @media (max-width: 480px) {
 
   /* Header: ซ่อนชื่อผู้ใช้ เหลือแค่ avatar + logout */
+=======
+/* =====================================================
+   SMALL MOBILE (< 480px)
+   ===================================================== */
+@media (max-width: 480px) {
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .app-header {
     padding: 8px 12px;
     min-height: 64px;
@@ -544,11 +827,15 @@ button:disabled {
     height: 38px;
   }
 
+<<<<<<< HEAD
   /* ซ่อน user-info (ชื่อ) บนมือถือเล็ก */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .user-info {
     display: none;
   }
 
+<<<<<<< HEAD
   
   .logout-btn {
     padding: 4px;
@@ -556,6 +843,12 @@ button:disabled {
   }
  
   /* Nav */
+=======
+  .logout-btn {
+    padding: 4px;
+  }
+ 
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .app-nav {
     top: 52px;
     padding: 6px 10px;
@@ -566,7 +859,10 @@ button:disabled {
     padding: 5px 9px;
   }
 
+<<<<<<< HEAD
   /* Page header */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .page-header {
     padding: 14px 12px;
   }
@@ -575,7 +871,10 @@ button:disabled {
     font-size: 16px;
   }
 
+<<<<<<< HEAD
   /* Card/Section */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .card,
   .section {
     padding: 16px 12px;
@@ -587,7 +886,10 @@ button:disabled {
     font-size: 15px;
   }
 
+<<<<<<< HEAD
   /* Form grid: 1 คอลัมน์บนมือถือ */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .form-grid {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -605,11 +907,18 @@ button:disabled {
   input,
   select,
   textarea {
+<<<<<<< HEAD
     font-size: 16px; /* ป้องกัน iOS zoom เมื่อ focus */
     padding: 10px;
   }
 
   /* Buttons */
+=======
+    font-size: 16px;
+    padding: 10px;
+  }
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .actions {
     flex-direction: column;
     gap: 8px;
@@ -624,9 +933,14 @@ button:disabled {
     text-align: center;
   }
 
+<<<<<<< HEAD
   /* Table: horizontal scroll */
   .table-wrapper {
     margin: 0 -4px; /* ขยายออกนิดหน่อย */
+=======
+  .table-wrapper {
+    margin: 0 -4px;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   }
 
   table {
@@ -643,7 +957,10 @@ button:disabled {
     max-width: 90px;
   }
 
+<<<<<<< HEAD
   /* Export buttons */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .section .actions {
     flex-direction: column;
   }
@@ -652,10 +969,16 @@ button:disabled {
     width: 100%;
   }
 
+<<<<<<< HEAD
   /* Modal */
   .modal {
     padding: 12px;
     align-items: flex-end; /* slide up from bottom */
+=======
+  .modal {
+    padding: 12px;
+    align-items: flex-end;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   }
 
   .modal-content {
@@ -665,11 +988,21 @@ button:disabled {
   }
 }
 
+<<<<<<< HEAD
 /* ---- Very Small: ≤ 360px ---- */
 @media (max-width: 360px) {
 
   .app-header .logo h2 {
     display: none; /* ซ่อนชื่อระบบบนจอเล็กมาก */
+=======
+/* =====================================================
+   VERY SMALL (≤ 360px)
+   ===================================================== */
+@media (max-width: 360px) {
+
+  .app-header .logo h2 {
+    display: none;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   }
 
   .page-header h1 {
@@ -677,8 +1010,14 @@ button:disabled {
   }
 }
 
+<<<<<<< HEAD
 /* ================= PRINT ================= */
 
+=======
+/* =====================================================
+   PRINT
+   ===================================================== */
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 @media print {
   .app-header, .app-nav, .actions,
   .btn-draft-edit, .btn-draft-del, .remove-btn { display: none !important; }
@@ -700,5 +1039,9 @@ button:disabled {
     flex-wrap: wrap;
     gap: 6px;
   }
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86

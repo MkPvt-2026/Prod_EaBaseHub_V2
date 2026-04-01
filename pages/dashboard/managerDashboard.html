@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<<<<<<< HEAD
   <meta name="apple-mobile-web-app-capable" content="yes">
+=======
+  <meta name="mobile-web-app-capable" content="yes">
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   <title>EABaseHub | Manager Dashboard</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,7 +15,151 @@
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/css/base/layout.css">
+<<<<<<< HEAD
   <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
+=======
+  <link rel="stylesheet" href="/css/components/badgeButtom.css">
+  <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
+  
+  <style>
+    /* ── Date Range Picker Styles ── */
+    .date-range-section {
+      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    
+    .date-range-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .date-range-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .date-range-title .icon {
+      font-size: 1.25rem;
+    }
+    
+    .date-range-label {
+      background: rgba(0,212,170,0.15);
+      color: var(--accent, #00d4aa);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .date-range-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .date-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .date-input-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted, #7a9cc0);
+      white-space: nowrap;
+    }
+    
+    .date-input-group input[type="date"] {
+      background: transparent;
+      border: none;
+      color: var(--text-primary, #e8f0fe);
+      font-family: 'Kanit', sans-serif;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .date-input-group input[type="date"]:focus {
+      outline: none;
+      background: rgba(0,212,170,0.1);
+    }
+    
+    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+    
+    .quick-range-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    
+    .quick-range-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted, #7a9cc0);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: 'Kanit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .quick-range-btn:hover {
+      background: rgba(0,212,170,0.1);
+      border-color: rgba(0,212,170,0.3);
+      color: var(--text-primary, #e8f0fe);
+    }
+    
+    .quick-range-btn.active {
+      background: rgba(0,212,170,0.2);
+      border-color: var(--accent, #00d4aa);
+      color: var(--accent, #00d4aa);
+      font-weight: 500;
+    }
+    
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .date-range-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .date-range-controls {
+        width: 100%;
+      }
+      
+      .date-input-group {
+        flex: 1;
+        min-width: 140px;
+      }
+      
+      .quick-range-btns {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 </head>
 <body>
 
@@ -41,13 +189,18 @@
   <div class="container">
 
     <!-- ══════════════════════════════════════════
+<<<<<<< HEAD
          PAGE HEADER + CONTROLS
+=======
+         PAGE HEADER
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
          ══════════════════════════════════════════ -->
     <div class="page-header">
       <div class="page-header-text">
         <h1>📊 Sales <span class="accent">Intelligence</span></h1>
         <p>ภาพรวมยอดขาย กำไร และประสิทธิภาพทีม</p>
       </div>
+<<<<<<< HEAD
       <div class="header-controls">
         <div class="period-selector">
           <label>ช่วงเวลา</label>
@@ -66,6 +219,43 @@
           <button onclick="changeWeek(1)" class="week-btn">›</button>
         </div>
       </div>
+=======
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         DATE RANGE PICKER — เลือกช่วงวันที่
+         ══════════════════════════════════════════ -->
+    <div class="date-range-section">
+      <div class="date-range-header">
+        <div class="date-range-title">
+          <span class="icon">📅</span>
+          <span>ช่วงเวลา</span>
+          <span class="date-range-label" id="dateRangeLabel">—</span>
+        </div>
+        
+        <div class="date-range-controls">
+          <div class="date-input-group">
+            <label>เริ่ม</label>
+            <input type="date" id="dateStart">
+          </div>
+          <div class="date-input-group">
+            <label>สิ้นสุด</label>
+            <input type="date" id="dateEnd">
+          </div>
+        </div>
+      </div>
+      
+      <div class="quick-range-btns">
+        <button class="quick-range-btn" data-range="today">วันนี้</button>
+        <button class="quick-range-btn" data-range="7days">7 วัน</button>
+        <button class="quick-range-btn active" data-range="30days">30 วัน</button>
+        <button class="quick-range-btn" data-range="thisWeek">สัปดาห์นี้</button>
+        <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
+        <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
+        <button class="quick-range-btn" data-range="thisQuarter">ไตรมาสนี้</button>
+        <button class="quick-range-btn" data-range="thisYear">ปีนี้</button>
+      </div>
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -218,8 +408,13 @@
 
       <div class="card">
         <div class="card-header">
+<<<<<<< HEAD
           <div class="card-title">📈 แนวโน้มยอดขาย (sales_data)</div>
           <span class="card-badge" id="trendBadge">8 ช่วง</span>
+=======
+          <div class="card-title">📈 แนวโน้มยอดขาย</div>
+          <span class="card-badge" id="trendBadge">— วัน</span>
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
         </div>
         <div class="chart-wrap">
           <canvas id="chartWeekly"></canvas>
@@ -314,7 +509,11 @@
   <script src="/js/services/shopService.js"></script>
   <script src="/js/services/categoryService.js"></script>
   <script src="/js/services/reportService.js"></script>
+<<<<<<< HEAD
   <script src="/js/pages/manager/Salesdashboard.js"></script>
+=======
+  <!-- ลบ Salesdashboard.js ออก เพื่อไม่ให้ซ้ำซ้อน -->
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   <script src="/js/pages/dashboard/managerDashboard.js"></script>
 
   <script src="/js/core/splash.js"></script>

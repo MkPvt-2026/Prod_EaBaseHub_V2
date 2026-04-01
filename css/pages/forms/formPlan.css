@@ -1,12 +1,17 @@
 /* =====================================================
+<<<<<<< HEAD
    EABaseHub — formPlan.css
    Theme: Clean Professional Teal
    รองรับ: Desktop + Tablet (iPad landscape)
+=======
+   EABaseHub — formPlan.css (Pastel Mint Theme)
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
    ===================================================== */
 
 /* =====================================================
    1. CSS VARIABLES
    ===================================================== */
+<<<<<<< HEAD
 :root {
   /* Brand Teal */
   --teal-50:  #f0fafa;
@@ -28,6 +33,109 @@
   --gray-600: #475569;
   --gray-700: #334155;
   --gray-800: #1e293b;
+=======
+   @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Pastel Mint */
+  --mint-50:  #f4fdf9;
+  --mint-100: #e0f7ed;
+  --mint-200: #b8ebd4;
+  --mint-300: #8fdfba;
+  --mint-400: #6dd3a3;
+  --mint-500: #4caf8a;
+  --mint-600: #3d8c6f;
+  --mint-700: #2f6b54;
+  --mint-800: #234d3d;
+
+  --mint-900: #25A385;     /* base */
+
+  --mint-light-50: #E8F6F3;
+  --mint-light-100: #B5E3D9;
+  --mint-light-200: #82D1BF;
+  --mint-light-300: #4FBEA5;
+  --mint-light-400: #25A385;    /* base */
+
+  --mint-dark-500: #1E826A;
+  --mint-dark-600: #176250;
+  --mint-dark-700: #104135;
+  --mint-dark-800: #08211B;
+
+  /* Sage Green */
+  --sage-100: #d9ebd9;
+  --sage-300: #8cc68c;
+  --sage-400: #66b366;
+  --sage-500: #4d994d;
+
+  /* Warm Gray */
+  --gray-50:  #fafaf9;
+  --gray-100: #f5f5f3;
+  --gray-200: #e8e8e5;
+  --gray-300: #d4d4cf;
+  --gray-400: #a8a8a0;
+  --gray-500: #787870;
+  --gray-600: #5a5a52;
+
+  --bg-base:        #f9fcfb;
+  --bg-card:        #ffffff;
+  --bg-subtle:      #e8f7f0;
+  --bg-muted:       var(--mint-100);
+
+  --border:         #e0ede5;
+  --border-strong:  var(--mint-200);
+
+  --text-primary:   #2f5045;
+  --text-secondary: #4a7060;
+  --text-muted:     #7a9b8b;
+  --text-light:     #a0bfbc;
+
+  --accent:         #e8a020;
+  --accent-light:   #f5d98a;
+  --danger:         #d95b5b;
+  --danger-dark:    #b83c3c;
+  --success:        #3a9e6a;
+
+  --shadow-sm:  0 1px 4px rgba(92,189,154,0.06);
+  --shadow-md:  0 4px 16px rgba(92,189,154,0.08);
+  --shadow-lg:  0 8px 32px rgba(92,189,154,0.12);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,0.02);
+
+  --radius-sm:  10px;
+  --radius-md:  14px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+
+  --font-xs:   12px;
+  --font-sm:   13px;
+  --font-base: 14px;
+  --font-md:   15px;
+  --font-lg:   17px;
+  --font-xl:   21px;
+  --font-2xl:  27px;
+
+  --transition: 0.20s ease;
+
+  /* Pastel Mint */
+  --mint-50:  #f4fdf9;
+  --mint-100: #e0f7ed;
+  --mint-200: #b8ebd4;
+  --mint-300: #8fdfba;
+  --mint-400: #6dd3a3;
+  --mint-500: #4caf8a;
+  --mint-600: #3d8c6f;
+  --mint-700: #2f6b54;
+
+  /* Neutral */
+  --gray-50:  #fafaf9;
+  --gray-100: #f5f5f3;
+  --gray-200: #e8e8e5;
+  --gray-300: #d4d4cf;
+  --gray-400: #a8a8a0;
+  --gray-500: #787870;
+  --gray-600: #5a5a52;
+  --gray-700: #3f3f39;
+  --gray-800: #2b2b26;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
   /* Semantic */
   --color-success: #16a34a;
@@ -43,6 +151,7 @@
   --font: 'Kanit', sans-serif;
 
   /* Shadows */
+<<<<<<< HEAD
   --shadow-xs: 0 1px 3px rgba(0,0,0,0.07);
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
   --shadow-md: 0 4px 18px rgba(0,0,0,0.10);
@@ -51,17 +160,35 @@
   /* Radius */
   --r-sm: 8px;
   --r-md: 12px;
+=======
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
+  --shadow-teal: 0 4px 14px rgba(92,189,154,0.20);
+
+  /* Radius */
+  --r-sm: 10px;
+  --r-md: 14px;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   --r-lg: 18px;
 
   --primary:#0d9488;
      --primary-dark:#0f766e;
      --primary-xdark:#115e59;
      
+<<<<<<< HEAD
      --bg-base:#f0fdfa;
      --bg-card:#ffffff;
      
      --border:#99f6e4;
      --radius-md:12px;
+=======
+  --bg-base: #f9fcfb;
+  --bg-card: #ffffff;
+     
+  --border: #e0ede5;
+  --radius-md: 14px;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* =====================================================
@@ -92,7 +219,11 @@ a { text-decoration: none; color: inherit; }
    ===================================================== */
 .sidebar {
   width: var(--sidebar-w);
+<<<<<<< HEAD
   background: linear-gradient(168deg, #3FB7AE 0%, #228880 55%, #1a6b64 100%);
+=======
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-xdark) 100%);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -102,7 +233,11 @@ a { text-decoration: none; color: inherit; }
   height: 100vh;
   overflow-y: auto;
   z-index: 100;
+<<<<<<< HEAD
   box-shadow: 3px 0 20px rgba(0,0,0,0.18);
+=======
+  box-shadow: 3px 0 16px rgba(0,0,0,0.14);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .sidebar::-webkit-scrollbar { width: 3px; }
@@ -124,13 +259,21 @@ a { text-decoration: none; color: inherit; }
   background: rgba(255,255,255,0.96);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
+<<<<<<< HEAD
   box-shadow: 0 4px 18px rgba(0,0,0,0.2), 0 0 0 4px rgba(255,255,255,0.18);
+=======
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 0 0 4px rgba(255,255,255,0.18);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .logo-circle:hover {
   transform: scale(1.05);
+<<<<<<< HEAD
   box-shadow: 0 6px 24px rgba(0,0,0,0.25), 0 0 0 5px rgba(255,255,255,0.25);
+=======
+  box-shadow: 0 6px 22px rgba(0,0,0,0.22), 0 0 0 5px rgba(255,255,255,0.25);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .logo-circle img { width: 52px; height: 52px; object-fit: contain; }
@@ -140,7 +283,11 @@ a { text-decoration: none; color: inherit; }
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.4px;
+<<<<<<< HEAD
   text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+=======
+  text-shadow: 0 1px 3px rgba(0,0,0,0.18);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* Menu */
@@ -177,7 +324,11 @@ a { text-decoration: none; color: inherit; }
 
 .sidebar-menu a.active {
   background: #fff;
+<<<<<<< HEAD
   color: var(--teal-700);
+=======
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   font-weight: 700;
   box-shadow: var(--shadow-md);
   margin-right: -14px;
@@ -186,7 +337,11 @@ a { text-decoration: none; color: inherit; }
 }
 
 .sidebar-menu a.active .material-symbols-outlined {
+<<<<<<< HEAD
   color: var(--teal-500);
+=======
+  color: var(--mint-500);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   opacity: 1;
 }
 
@@ -252,7 +407,11 @@ a { text-decoration: none; color: inherit; }
 h1 {
   font-size: 20px;
   font-weight: 700;
+<<<<<<< HEAD
   color: var(--teal-700);
+=======
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   margin-bottom: 22px;
   display: flex;
   align-items: center;
@@ -263,7 +422,11 @@ h2 {
   text-align: center;
   font-size: 20px;
   font-weight: 700;
+<<<<<<< HEAD
   color: var(--teal-700);
+=======
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   margin-bottom: 26px;
 }
 
@@ -275,6 +438,10 @@ h2 {
   box-shadow: var(--shadow-xs);
   border-radius: var(--radius-md);
   margin-bottom: 18px;
+<<<<<<< HEAD
+=======
+  padding: 20px 24px;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 } 
 
 .section,
@@ -297,37 +464,61 @@ h2 {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+<<<<<<< HEAD
 /* หัวการ์ด */
 .paper h1 {
   font-size: 20px;
   font-weight: 700; 
   color: var(--bg-card);
+=======
+.paper h1 {
+  font-size: 20px;
+  font-weight: 700; 
+  color: #fff;
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   text-align: center;  
   justify-content: center;
   margin-bottom: 6px;
 }
 
+<<<<<<< HEAD
 /* Section title */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .section h3,
 .paper h3 {
   font-size: 14px;
   font-weight: 700;
+<<<<<<< HEAD
   color: var(--teal-600);
   margin-bottom: 18px;
   padding-bottom: 10px;
   border-bottom: 2px solid var(--teal-100);
+=======
+  color: var(--mint-600);
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--mint-100);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+<<<<<<< HEAD
 /* accent bar ซ้าย */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .section h3::before,
 .paper h3::before {
   content: '';
   display: inline-block;
   width: 3px; height: 16px;
+<<<<<<< HEAD
   background: var(--teal-400);
+=======
+  background: var(--mint-400);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   border-radius: 2px;
   flex-shrink: 0;
 }
@@ -342,7 +533,10 @@ h2 {
   margin-bottom: 16px;
 }
 
+<<<<<<< HEAD
 /* override กรณี section บังคับ 2 คอลัมน์ */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .section .form-row {
   grid-template-columns: 1fr 1fr !important;
 }
@@ -377,6 +571,7 @@ select {
 
 input:focus, select:focus {
   outline: none;
+<<<<<<< HEAD
   border-color: var(--teal-400);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(63,183,174,0.14);
@@ -391,6 +586,21 @@ input[readonly], input:disabled {
 }
 
 /* select arrow */
+=======
+  border-color: var(--mint-400);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(109,211,163,0.12);
+}
+
+input[readonly], input:disabled {
+  background: #e8f7f0;
+  color: var(--mint-600);
+  font-weight: 700;
+  cursor: not-allowed;
+  border-color: var(--mint-100);
+}
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%2364748b' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -398,9 +608,14 @@ select {
   padding-right: 30px;
 }
 
+<<<<<<< HEAD
 /* ไฮไลต์ชื่อพนักงาน/เขต */
 #empName, #area, #empZone {
   color: var(--teal-600);
+=======
+#empName, #area, #empZone {
+  color: var(--mint-600);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   font-weight: 700;
   font-size: 15px;
 }
@@ -424,6 +639,7 @@ table,
 thead { position: sticky; top: 0; z-index: 1; }
 
 th {
+<<<<<<< HEAD
   background: linear-gradient(135deg, var(--teal-50), var(--teal-100));
   padding: 11px 10px;
   font-size: 12px;
@@ -431,6 +647,15 @@ th {
   color: var(--teal-700);
   text-align: center;
   border-bottom: 2px solid var(--teal-200);
+=======
+  background: linear-gradient(145deg, #e8f7f0, var(--mint-100));
+  padding: 11px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mint-700);
+  text-align: center;
+  border-bottom: 2px solid var(--mint-200);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   white-space: nowrap;
   letter-spacing: 0.2px;
 }
@@ -444,10 +669,16 @@ td {
 
 tbody tr:nth-child(even)  { background: var(--gray-50); }
 tbody tr:nth-child(odd)   { background: #fff; }
+<<<<<<< HEAD
 tbody tr:hover { background: var(--teal-50); transition: background 0.15s; }
 tbody tr:last-child td { border-bottom: none; }
 
 /* inputs ในตาราง */
+=======
+tbody tr:hover { background: #e8f7f0; transition: background 0.15s; }
+tbody tr:last-child td { border-bottom: none; }
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 td input, td select {
   width: 100%;
   padding: 7px 8px;
@@ -463,16 +694,25 @@ td input, td select {
 }
 
 td input:focus, td select:focus {
+<<<<<<< HEAD
   border-color: var(--teal-400);
   background: #fff;
   box-shadow: 0 0 0 2px rgba(63,183,174,0.14);
+=======
+  border-color: var(--mint-400);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(109,211,163,0.12);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   outline: none;
 }
 
 td input[type="date"] { text-align: center; }
 td input[type="number"] { text-align: right; }
 
+<<<<<<< HEAD
 /* trip-table compat */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .trip-table th { border: none; }
 .trip-table td { border: none; }
 
@@ -506,11 +746,15 @@ button, .btn {
 
 button:active { transform: scale(0.97); }
 
+<<<<<<< HEAD
 /* ➕ เพิ่มแถว */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .btn-add,
 .actions button:first-child {
   background: var(--color-success);
   color: #fff;
+<<<<<<< HEAD
   box-shadow: 0 2px 8px rgba(22,163,74,0.28);
 }
 .btn-add:hover, .actions button:first-child:hover {
@@ -520,10 +764,21 @@ button:active { transform: scale(0.97); }
 }
 
 /* ➖ ลบแถว */
+=======
+  box-shadow: 0 2px 8px rgba(22,163,74,0.22);
+}
+.btn-add:hover, .actions button:first-child:hover {
+  background: #15803d;
+  box-shadow: 0 4px 12px rgba(22,163,74,0.32);
+  transform: translateY(-1px);
+}
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .btn-delete,
 .actions button:nth-child(2) {
   background: var(--color-danger);
   color: #fff;
+<<<<<<< HEAD
   box-shadow: 0 2px 8px rgba(220,38,38,0.22);
 }
 .btn-delete:hover, .actions button:nth-child(2):hover {
@@ -536,10 +791,24 @@ button:active { transform: scale(0.97); }
 .btn-save,
 .actions button:nth-child(3) {
   background: var(--teal-500);
+=======
+  box-shadow: 0 2px 8px rgba(220,38,38,0.18);
+}
+.btn-delete:hover, .actions button:nth-child(2):hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220,38,38,0.28);
+  transform: translateY(-1px);
+}
+
+.btn-save,
+.actions button:nth-child(3) {
+  background: var(--mint-500);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   color: #fff;
   box-shadow: var(--shadow-teal);
 }
 .btn-save:hover, .actions button:nth-child(3):hover {
+<<<<<<< HEAD
   background: var(--teal-600);
   box-shadow: 0 4px 18px rgba(47,163,154,0.4);
   transform: translateY(-1px);
@@ -550,12 +819,24 @@ button:active { transform: scale(0.97); }
   background: var(--color-warning);
   color: #fff;
   box-shadow: 0 2px 8px rgba(217,119,6,0.22);
+=======
+  background: var(--mint-600);
+  box-shadow: 0 4px 16px rgba(92,189,154,0.32);
+  transform: translateY(-1px);
+}
+
+.btn-export {
+  background: var(--color-warning);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(217,119,6,0.18);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 .btn-export:hover {
   background: #b45309;
   transform: translateY(-1px);
 }
 
+<<<<<<< HEAD
 /* 🔍 Preview / last button */
 .actions button:last-child {
   background: var(--color-info);
@@ -565,6 +846,16 @@ button:active { transform: scale(0.97); }
 .actions button:last-child:hover {
   background: #1d4ed8;
   box-shadow: 0 4px 14px rgba(37,99,235,0.32);
+=======
+.actions button:last-child {
+  background: var(--color-info);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.18);
+}
+.actions button:last-child:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.28);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   transform: translateY(-1px);
 }
 
@@ -575,9 +866,15 @@ button:active { transform: scale(0.97); }
   display: inline-flex;
   align-items: center;
   gap: 8px;
+<<<<<<< HEAD
   background: var(--teal-50);
   color: var(--teal-700);
   border: 1.5px solid var(--teal-200);
+=======
+  background: #e8f7f0;
+  color: var(--mint-700);
+  border: 1.5px solid var(--mint-200);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   padding: 5px 14px;
   border-radius: 999px;
   font-size: 13px;
@@ -586,7 +883,11 @@ button:active { transform: scale(0.97); }
 }
 
 .badge #shopCount {
+<<<<<<< HEAD
   background: var(--teal-500);
+=======
+  background: var(--mint-500);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   color: #fff;
   border-radius: 999px;
   padding: 1px 10px;
@@ -598,19 +899,32 @@ button:active { transform: scale(0.97); }
    12. SUMMARY BOX (formActual)
    ===================================================== */
 .summary-box {
+<<<<<<< HEAD
   background: linear-gradient(135deg, var(--teal-50), #eff6ff);
   border: 1px solid var(--teal-100);
+=======
+  background: linear-gradient(135deg, #e8f7f0, #eff6ff);
+  border: 1px solid var(--mint-100);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   padding: 14px 22px;
   border-radius: var(--r-md);
   margin-top: 16px;
   text-align: center;
   font-size: 15px;
+<<<<<<< HEAD
   color: var(--teal-700);
+=======
+  color: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   font-weight: 500;
 }
 
 .summary-box strong {
+<<<<<<< HEAD
   color: var(--teal-600);
+=======
+  color: var(--mint-600);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   font-size: 18px;
   font-weight: 700;
 }
@@ -641,7 +955,10 @@ button:active { transform: scale(0.97); }
 
 .summary-item input { width: 100%; }
 
+<<<<<<< HEAD
 /* Grand Total */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .summary-item.total input {
   background: linear-gradient(135deg, #dbeafe, #eff6ff);
   border-color: var(--color-info);
@@ -693,7 +1010,10 @@ button:active { transform: scale(0.97); }
   box-shadow: 0 24px 64px rgba(0,0,0,0.3);
 }
 
+<<<<<<< HEAD
 /* ── แถบปุ่มบน ── */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .preview-actions {
   display: flex;
   gap: 8px;
@@ -701,7 +1021,11 @@ button:active { transform: scale(0.97); }
   flex-wrap: wrap;
   align-items: center;
   padding: 10px 14px;
+<<<<<<< HEAD
   background: var(--teal-700);
+=======
+  background: var(--mint-700);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   border-radius: var(--r-md);
 }
 
@@ -725,7 +1049,10 @@ button:active { transform: scale(0.97); }
   transform: translateY(-1px);
 }
 
+<<<<<<< HEAD
 /* ปุ่มปิด */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .preview-actions button:last-child {
   background: rgba(239,68,68,0.25);
   border-color: rgba(239,68,68,0.5);
@@ -750,11 +1077,17 @@ button:active { transform: scale(0.97); }
   line-height: 1.65;
   box-shadow: 0 4px 32px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.1);
   border-radius: 2px;
+<<<<<<< HEAD
   border-top: 4px solid var(--teal-500);
 }
 
 
 
+=======
+  border-top: 4px solid var(--mint-500);
+}
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 /* =====================================================
    17. PRINT
    ===================================================== */
@@ -785,6 +1118,10 @@ button:active { transform: scale(0.97); }
     margin: 6mm;
   }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 /* =====================================================
    18. RESPONSIVE — Tablet (iPad landscape ~1180px)
    ===================================================== */
@@ -838,7 +1175,10 @@ button:active { transform: scale(0.97); }
     font-size: 15px;
   }
 
+<<<<<<< HEAD
   /* ===== MAIN ===== */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .main-content {
     padding: 12px;
   }
@@ -847,13 +1187,19 @@ button:active { transform: scale(0.97); }
     font-size: 18px;
   }
 
+<<<<<<< HEAD
   /* ===== CARD ===== */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .section {
     padding: 14px;
     border-radius: 12px;
   }
 
+<<<<<<< HEAD
   /* ===== FORM ===== */
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   .section .form-row {
     grid-template-columns: 1fr !important;
     gap: 10px;

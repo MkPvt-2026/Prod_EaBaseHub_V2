@@ -1,0 +1,39 @@
+<!-- =============================================
+     EABaseHub: ส่วนประชาสัมพันธ์ สำหรับวางใน index.html
+     แทนที่ section เดิมในกรอบสีแดง
+     ============================================= -->
+
+<!-- เพิ่ม CSS ใน <head> -->
+<!-- <link rel="stylesheet" href="css/components/announcements.css"> -->
+
+<!-- ส่วน HTML วางแทนที่ section ประชาสัมพันธ์เดิม -->
+<section class="announce-section" id="announceSection">
+    <div class="announce-header">
+        <div class="announce-header-left">
+            <span class="material-symbols-outlined">campaign</span>
+            <h3>ประชาสัมพันธ์</h3>
+            <span class="announce-badge" id="announceBadge" style="display:none">0</span>
+        </div>
+        <div class="announce-header-right">
+            <a href="announcements.html" class="announce-view-all">ดูทั้งหมด →</a>
+            <button class="announce-btn-add" id="announceBtnAdd" 
+                    style="display:none"
+                    onclick="location.href='adminAnnouncements.html'">
+                <span class="material-symbols-outlined">add</span>
+                สร้างประกาศ
+            </button>
+        </div>
+    </div>
+    <div class="announce-list" id="announceList">
+        <!-- Cards render โดย JS -->
+    </div>
+</section>
+
+<!-- เพิ่ม JS ก่อน </body> (หลัง supabaseClient.js, userService.js, auth.js) -->
+<!-- <script src="js/components/announcements.js"></script> -->
+<!-- 
+<script>
+    // เรียก init หลัง auth สำเร็จ
+    // AnnouncementsModule.init(window.currentUser);
+</script>
+-->

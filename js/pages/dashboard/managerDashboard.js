@@ -1,10 +1,19 @@
 // =====================================================
+<<<<<<< HEAD
 // managerDashboard.js — Sales Intelligence Dashboard v2
+=======
+// managerDashboard.js — Sales Intelligence Dashboard v3
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // =====================================================
 // ตารางหลัก:
 //   sales_data  → KPI, charts, leaderboard, target, profit, slow-moving
 //   reports     → Heatmap (การเข้าเยี่ยมร้าน)
 // =====================================================
+<<<<<<< HEAD
+=======
+// v3: เพิ่ม Date Range Picker ให้เลือกช่วงวันที่เอง
+// =====================================================
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
 'use strict';
 
@@ -17,8 +26,15 @@ let profilesMap   = {};   // uid → { display_name, role, team_id }
 let shopsMap      = {};   // id  → shop_name
 
 let currentUser   = null;
+<<<<<<< HEAD
 let weekOffset    = 0;
 let currentPeriod = 'week'; // 'week' | 'month' | 'quarter'
+=======
+
+// ── Date Range State ──
+let dateStart = null;  // Date object
+let dateEnd   = null;  // Date object
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
 // Chart instances
 let chartSalesInst, chartCustomerInst, chartProductInst, chartWeeklyInst;
@@ -35,8 +51,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await loadCurrentUser();
   if (!currentUser) return;
 
+<<<<<<< HEAD
   const sel = document.getElementById('periodSelect');
   if (sel) sel.value = currentPeriod;
+=======
+  // ตั้งค่าเริ่มต้น: 30 วันล่าสุด
+  initDateRange();
+  setupDateControls();
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
   await Promise.all([loadProfiles(), loadShops()]);
   await loadDashboard();
@@ -44,6 +66,146 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // =====================================================
+<<<<<<< HEAD
+=======
+// 📅 DATE RANGE CONTROLS
+// =====================================================
+function initDateRange() {
+  // ค่าเริ่มต้น: 30 วันล่าสุด
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  
+  const start = new Date();
+  start.setDate(start.getDate() - 29);
+  start.setHours(0, 0, 0, 0);
+  
+  dateEnd   = today;
+  dateStart = start;
+  
+  // ตั้งค่า input
+  const startInput = document.getElementById('dateStart');
+  const endInput   = document.getElementById('dateEnd');
+  
+  if (startInput) startInput.value = formatDateForInput(dateStart);
+  if (endInput)   endInput.value   = formatDateForInput(dateEnd);
+  
+  updateDateRangeLabel();
+}
+
+function setupDateControls() {
+  // Date inputs
+  const startInput = document.getElementById('dateStart');
+  const endInput   = document.getElementById('dateEnd');
+  
+  if (startInput) {
+    startInput.addEventListener('change', () => {
+      dateStart = new Date(startInput.value);
+      dateStart.setHours(0, 0, 0, 0);
+      updateDateRangeLabel();
+      loadDashboard();
+    });
+  }
+  
+  if (endInput) {
+    endInput.addEventListener('change', () => {
+      dateEnd = new Date(endInput.value);
+      dateEnd.setHours(23, 59, 59, 999);
+      updateDateRangeLabel();
+      loadDashboard();
+    });
+  }
+  
+  // Quick buttons
+  document.querySelectorAll('.quick-range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const range = btn.dataset.range;
+      setQuickRange(range);
+      
+      // Update active state
+      document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
+
+function setQuickRange(range) {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  
+  let start = new Date();
+  start.setHours(0, 0, 0, 0);
+  
+  switch (range) {
+    case 'today':
+      // วันนี้
+      break;
+      
+    case '7days':
+      start.setDate(start.getDate() - 6);
+      break;
+      
+    case '30days':
+      start.setDate(start.getDate() - 29);
+      break;
+      
+    case 'thisWeek':
+      // จันทร์ของสัปดาห์นี้
+      const dayOfWeek = start.getDay();
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      start.setDate(start.getDate() + diff);
+      break;
+      
+    case 'thisMonth':
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      break;
+      
+    case 'lastMonth':
+      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      today.setDate(0); // วันสุดท้ายของเดือนก่อน
+      break;
+      
+    case 'thisQuarter':
+      const q = Math.floor(today.getMonth() / 3);
+      start = new Date(today.getFullYear(), q * 3, 1);
+      break;
+      
+    case 'thisYear':
+      start = new Date(today.getFullYear(), 0, 1);
+      break;
+      
+    default:
+      start.setDate(start.getDate() - 29);
+  }
+  
+  dateStart = start;
+  dateEnd   = today;
+  
+  // Update inputs
+  const startInput = document.getElementById('dateStart');
+  const endInput   = document.getElementById('dateEnd');
+  if (startInput) startInput.value = formatDateForInput(dateStart);
+  if (endInput)   endInput.value   = formatDateForInput(dateEnd);
+  
+  updateDateRangeLabel();
+  loadDashboard();
+}
+
+function updateDateRangeLabel() {
+  const label = document.getElementById('dateRangeLabel');
+  if (!label) return;
+  
+  const days = Math.ceil((dateEnd - dateStart) / (1000 * 60 * 60 * 24)) + 1;
+  const fmt = d => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+  
+  label.textContent = `${fmt(dateStart)} – ${fmt(dateEnd)} (${days} วัน)`;
+}
+
+function formatDateForInput(date) {
+  return date.toISOString().split('T')[0];
+}
+
+// =====================================================
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // 👤 CURRENT USER
 // =====================================================
 async function loadCurrentUser() {
@@ -101,6 +263,7 @@ async function loadDashboard() {
   try {
     showLoadingState(true);
 
+<<<<<<< HEAD
     const { start, end }         = getPeriodRange(currentPeriod, weekOffset);
     const { start: ps, end: pe } = getPeriodRange(currentPeriod, weekOffset - 1);
     updateWeekLabel(start, end);
@@ -109,6 +272,23 @@ async function loadDashboard() {
     const endStr   = end.toISOString().split('T')[0];
     const psStr    = ps.toISOString().split('T')[0];
     const peStr    = pe.toISOString().split('T')[0];
+=======
+    const startStr = dateStart.toISOString().split('T')[0];
+    const endStr   = dateEnd.toISOString().split('T')[0];
+    
+    // คำนวณ previous period (ช่วงก่อนหน้าที่มีความยาวเท่ากัน)
+    const daysDiff = Math.ceil((dateEnd - dateStart) / (1000 * 60 * 60 * 24));
+    const prevEnd   = new Date(dateStart);
+    prevEnd.setDate(prevEnd.getDate() - 1);
+    const prevStart = new Date(prevEnd);
+    prevStart.setDate(prevStart.getDate() - daysDiff);
+    
+    const psStr = prevStart.toISOString().split('T')[0];
+    const peStr = prevEnd.toISOString().split('T')[0];
+
+    console.log(`📅 Current: ${startStr} → ${endStr}`);
+    console.log(`📅 Previous: ${psStr} → ${peStr}`);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
     // ── ดึง sales_data (หลัก) ──
     const [sdCur, sdPrev] = await Promise.all([
@@ -132,7 +312,11 @@ async function loadDashboard() {
 
     // ── ดึง reports แยก (ไม่ให้ error block ทั้งหน้า) ──
     try {
+<<<<<<< HEAD
       const rpCur = await buildReportsQuery(start, end);
+=======
+      const rpCur = await buildReportsQuery(dateStart, dateEnd);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       reportsData = rpCur.data || [];
     } catch (e) {
       console.warn('⚠️ reports query failed (heatmap จะไม่แสดง):', e.message);
@@ -167,7 +351,10 @@ async function loadDashboard() {
 }
 
 function buildReportsQuery(start, end) {
+<<<<<<< HEAD
   // select เฉพาะ column ที่แน่ใจว่ามี — ถ้า error จะ fallback เป็น []
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   let q = supabaseClient
     .from('reports')
     .select('submitted_at, shop_id, sale_id, status')
@@ -183,6 +370,7 @@ function buildReportsQuery(start, end) {
 }
 
 // =====================================================
+<<<<<<< HEAD
 // 📅 PERIOD HELPERS
 // =====================================================
 function getPeriodRange(period, offset = 0) {
@@ -247,6 +435,8 @@ async function changeWeek(dir) {
 }
 
 // =====================================================
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // 📈 KPI CARDS
 // =====================================================
 function renderKPIs() {
@@ -362,7 +552,11 @@ function renderTargetBars() {
   const sorted = Object.values(map).sort((a, b) => b.total - a.total);
   const el = document.getElementById('targetSection');
   if (!sorted.length) {
+<<<<<<< HEAD
     el.innerHTML = '<div class="loading-text">ไม่มีข้อมูล</div>';
+=======
+    el.innerHTML = '<div class="loading-text">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     return;
   }
 
@@ -394,7 +588,11 @@ function renderLeaderboard() {
   const sorted = Object.values(map).sort((a, b) => b.total - a.total).slice(0, 8);
   const el = document.getElementById('leaderboard');
   if (!sorted.length) {
+<<<<<<< HEAD
     el.innerHTML = '<div class="loading-text">ไม่มีข้อมูล</div>';
+=======
+    el.innerHTML = '<div class="loading-text">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     return;
   }
 
@@ -421,7 +619,11 @@ function renderTopProductsList() {
   const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
   const el = document.getElementById('topProductsList');
   if (!sorted.length) {
+<<<<<<< HEAD
     el.innerHTML = '<div class="loading-text">ไม่มีข้อมูล</div>';
+=======
+    el.innerHTML = '<div class="loading-text">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     return;
   }
 
@@ -458,7 +660,11 @@ function renderTopProfitProducts() {
 
   const el = document.getElementById('topProfitProducts');
   if (!sorted.length) {
+<<<<<<< HEAD
     el.innerHTML = '<div class="loading-text">ไม่มีข้อมูล</div>';
+=======
+    el.innerHTML = '<div class="loading-text">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     return;
   }
 
@@ -488,16 +694,26 @@ function renderSlowMovingList() {
     map[key].amount += (r.amount_net || 0);
   }
 
+<<<<<<< HEAD
   // สินค้าที่ขายได้น้อยที่สุด (bottom 10)
   const sorted = Object.entries(map)
     .map(([name, d]) => ({ name, qty: d.qty, amount: d.amount }))
     .filter(item => item.qty > 0) // มียอดอย่างน้อย 1
+=======
+  const sorted = Object.entries(map)
+    .map(([name, d]) => ({ name, qty: d.qty, amount: d.amount }))
+    .filter(item => item.qty > 0)
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     .sort((a, b) => a.qty - b.qty)
     .slice(0, 10);
 
   const el = document.getElementById('slowMovingList');
   if (!sorted.length) {
+<<<<<<< HEAD
     el.innerHTML = '<div class="loading-text">ไม่มีข้อมูล</div>';
+=======
+    el.innerHTML = '<div class="loading-text">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     return;
   }
 
@@ -546,6 +762,12 @@ function renderSalesChart() {
     map[k] = (map[k] || 0) + (r.amount_net || 0);
   });
   const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+<<<<<<< HEAD
+=======
+  
+  if (!sorted.length) return;
+  
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   chartSalesInst = new Chart(ctx, {
     type: 'bar',
     data: { labels: sorted.map(([k]) => k),
@@ -599,6 +821,12 @@ function renderProductChart() {
     map[k] = (map[k] || 0) + (r.amount_net || 0);
   });
   const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
+<<<<<<< HEAD
+=======
+  
+  if (!sorted.length) return;
+  
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   chartProductInst = new Chart(ctx, {
     type: 'bar',
     data: { labels: sorted.map(([k]) => k),
@@ -619,6 +847,12 @@ function renderProfitBySalesChart() {
     map[k] = (map[k] || 0) + (r.profit || 0);
   });
   const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+<<<<<<< HEAD
+=======
+  
+  if (!sorted.length) return;
+  
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   chartProfitBySalesInst = new Chart(ctx, {
     type: 'bar',
     data: { labels: sorted.map(([k]) => k),
@@ -644,6 +878,11 @@ function renderMarginBySalesChart() {
     .map(([name, d]) => [name, d.amount > 0 ? (d.profit / d.amount * 100) : 0])
     .sort((a, b) => b[1] - a[1]);
 
+<<<<<<< HEAD
+=======
+  if (!sorted.length) return;
+
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   chartMarginBySalesInst = new Chart(ctx, {
     type: 'bar',
     data: { labels: sorted.map(([k]) => k),
@@ -662,11 +901,16 @@ function renderMarginBySalesChart() {
   });
 }
 
+<<<<<<< HEAD
 // Line: แนวโน้มยอดขาย (จาก sales_data.report_date)
+=======
+// Line: แนวโน้มยอดขาย (ตามช่วงที่เลือก)
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 async function renderWeeklyTrendChart() {
   const ctx = document.getElementById('chartWeekly'); if (!ctx) return;
   destroyChart(chartWeeklyInst);
 
+<<<<<<< HEAD
   try {
     const { start: trendStart } = getPeriodRange(currentPeriod, weekOffset - 7);
     const { end:   trendEnd   } = getPeriodRange(currentPeriod, weekOffset);
@@ -686,6 +930,15 @@ async function renderWeeklyTrendChart() {
     const amtTotals = {}, profTotals = {};
     data.forEach(r => {
       const key = getPeriodKey(new Date(r.report_date), currentPeriod);
+=======
+  if (!salesData.length) return;
+
+  try {
+    // กลุ่มตามวัน
+    const amtTotals = {}, profTotals = {};
+    salesData.forEach(r => {
+      const key = r.report_date; // YYYY-MM-DD
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       amtTotals[key]  = (amtTotals[key]  || 0) + (r.amount_net || 0);
       profTotals[key] = (profTotals[key] || 0) + (r.profit || 0);
     });
@@ -702,13 +955,24 @@ async function renderWeeklyTrendChart() {
     gradient2.addColorStop(0, 'rgba(245,166,35,0.2)');
     gradient2.addColorStop(1, 'rgba(245,166,35,0)');
 
+<<<<<<< HEAD
     // อัปเดต badge
     setEl('trendBadge', `${labels.length} ช่วง`);
+=======
+    setEl('trendBadge', `${labels.length} วัน`);
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
     chartWeeklyInst = new Chart(ctx, {
       type: 'line',
       data: {
+<<<<<<< HEAD
         labels: labels.map(k => formatPeriodLabel(k, currentPeriod)),
+=======
+        labels: labels.map(k => {
+          const d = new Date(k);
+          return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+        }),
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
         datasets: [
           {
             label: 'ยอดขาย (฿)', data: amtVals,
@@ -728,6 +992,7 @@ async function renderWeeklyTrendChart() {
   } catch (e) { console.error('weeklyChart', e); }
 }
 
+<<<<<<< HEAD
 function getPeriodKey(d, period) {
   if (period === 'week') {
     const jan1 = new Date(d.getFullYear(), 0, 1);
@@ -750,6 +1015,8 @@ function formatPeriodLabel(key, period) {
   return key;
 }
 
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // =====================================================
 // 🗓️ HEATMAP (reports — 30 วัน)
 // =====================================================
@@ -767,7 +1034,11 @@ async function renderHeatmap() {
     const { data, error } = await q;
     if (error) {
       console.warn('⚠️ Heatmap: reports query error:', error.message);
+<<<<<<< HEAD
       wrap.innerHTML = '<div class="loading-text">ไม่สามารถโหลด heatmap ได้ (reports table error)</div>';
+=======
+      wrap.innerHTML = '<div class="loading-text">ไม่สามารถโหลด heatmap ได้</div>';
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       return;
     }
     const counts = {};

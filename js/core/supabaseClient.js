@@ -1,6 +1,9 @@
 // ===============================
 // SUPABASE CLIENT SETUP / supabaseClient.js
+<<<<<<< HEAD
 // SUPABASE MkPvt-2026 [Prod] 
+=======
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // ไฟล์นี้ต้องโหลดก่อนไฟล์อื่นๆ ทั้งหมด
 // ใช้สำหรับสร้าง Supabase client สำหรับทั้งระบบ
 // ===============================
@@ -32,4 +35,8 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { supabaseClient };
 }
 // ✅ expose client instance (ไม่ใช่ library) ให้ทุกไฟล์เข้าถึงได้
+<<<<<<< HEAD
 window.supabaseClient = supabaseClient; // alias ให้ปลอดภัย
+=======
+window.supabaseClient = supabaseClient; // alias ให้ปลอดภัย
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86

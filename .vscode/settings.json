@@ -4,6 +4,10 @@
         "markdown",
         "latex",
         "plaintext"
+<<<<<<< HEAD
     ],
     "liveServer.settings.port": 5501
+=======
+    ]
+>>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
