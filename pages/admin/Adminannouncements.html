@@ -8,10 +8,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
     <!-- Base CSS -->
-    <!-- <link rel="stylesheet" href="css/adminBase.css"> -->
+    <link rel="stylesheet" href="/css/adminBase.css">
     <link rel="stylesheet" href="/css/pages/admin/Adminannouncements.css">
 </head>
 <body>
+
+     <header class="app-header">
+      <!-- LOGO + SYSTEM NAME -->
+      <div class="logo">
+        <!-- โลโก้วงกลม -->
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo" />
+        </div>
+
+        <!-- ชื่อระบบ -->
+        <h2>EABaseHub</h2>
+      </div>
+
+      <!-- USER INFO + LOGOUT -->
+      <div class="user-box">
+        <!-- avatar ผู้ใช้ -->
+        <div class="user-avatar" id="userAvatar">👤</div>
+
+        <!-- ข้อมูล user -->
+        <div class="user-info">
+          <div class="user-name" id="userName">กำลังโหลด...</div>
+        </div>
+
+        <!-- ปุ่ม logout -->
+        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="app-nav">
+      <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>
+      <a href="/pages/admin/admintor.html" class="active">การจัดการสิทธิ์</a>
+      <a href="/pages/admin/AddProductSpec.html">การจัดการสินค้า</a>
+    </nav>
+
     <!-- Sidebar (ใช้ sidebar เดียวกับระบบ) -->
 
     <main class="admin-announce-page">
