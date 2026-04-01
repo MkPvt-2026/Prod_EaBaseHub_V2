@@ -3,11 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<<<<<<< HEAD
-  <meta name="apple-mobile-web-app-capable" content="yes">
-=======
   <meta name="mobile-web-app-capable" content="yes">
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   <title>EABaseHub | Manager Dashboard</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,9 +11,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/css/base/layout.css">
-<<<<<<< HEAD
-  <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
-=======
   <link rel="stylesheet" href="/css/components/badgeButtom.css">
   <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
   
@@ -159,7 +152,6 @@
       }
     }
   </style>
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 </head>
 <body>
 
@@ -189,37 +181,13 @@
   <div class="container">
 
     <!-- ══════════════════════════════════════════
-<<<<<<< HEAD
-         PAGE HEADER + CONTROLS
-=======
          PAGE HEADER
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
          ══════════════════════════════════════════ -->
     <div class="page-header">
       <div class="page-header-text">
         <h1>📊 Sales <span class="accent">Intelligence</span></h1>
         <p>ภาพรวมยอดขาย กำไร และประสิทธิภาพทีม</p>
       </div>
-<<<<<<< HEAD
-      <div class="header-controls">
-        <div class="period-selector">
-          <label>ช่วงเวลา</label>
-          <select id="periodSelect" onchange="changePeriod(this.value)">
-            <option value="week">รายสัปดาห์</option>
-            <option value="month">รายเดือน</option>
-            <option value="quarter">รายไตรมาส</option>
-          </select>
-        </div>
-        <div class="week-nav">
-          <button onclick="changeWeek(-1)" class="week-btn">‹</button>
-          <div class="week-label-box">
-            <div id="weekOffsetLabel">สัปดาห์นี้</div>
-            <div id="weekLabel">—</div>
-          </div>
-          <button onclick="changeWeek(1)" class="week-btn">›</button>
-        </div>
-      </div>
-=======
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -255,7 +223,6 @@
         <button class="quick-range-btn" data-range="thisQuarter">ไตรมาสนี้</button>
         <button class="quick-range-btn" data-range="thisYear">ปีนี้</button>
       </div>
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -408,13 +375,8 @@
 
       <div class="card">
         <div class="card-header">
-<<<<<<< HEAD
-          <div class="card-title">📈 แนวโน้มยอดขาย (sales_data)</div>
-          <span class="card-badge" id="trendBadge">8 ช่วง</span>
-=======
           <div class="card-title">📈 แนวโน้มยอดขาย</div>
           <span class="card-badge" id="trendBadge">— วัน</span>
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
         </div>
         <div class="chart-wrap">
           <canvas id="chartWeekly"></canvas>
@@ -509,11 +471,7 @@
   <script src="/js/services/shopService.js"></script>
   <script src="/js/services/categoryService.js"></script>
   <script src="/js/services/reportService.js"></script>
-<<<<<<< HEAD
-  <script src="/js/pages/manager/Salesdashboard.js"></script>
-=======
   <!-- ลบ Salesdashboard.js ออก เพื่อไม่ให้ซ้ำซ้อน -->
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   <script src="/js/pages/dashboard/managerDashboard.js"></script>
 
   <script src="/js/core/splash.js"></script>

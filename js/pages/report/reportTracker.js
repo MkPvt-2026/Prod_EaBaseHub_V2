@@ -1,12 +1,4 @@
 // =====================================================
-<<<<<<< HEAD
-// reportTracker.js - Manager Report Review Page
-// ใช้ area แทน team_id
-// =====================================================
-
-// ⚠️ ไม่ประกาศ let currentUser ซ้ำ เพราะ userService.js
-// ใช้ window.currentUser แทน — เก็บ reference ไว้ใน localUser
-=======
 // reportTracker.js - Manager Report Review Page v2
 // ใช้ Date Range Picker แทน Week Selector
 // =====================================================
@@ -14,7 +6,6 @@
 'use strict';
 
 // ⚠️ ไม่ประกาศ let currentUser ซ้ำ เพราะ userService.js
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 let localUser = null;
 
 let allReports = [];
@@ -23,14 +14,10 @@ let profilesMap = {};
 let shopsMap = {};
 let productsMap = {};
 
-<<<<<<< HEAD
-let weekOffset = 0;
-=======
 // ── Date Range State ──
 let dateStart = null;
 let dateEnd = null;
 
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 let currentPage = 1;
 const PAGE_SIZE = 20;
 
@@ -50,11 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-<<<<<<< HEAD
-  // ใช้ window.currentUser จาก userService (โหลดโดย protectPage → initUserService)
-=======
   // ใช้ window.currentUser จาก userService
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   if (window.currentUser && window.currentUser.id) {
     localUser = {
       id:   window.currentUser.id,
@@ -67,10 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     console.log('✅ Using window.currentUser:', localUser);
   } else {
-<<<<<<< HEAD
-    // fallback — ดึงจาก DB ตรงๆ
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     localUser = await loadCurrentUserFallback();
     if (!localUser) {
       console.error('❌ No current user');
@@ -86,13 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const avatarEl = document.getElementById('userAvatar');
   if (avatarEl) avatarEl.textContent = localUser.name.charAt(0).toUpperCase();
 
-<<<<<<< HEAD
-=======
   // ตั้งค่า Date Range
   initDateRange();
   setupDateControls();
 
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   // โหลดข้อมูลสนับสนุน
   await Promise.all([
     loadProfiles(),
@@ -111,10 +87,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // =====================================================
-<<<<<<< HEAD
-// 👤 LOAD CURRENT USER (fallback)
-// ใช้เมื่อ window.currentUser ยังไม่พร้อม
-=======
 // 📅 DATE RANGE CONTROLS
 // =====================================================
 function initDateRange() {
@@ -257,7 +229,6 @@ function formatDateForInput(date) {
 
 // =====================================================
 // 👤 LOAD CURRENT USER (fallback)
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // =====================================================
 async function loadCurrentUserFallback() {
   try {
@@ -283,12 +254,7 @@ async function loadCurrentUserFallback() {
 }
 
 // =====================================================
-<<<<<<< HEAD
-// 👥 LOAD PROFILES (sales ทั้งหมด)
-// Manager + Admin ดู sales ทุกคนได้ ไม่ filter area
-=======
 // 👥 LOAD PROFILES
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // =====================================================
 async function loadProfiles() {
   try {
@@ -306,10 +272,6 @@ async function loadProfiles() {
 
     profilesMap = Object.fromEntries((data || []).map(p => [p.id, p]));
 
-<<<<<<< HEAD
-    // Populate filter dropdown
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const select = document.getElementById('filterSales');
     if (select) {
       select.innerHTML = '<option value="">— ทั้งหมด —</option>';
@@ -338,22 +300,10 @@ async function loadShops() {
 
     if (error) {
       console.error('❌ loadShops error:', error);
-<<<<<<< HEAD
-      console.warn('⚠️ อาจเป็นปัญหา RLS — ตรวจสอบว่า manager มีสิทธิ์ SELECT จาก shops');
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       return;
     }
 
     console.log('✅ Shops loaded:', data?.length || 0);
-<<<<<<< HEAD
-
-    if (!data || data.length === 0) {
-      console.warn('⚠️ Shops = 0 — ตรวจสอบ RLS policy ของตาราง shops');
-    }
-
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     shopsMap = Object.fromEntries((data || []).map(s => [s.id, s.shop_name]));
   } catch (e) {
     console.error('❌ loadShops error:', e);
@@ -393,17 +343,10 @@ async function loadReports() {
   try {
     console.log('=== 📊 LOADING REPORTS ===');
 
-<<<<<<< HEAD
-    const { start, end } = getWeekRange(weekOffset);
-    updateWeekDisplay(start, end);
-
-    console.log('📅 Week range:', start.toISOString(), 'to', end.toISOString());
-=======
     const startStr = dateStart.toISOString();
     const endStr = dateEnd.toISOString();
 
     console.log('📅 Date range:', formatDateForInput(dateStart), 'to', formatDateForInput(dateEnd));
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
     let query = supabaseClient
       .from('reports')
@@ -411,33 +354,18 @@ async function loadReports() {
       .order('submitted_at', { ascending: false, nullsLast: true })
       .order('report_date', { ascending: false, nullsLast: true });
 
-<<<<<<< HEAD
-    // Admin + Manager ดู report ทั้งหมด (ไม่ filter by sale_id)
-    // ถ้าอนาคตต้องการจำกัด → เพิ่ม filter ตรงนี้
-
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const { data, error } = await query;
 
     if (error) {
       console.error('❌ reports query error:', error);
-<<<<<<< HEAD
-      console.warn('⚠️ ตรวจสอบ RLS policy ของตาราง reports');
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       throw error;
     }
 
     console.log('✅ Raw reports from DB:', data?.length || 0);
 
     // Filter วันที่ใน JavaScript
-<<<<<<< HEAD
-    const startTime = start.getTime();
-    const endTime = end.getTime();
-=======
     const startTime = dateStart.getTime();
     const endTime = dateEnd.getTime();
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
     const filtered = (data || []).filter(r => {
       const date = r.submitted_at || r.report_date || r.created_at;
@@ -447,16 +375,7 @@ async function loadReports() {
       return reportTime >= startTime && reportTime <= endTime;
     });
 
-<<<<<<< HEAD
-    console.log('✅ Reports in week range:', filtered.length);
-
-    // ถ้า raw > 0 แต่ filtered = 0 → อาจอยู่สัปดาห์อื่น
-    if ((data?.length || 0) > 0 && filtered.length === 0) {
-      console.log('ℹ️ มี report ใน DB แต่ไม่อยู่ในสัปดาห์นี้ — ลองเลื่อนสัปดาห์ดู');
-    }
-=======
     console.log('✅ Reports in date range:', filtered.length);
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
     allReports = filtered;
     filteredReports = [...allReports];
@@ -481,50 +400,6 @@ async function loadReports() {
 }
 
 // =====================================================
-<<<<<<< HEAD
-// 📅 WEEK HELPERS
-// =====================================================
-function getWeekRange(offset = 0) {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Monday
-
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff + (offset * 7));
-  monday.setHours(0, 0, 0, 0);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-
-  return { start: monday, end: sunday };
-}
-
-function updateWeekDisplay(start, end) {
-  const fmt = d => d.toLocaleDateString('th-TH', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-
-  let label = '';
-  if (weekOffset === 0) label = 'สัปดาห์นี้';
-  else if (weekOffset === -1) label = 'สัปดาห์ที่แล้ว';
-  else if (weekOffset < -1) label = `${Math.abs(weekOffset)} สัปดาห์ก่อน`;
-  else label = `อีก ${weekOffset} สัปดาห์`;
-
-  document.getElementById('weekLabel').textContent = label;
-  document.getElementById('weekRange').textContent = `${fmt(start)} – ${fmt(end)}`;
-}
-
-async function changeWeek(direction) {
-  weekOffset += direction;
-  await loadReports();
-}
-
-// =====================================================
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 // 📈 UPDATE SUMMARY CARDS
 // =====================================================
 function updateSummaryCards() {
@@ -670,11 +545,7 @@ function renderReports() {
   }
 
   if (!pageReports.length) {
-<<<<<<< HEAD
-    container.innerHTML = '<div class="loading">ไม่มีรายงาน</div>';
-=======
     container.innerHTML = '<div class="loading">ไม่มีรายงานในช่วงเวลาที่เลือก</div>';
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     renderPagination();
     return;
   }
@@ -898,10 +769,6 @@ async function markAsRead() {
 
     if (error) throw error;
 
-<<<<<<< HEAD
-    // Update local state
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const idx = allReports.findIndex(r => r.id === currentReportId);
     if (idx !== -1) {
       allReports[idx].manager_acknowledged = true;
@@ -964,11 +831,7 @@ function exportCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-<<<<<<< HEAD
-  a.download = `reports_${new Date().toISOString().slice(0, 10)}.csv`;
-=======
   a.download = `reports_${formatDateForInput(dateStart)}_${formatDateForInput(dateEnd)}.csv`;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   a.click();
   URL.revokeObjectURL(url);
 
