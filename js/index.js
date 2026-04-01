@@ -492,12 +492,6 @@ async function init() {
   // Admin badge
   if (profile?.role === "admin") document.body.classList.add("is-admin");
 
-  // 🆕 Manager Dashboard Button - แสดงเมื่อ role เป็น manager หรือ admin
-  if (profile?.role === "manager" || profile?.role === "admin") {
-    const managerBtn = document.getElementById("managerDashboardBtn");
-    if (managerBtn) managerBtn.style.display = "block";
-  }
-
   // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ
   const currentUser = {
     id: session.user.id,

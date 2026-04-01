@@ -294,6 +294,8 @@ async function editDraftToForm(draftId) {
   if (d.report_date) document.getElementById("reportDate").value = d.report_date;
   if (d.status_visit) document.getElementById("status").value = d.status_visit;
   if (d.note) document.getElementById("note").value = d.note;
+  if (d.product_interest) document.getElementById("productInterest").value = d.product_interest;
+
 
   if (d.province) {
     const provSel = document.getElementById("provinceSelect");
@@ -413,6 +415,7 @@ async function submitOneDraft(draftId) {
       source:       d.source || null,
       status:       "submitted",
       status_visit: d.status_visit || null,
+      product_interest: d.product_interest || null,
       note:         d.note,
       attributes:   p.attributes || {},
       sale_id:      session.user.id,
@@ -462,6 +465,7 @@ async function submitAllDrafts() {
           source:       d.source || null,
           status:       "submitted",
           status_visit: d.status_visit || null,
+          product_interest: d.product_interest || null,
           note:         d.note,
           attributes:   p.attributes || {},
           sale_id:      session.user.id,
@@ -638,6 +642,7 @@ function collectFormData() {
     shop_id:      document.getElementById("shopSelect")?.value      || null,
     status_visit: document.getElementById("status")?.value          || null,
     note:         document.getElementById("note")?.value            || null,
+    product_interest: document.getElementById("productInterest")?.value || null,
     products:     selectedProducts.map(p => ({
       product_id: p.product_id,
       attributes: p.attributes || {}
@@ -661,6 +666,7 @@ function clearForm() {
     const el = document.getElementById(id); if(el) el.selectedIndex = 0;
   });
   document.getElementById("note").value = "";
+  document.getElementById("productInterest").value = "";
 
   // reset picker
   const catSel  = document.getElementById("pickerCategory");
