@@ -8,10 +8,6 @@
  * - Weekly report progress
  * - Dynamic calendar
  * - UI controls (menu / sidebar)
-<<<<<<< HEAD
-=======
- * - Announcements module integration
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
  *************************************************/
 
 
@@ -87,19 +83,12 @@ async function loadData() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
-<<<<<<< HEAD
   // ✅ ลอง auth.uid() แทน user_id ก่อน — หรือดึงทั้งหมดแล้วกรองทีหลัง
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   const { data: reportData, error: reportError } =
     await supabaseClient
       .from("reports")
       .select("*")
-<<<<<<< HEAD
       .eq("sale_id", user.id)   // เปลี่ยน user_id ให้ตรงกับชื่อจริง
-=======
-      .eq("sale_id", user.id)
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
       .order("created_at", { ascending: false });
 
   if (reportError) {
@@ -118,10 +107,7 @@ async function loadData() {
   reports = reportData || [];
   claims  = claimData  || [];
   
-<<<<<<< HEAD
   // แสดงใน console เพื่อดูว่า column ชื่ออะไร
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   if (reports.length > 0) {
     console.log("📋 Report columns:", Object.keys(reports[0]));
   }
@@ -149,19 +135,13 @@ async function loadUserProfile() {
     return;
   }
 
-<<<<<<< HEAD
   // ✅ ใช้ตัวแปรเดียวให้ถูกต้อง
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   const fullName =
     profile?.display_name ||
     profile?.username ||
     user.email;
 
-<<<<<<< HEAD
   // ใส่ค่าลง element (เช็คก่อนกันพัง)
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   const userNameEl  = document.getElementById("userName");
   const displayEl   = document.getElementById("displayName");
   const emailEl     = document.getElementById("userEmail");
@@ -183,19 +163,13 @@ async function loadUserArea() {
 
   try {
 
-<<<<<<< HEAD
     // 1️⃣ ดึง user ที่ login อยู่
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const { data: { user }, error } =
       await supabaseClient.auth.getUser();
 
     if (error || !user) return;
 
-<<<<<<< HEAD
     // 2️⃣ ดึงค่า area จาก profiles
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const { data: profile, error: profileError } =
       await supabaseClient
         .from("profiles")
@@ -208,10 +182,7 @@ async function loadUserArea() {
       return;
     }
 
-<<<<<<< HEAD
     // 3️⃣ แสดงค่าใน Card
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const areaEl = document.getElementById("areaCount");
 
     if (areaEl) {
@@ -238,11 +209,7 @@ async function loadUserInfo() {
   }
 
   document.getElementById("userName").textContent =
-<<<<<<< HEAD
     user.email;  // ชั่วคราวใช้ email ก่อน
-=======
-    user.email;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 
@@ -278,7 +245,6 @@ function renderReportList() {
       link: `report.html?id=${r.id}`,
       id: r.id
     })),
-<<<<<<< HEAD
     // ...trips.map(t => ({
     //   type: "trip",
     //   title: `Trip : ${t.place || "-"}`,
@@ -286,8 +252,6 @@ function renderReportList() {
     //   link: `trip.html?id=${t.id}`,
     //   id: t.id
     // }))
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   ];
 
   if (!items.length) {
@@ -476,10 +440,7 @@ async function logout() {
    🔟 INIT
 ================================================= */
 
-<<<<<<< HEAD
 // ✅ แบบใหม่ - รันพร้อมกัน (~200-300ms)
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 async function init() {
 
   // 1️⃣ ตรวจ session ก่อนเลย (บล็อกอย่างเดียว)
@@ -508,11 +469,7 @@ async function init() {
     // โหลด claims
     supabaseClient
       .from("claims")
-<<<<<<< HEAD
       .select("id"),   // select แค่ id พอ ไม่ต้องดึงทั้งหมด
-=======
-      .select("id"),
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
     // นับร้านค้า
     supabaseClient
@@ -530,7 +487,6 @@ async function init() {
   const fullName = profile?.display_name || profile?.username || session.user.email;
 
   // อัพเดท UI ทีเดียว
-<<<<<<< HEAD
   document.getElementById("userName")?.textContent  && (document.getElementById("userName").textContent = fullName);
   document.getElementById("displayName")?.textContent && (document.getElementById("displayName").textContent = fullName);
   document.getElementById("userEmail") && (document.getElementById("userEmail").textContent = session.user.email);
@@ -538,69 +494,16 @@ async function init() {
   document.getElementById("areaCount") && (document.getElementById("areaCount").textContent = profile?.area || "-");
   document.getElementById("storeCount") && (document.getElementById("storeCount").textContent = storeCount);
   document.getElementById("claimCount") && (document.getElementById("claimCount").textContent = claims.length);
-=======
-  const userNameEl = document.getElementById("userName");
-  const displayNameEl = document.getElementById("displayName");
-  const userEmailEl = document.getElementById("userEmail");
-  const userRoleEl = document.getElementById("userRole");
-  const areaCountEl = document.getElementById("areaCount");
-  const storeCountEl = document.getElementById("storeCount");
-  const claimCountEl = document.getElementById("claimCount");
-
-  if (userNameEl) userNameEl.textContent = fullName;
-  if (displayNameEl) displayNameEl.textContent = fullName;
-  if (userEmailEl) userEmailEl.textContent = session.user.email;
-  if (userRoleEl) userRoleEl.textContent = profile?.role || "Sales Executive";
-  if (areaCountEl) areaCountEl.textContent = profile?.area || "-";
-  if (storeCountEl) storeCountEl.textContent = storeCount;
-  if (claimCountEl) claimCountEl.textContent = claims.length;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
   // Admin badge
   if (profile?.role === "admin") document.body.classList.add("is-admin");
 
-<<<<<<< HEAD
   // 4️⃣ Render UI
-=======
-  // 🆕 Manager Dashboard Button - แสดงเมื่อ role เป็น manager หรือ admin
-  if (profile?.role === "manager" || profile?.role === "admin") {
-    const managerBtn = document.getElementById("managerDashboardBtn");
-    if (managerBtn) managerBtn.style.display = "block";
-  }
-
-  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ
-  const currentUser = {
-    id: session.user.id,
-    email: session.user.email,
-    role: profile?.role || 'user',
-    display_name: fullName
-  };
-
-  // เก็บไว้ใน window สำหรับ modules อื่นใช้
-  window.currentUser = currentUser;
-
-  // 5️⃣ Render UI
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   initAvatarUpload();
   renderSummary();
   renderReportList();
   renderWeeklyProgress();
   renderCalendar();
-<<<<<<< HEAD
-=======
-
-  // 6️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
-  if (typeof AnnouncementsModule !== 'undefined') {
-    try {
-      await AnnouncementsModule.init(currentUser);
-      console.log("✅ AnnouncementsModule initialized");
-    } catch (err) {
-      console.error("❌ AnnouncementsModule init error:", err);
-    }
-  } else {
-    console.warn("⚠️ AnnouncementsModule not loaded");
-  }
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* =================================================
@@ -646,20 +549,14 @@ console.log("Home loaded (Production Ready) 🚀");
 async function loadStoreCount() {
   try {
 
-<<<<<<< HEAD
     // ดึง user ปัจจุบัน
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const { data: { user }, error: userError } =
       await supabaseClient.auth.getUser();
 
     if (userError) throw userError;
     if (!user) return;
 
-<<<<<<< HEAD
     // นับจำนวนร้าน (ไม่ดึงข้อมูลจริง ใช้ head:true เพื่อความเร็ว)
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const { count, error } =
       await supabaseClient
         .from("shops")
@@ -668,10 +565,7 @@ async function loadStoreCount() {
 
     if (error) throw error;
 
-<<<<<<< HEAD
     // แสดงผลใน card
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
     const el = document.getElementById("storeCount");
     if (el) el.textContent = count ?? 0;
 
@@ -680,10 +574,6 @@ async function loadStoreCount() {
     const el = document.getElementById("storeCount");
     if (el) el.textContent = 0;
   }
-<<<<<<< HEAD
 }
 
 
-=======
-}
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86

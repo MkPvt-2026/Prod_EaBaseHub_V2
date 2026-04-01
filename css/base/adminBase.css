@@ -258,43 +258,6 @@ position: relative;
    ===================================================== */
 
 .logo-circle {
-<<<<<<< HEAD
-
-width:45px;
-height:45px;
-
-border-radius:50%;
-
-/* background วงกลม */
-
-background:white;
-
-/* center logo */
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-/* shadow */
-
-box-shadow:0 15px 30px rgba(0,0,0,0.15);
-
-/* ป้องกัน overflow */
-
-overflow:hidden;
-
-}
-
-.logo-circle img {
-
-width:65%;
-height:65%;
-
-object-fit:contain;
-
-display:block;
-
-=======
 width:45px;
 height:45px;
 border-radius:50%;  /* background วงกลม */
@@ -311,7 +274,6 @@ width:65%;
 height:65%;
 object-fit:contain;
 display:block;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 

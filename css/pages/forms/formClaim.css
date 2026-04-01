@@ -82,11 +82,7 @@ body {
 a { text-decoration: none; color: inherit; }
 
 /* ================= STICKY HEADER ================= */
-<<<<<<< HEAD
-.app-header {
-=======
 /* .app-header {
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -135,11 +131,7 @@ a { text-decoration: none; color: inherit; }
   color: #fff;
   letter-spacing: 0.5px;
   white-space: nowrap;
-<<<<<<< HEAD
-}
-=======
 } */
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
 /* ===== User Box ===== */
 .user-box {

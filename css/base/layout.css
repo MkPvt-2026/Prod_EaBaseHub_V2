@@ -1,19 +1,4 @@
 /* =====================================================
-<<<<<<< HEAD
-   GLOBAL LAYOUT (ใช้ทุกหน้า)
-   ===================================================== */
-
-:root{
-  --primary:#0d9488;
-  --primary-dark:#0f766e;
-  --primary-xdark:#115e59;
-
-  --bg-base:#f0fdfa;
-  --bg-card:#ffffff;
-
-  --border:#99f6e4;
-  --radius-md:12px;
-=======
    GLOBAL LAYOUT (Pastel Mint Theme)
    ===================================================== */
 
@@ -86,7 +71,6 @@
   --font-2xl:  27px;
 
   --transition: 0.20s ease;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 *,
@@ -115,20 +99,12 @@ body{
   top: 0;
   z-index: 1000;
   display: flex;
-<<<<<<< HEAD
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-xdark) 100%);
-=======
   background: var(--mint-900);
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
   padding: 10px 24px;
   height: 64px;  
   justify-content: space-between;
   align-items: center;
-<<<<<<< HEAD
-  box-shadow: 0 2px 12px rgba(13,148,136,0.3);
-=======
   box-shadow: 0 2px 10px rgba(92,189,154,0.24);
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .app-header .logo {
@@ -140,13 +116,6 @@ body{
   flex-direction: row;
 }
 
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 .logo{
   display:flex;
   align-items:center;
@@ -162,11 +131,8 @@ body{
 .logo h2 {
   color: #fff;
   font-size: 16px;
-<<<<<<< HEAD
-=======
   font-weight: 600;
   letter-spacing: 0.3px;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .logo-circle{
@@ -177,10 +143,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-<<<<<<< HEAD
-=======
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 .logo-circle img{
@@ -200,24 +163,6 @@ body{
   width:32px;
   height:32px;
   border-radius:50%;
-<<<<<<< HEAD
-  background:var(--primary);
-  color:#fff;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.logout-btn{
-  padding:4px 10px;
-  border:none;
-  border-radius:16px;
-  background:#fff;
-  color:var(--primary-dark);
-  font-size:12px;
-  cursor:pointer;
-=======
   background:var(--bg-card);
   color: var(--mint-800);
   display:flex;
@@ -243,7 +188,6 @@ body{
   background:#f0f9f8;
   transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(0,0,0,0.14);
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* ================= NAV ================= */
@@ -253,13 +197,8 @@ body{
   top:64px;
   z-index:999;
 
-<<<<<<< HEAD
-  background:#f0f0f0;
-  border-bottom:1px solid #ddd;
-=======
   background:#f5f8f7;
   border-bottom:1px solid #e0ede5;
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 
   padding:8px 16px;
 
@@ -271,16 +210,6 @@ body{
 
 .app-nav a{
   padding:6px 12px;
-<<<<<<< HEAD
-  border-radius:6px;
-  font-size:13px;
-  white-space:nowrap;
-}
-
-.app-nav a.active{
-  background:#1976d2;
-  color:#fff;
-=======
   border-radius:8px;
   font-size:13px;
   white-space:nowrap;
@@ -298,7 +227,6 @@ body{
   color:#fff;
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(92,189,154,0.20);
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 }
 
 /* ================= CONTAINER ================= */
@@ -309,14 +237,6 @@ body{
   padding:20px;
 }
 
-<<<<<<< HEAD
-
-
-
-
-
-=======
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
 /* =====================================================
    RESPONSIVE DESIGN
    ===================================================== */
@@ -442,9 +362,4 @@ body{
   font-size:10px;
 }
 
-<<<<<<< HEAD
 }
-
-=======
-}
->>>>>>> 6a6183de9074f71dfaeeaf6728915012883bba86
