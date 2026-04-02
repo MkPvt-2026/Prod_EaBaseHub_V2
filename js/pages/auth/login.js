@@ -43,7 +43,7 @@ async function redirectIfLoggedIn() {
     } else if (profile.role === "sales") {
       window.location.href = "/index.html";
     } else if (profile.role === "manager") {
-      window.location.href = "/pages/reports/reportTracker.html";
+      window.location.href = "/index.html";
     } else if (profile.role === "executive") {
       window.location.href = "/pages/dashboard/executiveDashboard.html";
     }
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (profile.role === "sales") {
         showLoginOverlay("/index.html");
       } else if (profile.role === "manager") {
-        showLoginOverlay("/pages/dashboard/managerDashboard.html");
+        showLoginOverlay("/index.html");
       } else if (profile.role === "executive") {
         showLoginOverlay("/pages/dashboard/executiveDashboard.html");
       } else {
