@@ -9,7 +9,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <meta name="theme-color" content="#222A38" />
+    <meta name="theme-color" content="#4caf8a" />
     <meta name="description" content="EABaseHub - ระบบจัดการรายงานและร้านค้า" />
     <title>Home - EABaseHub</title>
     <!-- =========================
@@ -27,7 +27,12 @@
          PWA CONFIG
          ========================= -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png"/>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/assets/icons/icon-192.png"
+    />
 
     <!-- =========================
          CSS STYLES - ใช้ไฟล์ใหม่ที่ปรับปรุงแล้ว
@@ -217,18 +222,22 @@
             <!-- =========================
                  PROGRESS CARD - การ์ดแสดงความคืบหน้า
                  ========================= -->
-            <!-- <div class="progress-card">
-              <div class="progress-title">
-                <span
-                  class="material-symbols-outlined"
-                  style="
-                    font-size: 20px;
-                    vertical-align: middle;
-                    color: var(--primary-500);
-                  "
-                  >edit_note</span
-                >
-                เขียนรายงานแล้ว <strong id="reportDays">0</strong> วัน
+            <section class="announce-section" id="announceSection">
+              <div class="announce-header">
+                <div class="announce-header-left">
+                  <span class="material-symbols-outlined">campaign</span>
+                  <h3>ประชาสัมพันธ์</h3>
+                  <span class="announce-badge" id="announceBadge" style="display:none">0</span>
+                </div>
+                <div class="announce-header-right">
+                  <a href="/commingSoon.html" class="announce-view-all">ดูทั้งหมด →</a>
+                  <button class="announce-btn-add" id="announceBtnAdd" 
+                          style="display:none"
+                          onclick="location.href='adminAnnouncements.html'">
+                    <span class="material-symbols-outlined">add</span>
+                    สร้างประกาศ
+                  </button>
+                </div>
               </div>
 
               <div class="progress-bar">
@@ -368,6 +377,34 @@
                 >
                 จัดการผู้ใช้
               </button>
+
+              <!-- 🆕 ปุ่มสำหรับ Manager -- onclick="goToManagerDashboard()" -->
+              <button
+                id="managerDashboardBtn"
+                onclick="goToreportTracker()"
+                
+                style="
+                  display: none;
+                  width: 100%;
+                  padding: 12px;
+                  margin-top: 8px;
+                  background: linear-gradient(135deg, #1a365d 0%, #2d4a6f 100%);
+                  color: white;
+                  border: none;
+                  border-radius: var(--radius-md);
+                  font-family: 'Kanit', sans-serif;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                "
+              >
+                <span
+                  class="material-symbols-outlined"
+                  style="font-size: 18px; vertical-align: middle"
+                  >monitoring</span
+                >
+                Manager
+              </button>
             </aside>
           </div>
         </div>
@@ -493,7 +530,6 @@
       // OPEN SHOP MODAL
       // ===========================
       function openShopModal() {
-        // TODO: เปลี่ยนเป็น modal จริง
         alert("🏪 ฟีเจอร์เปิดร้านค้าใหม่กำลังพัฒนา");
       }
 
@@ -559,6 +595,19 @@
       // ===========================
       function goToAdmin() {
         window.location.href = "/pages/admin/adminDashboard.html";
+      }
+
+      // ===========================
+      // 🆕 GO TO MANAGER DASHBOARD
+      // ===========================
+      function goToManagerDashboard() {
+        window.location.href = "/pages/manager/managerDashboard.html";
+      }
+      // ===========================
+      // 🆕 GO TO MANAGER DASHBOARD 2
+      // ===========================
+      function goToreportTracker() {
+        window.location.href = "/pages/reports/reportTracker.html";
       }
 
       // ===========================
