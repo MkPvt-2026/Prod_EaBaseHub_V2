@@ -1,56 +1,29 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <!-- =====================================================
-       BASIC META
-       ===================================================== -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>แผนการเดินทางและเบิกทดลองจ่าย ๑</title>
-
-  <!-- ✅ ย้าย Supabase CDN มาไว้ใน <head> ให้โหลดก่อน script อื่น -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- GOOGLE FONT -->
   <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-
   <link rel="stylesheet" href="/css/pages/forms/formPlan.css">
-  
-
+</head>
 <body>
 
 <div class="layout">
-
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="logo-circle">
-        <img src="/assets/icons/icon-192.png" alt="logo">
-      </div>
-      <!-- ✅ แก้: เดิมใช้ <span class="sidebar-header"> ซ้ำกับ class ของ div → เปลี่ยนเป็น logo-text -->
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
       <span class="logo-text">EABaseHub</span>
     </div>
-
     <nav class="sidebar-menu">
-      <a href="/index.html">
-        <span class="material-symbols-outlined">home</span>
-        หน้าแรก
-      </a>
-      <a href="/pages/reports/report.html">
-        <span class="material-symbols-outlined">assignment</span>
-        รายงานเยี่ยมร้านค้า
-      </a>
-      <a href="/pages/forms/formPlan.html" class="active">
-        <span class="material-symbols-outlined">map</span>
-        ฟอร์ม ๑ แผนการเดินทาง
-      </a>
-      <a href="/pages/forms/formActual.html">
-        <span class="material-symbols-outlined">check_circle</span>
-        ฟอร์ม ๒ เคลียร์ค่าใช้จ่าย
-      </a>
+      <a href="/index.html"><span class="material-symbols-outlined">home</span>หน้าแรก</a>
+      <a href="/pages/reports/report.html"><span class="material-symbols-outlined">assignment</span>รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formPlan.html" class="active"><span class="material-symbols-outlined">map</span>ฟอร์ม ๑ แผนการเดินทาง</a>
+      <a href="/pages/forms/formActual.html"><span class="material-symbols-outlined">check_circle</span>ฟอร์ม ๒ เคลียร์ค่าใช้จ่าย</a>
     </nav>
-
     <div class="sidebar-logout">
       <span id="sidebarEmail" class="sidebar-email"></span>
       <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
@@ -59,168 +32,102 @@
 
   <!-- ===== Main Content ===== -->
   <main class="main-content">
-
     <div class="page">
-      <div class="paper">
-      <h1>ฟอร์มแผนการเดินทางและเบิกจ่าย ๑</h1>
-      </div>
+      <div class="paper"><h1>ฟอร์มแผนการเดินทางและเบิกจ่าย ๑</h1></div>
+
       <!-- SECTION: ข้อมูลพนักงาน -->
       <div class="section summary-section">
         <h3>ข้อมูลพนักงาน / ช่วงเวลา</h3>
-
         <div class="form-row">
-          <div class="form-group">
-            <label for="empName">พนักงานขาย</label>
-            <input id="empName" readonly>
-          </div>
-          <div class="form-group">
-            <!-- ✅ id="area" ตรงกับ JS และ CSS -->
-            <label for="area">เขตการขาย</label>
-            <input id="area" readonly>
-          </div>  
+          <div class="form-group"><label for="empName">พนักงานขาย</label><input id="empName" readonly></div>
+          <div class="form-group"><label for="area">เขตการขาย</label><input id="area" readonly></div>
         </div>
-
         <div class="form-row">
-          <div class="form-group">
-            <label for="startDate">ระหว่างวันที่</label>
-            <input type="date" id="startDate">
-          </div>
-          <div class="form-group">
-            <label for="endDate">ถึงวันที่</label>
-            <input type="date" id="endDate">
-          </div>
+          <div class="form-group"><label for="startDate">ระหว่างวันที่</label><input type="date" id="startDate"></div>
+          <div class="form-group"><label for="endDate">ถึงวันที่</label><input type="date" id="endDate"></div>
         </div>
       </div>
-
-      <!-- SECTION: Draft Manager -->
-<div class="section summary-section" id="draftManagerSection">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-    <h3 style="margin:0; border:none; padding:0;">แผนที่บันทึกไว้
-      <span id="draftCountBadge" style="
-        background:#e8f5f4; color:#0f6e56; font-size:12px;
-        padding:2px 10px; border-radius:999px;
-        border:1px solid #5DCAA5; margin-left:8px;
-        font-weight:500; vertical-align:middle;">0 รายการ</span>
-    </h3>
-    <button type="button" onclick="loadDraftList()" style="
-      background:none; border:1px solid #ccc; border-radius:8px;
-      padding:5px 14px; font-size:13px; cursor:pointer;
-      display:flex; align-items:center; gap:6px;">
-      🔄 รีเฟรช
-    </button>
-  </div>
-  <div id="draftList">
-    <p style="text-align:center; color:#aaa; padding:20px 0; font-size:13px;">กำลังโหลด...</p>
-  </div>
-</div>
 
       <!-- SECTION: แผนการเดินทาง -->
       <div class="section summary-section">
         <h3>แผนการเดินทาง</h3>
-
-        <div class="badge">
-          ร้านในความรับผิดชอบ
-          <span id="shopCount">0</span> ร้าน
-        </div>
-
+        <div class="badge">ร้านในความรับผิดชอบ <span id="shopCount">0</span> ร้าน</div>
         <table id="tripTable" class="trip-table">
-          <thead>
-            <tr>
-              <th>ว/ด/ป</th>
-              <th>จากจังหวัด</th>
-              <th>ไปจังหวัด</th>
-              <th>ร้านค้า 1</th>
-              <th>ร้านค้า 2</th>
-              <th>ร้านค้า 3</th>
-              <th>หมายเหตุ</th>
-            </tr>
-          </thead>
-          <tbody id="tripTableBody">
-            <!-- JS จะเพิ่มแถวให้ -->
-          </tbody>
+          <thead><tr><th>ว/ด/ป</th><th>จากจังหวัด</th><th>ไปจังหวัด</th><th>ร้านค้า 1</th><th>ร้านค้า 2</th><th>ร้านค้า 3</th><th>หมายเหตุ</th></tr></thead>
+          <tbody id="tripTableBody"></tbody>
         </table>
-
         <div class="actions">
           <button type="button" onclick="addRow()">➕ เพิ่มแถว</button>
           <button type="button" onclick="removeRow()">➖ ลบแถว</button>
-          <button class="btn-save" onclick="savePlanToDatabase('draft')">💾 Save Draft</button>
+          <button class="btn-save" onclick="saveDraftToLocal()" style="background:#FAEEDA;color:#633806;border:1px solid #EF9F27;">💾 Save Draft</button>
+          <button type="button" onclick="clearForm()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;padding:8px 16px;font-size:14px;cursor:pointer;font-family:inherit;">🔄 สร้างใหม่</button>
         </div>
       </div>
 
       <!-- SECTION: สรุปค่าใช้จ่าย -->
       <div class="section summary-section">
         <h3>สรุปแผนการเดินทางและเบิกจ่าย</h3>
-
         <div class="summary-grid">
-          <div class="summary-item">
-            <label>เบี้ยเลี้ยง</label>
-            <input type="number" id="allowanceRate" placeholder="บาท/วัน">
-          </div>
-          <div class="summary-item">
-            <label>ค่าที่พัก(ราคา)</label>
-            <input type="number" id="hotelRate" placeholder="บาท/คืน">
-          </div>
-          <div class="summary-item">
-            <label>ค่าใช้จ่ายอื่นๆ</label>
-            <input type="number" id="otherCost" placeholder="บาท">
-          </div>
-          <div class="summary-item">
-            <label>จำนวน(วัน)</label>
-            <input type="number" id="allowanceDays" placeholder="จำนวน(วัน)">
-          </div>
-          <div class="summary-item">
-            <label>รวมพัก(คืน)</label>
-            <input type="number" id="hotelNights" placeholder="จำนวน(คืน)">
-          </div>
-          <div class="summary-item total">
-            <label>รวมเบิกทั้งหมด</label>
-            <input type="text" id="grandTotal" placeholder="บาท" readonly>
-          </div>
+          <div class="summary-item"><label>เบี้ยเลี้ยง</label><input type="number" id="allowanceRate" placeholder="บาท/วัน"></div>
+          <div class="summary-item"><label>ค่าที่พัก(ราคา)</label><input type="number" id="hotelRate" placeholder="บาท/คืน"></div>
+          <div class="summary-item"><label>ค่าใช้จ่ายอื่นๆ</label><input type="number" id="otherCost" placeholder="บาท"></div>
+          <div class="summary-item"><label>จำนวน(วัน)</label><input type="number" id="allowanceDays" placeholder="จำนวน(วัน)"></div>
+          <div class="summary-item"><label>รวมพัก(คืน)</label><input type="number" id="hotelNights" placeholder="จำนวน(คืน)"></div>
+          <div class="summary-item total"><label>รวมเบิกทั้งหมด</label><input type="text" id="grandTotal" placeholder="บาท" readonly></div>
         </div>
-
         <div class="actions">
-          <button onclick="openPreview()">🔍 บันทึกและดูตัวอย่าง</button>
+          <button onclick="openPreview()">🔍 ดูตัวอย่าง</button>
         </div>
       </div>
 
+      <!-- SECTION: Draft (localStorage) -->
+      <div class="section summary-section" id="localDraftSection">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="margin:0;border:none;padding:0;">📝 แบบร่าง (Draft — ในเครื่อง)
+            <span id="localDraftCountBadge" style="background:#FAEEDA;color:#633806;font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid #EF9F27;margin-left:8px;font-weight:500;vertical-align:middle;">0 รายการ</span>
+          </h3>
+          <button type="button" onclick="loadLocalDraftList()" style="background:none;border:1px solid #ccc;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;">🔄 รีเฟรช</button>
+        </div>
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Draft เก็บไว้ในเครื่องนี้เท่านั้น — ยังไม่ส่งเข้าระบบ จนกว่าจะกด "บันทึกเข้าระบบ"</p>
+        <div id="localDraftList"><p style="text-align:center;color:#aaa;padding:20px 0;font-size:13px;">กำลังโหลด...</p></div>
+      </div>
+
+      <!-- SECTION: Completed (Supabase) -->
+      <div class="section summary-section" id="completedSection">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="margin:0;border:none;padding:0;">✅ แผนที่บันทึกในระบบแล้ว
+            <span id="completedCountBadge" style="background:#e8f5f4;color:#0f6e56;font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid #5DCAA5;margin-left:8px;font-weight:500;vertical-align:middle;">0 รายการ</span>
+          </h3>
+          <button type="button" onclick="loadCompletedList()" style="background:none;border:1px solid #ccc;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;">🔄 รีเฟรช</button>
+        </div>
+        <div id="completedList"><p style="text-align:center;color:#aaa;padding:20px 0;font-size:13px;">กำลังโหลด...</p></div>
+      </div>
+
     </div><!-- /page -->
+  </main>
+</div>
 
-  </main><!-- /main-content -->
-
-</div><!-- /layout -->
-
-<!-- =====================================================
-     PREVIEW MODAL
-     ===================================================== -->
+<!-- PREVIEW MODAL -->
 <div id="previewModal" class="preview-modal">
   <div class="preview-wrapper">
     <div class="preview-actions">
-      <button onclick="savePlanToDatabase('completed')">💾 Save</button>
+      <button onclick="saveCompletedToDatabase()" style="background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit;">✅ บันทึกเข้าระบบ</button>
+      <button onclick="saveDraftToLocal()" style="background:#FAEEDA;color:#633806;border:1px solid #EF9F27;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit;">💾 Save Draft</button>
       <button onclick="printPreview()">🖨 Print</button>
       <button onclick="exportPDF()">📤 Export PDF</button>
       <button onclick="closePreview()">✖ ปิด</button>
     </div>
-    <!-- A4 AREA -->
-    <div id="previewContent" class="a4-page">
-      <!-- JS จะ generate ตารางตรงนี้ -->
-    </div>
+    <div id="previewContent" class="a4-page"></div>
   </div>
 </div>
 
 <footer class="footer">© 2026 EABaseHub</footer>
 
-<!-- =====================================================
-     SCRIPT — โหลดตามลำดับที่ถูกต้อง
-     ===================================================== -->
 <script src="/js/core/supabaseClient.js"></script>
 <script src="/js/core/userService.js"></script>
 <script src="/js/core/auth.js"></script>
-<!-- ✅ แก้: เดิมโหลด adminQc.js ผิดไฟล์ → เปลี่ยนเป็น formPlan.js -->
 <script src="/js/pages/forms/formPlan.js"></script>
-
-
-<script src="/js/core/splash.js"></script> 
-  <script src="/js/core/loadingSplash.js"></script>
-
+<script src="/js/core/splash.js"></script>
+<script src="/js/core/loadingSplash.js"></script>
 </body>
 </html>
