@@ -378,11 +378,10 @@
                 จัดการผู้ใช้
               </button>
 
-              <!-- 🆕 ปุ่มสำหรับ Manager-->
+              <!-- 🆕 ปุ่มสำหรับ Manager -->
               <button
                 id="managerDashboardBtn"
-                onclick="goToreportTracker()"
-                
+                onclick="goToManagerDashboard()"
                 style="
                   display: none;
                   width: 100%;
@@ -403,7 +402,7 @@
                   style="font-size: 18px; vertical-align: middle"
                   >monitoring</span
                 >
-                Manager
+                Manager Dashboard
               </button>
             </aside>
           </div>
@@ -602,12 +601,6 @@
       // ===========================
       function goToManagerDashboard() {
         window.location.href = "/pages/manager/managerDashboard.html";
-      }
-      // ===========================
-      // 🆕 GO TO MANAGER DASHBOARD 2
-      // ===========================
-      function goToreportTracker() {
-        window.location.href = "/pages/reports/reportTracker.html";
       }
 
       // ===========================
