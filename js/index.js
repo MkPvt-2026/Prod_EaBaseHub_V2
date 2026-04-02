@@ -498,7 +498,18 @@ async function init() {
   // Admin badge
   if (profile?.role === "admin") document.body.classList.add("is-admin");
 
-  // 4️⃣ Render UI
+  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ
+  const currentUser = {
+    id: session.user.id,
+    email: session.user.email,
+    role: profile?.role || 'user',
+    display_name: fullName
+  };
+
+  // เก็บไว้ใน window สำหรับ modules อื่นใช้
+  window.currentUser = currentUser;
+
+  // 5️⃣ Render UI
   initAvatarUpload();
   renderSummary();
   renderReportList();
