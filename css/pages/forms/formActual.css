@@ -252,6 +252,32 @@
   border-top: 4px solid #3FB7AE;
 }
 
+
+.draft-item {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+}
+
+.draft-item:hover {
+  background: #f0f9f8;
+}
+
+.draft-btn {
+  background: #3FB7AE;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
 /* Print */
 /* =====================================================
    17. PRINT

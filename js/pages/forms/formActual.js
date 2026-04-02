@@ -4,7 +4,7 @@
 // =====================================================
 "use strict";
 
-const STORAGE_KEY = "formActualDraft";
+const STORAGE_KEY = "formActualDrafts";
 let currentPlanId = null;
 let planData = null;
 let actualId = null;
@@ -16,6 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserInfo();
   await checkLatestPlan();
   await loadActualDraft();
+
+  loadDraftListLocal();
+
   if (document.getElementById("tableBody").rows.length === 0) addRow();
   setupSummaryCalculation();
 });
@@ -378,67 +381,159 @@ async function saveDraft() {
   const d = collectFormData();
   if (!d) return;
 
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      alert("กรุณา Login ก่อนบันทึกค่ะ");
-      return;
-    }
+  saveDraftLocal(d);   // ✅ เก็บในเครื่อง
+  alert("💾 บันทึก Draft ในเครื่องแล้ว");
 
-    const payload = {
-      user_id: session.user.id,
-      user_name: d.emp,
-      ref_plan_id: d.refPlanId,
-      zone: d.zone,
-      start_date: d.start || null,
-      end_date: d.end || null,
-      rows: d.rows,
-      grand_total: d.grandTotal,
-      status: "draft",
-      updated_at: new Date().toISOString(),
-      allowance_rate: d.allowanceRate,
-      allowance_days: d.allowanceDays,
-      hotel_rate: d.hotelRate,
-      hotel_nights: d.hotelNights,
-      other_cost: d.otherCost,
-    };
+  loadDraftListLocal(); // ✅ รีโหลด list
+}
 
-    let saveError = null;
+  // try {
+  //   const { data: { session } } = await supabaseClient.auth.getSession();
+  //   if (!session) {
+  //     alert("กรุณา Login ก่อนบันทึกค่ะ");
+  //     return;
+  //   }
 
-    if (actualId) {
-      const { error } = await supabaseClient
-        .from("actuals")
-        .update(payload)
-        .eq("id", actualId);
-      saveError = error;
-    } else {
-      payload.created_at = new Date().toISOString();
-      const { data: inserted, error } = await supabaseClient
-        .from("actuals")
-        .insert([payload])
-        .select("id")
-        .single();
-      saveError = error;
-      if (!error && inserted) actualId = inserted.id;
-    }
+  //   const payload = {
+  //     user_id: session.user.id,
+  //     user_name: d.emp,
+  //     ref_plan_id: d.refPlanId,
+  //     zone: d.zone,
+  //     start_date: d.start || null,
+  //     end_date: d.end || null,
+  //     rows: d.rows,
+  //     grand_total: d.grandTotal,
+  //     status: "draft",
+  //     updated_at: new Date().toISOString(),
+  //     allowance_rate: d.allowanceRate,
+  //     allowance_days: d.allowanceDays,
+  //     hotel_rate: d.hotelRate,
+  //     hotel_nights: d.hotelNights,
+  //     other_cost: d.otherCost,
+  //   };
 
-    if (saveError) throw saveError;
+  //   let saveError = null;
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...d, actualId, savedAt: new Date().toISOString() })
-    );
+  //   if (actualId) {
+  //     const { error } = await supabaseClient
+  //       .from("actuals")
+  //       .update(payload)
+  //       .eq("id", actualId);
+  //     saveError = error;
+  //   } else {
+  //     payload.created_at = new Date().toISOString();
+  //     const { data: inserted, error } = await supabaseClient
+  //       .from("actuals")
+  //       .insert([payload])
+  //       .select("id")
+  //       .single();
+  //     saveError = error;
+  //     if (!error && inserted) actualId = inserted.id;
+  //   }
 
-    console.log("✅ saveDraft:", actualId);
-    alert("💾 บันทึก Draft เรียบร้อยค่ะ");
-  } catch (err) {
-    console.error("❌ saveDraft:", err);
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...d, savedAt: new Date().toISOString() })
-    );
-    alert("⚠️ บันทึก Supabase ไม่สำเร็จ\nบันทึก localStorage ไว้แล้ว\n\nError: " + err.message);
+  //   if (saveError) throw saveError;
+
+  //   localStorage.setItem(
+  //     STORAGE_KEY,
+  //     JSON.stringify({ ...d, actualId, savedAt: new Date().toISOString() })
+  //   );
+
+  //   console.log("✅ saveDraft:", actualId);
+  //   alert("💾 บันทึก Draft เรียบร้อยค่ะ");
+  // } catch (err) {
+  //   console.error("❌ saveDraft:", err);
+  //   localStorage.setItem(
+  //     STORAGE_KEY,
+  //     JSON.stringify({ ...d, savedAt: new Date().toISOString() })
+  //   );
+  //   alert("⚠️ บันทึก Supabase ไม่สำเร็จ\nบันทึก localStorage ไว้แล้ว\n\nError: " + err.message);
+  // }
+//}
+
+// =====================================================
+// list Draft
+// =====================================================
+
+  function loadDraftListLocal() {
+  const container = document.getElementById("draftList");
+  if (!container) return;
+
+  const drafts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+  if (drafts.length === 0) {
+    container.innerHTML = `<div style="color:#999">ไม่มี Draft</div>`;
+    return;
   }
+
+  container.innerHTML = "";
+
+  drafts.forEach(d => {
+    const el = document.createElement("div");
+    el.className = "draft-item";
+
+    const dateText = d.start
+      ? new Date(d.start).toLocaleDateString("th-TH")
+      : "-";
+
+    el.innerHTML = `
+      <div>
+        <div>📅 ${dateText}</div>
+        <div style="font-size:12px;color:#666">
+          ${d.rows?.length || 0} แถว
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px">
+        <button onclick="loadDraftLocal(${d.id})">แก้ไข</button>
+        <button onclick="deleteDraftLocal(${d.id})">ลบ</button>
+      </div>
+    `;
+
+    container.appendChild(el);
+  });
+}
+
+
+// =====================================================
+// โหลด Draft กลับมาแก้
+// =====================================================
+function loadDraftLocal(id) {
+  const drafts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const d = drafts.find(x => x.id === id);
+  if (!d) return;
+
+  document.getElementById("tableBody").innerHTML = "";
+
+  d.rows.forEach(r => {
+    addRow(r.date, r.route);
+    const last = document.getElementById("tableBody").lastElementChild;
+    last.querySelectorAll("input")[2].value = r.note || "";
+  });
+
+  document.getElementById("allowanceRate").value = d.allowanceRate || "";
+  document.getElementById("allowanceDays").value = d.allowanceDays || "";
+  document.getElementById("hotelRate").value = d.hotelRate || "";
+  document.getElementById("hotelNights").value = d.hotelNights || "";
+  document.getElementById("otherCost").value = d.otherCost || "";
+
+  calculateSummary();
+
+  alert("✅ โหลด Draft แล้ว");
+}
+
+// =====================================================
+// ลบ Draft
+// =====================================================
+
+function deleteDraftLocal(id) {
+  const confirmDelete = confirm("ลบ Draft นี้?");
+  if (!confirmDelete) return;
+
+  let drafts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  drafts = drafts.filter(d => d.id !== id);
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(drafts));
+  loadDraftListLocal();
 }
 
 // =====================================================
@@ -704,8 +799,49 @@ function exportPDF() {
 }
 
 async function saveAndClose() {
-  await saveDraft();
-  closePreview();
+  const d = collectFormData();
+  if (!d) return;
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      alert("กรุณา Login ก่อนค่ะ");
+      return;
+    }
+
+    const payload = {
+      user_id: session.user.id,
+      user_name: d.emp,
+      ref_plan_id: d.refPlanId,
+      zone: d.zone,
+      start_date: d.start || null,
+      end_date: d.end || null,
+      rows: d.rows,
+      grand_total: d.grandTotal,
+      status: "completed", // 👈 สำคัญ
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      allowance_rate: d.allowanceRate,
+      allowance_days: d.allowanceDays,
+      hotel_rate: d.hotelRate,
+      hotel_nights: d.hotelNights,
+      other_cost: d.otherCost,
+    };
+
+    const { error } = await supabaseClient
+      .from("actuals")
+      .insert([payload]);
+
+    if (error) throw error;
+
+    alert("✅ บันทึกลงระบบเรียบร้อย");
+
+    closePreview();
+
+  } catch (err) {
+    console.error("saveAndClose:", err);
+    alert("❌ บันทึกไม่สำเร็จ: " + err.message);
+  }
 }
 
 // =====================================================
@@ -792,3 +928,21 @@ function setupSummaryCalculation() {
 }
 
 console.log("✅ formActual.js loaded successfully");
+
+// =====================================================
+// save draft (local)
+// =====================================================
+
+function saveDraftLocal(d) {
+  const drafts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+  const newDraft = {
+    id: Date.now(),
+    ...d,
+    savedAt: new Date().toISOString()
+  };
+
+  drafts.unshift(newDraft);
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(drafts));
+}
