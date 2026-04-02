@@ -498,9 +498,7 @@ async function init() {
   // Admin badge
   if (profile?.role === "admin") document.body.classList.add("is-admin");
 
-<<<<<<<<< Temporary merge branch 1
-  // 4️⃣ Render UI
-=========
+
   // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ
   const currentUser = {
     id: session.user.id,
@@ -513,7 +511,7 @@ async function init() {
   window.currentUser = currentUser;
 
   // 5️⃣ Render UI
->>>>>>>>> Temporary merge branch 2
+
   initAvatarUpload();
   renderSummary();
   renderReportList();
