@@ -1,37 +1,23 @@
 // =====================================================
 // formActual.js — ใบเดินทางจริงและเคลียร์ค่าใช้จ่าย ๒
-//
-// trips table schema (jsonb):
-//   id, user_id, user_name, start_date, end_date,
-//   area, trips (jsonb array), status, created_at, updated_at
-//
-// trips jsonb item: { date, from, to, shop1, shop2, shop3, note }
-//
-// actuals table schema:
-//   id, user_id, user_name, ref_plan_id,
-//   start_date, end_date, zone,
-//   rows (jsonb array), grand_total, status,
-//   created_at, updated_at
-//
-// actuals jsonb item:
-//   { date, route, allowance, hotel, fuel, other, note }
+// เวอร์ชัน: 2.1 | ปรับปรุง: 2026
 // =====================================================
 "use strict";
 
-const STORAGE_KEY = "formActualDraft"; // localStorage key
-let currentPlanId = null; // plan_id ที่โหลดมา
-let planData = null; // raw plan object
-let actualId = null; // actual record ที่กำลังแก้ไข (ถ้ามี)
+const STORAGE_KEY = "formActualDraft";
+let currentPlanId = null;
+let planData = null;
+let actualId = null;
 
 // =====================================================
 // 🚀 INIT
 // =====================================================
 document.addEventListener("DOMContentLoaded", async () => {
   await loadUserInfo();
-  await checkLatestPlan(); // ดึงแผนล่าสุดจาก trips → แสดง banner
-  await loadActualDraft(); // โหลด actual draft ที่บันทึกไว้ใน Supabase (ถ้ามี)
+  await checkLatestPlan();
+  await loadActualDraft();
   if (document.getElementById("tableBody").rows.length === 0) addRow();
-  setupSummaryCalculation(); // ← เพิ่มบรรทัดนี้
+  setupSummaryCalculation();
 });
 
 // =====================================================
@@ -39,9 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // =====================================================
 async function loadUserInfo() {
   try {
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
       window.location.href = "login.html";
       return;
@@ -69,21 +53,15 @@ async function loadUserInfo() {
 
 // =====================================================
 // 📋 CHECK LATEST PLAN (trips table)
-// ดึงแผนล่าสุดของ user — trips column เป็น jsonb array
 // =====================================================
 async function checkLatestPlan() {
   try {
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return;
 
-    // ✅ select ตรง column จริง: trips (jsonb), start_date, end_date, area, status
     const { data, error } = await supabaseClient
       .from("trips")
-      .select(
-        "id, user_name, start_date, end_date, area, trips, status, created_at",
-      )
+      .select("id, user_name, start_date, end_date, area, trips, status, created_at")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false })
       .limit(1);
@@ -97,7 +75,6 @@ async function checkLatestPlan() {
     planData = data[0];
     currentPlanId = planData.id;
 
-    // ── แสดง Banner ──
     const banner = document.getElementById("planBanner");
     const banTx = document.getElementById("planBannerText");
     const refInp = document.getElementById("refPlanId");
@@ -106,38 +83,26 @@ async function checkLatestPlan() {
     if (banner) banner.style.display = "flex";
 
     const fmtD = (d) =>
-      d
-        ? new Date(d).toLocaleDateString("th-TH", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })
-        : "";
+      d ? new Date(d).toLocaleDateString("th-TH", {
+        day: "numeric", month: "short", year: "numeric"
+      }) : "";
 
     if (banTx) {
-      const tripCount = Array.isArray(planData.trips)
-        ? planData.trips.length
-        : 0;
+      const tripCount = Array.isArray(planData.trips) ? planData.trips.length : 0;
       banTx.textContent =
         `พบแผนการเดินทาง (ฟอร์ม ๑) : ${fmtD(planData.start_date)}` +
         (planData.end_date ? ` – ${fmtD(planData.end_date)}` : "") +
         ` (${tripCount} แถว)`;
     }
 
-    console.log(
-      "✅ checkLatestPlan:",
-      planData.id,
-      "trips:",
-      Array.isArray(planData.trips) ? planData.trips.length : 0,
-    );
+    console.log("✅ checkLatestPlan:", planData.id, "trips:", Array.isArray(planData.trips) ? planData.trips.length : 0);
   } catch (err) {
     console.error("❌ checkLatestPlan:", err);
   }
 }
 
 // =====================================================
-// 📥 IMPORT FROM PLAN
-// trips jsonb item: { date, from, to, shop1, shop2, shop3, note }
+// 📥 IMPORT FROM PLAN — ✅ แก้ไข bug อ้างอิง draft ที่ไม่มี
 // =====================================================
 function importFromPlan() {
   if (!planData) {
@@ -155,17 +120,9 @@ function importFromPlan() {
   document.getElementById("tableBody").innerHTML = "";
 
   // สร้างแถวจาก trips jsonb
-  // วันที่ + เส้นทาง: from → to → shop1, shop2, shop3
-  // ค่าใช้จ่ายปล่อยว่าง ให้กรอกตามจริง
   tripRows.forEach((t) => {
     const parts = [t.from, t.to, t.shop1, t.shop2, t.shop3].filter(
-      (v) =>
-        v &&
-        v.trim() &&
-        v !== "-" &&
-        v !== "จังหวัด" &&
-        v !== "ชื่อร้าน" &&
-        v !== "",
+      (v) => v && v.trim() && v !== "-" && v !== "จังหวัด" && v !== "ชื่อร้าน" && v !== ""
     );
     const route = parts.join(" → ");
     addRow(t.date || "", route);
@@ -173,13 +130,19 @@ function importFromPlan() {
 
   calcTotal();
 
-  // เติมค่า summary grid (ถ้ามีบันทึกไว้)
-  if (draft.allowance_rate !== undefined) {
-    document.getElementById("allowanceRate").value = draft.allowance_rate || "";
-    document.getElementById("allowanceDays").value = draft.allowance_days || "";
-    document.getElementById("hotelRate").value = draft.hotel_rate || "";
-    document.getElementById("hotelNights").value = draft.hotel_nights || "";
-    document.getElementById("otherCost").value = draft.other_cost || "";
+  // ✅ แก้ไข: ใช้ planData แทน draft ที่ไม่มีอยู่
+  if (planData.allowance_rate !== undefined) {
+    const allowanceRateEl = document.getElementById("allowanceRate");
+    const allowanceDaysEl = document.getElementById("allowanceDays");
+    const hotelRateEl = document.getElementById("hotelRate");
+    const hotelNightsEl = document.getElementById("hotelNights");
+    const otherCostEl = document.getElementById("otherCost");
+    
+    if (allowanceRateEl) allowanceRateEl.value = planData.allowance_rate || "";
+    if (allowanceDaysEl) allowanceDaysEl.value = planData.allowance_days || "";
+    if (hotelRateEl) hotelRateEl.value = planData.hotel_rate || "";
+    if (hotelNightsEl) hotelNightsEl.value = planData.hotel_nights || "";
+    if (otherCostEl) otherCostEl.value = planData.other_cost || "";
     calculateSummary();
   }
 
@@ -187,13 +150,11 @@ function importFromPlan() {
   if (hint) hint.style.display = "flex";
 
   dismissBanner();
-  alert(
-    `✅ นำข้อมูล ${tripRows.length} แถวจากแผนมาแล้วค่ะ\nกรอกค่าใช้จ่ายจริงในแต่ละแถวได้เลย`,
-  );
+  alert(`✅ นำข้อมูล ${tripRows.length} แถวจากแผนมาแล้วค่ะ\nกรอกค่าใช้จ่ายจริงในแต่ละแถวได้เลย`);
 }
 
 // =====================================================
-// 🔎 LOAD PLAN BY ID (กรอก ID เอง)
+// 🔎 LOAD PLAN BY ID
 // =====================================================
 async function loadPlanById() {
   const id = document.getElementById("refPlanId")?.value?.trim();
@@ -225,30 +186,23 @@ async function loadPlanById() {
       banTx.textContent = `พบแผน ID: ${id.substring(0, 8)}... (${tripCount} แถว) — กด "นำข้อมูลมาใช้" ได้เลยค่ะ`;
 
     console.log("✅ loadPlanById:", id, "trips:", tripCount);
-    alert(
-      `✅ โหลดแผนสำเร็จ (${tripCount} แถว)\nกด "นำข้อมูลมาใช้" เพื่อนำมาใส่ตาราง`,
-    );
+    alert(`✅ โหลดแผนสำเร็จ (${tripCount} แถว)\nกด "นำข้อมูลมาใช้" เพื่อนำมาใส่ตาราง`);
   } catch (err) {
     alert("❌ เกิดข้อผิดพลาด: " + err.message);
   }
 }
 
 // =====================================================
-// 🗂️ LOAD ACTUAL DRAFT (จาก Supabase actuals table)
-// ถ้ามี draft ที่ยังไม่ complete → โหลดกลับมาต่อ
+// 🗂️ LOAD ACTUAL DRAFT
 // =====================================================
 async function loadActualDraft() {
   try {
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return;
 
     const { data, error } = await supabaseClient
       .from("actuals")
-      .select(
-        "id, ref_plan_id, start_date, end_date, rows, grand_total, status",
-      )
+      .select("id, ref_plan_id, start_date, end_date, rows, grand_total, status, allowance_rate, allowance_days, hotel_rate, hotel_nights, other_cost")
       .eq("user_id", session.user.id)
       .eq("status", "draft")
       .order("updated_at", { ascending: false })
@@ -259,21 +213,16 @@ async function loadActualDraft() {
     const draft = data[0];
     if (!Array.isArray(draft.rows) || draft.rows.length === 0) return;
 
-    // ถาม user ก่อน
     const fmtD = (d) =>
-      d
-        ? new Date(d).toLocaleDateString("th-TH", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })
-        : "-";
+      d ? new Date(d).toLocaleDateString("th-TH", {
+        day: "numeric", month: "short", year: "numeric"
+      }) : "-";
 
     const confirm = window.confirm(
       `พบ Draft ที่บันทึกไว้\n` +
-        `ช่วงวันที่: ${fmtD(draft.start_date)} – ${fmtD(draft.end_date)}\n` +
-        `จำนวน: ${draft.rows.length} แถว\n\n` +
-        `ต้องการโหลดต่อไหมคะ?`,
+      `ช่วงวันที่: ${fmtD(draft.start_date)} – ${fmtD(draft.end_date)}\n` +
+      `จำนวน: ${draft.rows.length} แถว\n\n` +
+      `ต้องการโหลดต่อไหมคะ?`
     );
     if (!confirm) return;
 
@@ -289,19 +238,31 @@ async function loadActualDraft() {
       addRow(r.date || "", r.route || "");
       const lastRow = document.getElementById("tableBody").lastElementChild;
       const inp = lastRow.querySelectorAll("input");
-      inp[2].value = r.allowance || 0;
-      inp[3].value = r.hotel || 0;
-      inp[4].value = r.fuel || 0;
-      inp[5].value = r.other || 0;
-      inp[6].value = r.note || "";
+      if (inp[2]) inp[2].value = r.note || "";
     });
     calcTotal();
+
+    // ✅ โหลดค่าใช้จ่ายจาก draft
+    if (draft.allowance_rate !== undefined) {
+      const allowanceRateEl = document.getElementById("allowanceRate");
+      const allowanceDaysEl = document.getElementById("allowanceDays");
+      const hotelRateEl = document.getElementById("hotelRate");
+      const hotelNightsEl = document.getElementById("hotelNights");
+      const otherCostEl = document.getElementById("otherCost");
+      
+      if (allowanceRateEl) allowanceRateEl.value = draft.allowance_rate || "";
+      if (allowanceDaysEl) allowanceDaysEl.value = draft.allowance_days || "";
+      if (hotelRateEl) hotelRateEl.value = draft.hotel_rate || "";
+      if (hotelNightsEl) hotelNightsEl.value = draft.hotel_nights || "";
+      if (otherCostEl) otherCostEl.value = draft.other_cost || "";
+      calculateSummary();
+    }
 
     const hint = document.getElementById("importHint");
     if (hint) {
       hint.style.display = "flex";
-      hint.querySelector("span:last-child").textContent =
-        "โหลด Draft ที่บันทึกไว้แล้ว — แก้ไขต่อได้เลยค่ะ";
+      const hintText = hint.querySelector("span:last-child");
+      if (hintText) hintText.textContent = "โหลด Draft ที่บันทึกไว้แล้ว — แก้ไขต่อได้เลยค่ะ";
     }
 
     console.log("✅ loadActualDraft:", actualId);
@@ -353,10 +314,10 @@ function calcTotal() {
       total += Number(inp.value || 0);
     });
   });
-  document.getElementById("days").textContent = rows.length;
-  document.getElementById("total").textContent = total.toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-  });
+  const daysEl = document.getElementById("days");
+  const totalEl = document.getElementById("total");
+  if (daysEl) daysEl.textContent = rows.length;
+  if (totalEl) totalEl.textContent = total.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 }
 
 // =====================================================
@@ -377,10 +338,14 @@ function collectFormData() {
 
   document.querySelectorAll("#tableBody tr").forEach((tr, i) => {
     const inp = tr.querySelectorAll("input");
-    const date = inp[0].value;
+    const date = inp[0]?.value || "";
     if (i === 0) firstDate = date;
     lastDate = date;
-    rows.push({ date, route: inp[1].value, note: inp[2].value });
+    rows.push({ 
+      date, 
+      route: inp[1]?.value || "", 
+      note: inp[2]?.value || "" 
+    });
   });
 
   if (rows.length === 0) {
@@ -388,19 +353,12 @@ function collectFormData() {
     return null;
   }
 
-  // ดึงจาก summary grid
-  const allowanceRate =
-    parseFloat(document.getElementById("allowanceRate")?.value) || 0;
-  const allowanceDays =
-    parseFloat(document.getElementById("allowanceDays")?.value) || 0;
-  const hotelRate =
-    parseFloat(document.getElementById("hotelRate")?.value) || 0;
-  const hotelNights =
-    parseFloat(document.getElementById("hotelNights")?.value) || 0;
-  const otherCost =
-    parseFloat(document.getElementById("otherCost")?.value) || 0;
-  const grandTotal =
-    allowanceRate * allowanceDays + hotelRate * hotelNights + otherCost;
+  const allowanceRate = parseFloat(document.getElementById("allowanceRate")?.value) || 0;
+  const allowanceDays = parseFloat(document.getElementById("allowanceDays")?.value) || 0;
+  const hotelRate = parseFloat(document.getElementById("hotelRate")?.value) || 0;
+  const hotelNights = parseFloat(document.getElementById("hotelNights")?.value) || 0;
+  const otherCost = parseFloat(document.getElementById("otherCost")?.value) || 0;
+  const grandTotal = allowanceRate * allowanceDays + hotelRate * hotelNights + otherCost;
 
   return {
     emp,
@@ -419,16 +377,14 @@ function collectFormData() {
 }
 
 // =====================================================
-// 💾 SAVE DRAFT — บันทึกลง Supabase actuals + localStorage backup
+// 💾 SAVE DRAFT
 // =====================================================
 async function saveDraft() {
   const d = collectFormData();
   if (!d) return;
 
   try {
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
       alert("กรุณา Login ก่อนบันทึกค่ะ");
       return;
@@ -441,31 +397,26 @@ async function saveDraft() {
       zone: d.zone,
       start_date: d.start || null,
       end_date: d.end || null,
-      rows: d.rows, // jsonb array
+      rows: d.rows,
       grand_total: d.grandTotal,
       status: "draft",
       updated_at: new Date().toISOString(),
-      allowance_rate:
-        parseFloat(document.getElementById("allowanceRate")?.value) || 0,
-      allowance_days:
-        parseFloat(document.getElementById("allowanceDays")?.value) || 0,
-      hotel_rate: parseFloat(document.getElementById("hotelRate")?.value) || 0,
-      hotel_nights:
-        parseFloat(document.getElementById("hotelNights")?.value) || 0,
-      other_cost: parseFloat(document.getElementById("otherCost")?.value) || 0,
+      allowance_rate: d.allowanceRate,
+      allowance_days: d.allowanceDays,
+      hotel_rate: d.hotelRate,
+      hotel_nights: d.hotelNights,
+      other_cost: d.otherCost,
     };
 
     let saveError = null;
 
     if (actualId) {
-      // ── UPDATE record เดิม ──
       const { error } = await supabaseClient
         .from("actuals")
         .update(payload)
         .eq("id", actualId);
       saveError = error;
     } else {
-      // ── INSERT record ใหม่ ──
       payload.created_at = new Date().toISOString();
       const { data: inserted, error } = await supabaseClient
         .from("actuals")
@@ -473,42 +424,36 @@ async function saveDraft() {
         .select("id")
         .single();
       saveError = error;
-      if (!error && inserted) actualId = inserted.id; // เก็บ id ไว้ update ครั้งต่อไป
+      if (!error && inserted) actualId = inserted.id;
     }
 
     if (saveError) throw saveError;
 
-    // ── localStorage backup ──
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...d, actualId, savedAt: new Date().toISOString() }),
+      JSON.stringify({ ...d, actualId, savedAt: new Date().toISOString() })
     );
 
     console.log("✅ saveDraft:", actualId);
     alert("💾 บันทึก Draft เรียบร้อยค่ะ");
   } catch (err) {
     console.error("❌ saveDraft:", err);
-    // ถ้า Supabase ล้มเหลว ยังมี localStorage backup
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...d, savedAt: new Date().toISOString() }),
+      JSON.stringify({ ...d, savedAt: new Date().toISOString() })
     );
-    alert(
-      "⚠️ บันทึก Supabase ไม่สำเร็จ\nบันทึก localStorage ไว้แล้ว\n\nError: " +
-        err.message,
-    );
+    alert("⚠️ บันทึก Supabase ไม่สำเร็จ\nบันทึก localStorage ไว้แล้ว\n\nError: " + err.message);
   }
 }
 
 // =====================================================
-// ✅ SAVE COMPLETED — เปลี่ยน status เป็น completed
+// ✅ SAVE COMPLETED
 // =====================================================
 async function saveCompleted() {
   const d = collectFormData();
   if (!d) return;
 
   if (!actualId) {
-    // ยังไม่มี record → save draft ก่อนแล้วค่อย complete
     await saveDraft();
     if (!actualId) return;
   }
@@ -521,7 +466,7 @@ async function saveCompleted() {
 
     if (error) throw error;
 
-    localStorage.removeItem(STORAGE_KEY); // ลบ draft backup
+    localStorage.removeItem(STORAGE_KEY);
     console.log("✅ saveCompleted:", actualId);
     alert("✅ บันทึกเอกสารเสร็จสมบูรณ์แล้วค่ะ");
   } catch (err) {
@@ -542,8 +487,7 @@ function openPreview() {
     const [y, m, day] = s.split("-");
     return `${day}/${m}/${y}`;
   };
-  const fmt = (n) =>
-    Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2 });
+  const fmt = (n) => Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
   let tRows = "";
   d.rows.forEach((r, i) => {
@@ -559,9 +503,7 @@ function openPreview() {
   const totalAllow = d.allowanceRate * d.allowanceDays;
   const totalHotel = d.hotelRate * d.hotelNights;
   const today = new Date().toLocaleDateString("th-TH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    year: "numeric", month: "long", day: "numeric"
   });
   const planRef = d.refPlanId
     ? `<div><span class="dm-label">อ้างอิงแผน :</span>${d.refPlanId.substring(0, 8)}...</div>`
@@ -643,15 +585,31 @@ hr.dd{border:none;border-top:2px solid #1a1a1a;margin:8px 0 12px}
   document.getElementById("previewModal").style.display = "flex";
 }
 
-// ── Modal Controls ──
+// =====================================================
+// 🔲 MODAL CONTROLS
+// =====================================================
 function closePreview() {
   document.getElementById("previewModal").style.display = "none";
 }
-function printPreview() {
-  const content = document.getElementById("previewContent").innerHTML;
-  const win = window.open("", "_blank", "width=900,height=700");
 
-  win.document.write(`<!DOCTYPE html>
+function printPreview() {
+  const content = document.getElementById("previewContent")?.innerHTML;
+  
+  // ✅ ตรวจสอบว่ามี content หรือไม่
+  if (!content || content.trim() === "") {
+    alert("❌ ไม่มีข้อมูลสำหรับพิมพ์ กรุณากด Preview ก่อน");
+    return;
+  }
+
+  try {
+    const win = window.open("", "_blank", "width=900,height=700");
+    
+    if (!win) {
+      alert("❌ ไม่สามารถเปิดหน้าต่างพิมพ์ได้ กรุณาอนุญาต popup");
+      return;
+    }
+
+    win.document.write(`<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
@@ -684,7 +642,6 @@ function printPreview() {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
       }
-      /* ✅ ลายเซ็น margin ลดลงตอนพิมพ์ */
       .ds { margin-top: 20px !important; }
     }
     @media screen {
@@ -696,7 +653,6 @@ function printPreview() {
         margin: 0 auto;
       }
     }
-    /* ✅ ชื่อร้านพอดี 1 บรรทัด */
     .dmt td {
       max-width: 120px !important;
       white-space: nowrap !important;
@@ -704,7 +660,6 @@ function printPreview() {
       text-overflow: ellipsis !important;
     }
     .dmt th { white-space: nowrap !important; }
-    /* ✅ สีอ่อนลง */
     .dmt th {
       background: #e8f5f4 !important;
       color: #1a5550 !important;
@@ -714,7 +669,6 @@ function printPreview() {
       background: #e8f5f4 !important;
       color: #1a5550 !important;
     }
-    /* ✅ ระยะห่างลายเซ็น */
     .dsl {
       border-top: 1px solid #555;
       padding-top: 10px !important;
@@ -740,11 +694,15 @@ function printPreview() {
 </body>
 </html>`);
 
-  win.document.close();
+    win.document.close();
+  } catch (e) {
+    console.error("printPreview error:", e);
+    alert("❌ เกิดข้อผิดพลาดในการพิมพ์: " + e.message);
+  }
 }
 
 function exportPDF() {
-  printPreview(); // ใช้ฟังก์ชันเดียวกัน
+  printPreview();
 }
 
 async function saveAndClose() {
@@ -753,61 +711,96 @@ async function saveAndClose() {
 }
 
 // =====================================================
-// 📤 EXPORT CSV
+// 📤 EXPORT CSV — ✅ แก้ไขให้ทำงานได้
 // =====================================================
 function exportCSV() {
   const d = collectFormData();
   if (!d) return;
 
-  let csv = "วันที่,เส้นทาง,เบี้ยเลี้ยง,โรงแรม,น้ำมัน,อื่นๆ,หมายเหตุ\n";
-  d.rows.forEach((r) => {
-    csv +=
-      [
-        r.date,
-        `"${r.route}"`,
-        r.allowance,
-        r.hotel,
-        r.fuel,
-        r.other,
-        `"${r.note}"`,
-      ].join(",") + "\n";
-  });
-  csv += `\n,,,,,,\nรวมทั้งหมด,,,,,${d.grandTotal},\n`;
+  // ✅ ตรวจสอบว่ามีข้อมูลหรือไม่
+  if (!d.rows || d.rows.length === 0) {
+    alert("❌ ไม่มีข้อมูลให้ Export");
+    return;
+  }
 
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `Actual_${d.emp}_${d.start || "nodate"}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  try {
+    // ✅ สร้าง CSV headers
+    const headers = ["วันที่", "เส้นทาง", "หมายเหตุ"];
+    
+    // ✅ สร้างแถวข้อมูล
+    const rows = d.rows.map((r) => [
+      r.date || "",
+      escapeCsvField(r.route),
+      escapeCsvField(r.note),
+    ]);
+
+    // ✅ รวมเป็น CSV string
+    let csvContent = [
+      headers.map(h => escapeCsvField(h)).join(","),
+      ...rows.map(r => r.join(","))
+    ].join("\n");
+
+    // ✅ เพิ่มสรุปค่าใช้จ่าย
+    csvContent += "\n\n";
+    csvContent += "สรุปค่าใช้จ่าย\n";
+    csvContent += `เบี้ยเลี้ยง,${d.allowanceRate} × ${d.allowanceDays} วัน,${d.allowanceRate * d.allowanceDays}\n`;
+    csvContent += `ค่าที่พัก,${d.hotelRate} × ${d.hotelNights} คืน,${d.hotelRate * d.hotelNights}\n`;
+    csvContent += `ค่าใช้จ่ายอื่นๆ,-,${d.otherCost}\n`;
+    csvContent += `รวมทั้งหมด,,${d.grandTotal}\n`;
+
+    // ✅ สร้าง Blob พร้อม BOM สำหรับ UTF-8
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    
+    // ✅ สร้าง download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Actual_${d.emp}_${d.start || "nodate"}.csv`;
+    
+    // ✅ Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // ✅ Cleanup
+    URL.revokeObjectURL(url);
+    
+    alert("✅ Export CSV สำเร็จ");
+  } catch (e) {
+    console.error("exportCSV error:", e);
+    alert("❌ Export ไม่สำเร็จ: " + e.message);
+  }
 }
 
-function calculateSummary() {
-  const allowanceRate =
-    parseFloat(document.getElementById("allowanceRate")?.value) || 0;
-  const allowanceDays =
-    parseFloat(document.getElementById("allowanceDays")?.value) || 0;
-  const hotelRate =
-    parseFloat(document.getElementById("hotelRate")?.value) || 0;
-  const hotelNights =
-    parseFloat(document.getElementById("hotelNights")?.value) || 0;
-  const otherCost =
-    parseFloat(document.getElementById("otherCost")?.value) || 0;
+// ✅ Helper function สำหรับ escape CSV field
+function escapeCsvField(text) {
+  if (text === null || text === undefined) return "";
+  const str = String(text);
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
 
-  const grandTotal =
-    allowanceRate * allowanceDays + hotelRate * hotelNights + otherCost;
-  document.getElementById("grandTotal").value =
-    grandTotal.toLocaleString("th-TH");
+// =====================================================
+// 📊 SUMMARY CALCULATION
+// =====================================================
+function calculateSummary() {
+  const allowanceRate = parseFloat(document.getElementById("allowanceRate")?.value) || 0;
+  const allowanceDays = parseFloat(document.getElementById("allowanceDays")?.value) || 0;
+  const hotelRate = parseFloat(document.getElementById("hotelRate")?.value) || 0;
+  const hotelNights = parseFloat(document.getElementById("hotelNights")?.value) || 0;
+  const otherCost = parseFloat(document.getElementById("otherCost")?.value) || 0;
+
+  const grandTotal = allowanceRate * allowanceDays + hotelRate * hotelNights + otherCost;
+  const grandTotalEl = document.getElementById("grandTotal");
+  if (grandTotalEl) grandTotalEl.value = grandTotal.toLocaleString("th-TH");
 }
 
 function setupSummaryCalculation() {
-  [
-    "allowanceRate",
-    "allowanceDays",
-    "hotelRate",
-    "hotelNights",
-    "otherCost",
-  ].forEach((id) => {
+  ["allowanceRate", "allowanceDays", "hotelRate", "hotelNights", "otherCost"].forEach((id) => {
     document.getElementById(id)?.addEventListener("input", calculateSummary);
   });
 }
+
+console.log("✅ formActual.js loaded successfully");
