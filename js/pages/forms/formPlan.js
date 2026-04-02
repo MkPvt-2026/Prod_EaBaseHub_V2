@@ -1,7 +1,7 @@
 // =====================================================
 // formPlan.js
 // ระบบแผนการเดินทางและเบิกจ่าย (Travel Plan & Expense System)
-// เวอร์ชัน: 2.2 | ปรับปรุง: 2026
+// เวอร์ชัน: 2.4 | ปรับปรุง: 2026
 // =====================================================
 
 "use strict";
@@ -10,7 +10,6 @@
 // 🌐 GLOBAL STATE
 // =====================================================
 
-// ✅ แก้: เดิม trips ถูก comment ออกจนไม่ได้ declare → ทำให้ saveTableData / exportTrips พัง
 /** @type {Array<Object>} รายการทริปทั้งหมดในแผนปัจจุบัน */
 let trips = [];
 
@@ -79,7 +78,6 @@ async function initUserInfo() {
     if (typeof autoFillUserData === "function") {
       autoFillUserData({
         display_name: "empName",
-        // ✅ แก้: เดิมส่ง area: "zone" แต่ element จริงคือ id="area"
         area: "area",
         readonly: ["empName", "area"],
       });
@@ -100,7 +98,6 @@ async function loadUserInfoBasic() {
       .eq("id", session.user.id)
       .maybeSingle();
 
-    // แสดงอีเมลใน sidebar
     const sidebarEmail = document.getElementById("sidebarEmail");
     if (sidebarEmail) sidebarEmail.textContent = session.user.email;
 
@@ -110,7 +107,6 @@ async function loadUserInfoBasic() {
       empNameInput.readOnly = true;
     }
 
-    // ✅ แก้: เดิมอ้าง id="zone" แต่ใน HTML ใช้ id="area"
     const areaInput = document.getElementById("area");
     if (areaInput) {
       areaInput.value    = profile?.area || "";
@@ -243,18 +239,15 @@ async function loadExistingTrips() {
     const plan = data[0];
     currentPlanId = plan.id;
 
-    // โหลดวันที่
     if (plan.start_date) document.getElementById("startDate").value = plan.start_date;
     if (plan.end_date)   document.getElementById("endDate").value   = plan.end_date;
 
-    // โหลดเขต
     const areaInput = document.getElementById("area");
     if (areaInput && plan.area) areaInput.value = plan.area;
 
-    // ✅ โหลดแถวตารางกลับมา
     if (plan.trips && Array.isArray(plan.trips) && plan.trips.length > 0) {
       const tbody = document.getElementById("tripTableBody");
-      tbody.innerHTML = ""; // ล้างก่อน
+      tbody.innerHTML = "";
 
       plan.trips.forEach((t) => {
         const row = document.createElement("tr");
@@ -278,7 +271,6 @@ async function loadExistingTrips() {
         tbody.appendChild(row);
       });
 
-      // sync trips array
       trips = plan.trips;
       console.log(`✅ Restored ${trips.length} trip rows`);
     }
@@ -288,6 +280,7 @@ async function loadExistingTrips() {
     console.error("❌ loadExistingTrips error:", error);
   }
 }
+
 // =====================================================
 // ➕ TABLE ROW MANAGEMENT
 // =====================================================
@@ -322,16 +315,6 @@ function removeRow() {
   if (tbody.rows.length > 0) tbody.deleteRow(-1);
 }
 
-function generateProvinceOptions() {
-  const provinces = [...new Set(myShops.map((s) => s.province))].sort();
-  let html = `<option value="">จังหวัด</option>`;
-  provinces.forEach((p) => {
-    html += `<option value="${p}">${p}</option>`;
-  });
-  return html;
-}
-
-// ✅ generate province options พร้อม pre-select ค่าที่บันทึกไว้
 function generateProvinceOptions(selectedValue = "") {
   const provinces = [...new Set(myShops.map((s) => s.province))].sort();
   let html = `<option value="">จังหวัด</option>`;
@@ -342,13 +325,10 @@ function generateProvinceOptions(selectedValue = "") {
   return html;
 }
 
-// ✅ generate shop options พร้อม pre-select ร้านที่บันทึกไว้
 function generateShopOptions(province = "", selectedId = "", selectedName = "") {
   let html = `<option value="">ชื่อร้าน</option>`;
 
-  const shops = province
-    ? myShops.filter((s) => s.province === province)
-    : [];
+  const shops = province ? myShops.filter((s) => s.province === province) : [];
 
   if (shops.length > 0) {
     shops.forEach((s) => {
@@ -356,7 +336,6 @@ function generateShopOptions(province = "", selectedId = "", selectedName = "") 
       html += `<option value="${s.id}" ${selected}>${s.shop_name}</option>`;
     });
   } else if (selectedId && selectedName) {
-    // ✅ กรณี province ไม่ตรง แต่ยังมีค่าเดิม — แสดงชื่อร้านไว้ก่อน
     html += `<option value="${selectedId}" selected>${selectedName}</option>`;
   }
 
@@ -389,15 +368,13 @@ async function savePlanToDatabase(status = "draft") {
       return;
     }
 
-    // เก็บข้อมูลจากตาราง
-    saveTableData(false); // false = ไม่แสดง alert
+    saveTableData(false);
 
     const planData = {
       user_id:    userId,
       user_name:  userName,
       start_date: document.getElementById("startDate")?.value,
       end_date:   document.getElementById("endDate")?.value,
-      // ✅ แก้: เดิมอ้าง id="zone" → แก้เป็น id="area"
       area:       document.getElementById("area")?.value || userZone,
       trips:      trips,
       status:     status,
@@ -437,23 +414,22 @@ async function savePlanToDatabase(status = "draft") {
 // 📦 COLLECT TABLE DATA
 // =====================================================
 
-// showAlert = true เมื่อเรียกจากปุ่มโดยตรง, false เมื่อเรียกก่อน save
 function saveTableData(showAlert = true) {
   const rows = document.querySelectorAll("#tripTableBody tr");
   trips = [];
 
   rows.forEach((row) => {
     trips.push({
-      date:   row.querySelector(".trip-date")?.value    || "",
-      from:   row.querySelector(".from-province")?.value || "",
-      to:     row.querySelector(".to-province")?.value   || "",
-      shop1:  row.querySelector(".shop1")?.selectedOptions?.[0]?.text || "",
-      shop2:  row.querySelector(".shop2")?.selectedOptions?.[0]?.text || "",
-      shop3:  row.querySelector(".shop3")?.selectedOptions?.[0]?.text || "",
+      date:    row.querySelector(".trip-date")?.value     || "",
+      from:    row.querySelector(".from-province")?.value || "",
+      to:      row.querySelector(".to-province")?.value   || "",
+      shop1:   row.querySelector(".shop1")?.selectedOptions?.[0]?.text || "",
+      shop2:   row.querySelector(".shop2")?.selectedOptions?.[0]?.text || "",
+      shop3:   row.querySelector(".shop3")?.selectedOptions?.[0]?.text || "",
       shop1Id: row.querySelector(".shop1")?.value || "",
       shop2Id: row.querySelector(".shop2")?.value || "",
       shop3Id: row.querySelector(".shop3")?.value || "",
-      note:   row.querySelector(".note")?.value || "",
+      note:    row.querySelector(".note")?.value || "",
     });
   });
 
@@ -465,13 +441,12 @@ function saveTableData(showAlert = true) {
 // 📊 SUMMARY CALCULATION
 // =====================================================
 
-// ✅ แก้: เดิม calculateSummary() ถูก declare 2 ครั้ง → รวมเป็นครั้งเดียว
 function calculateSummary() {
   const allowanceRate  = parseFloat(document.getElementById("allowanceRate")?.value)  || 0;
   const allowanceDays  = parseFloat(document.getElementById("allowanceDays")?.value)  || 0;
-  const hotelRate      = parseFloat(document.getElementById("hotelRate")?.value)       || 0;
-  const hotelNights    = parseFloat(document.getElementById("hotelNights")?.value)     || 0;
-  const otherCost      = parseFloat(document.getElementById("otherCost")?.value)       || 0;
+  const hotelRate      = parseFloat(document.getElementById("hotelRate")?.value)      || 0;
+  const hotelNights    = parseFloat(document.getElementById("hotelNights")?.value)    || 0;
+  const otherCost      = parseFloat(document.getElementById("otherCost")?.value)      || 0;
 
   const grandTotal = (allowanceRate * allowanceDays) + (hotelRate * hotelNights) + otherCost;
   document.getElementById("grandTotal").value = grandTotal.toLocaleString("th-TH");
@@ -488,16 +463,14 @@ function setupSummaryCalculation() {
 // =====================================================
 
 function openPreview() {
-  saveTableData(false); // sync trips ก่อน render
+  saveTableData(false);
 
-  // ── helper: แปลงวันที่เป็น dd/mm/yyyy ──
   function fmtDate(d) {
     if (!d) return "-";
     const [y, m, day] = d.split("-");
     return `${day}/${m}/${y}`;
   }
 
-  // ── สร้างแถวตาราง ──
   let tableRows = "";
   trips.forEach((t, i) => {
     const rowBg = i % 2 === 0 ? "" : 'style="background:#f7f9fb"';
@@ -517,154 +490,64 @@ function openPreview() {
     tableRows = `<tr><td colspan="7" style="text-align:center;color:#999;padding:14px">ไม่มีข้อมูล</td></tr>`;
   }
 
-  // ── ข้อมูลค่าใช้จ่าย ──
   const allowanceRate = parseFloat(document.getElementById("allowanceRate")?.value) || 0;
   const allowanceDays = parseFloat(document.getElementById("allowanceDays")?.value) || 0;
-  const hotelRate     = parseFloat(document.getElementById("hotelRate")?.value)      || 0;
-  const hotelNights   = parseFloat(document.getElementById("hotelNights")?.value)    || 0;
-  const otherCost     = parseFloat(document.getElementById("otherCost")?.value)      || 0;
+  const hotelRate     = parseFloat(document.getElementById("hotelRate")?.value)     || 0;
+  const hotelNights   = parseFloat(document.getElementById("hotelNights")?.value)   || 0;
+  const otherCost     = parseFloat(document.getElementById("otherCost")?.value)     || 0;
   const totalAllow    = allowanceRate * allowanceDays;
   const totalHotel    = hotelRate * hotelNights;
   const grandTotal    = totalAllow + totalHotel + otherCost;
 
   const fmt = (n) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
-  // ── ข้อมูลพนักงาน ──
   const empName = document.getElementById("empName")?.value || "-";
   const area    = document.getElementById("area")?.value    || "-";
   const start   = fmtDate(document.getElementById("startDate")?.value);
   const end     = fmtDate(document.getElementById("endDate")?.value);
 
-  // ── วันที่พิมพ์ ──
   const printDate = new Date().toLocaleDateString("th-TH", {
     year: "numeric", month: "long", day: "numeric"
   });
 
   document.getElementById("previewContent").innerHTML = `
   <style>
-    /* ── สไตล์เฉพาะ preview content ── */
     .doc-wrap { font-family: 'Kanit', sans-serif; font-size: 13px; color: #1a1a1a; }
-
-    /* หัวเอกสาร */
     .doc-company { text-align:center; margin-bottom:4px; }
-    .doc-company .company-name {
-      font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.3px;
-    }
-    .doc-company .doc-title {
-      font-size: 14px; font-weight: 600; color: #1a1a1a; margin-top: 2px;
-    }
-    .doc-divider {
-      border: none; border-top: 2px solid #1a1a1a; margin: 8px 0 12px;
-    }
-
-    /* กล่องข้อมูลพนักงาน */
-    .doc-meta {
-      display: grid; grid-template-columns: 1fr 1fr;
-      border: 1px solid #bbb; border-radius: 4px;
-      margin-bottom: 14px; overflow: hidden;
-    }
-    .doc-meta-cell {
-      padding: 7px 12px; font-size: 12.5px; line-height: 1.8;
-    }
+    .doc-company .company-name { font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.3px; }
+    .doc-company .doc-title { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-top: 2px; }
+    .doc-divider { border: none; border-top: 2px solid #1a1a1a; margin: 8px 0 12px; }
+    .doc-meta { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #bbb; border-radius: 4px; margin-bottom: 14px; overflow: hidden; }
+    .doc-meta-cell { padding: 7px 12px; font-size: 12.5px; line-height: 1.8; }
     .doc-meta-cell:first-child { border-right: 1px solid #bbb; }
     .doc-meta-label { font-weight: 700; color: #444; margin-right: 4px; }
-
-    /* ตารางหลัก */
-    .doc-trip-table {
-      width: 100%; border-collapse: collapse; margin-bottom: 18px;
-      font-size: 12px;
-    }
-    .doc-trip-table th {
-      background: #e8f5f4; color: #1a5550;
-      padding: 8px 7px; text-align: center;
-      font-weight: 700; font-size: 12px;
-      border: 1px solid #b2d8d5;
-    }
-    .doc-trip-table td {
-      padding: 5px 6px; text-align: center;
-      border: 1px solid #ccc; vertical-align: middle;
-      font-size: 11px;
-      /* ✅ ชื่อร้านพอดี 1 บรรทัด */
-      max-width: 100px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-
+    .doc-trip-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 12px; }
+    .doc-trip-table th { background: #e8f5f4; color: #1a5550; padding: 8px 7px; text-align: center; font-weight: 700; font-size: 12px; border: 1px solid #b2d8d5; }
+    .doc-trip-table td { padding: 5px 6px; text-align: center; border: 1px solid #ccc; vertical-align: middle; font-size: 11px; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .doc-trip-table tbody tr:last-child td { border-bottom: 1px solid #ccc; }
-
-    /* หัวสรุป */
-    .doc-summary-title {
-      font-size: 13px; font-weight: 700; color: #1a1a1a;
-      margin-bottom: 6px; padding-bottom: 4px;
-      border-bottom: 1.5px solid #b2d8d5;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .doc-summary-title::before {
-      content: ''; display: inline-block;
-      width: 3px; height: 14px;
-      background: #7ec8c3; border-radius: 2px;
-    }
-
-    /* ตารางสรุปค่าใช้จ่าย */
-    .doc-cost-table {
-      width: 55%; margin-left: auto; margin-bottom: 20px;
-      border-collapse: collapse; font-size: 12.5px;
-    }
-    .doc-cost-table td, .doc-cost-table th {
-      border: 1px solid #ccc; padding: 6px 10px;
-    }
+    .doc-summary-title { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1.5px solid #b2d8d5; display: flex; align-items: center; gap: 6px; }
+    .doc-summary-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: #7ec8c3; border-radius: 2px; }
+    .doc-cost-table { width: 55%; margin-left: auto; margin-bottom: 20px; border-collapse: collapse; font-size: 12.5px; }
+    .doc-cost-table td, .doc-cost-table th { border: 1px solid #ccc; padding: 6px 10px; }
     .doc-cost-table td:first-child { font-weight: 600; color: #333; }
     .doc-cost-table td:nth-child(2) { text-align: center; color: #555; }
     .doc-cost-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
-
-    .doc-cost-table .total-row th {
-      background: #e8f5f4; color: #1a5550;
-      text-align: right; padding: 7px 10px; font-size: 13px;
-      border: 1px solid #b2d8d5; font-weight: 700;
-    }
-
-    /* ลายเซ็น */
-        .doc-sign {
-      margin-top: 40px;
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 24px; text-align: center;
-    }
+    .doc-cost-table .total-row th { background: #e8f5f4; color: #1a5550; text-align: right; padding: 7px 10px; font-size: 13px; border: 1px solid #b2d8d5; font-weight: 700; }
+    .doc-sign { margin-top: 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
     .doc-sign-box { font-size: 12px; line-height: 1.8; }
-    .doc-sign-line {
-      border-top: 1px solid #555;
-      padding-top: 20px;
-      margin-top: 60px;      /* ✅ เพิ่มระยะห่างเส้น-ชื่อ */
-    }
-    .doc-sign-name {
-      font-weight: 600;
-      color: #1a1a1a;
-      margin-bottom: 2px;    /* ✅ ระยะห่างชื่อ-ตำแหน่ง */
-    }
-    .doc-sign-role {
-      color: #555;
-      margin-top: 2px;
-    }
-    /* วันที่พิมพ์ */
-    .doc-print-date {
-      text-align: right; font-size: 11px; color: #777; margin-bottom: 10px;
-    }
+    .doc-sign-line { border-top: 1px solid #555; padding-top: 20px; margin-top: 60px; }
+    .doc-sign-name { font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+    .doc-sign-role { color: #555; margin-top: 2px; }
+    .doc-print-date { text-align: right; font-size: 11px; color: #777; margin-bottom: 10px; }
   </style>
 
   <div class="doc-wrap">
-
-    <!-- วันที่พิมพ์ -->
     <div class="doc-print-date">วันที่พิมพ์: ${printDate}</div>
-
-    <!-- หัวเอกสาร -->
     <div class="doc-company">
       <div class="company-name">บริษัท เอิร์นนี่ แอดวานซ์ จำกัด</div>
       <div class="doc-title">แผนการเดินทางและเบิกทดลองจ่าย ๑</div>
     </div>
     <hr class="doc-divider">
-
-    <!-- ข้อมูลพนักงาน -->
     <div class="doc-meta">
       <div class="doc-meta-cell">
         <div><span class="doc-meta-label">พนักงานขาย :</span>${empName}</div>
@@ -675,8 +558,6 @@ function openPreview() {
         <div><span class="doc-meta-label">ถึงวันที่ :</span>${end}</div>
       </div>
     </div>
-
-    <!-- ตารางเดินทาง -->
     <table class="doc-trip-table">
       <thead>
         <tr>
@@ -691,8 +572,6 @@ function openPreview() {
       </thead>
       <tbody>${tableRows}</tbody>
     </table>
-
-    <!-- สรุปค่าใช้จ่าย -->
     <div class="doc-summary-title">สรุปค่าใช้จ่าย</div>
     <table class="doc-cost-table">
       <tr>
@@ -715,8 +594,6 @@ function openPreview() {
         <th style="font-size:14px">${fmt(grandTotal)} บาท</th>
       </tr>
     </table>
-
-    <!-- ลายเซ็น -->
     <div class="doc-sign">
       <div class="doc-sign-box">
         <div class="doc-sign-line">
@@ -743,7 +620,6 @@ function openPreview() {
         </div>
       </div>
     </div>
-
   </div>`;
 
   document.getElementById("previewModal").style.display = "flex";
@@ -753,180 +629,170 @@ function closePreview() {
   document.getElementById("previewModal").style.display = "none";
 }
 
+// =====================================================
+// 🖨️ PRINT PREVIEW — ✅ แก้ไขให้ทำงานบนแท็บเลต/มือถือ
+// =====================================================
 function printPreview() {
-  const content = document.getElementById("previewContent").innerHTML;
-  const win = window.open("", "_blank", "width=900,height=700");
+  const content = document.getElementById("previewContent")?.innerHTML;
+  
+  if (!content || content.trim() === "") {
+    alert("❌ ไม่มีข้อมูลสำหรับพิมพ์ กรุณากด Preview ก่อน");
+    return;
+  }
 
-  win.document.write(`<!DOCTYPE html>
+  // ✅ ใช้ iframe สำหรับทุกอุปกรณ์ (รองรับทั้ง Desktop และ Tablet/Mobile)
+  printViaIframe(content);
+}
+
+// ✅ ฟังก์ชันพิมพ์ผ่าน iframe (รองรับทุกอุปกรณ์)
+function printViaIframe(content) {
+  const printHTML = `<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>แผนการเดินทาง</title>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body {
-      width: 210mm;
-      margin: 0 auto;
+      width: 100%;
       background: #fff;
       font-family: 'Kanit', sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-
     #print-wrap {
       width: 100%;
-      padding: 6mm 8mm;
+      padding: 8mm;
+      max-width: 210mm;
+      margin: 0 auto;
     }
-
-    /* ✅ บังคับทุกอย่างอยู่หน้าเดียว ไม่ตัดหน้า */
-    * {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-
     @media print {
-      @page {
-        size: A4 portrait;
-        margin: 0;
-      }
-
-      html, body {
-        width: 210mm;
-        height: 297mm;
-        overflow: hidden;
-        margin: 0;
-      }
-
-      #print-wrap {
-        /* ✅ zoom แทน transform — Chrome print รองรับได้จริง */
-        zoom: var(--zoom-level, 0.78);
-        width: calc(210mm / var(--zoom-level, 0.78));
-        padding: 5mm 7mm;
-        page-break-after: avoid;
-        break-after: avoid;
-      }
-
-      /* ✅ ห้ามตัดหน้าทุก element */
-      table, thead, tbody, tr, td, th,
-      .doc-sign, .doc-cost-table, .doc-trip-table {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
-
-      /* ซ่อน signature section ถ้าเกิน — optional */
-      .doc-sign { margin-top: 20px !important; }
+      @page { size: A4 portrait; margin: 8mm; }
+      html, body { width: 210mm; }
+      #print-wrap { padding: 0; max-width: none; }
     }
-
-    /* preview (ก่อนกด print) จัดกลาง */
-    @media screen {
-      body { padding: 10mm; background: #e0e0e0; }
-      #print-wrap {
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-        max-width: 190mm;
-        margin: 0 auto;
-      }
-    }
-
-    /* ✅ ชื่อร้านพอดี 1 บรรทัด */
     .doc-trip-table td {
-      max-width: 90px !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
+      max-width: 90px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .doc-trip-table th { white-space: nowrap !important; }
-
-    /* สีอ่อนลง */
     .doc-trip-table th {
       background: #e8f5f4 !important;
       color: #1a5550 !important;
       border: 1px solid #b2d8d5 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     .doc-cost-table .total-row th {
       background: #e8f5f4 !important;
       color: #1a5550 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
   </style>
 </head>
 <body>
   <div id="print-wrap">${content}</div>
-
-  <script>
-    document.fonts.ready.then(() => {
-      // คำนวณ zoom จากความสูงจริงของ content
-      const wrap = document.getElementById('print-wrap');
-      const A4_H_PX = 297 * 3.7795;   // 297mm → px
-      const A4_W_PX = 210 * 3.7795;
-      const contentH = wrap.scrollHeight;
-      const contentW = wrap.scrollWidth;
-
-      const zoomH = (A4_H_PX - 20) / contentH;
-      const zoomW = A4_W_PX / contentW;
-      const zoom  = Math.min(zoomH, zoomW, 1).toFixed(3); // ไม่ขยาย ถ้าเล็กกว่า A4
-
-      wrap.style.setProperty('--zoom-level', zoom);
-      wrap.style.zoom = zoom;
-
-      console.log('zoom:', zoom, 'contentH:', contentH);
-
-      setTimeout(() => {
-        window.focus();
-        window.print();
-        window.close();
-      }, 400);
-    });
-  <\/script>
 </body>
-</html>`);
+</html>`;
 
-  win.document.close();
+  // ลบ iframe เก่าถ้ามี
+  const oldFrame = document.getElementById("printFrame");
+  if (oldFrame) oldFrame.remove();
+
+  // สร้าง iframe ใหม่
+  const iframe = document.createElement("iframe");
+  iframe.id = "printFrame";
+  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentWindow || iframe.contentDocument;
+  const doc = iframeDoc.document || iframeDoc;
+  
+  doc.open();
+  doc.write(printHTML);
+  doc.close();
+
+  // รอให้ content และ font โหลดเสร็จ
+  iframe.onload = function() {
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        console.error("iframe print error:", e);
+        // Fallback: ลองใช้ window.print() บน content ปัจจุบัน
+        window.print();
+      }
+      
+      // ลบ iframe หลังพิมพ์
+      setTimeout(() => {
+        iframe.remove();
+      }, 1000);
+    }, 800); // รอ 800ms ให้ font โหลด
+  };
 }
 
 function exportPDF() {
-  printPreview(); // ใช้ฟังก์ชันเดียวกัน
+  printPreview();
 }
-
-// function exportPDF() {
-//   window.print();
-// }
 
 // =====================================================
 // 📤 EXPORT CSV
 // =====================================================
 
 function exportTrips() {
-  if (trips.length === 0) {
-    alert("❌ ไม่มีข้อมูลทริปให้ Export");
+  saveTableData(false);
+  
+  if (!trips || trips.length === 0) {
+    alert("❌ ไม่มีข้อมูลทริปให้ Export\nกรุณาเพิ่มข้อมูลในตารางก่อน");
     return;
   }
 
-  const empName = document.getElementById("empName")?.value || "User";
-  const area    = document.getElementById("area")?.value    || "";
-  const start   = document.getElementById("startDate")?.value || "";
+  try {
+    const empName = document.getElementById("empName")?.value || "User";
+    const area    = document.getElementById("area")?.value    || "";
+    const start   = document.getElementById("startDate")?.value || "";
 
-  let csv = "ลำดับ,วันที่,เดินทางจาก,ไปจังหวัด,ร้านค้า 1,ร้านค้า 2,ร้านค้า 3,หมายเหตุ\n";
-  trips.forEach((t, i) => {
-    csv += [
+    const headers = ["ลำดับ", "วันที่", "เดินทางจาก", "ไปจังหวัด", "ร้านค้า 1", "ร้านค้า 2", "ร้านค้า 3", "หมายเหตุ"];
+    
+    const rows = trips.map((t, i) => [
       i + 1,
-      t.date,
+      t.date || "",
       escapeCsv(t.from),
       escapeCsv(t.to),
       escapeCsv(t.shop1),
       escapeCsv(t.shop2),
       escapeCsv(t.shop3),
       escapeCsv(t.note),
-    ].join(",") + "\n";
-  });
+    ]);
 
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url  = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href     = url;
-  link.download = `Trip_Plan_${empName}_${area}_${start}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-  alert("✅ Export สำเร็จ");
+    const csvContent = [
+      headers.map(h => escapeCsv(h)).join(","),
+      ...rows.map(r => r.join(","))
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href     = url;
+    link.download = `Trip_Plan_${empName}_${area}_${start || "nodate"}.csv`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    
+    alert("✅ Export สำเร็จ");
+  } catch (e) {
+    console.error("exportTrips error:", e);
+    alert("❌ Export ไม่สำเร็จ: " + e.message);
+  }
 }
 
 // =====================================================
@@ -961,11 +827,12 @@ async function getCurrentUserInfo() {
 }
 
 function escapeCsv(text) {
-  if (!text) return "";
-  if (text.includes(",") || text.includes('"') || text.includes("\n")) {
-    return '"' + text.replace(/"/g, '""') + '"';
+  if (text === null || text === undefined) return "";
+  const str = String(text);
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+    return '"' + str.replace(/"/g, '""') + '"';
   }
-  return text;
+  return str;
 }
 
 console.log("✅ formPlan.js loaded successfully");
@@ -1076,7 +943,6 @@ async function loadDraftList() {
   }
 }
 
-// ── ไฮไลต์การ์ดที่เลือก ──
 function selectDraftCard(id) {
   document.querySelectorAll('[id^="draft-"]').forEach(el => {
     el.style.borderColor = "#e2e8f0";
@@ -1091,7 +957,6 @@ function selectDraftCard(id) {
   }
 }
 
-// ── โหลดแผนมาใส่ฟอร์ม ──
 async function loadDraftById(id) {
   try {
     const { data, error } = await supabaseClient
@@ -1105,23 +970,19 @@ async function loadDraftById(id) {
 
     currentPlanId = data.id;
 
-    // โหลดวันที่
     if (data.start_date) document.getElementById("startDate").value = data.start_date;
     if (data.end_date)   document.getElementById("endDate").value   = data.end_date;
 
-    // โหลดเขต
     const areaInput = document.getElementById("area");
     if (areaInput && data.area) areaInput.value = data.area;
 
-    // โหลดค่าใช้จ่าย (ถ้าบันทึกไว้)
     if (data.allowance_rate)  document.getElementById("allowanceRate").value  = data.allowance_rate;
     if (data.allowance_days)  document.getElementById("allowanceDays").value  = data.allowance_days;
-    if (data.hotel_rate)      document.getElementById("hotelRate").value       = data.hotel_rate;
-    if (data.hotel_nights)    document.getElementById("hotelNights").value     = data.hotel_nights;
-    if (data.other_cost)      document.getElementById("otherCost").value       = data.other_cost;
+    if (data.hotel_rate)      document.getElementById("hotelRate").value      = data.hotel_rate;
+    if (data.hotel_nights)    document.getElementById("hotelNights").value    = data.hotel_nights;
+    if (data.other_cost)      document.getElementById("otherCost").value      = data.other_cost;
     calculateSummary();
 
-    // โหลดแถวตาราง
     if (Array.isArray(data.trips) && data.trips.length > 0) {
       const tbody = document.getElementById("tripTableBody");
       tbody.innerHTML = "";
@@ -1143,10 +1004,7 @@ async function loadDraftById(id) {
       trips = data.trips;
     }
 
-    // ไฮไลต์การ์ดที่โหลด
     selectDraftCard(id);
-
-    // เลื่อนขึ้นไปที่ฟอร์ม
     document.querySelector(".section")?.scrollIntoView({ behavior: "smooth" });
     alert(`✅ โหลดแผนเรียบร้อย (ID: ${id.slice(0,8)}...)`);
 
@@ -1156,7 +1014,6 @@ async function loadDraftById(id) {
   }
 }
 
-// ── ลบแผน ──
 async function deleteDraftById(id) {
   if (!confirm("ต้องการลบแผนนี้?")) return;
   try {
@@ -1167,10 +1024,8 @@ async function deleteDraftById(id) {
 
     if (error) throw error;
 
-    // ลบการ์ดออกจาก UI
     document.getElementById(`draft-${id}`)?.remove();
 
-    // อัปเดต badge
     const remaining = document.querySelectorAll('[id^="draft-"]').length;
     const badge = document.getElementById("draftCountBadge");
     if (badge) badge.textContent = `${remaining} รายการ`;
@@ -1183,7 +1038,6 @@ async function deleteDraftById(id) {
         </div>`;
     }
 
-    // ถ้าลบแผนที่กำลังแก้อยู่ — reset
     if (currentPlanId === id) currentPlanId = null;
 
     alert("✅ ลบเรียบร้อย");
@@ -1193,7 +1047,6 @@ async function deleteDraftById(id) {
   }
 }
 
-// ── helper: แปลงวันที่ ──
 function formatDateTH(dateStr) {
   if (!dateStr) return "-";
   const [y, m, d] = dateStr.split("-");

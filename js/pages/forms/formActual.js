@@ -1,6 +1,6 @@
 // =====================================================
 // formActual.js — ใบเดินทางจริงและเคลียร์ค่าใช้จ่าย ๒
-// เวอร์ชัน: 2.1 | ปรับปรุง: 2026
+// เวอร์ชัน: 2.2 | ปรับปรุง: 2026
 // =====================================================
 "use strict";
 
@@ -102,7 +102,7 @@ async function checkLatestPlan() {
 }
 
 // =====================================================
-// 📥 IMPORT FROM PLAN — ✅ แก้ไข bug อ้างอิง draft ที่ไม่มี
+// 📥 IMPORT FROM PLAN
 // =====================================================
 function importFromPlan() {
   if (!planData) {
@@ -116,10 +116,8 @@ function importFromPlan() {
     return;
   }
 
-  // ล้างตารางเดิม
   document.getElementById("tableBody").innerHTML = "";
 
-  // สร้างแถวจาก trips jsonb
   tripRows.forEach((t) => {
     const parts = [t.from, t.to, t.shop1, t.shop2, t.shop3].filter(
       (v) => v && v.trim() && v !== "-" && v !== "จังหวัด" && v !== "ชื่อร้าน" && v !== ""
@@ -130,7 +128,6 @@ function importFromPlan() {
 
   calcTotal();
 
-  // ✅ แก้ไข: ใช้ planData แทน draft ที่ไม่มีอยู่
   if (planData.allowance_rate !== undefined) {
     const allowanceRateEl = document.getElementById("allowanceRate");
     const allowanceDaysEl = document.getElementById("allowanceDays");
@@ -232,7 +229,6 @@ async function loadActualDraft() {
     const refInp = document.getElementById("refPlanId");
     if (refInp && draft.ref_plan_id) refInp.value = draft.ref_plan_id;
 
-    // ล้างตาราง แล้วเติมข้อมูล
     document.getElementById("tableBody").innerHTML = "";
     draft.rows.forEach((r) => {
       addRow(r.date || "", r.route || "");
@@ -242,7 +238,6 @@ async function loadActualDraft() {
     });
     calcTotal();
 
-    // ✅ โหลดค่าใช้จ่ายจาก draft
     if (draft.allowance_rate !== undefined) {
       const allowanceRateEl = document.getElementById("allowanceRate");
       const allowanceDaysEl = document.getElementById("allowanceDays");
@@ -592,113 +587,116 @@ function closePreview() {
   document.getElementById("previewModal").style.display = "none";
 }
 
+// =====================================================
+// 🖨️ PRINT PREVIEW — ✅ แก้ไขให้ทำงานบนแท็บเลต/มือถือ
+// =====================================================
 function printPreview() {
   const content = document.getElementById("previewContent")?.innerHTML;
   
-  // ✅ ตรวจสอบว่ามี content หรือไม่
   if (!content || content.trim() === "") {
     alert("❌ ไม่มีข้อมูลสำหรับพิมพ์ กรุณากด Preview ก่อน");
     return;
   }
 
-  try {
-    const win = window.open("", "_blank", "width=900,height=700");
-    
-    if (!win) {
-      alert("❌ ไม่สามารถเปิดหน้าต่างพิมพ์ได้ กรุณาอนุญาต popup");
-      return;
-    }
+  // ✅ ใช้ iframe สำหรับทุกอุปกรณ์ (รองรับทั้ง Desktop และ Tablet/Mobile)
+  printViaIframe(content);
+}
 
-    win.document.write(`<!DOCTYPE html>
+// ✅ ฟังก์ชันพิมพ์ผ่าน iframe (รองรับทุกอุปกรณ์)
+function printViaIframe(content) {
+  const printHTML = `<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ใบเดินทางจริง</title>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      width: 210mm;
-      margin: 0 auto;
+      width: 100%;
       background: #fff;
       font-family: 'Kanit', sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     #print-wrap {
       width: 100%;
-      padding: 6mm 8mm;
+      padding: 8mm;
+      max-width: 210mm;
+      margin: 0 auto;
     }
     @media print {
-      @page { size: A4 portrait; margin: 0; }
-      html, body { width: 210mm; height: 297mm; overflow: hidden; margin: 0; }
-      #print-wrap {
-        zoom: var(--zoom-level, 0.82);
-        width: calc(210mm / var(--zoom-level, 0.82));
-        padding: 5mm 7mm;
-        page-break-after: avoid;
-        break-after: avoid;
-      }
-      table, thead, tbody, tr, td, th,
-      .ds, .dct, .dmt {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
-      .ds { margin-top: 20px !important; }
-    }
-    @media screen {
-      body { padding: 10mm; background: #e0e0e0; }
-      #print-wrap {
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-        max-width: 190mm;
-        margin: 0 auto;
-      }
+      @page { size: A4 portrait; margin: 8mm; }
+      html, body { width: 210mm; }
+      #print-wrap { padding: 0; max-width: none; }
     }
     .dmt td {
-      max-width: 120px !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .dmt th { white-space: nowrap !important; }
     .dmt th {
       background: #e8f5f4 !important;
       color: #1a5550 !important;
       border: 1px solid #b2d8d5 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     .dct .tr th {
       background: #e8f5f4 !important;
       color: #1a5550 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     .dsl {
       border-top: 1px solid #555;
-      padding-top: 10px !important;
-      margin-top: 60px !important;
+      padding-top: 10px;
+      margin-top: 60px;
     }
   </style>
 </head>
 <body>
   <div id="print-wrap">${content}</div>
-  <script>
-    document.fonts.ready.then(() => {
-      const wrap = document.getElementById('print-wrap');
-      const A4_H_PX = 297 * 3.7795;
-      const A4_W_PX = 210 * 3.7795;
-      const zoomH = (A4_H_PX - 20) / wrap.scrollHeight;
-      const zoomW = A4_W_PX / wrap.scrollWidth;
-      const zoom  = Math.min(zoomH, zoomW, 1).toFixed(3);
-      wrap.style.setProperty('--zoom-level', zoom);
-      wrap.style.zoom = zoom;
-      setTimeout(() => { window.focus(); window.print(); window.close(); }, 400);
-    });
-  <\/script>
 </body>
-</html>`);
+</html>`;
 
-    win.document.close();
-  } catch (e) {
-    console.error("printPreview error:", e);
-    alert("❌ เกิดข้อผิดพลาดในการพิมพ์: " + e.message);
-  }
+  // ลบ iframe เก่าถ้ามี
+  const oldFrame = document.getElementById("printFrame");
+  if (oldFrame) oldFrame.remove();
+
+  // สร้าง iframe ใหม่
+  const iframe = document.createElement("iframe");
+  iframe.id = "printFrame";
+  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentWindow || iframe.contentDocument;
+  const doc = iframeDoc.document || iframeDoc;
+  
+  doc.open();
+  doc.write(printHTML);
+  doc.close();
+
+  // รอให้ content และ font โหลดเสร็จ
+  iframe.onload = function() {
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        console.error("iframe print error:", e);
+        // Fallback: ลองใช้ window.print() บน content ปัจจุบัน
+        window.print();
+      }
+      
+      // ลบ iframe หลังพิมพ์
+      setTimeout(() => {
+        iframe.remove();
+      }, 1000);
+    }, 800); // รอ 800ms ให้ font โหลด
+  };
 }
 
 function exportPDF() {
@@ -711,36 +709,31 @@ async function saveAndClose() {
 }
 
 // =====================================================
-// 📤 EXPORT CSV — ✅ แก้ไขให้ทำงานได้
+// 📤 EXPORT CSV
 // =====================================================
 function exportCSV() {
   const d = collectFormData();
   if (!d) return;
 
-  // ✅ ตรวจสอบว่ามีข้อมูลหรือไม่
   if (!d.rows || d.rows.length === 0) {
     alert("❌ ไม่มีข้อมูลให้ Export");
     return;
   }
 
   try {
-    // ✅ สร้าง CSV headers
     const headers = ["วันที่", "เส้นทาง", "หมายเหตุ"];
     
-    // ✅ สร้างแถวข้อมูล
     const rows = d.rows.map((r) => [
       r.date || "",
       escapeCsvField(r.route),
       escapeCsvField(r.note),
     ]);
 
-    // ✅ รวมเป็น CSV string
     let csvContent = [
       headers.map(h => escapeCsvField(h)).join(","),
       ...rows.map(r => r.join(","))
     ].join("\n");
 
-    // ✅ เพิ่มสรุปค่าใช้จ่าย
     csvContent += "\n\n";
     csvContent += "สรุปค่าใช้จ่าย\n";
     csvContent += `เบี้ยเลี้ยง,${d.allowanceRate} × ${d.allowanceDays} วัน,${d.allowanceRate * d.allowanceDays}\n`;
@@ -748,21 +741,17 @@ function exportCSV() {
     csvContent += `ค่าใช้จ่ายอื่นๆ,-,${d.otherCost}\n`;
     csvContent += `รวมทั้งหมด,,${d.grandTotal}\n`;
 
-    // ✅ สร้าง Blob พร้อม BOM สำหรับ UTF-8
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     
-    // ✅ สร้าง download link
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = `Actual_${d.emp}_${d.start || "nodate"}.csv`;
     
-    // ✅ Trigger download
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    // ✅ Cleanup
     URL.revokeObjectURL(url);
     
     alert("✅ Export CSV สำเร็จ");
@@ -772,7 +761,6 @@ function exportCSV() {
   }
 }
 
-// ✅ Helper function สำหรับ escape CSV field
 function escapeCsvField(text) {
   if (text === null || text === undefined) return "";
   const str = String(text);
