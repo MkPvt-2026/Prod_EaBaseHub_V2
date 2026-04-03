@@ -398,44 +398,73 @@ async function submitOneDraft(draftId) {
   const d = drafts.find(x => x.id === draftId);
   if (!d) return;
 
-  if (!d.shop_id || !d.products?.length) {
-    alert("❌ ข้อมูลไม่ครบ — ต้องมีร้านค้าและสินค้าอย่างน้อย 1 รายการ");
+  // ❗ เหลือแค่เช็ค shop ก็พอ
+  if (!d.shop_id) {
+    alert("❌ ต้องเลือกร้านค้า");
     return;
   }
+
   try {
-    const { data:{ session } } = await supabaseClient.auth.getSession();
-    if (!session) { alert("❌ Session หมดอายุ กรุณาล็อกอินใหม่"); return; }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      alert("❌ Session หมดอายุ กรุณาล็อกอินใหม่");
+      return;
+    }
 
     const now = new Date().toISOString();
-    // insert 1 row ต่อ 1 product
-    const rows = d.products.map(p => ({
-      report_date:  d.report_date,
-      shop_id:      d.shop_id,
-      product_id:   p.product_id,
-      source:       d.source || null,
-      status:       "submitted",
-      status_visit: d.status_visit || null,
-      product_interest: d.product_interest || null,
-      note:         d.note,
-      attributes:   p.attributes || {},
-      sale_id:      session.user.id,
-      submitted_at: now,
-      created_at:   d.saved_at || now
-    }));
 
-    const { error } = await supabaseClient.from("reports").insert(rows);
+    let rows = [];
+
+    // ✅ มีสินค้า
+    if (d.products && d.products.length > 0) {
+      rows = d.products.map(p => ({
+        report_date:  d.report_date,
+        shop_id:      d.shop_id,
+        product_id:   p.product_id,
+        source:       d.source || null,
+        status:       "submitted",
+        status_visit: d.status_visit || null,
+        product_interest: d.product_interest || null,
+        note:         d.note,
+        attributes:   p.attributes || {},
+        sale_id:      session.user.id,
+        submitted_at: now,
+        created_at:   d.saved_at || now
+      }));
+    } else {
+      // ✅ ไม่มีสินค้า → insert 1 แถว
+      rows = [{
+        report_date:  d.report_date,
+        shop_id:      d.shop_id,
+        product_id:   null, // สำคัญ!
+        source:       d.source || null,
+        status:       "submitted",
+        status_visit: d.status_visit || null,
+        product_interest: d.product_interest || null,
+        note:         d.note,
+        attributes:   {},
+        sale_id:      session.user.id,
+        submitted_at: now,
+        created_at:   d.saved_at || now
+      }];
+    }
+
+    const { error } = await supabaseClient
+      .from("reports")
+      .insert(rows);
+
     if (error) throw error;
 
     saveDraftsToStorage(drafts.filter(x => x.id !== draftId));
     showToast("✅ ส่งรายงานสำเร็จ");
     await renderDraftList();
     await loadSubmittedReports();
-  } catch(e) {
+
+  } catch (e) {
     console.error("submitOneDraft", e);
     alert("❌ ส่งไม่สำเร็จ: " + e.message);
   }
 }
-
 // =====================================================
 // 📤 SUBMIT ALL DRAFTS
 // =====================================================
@@ -643,6 +672,9 @@ function collectFormData() {
     status_visit: document.getElementById("status")?.value          || null,
     note:         document.getElementById("note")?.value            || null,
     product_interest: document.getElementById("productInterest")?.value || null,
+
+    no_product: document.getElementById("noProductFlag")?.checked || false,
+
     products:     selectedProducts.map(p => ({
       product_id: p.product_id,
       attributes: p.attributes || {}
@@ -745,6 +777,28 @@ function setupEventListeners() {
   if (closeBtn) closeBtn.addEventListener("click", closeModal);
   const modal = document.getElementById("reportModal");
   if (modal) modal.addEventListener("click", e => { if(e.target===modal) closeModal(); });
+
+  const noProduct = document.getElementById("noProductFlag");
+if (noProduct) {
+  noProduct.addEventListener("change", (e) => {
+    const picker = document.querySelector(".product-picker");
+
+    if (e.target.checked) {
+      // ✅ ติ๊ก → ล้างสินค้า + ซ่อน
+      selectedProducts = [];
+      renderSelectedProducts();
+
+      document.getElementById("pickerCategory").value = "";
+      document.getElementById("pickerProduct").innerHTML = `<option value="">-- เลือกสินค้า --</option>`;
+      document.getElementById("pickerAttributes").innerHTML = "";
+
+      picker.classList.add("disabled"); // ใช้ CSS คุม
+    } else {
+      // ✅ เอาติ๊กออก → เปิดกลับ
+      picker.classList.remove("disabled");
+    }
+  });
+}
 }
 
 // =====================================================

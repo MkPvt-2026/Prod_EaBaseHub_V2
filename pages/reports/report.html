@@ -96,10 +96,12 @@
       <!-- ===================================================== -->
       <!-- PRODUCT PICKER SECTION                                 -->
       <!-- ===================================================== -->
+      
       <div class="form-section-divider">
         <span>📦 สินค้าที่จำหน่ายกับร้านนี้</span>
       </div>
-
+      
+      
       <!-- Picker: เลือกสินค้า 1 ชุด -->
       <div class="product-picker">
         <div class="form-grid">
@@ -123,6 +125,9 @@
         <button type="button" class="btn-add-product" id="addProductBtn">
           ➕ เพิ่มสินค้า
         </button>
+       
+
+       
       </div>
 
       <!-- รายการสินค้าที่เลือกแล้ว -->
@@ -130,10 +135,19 @@
         <div class="selected-products-header">
           <span>สินค้าที่ได้ขายกับร้านนี้</span>
           <span class="selected-count" id="selectedProductCount">0</span>
+          
+          <div class="no-product-toggle">
+ <label class="switch">
+   <input type="checkbox" id="noProductFlag">
+   <span class="slider"></span>
+ </label>
+ <span class="toggle-label">ยังไม่มีสินค้าที่จำหน่ายกับร้านนี้</span>
+</div>
         </div>
         <div id="selectedProductList" class="selected-product-list">
           <div class="empty-product-list">ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
         </div>
+        
       </div>
 
 

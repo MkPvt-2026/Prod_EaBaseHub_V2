@@ -253,22 +253,22 @@ function buildPreviewHTML(){
 <style>
 .dw{font-family:'Kanit',sans-serif;font-size:11px;color:#1a1a1a;line-height:1.35}
 .dc{text-align:center;margin-bottom:2px}
-.dc .cn{font-size:14px;font-weight:700}.dc .tt{font-size:12px;font-weight:600;margin-top:1px}
+.dc .cn{font-size:18px;font-weight:700}.dc .tt{font-size:14px;font-weight:600;margin-top:1px}
 hr.dv{border:none;border-top:1.5px solid #1a1a1a;margin:4px 0 8px}
 .dm{display:grid;grid-template-columns:1fr 1fr;border:1px solid #999;border-radius:3px;margin-bottom:8px;overflow:hidden}
-.dmc{padding:4px 10px;font-size:10.5px;line-height:1.6}.dmc:first-child{border-right:1px solid #999}
+.dmc{padding:4px 10px;font-size:14px;line-height:1.6}.dmc:first-child{border-right:1px solid #999}
 .ml{font-weight:700;color:#444;margin-right:3px}
 .dt{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px;table-layout:fixed}
-.dt th{background:#e8f5f4;color:#1a5550;padding:4px 2px;text-align:center;font-weight:700;font-size:9.5px;border:1px solid #b2d8d5}
-.dt td{padding:2px 2px;text-align:center;border:1px solid #ccc;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt th{background:#e8f5f4;color:#1a5550;padding:4px 2px;text-align:center;font-weight:700;font-size:14px;border:1px solid #b2d8d5}
+.dt td{padding:3px 4px;text-align:center;border:1px solid #ccc;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st{font-size:11px;font-weight:700;margin-bottom:3px;padding-bottom:2px;border-bottom:1.5px solid #b2d8d5;display:flex;align-items:center;gap:4px}
 .st::before{content:'';display:inline-block;width:3px;height:12px;background:#7ec8c3;border-radius:2px}
-.ct{width:50%;margin-left:auto;margin-bottom:10px;border-collapse:collapse;font-size:10px}
+.ct{width:50%;margin-left:auto;margin-bottom:10px;border-collapse:collapse;font-size:14px}
 .ct td,.ct th{border:1px solid #ccc;padding:2px 6px}
 .ct td:first-child{font-weight:600;color:#333}.ct td:nth-child(2){text-align:center;color:#555}.ct td:last-child{text-align:right}
-.ct .tr th{background:#e8f5f4;color:#1a5550;text-align:right;padding:3px 6px;font-size:11px;border:1px solid #b2d8d5;font-weight:700}
+.ct .tr th{background:#e8f5f4;color:#1a5550;text-align:right;padding:3px 6px;font-size:14px;border:1px solid #b2d8d5;font-weight:700}
 .sg{margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
-.sb{font-size:9.5px;line-height:1.5}.sl{border-top:1px solid #555;padding-top:6px;margin-top:30px}
+.sb{font-size:12.5px;line-height:1.5}.sl{border-top:1px solid #555;padding-top:24px;margin-top:40px}
 .sn{font-weight:600}.sr{color:#555}
 .dpd{text-align:right;font-size:9px;color:#777;margin-bottom:3px}
 </style>
@@ -276,20 +276,30 @@ hr.dv{border:none;border-top:1.5px solid #1a1a1a;margin:4px 0 8px}
   <div class="dpd">วันที่พิมพ์: ${pd}</div>
   <div class="dc"><div class="cn">บริษัท เอิร์นนี่ แอดวานซ์ จำกัด</div><div class="tt">แผนการเดินทางและเบิกทดลองจ่าย ๑</div></div>
   <hr class="dv">
-  <div class="dm"><div class="dmc"><div><span class="ml">พนักงานขาย :</span>${emp}</div><div><span class="ml">เขตการขาย :</span>${area}</div></div><div class="dmc"><div><span class="ml">ระหว่างวันที่ :</span>${st}</div><div><span class="ml">ถึงวันที่ :</span>${en}</div></div></div>
+  <div class="dm">
+    <div class="dmc">
+    <div><span class="ml">พนักงานขาย :</span>${emp}</div>
+    <div><span class="ml">เขตการขาย :</span>${area}</div>
+    </div>
+    <div class="dmc">
+    <div><span class="ml">ระหว่างวันที่ :</span>${st}</div>
+    <div><span class="ml">ถึงวันที่ :</span>${en}</div>
+    <div><span class="ml">จำนวน :</span>${trips.length} วัน</div>
+    </div>
+    </div>
   <table class="dt"><thead><tr><th style="width:11%">ว/ด/ป</th><th style="width:14%">จากจังหวัด</th><th style="width:14%">ไปจังหวัด</th><th style="width:18%">ร้านค้า 1</th><th style="width:18%">ร้านค้า 2</th><th style="width:15%">ร้านค้า 3</th><th style="width:10%">หมายเหตุ</th></tr></thead><tbody>${tRows}</tbody></table>
   <div class="st">สรุปค่าใช้จ่าย</div>
   <table class="ct">
     <tr><td>เบี้ยเลี้ยง</td><td>${fm(ar)} × ${ad} วัน</td><td>${fm(ta)} บาท</td></tr>
     <tr><td>ค่าที่พัก</td><td>${fm(hr)} × ${hn} คืน</td><td>${fm(th)} บาท</td></tr>
     <tr><td>อื่นๆ</td><td style="text-align:center">–</td><td>${fm(oc)} บาท</td></tr>
-    <tr class="tr"><th colspan="2">รวมเบิกทั้งหมด</th><th style="font-size:11px">${fm(gt)} บาท</th></tr>
+    <tr class="tr"><th colspan="2">รวมเบิกทั้งหมด</th><th style="font-size:14px">${fm(gt)} บาท</th></tr>
   </table>
   <div class="sg">
     <div class="sb"><div class="sl"><div class="sn">(${emp})</div><div class="sr">พนักงานขาย</div></div></div>
-    <div class="sb"><div class="sl"><div class="sn">(............................)</div><div class="sr">ผจก.ฝ่ายขาย</div></div></div>
-    <div class="sb"><div class="sl"><div class="sn">(............................)</div><div class="sr">ฝ่ายบัญชี</div></div></div>
-    <div class="sb"><div class="sl"><div class="sn">(............................)</div><div class="sr">ผู้อนุมัติ</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ผจก.ฝ่ายขาย</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ฝ่ายบัญชี</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ผู้อนุมัติ</div></div></div>
   </div>
 </div>`;
 }
@@ -301,26 +311,68 @@ function closePreview(){document.getElementById("previewModal").style.display="n
 // 🖨️ PRINT — ✅ TABLET + FIT A4 + จัดกลาง ไม่ล้นขอบ
 // =====================================================
 function buildFullPageHTML(body){
-  return`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>แผนการเดินทาง</title>
+  return `<!DOCTYPE html><html lang="th"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ใบเดินทางจริง</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;background:#fff;font-family:'Kanit',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#print-wrap{width:190mm;max-width:190mm;margin:0 auto;padding:12mm 0}
-.no-print{margin:12px auto;text-align:center;padding:10px}
-.no-print button{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600;padding:14px 32px;margin:6px;border-radius:12px;cursor:pointer;border:none;color:#fff;min-width:160px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.btn-print{background:#1D9E75}.btn-close{background:#64748b}
-@media print{
-  @page{size:A4 portrait;margin:12mm 10mm}
-  html,body{width:210mm;height:297mm}
-  #print-wrap{width:100%;max-width:190mm;margin:0 auto;padding:0}
-  .no-print{display:none!important}
-}
-.dt{table-layout:fixed;width:100%}
-.dt td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dt th{background:#e8f5f4!important;color:#1a5550!important;border:1px solid #b2d8d5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.ct .tr th{background:#e8f5f4!important;color:#1a5550!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-</style></head><body>
+  * { box-sizing:border-box; margin:0; padding:0 }
+  html, body {
+    width:100%;
+    background:#fff;
+    font-family:'Kanit',sans-serif;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+  /* === หน้าจอ (preview ก่อนพิมพ์) === */
+  #print-wrap {
+    width: 190mm;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10mm 0;
+  }
+
+  .no-print { text-align:center; padding:10px }
+  .no-print button {
+    font-family:'Kanit',sans-serif; font-size:16px; font-weight:600;
+    padding:14px 32px; margin:6px; border-radius:12px; cursor:pointer;
+    border:none; color:#fff; min-width:160px; touch-action:manipulation;
+  }
+  .btn-print { background:#1D9E75 }
+  .btn-close { background:#64748b }
+
+  /* === พิมพ์ === */
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 10mm 10mm;   /* ขอบเท่ากันทุกด้าน */
+    }
+    html, body { width:210mm }
+    #print-wrap {
+      width: 190mm;        /* 210 - 10 - 10 = 190 พอดี */
+      padding: 0;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .no-print { display:none !important }
+  }
+
+  /* === table === */
+  .dt { table-layout:fixed; width:100% }
+  .dt td { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .dt th {
+    background:#e8f5f4 !important; color:#1a5550 !important;
+    border:1px solid #b2d8d5 !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .ct .tr th {
+    background:#e8f5f4 !important; color:#1a5550 !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+</style>
+</head><body>
 <div class="no-print">
   <button class="btn-print" onclick="window.print()">🖨 พิมพ์ / Save PDF</button>
   <button class="btn-close" onclick="window.close()">✖ ปิดหน้านี้</button>
