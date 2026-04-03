@@ -353,9 +353,9 @@ hr.dv{border:none;border-top:1.5px solid #1a1a1a;margin:4px 0 8px}
   </table>
   <div class="sg">
     <div class="sb"><div class="sl"><div class="sn">(${d.emp})</div><div class="sr">พนักงานขาย</div></div></div>
-    <div class="sb"><div class="sl"><div class="sn">(..................................)</div><div class="sr">ผจก.ฝ่ายขาย</div></div></div>
-    <div class="sb"><div class="sl"><div class="sn">(..................................)</div><div class="sr">ฝ่ายบัญชี</div></div></div>
-    <div class="sb"><div class="sl"><div class="sn">(..................................)</div><div class="sr">ผู้อนุมัติ</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(.................................................................................)</div><div class="sr">ผจก.ฝ่ายขาย</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(.................................................................................)</div><div class="sr">ฝ่ายบัญชี</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(.................................................................................)</div><div class="sr">ผู้อนุมัติ</div></div></div>
   </div>
 </div>`;
   document.getElementById("previewModal").style.display = "flex";
