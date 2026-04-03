@@ -778,27 +778,44 @@ function setupEventListeners() {
   const modal = document.getElementById("reportModal");
   if (modal) modal.addEventListener("click", e => { if(e.target===modal) closeModal(); });
 
-  const noProduct = document.getElementById("noProductFlag");
+const noProduct = document.getElementById("noProductFlag");
+const label = document.querySelector(".toggle-label");
+
 if (noProduct) {
   noProduct.addEventListener("change", (e) => {
-    const picker = document.querySelector(".product-picker");
+    const isChecked = e.target.checked;
 
-    if (e.target.checked) {
-      // ✅ ติ๊ก → ล้างสินค้า + ซ่อน
+    // 👉 ล้างสินค้า
+    if (isChecked) {
       selectedProducts = [];
       renderSelectedProducts();
 
       document.getElementById("pickerCategory").value = "";
-      document.getElementById("pickerProduct").innerHTML = `<option value="">-- เลือกสินค้า --</option>`;
+      document.getElementById("pickerProduct").innerHTML =
+        `<option value="">-- เลือกสินค้า --</option>`;
       document.getElementById("pickerAttributes").innerHTML = "";
+    }
 
-      picker.classList.add("disabled"); // ใช้ CSS คุม
-    } else {
-      // ✅ เอาติ๊กออก → เปิดกลับ
-      picker.classList.remove("disabled");
+    // 👉 disable UI
+    document.querySelector(".product-picker")
+      .classList.toggle("disabled", isChecked);
+
+    // 👉 เปลี่ยนข้อความ
+    if (label) {
+      label.textContent = isChecked
+        ? "ร้านนี้ยังไม่มีสินค้า (บันทึกได้เลย)"
+        : "ยังไม่มีสินค้าที่จำหน่ายกับร้านนี้";
     }
   });
 }
+const card = document.querySelector(".product-status-card");
+
+noProduct.addEventListener("change", (e) => {
+  const isChecked = e.target.checked;
+
+  // highlight card
+  card.classList.toggle("active", isChecked);
+});
 }
 
 // =====================================================
