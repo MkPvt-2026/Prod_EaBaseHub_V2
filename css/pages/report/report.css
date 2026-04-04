@@ -173,6 +173,7 @@ body {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 28px 28px 24px;
+  margin-top: 10px;
   margin-bottom: 20px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
@@ -231,6 +232,12 @@ input, select, textarea {
   appearance: none;
   -webkit-appearance: none;
 }
+
+textarea {
+  background: #fafffe;
+}
+
+
 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235cbd9a' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -801,7 +808,7 @@ tbody tr:last-child td { border-bottom: none; }
    PRODUCT PICKER + SELECTED LIST
    ===================================================== */
 .product-picker {
-  background: #f8faf8;
+  background: #f8fafc;
   border: 1px dashed #c5dcc5;
   border-radius: 10px;
   padding: 16px;
