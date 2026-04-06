@@ -24,6 +24,8 @@
   --warn-bg:      rgba(245,158,11,0.08);
   --warn-border:  rgba(245,158,11,0.25);
   --info:         #3b82f6;
+  --info1:        #0473E6;
+  --info2:        #214098;
   --info-bg:      rgba(59,130,246,0.08);
   --info-border:  rgba(59,130,246,0.25);
   --text-1:       #111827;
@@ -158,13 +160,29 @@ body {
   letter-spacing: -.01em; 
   margin-bottom: 3px; 
 }
-.page-header p  { font-size: .75rem; color: var(--text-2); letter-spacing: .04em; }
+.page-header p  { 
+  font-size: .75rem; 
+  color: var(--text-2); 
+  letter-spacing: .04em; 
+}
 
 /* ── CONTAINER ── */
-.container { max-width: 1200px; margin: 0 auto; padding: 24px 24px 60px; display: flex; flex-direction: column; gap: 16px; }
+.container { 
+  max-width: 1200px;
+  margin: 0 auto; 
+  padding: 24px 24px 60px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+}
 
 /* ── SUMMARY CARDS ── */
-.qc-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.qc-summary { 
+  display: grid; 
+  grid-template-columns: repeat(4,1fr); 
+  gap: 12px; 
+}
+
 .summary-card {
   background: var(--bg-card); 
   border: 1px solid var(--border); 
@@ -174,11 +192,29 @@ body {
   align-items: center; 
   gap: 14px;
 }
-.summary-card:hover { border-color: var(--border-lit); }
+.summary-card:hover { 
+  border-color: var(--border-lit); 
+}
 
-.summary-icon { width:40px; height:40px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.summary-icon .material-symbols-outlined { font-size:20px; }
-.summary-card.total    .summary-icon { background:var(--info-bg); color:var(--info); }
+.summary-icon { 
+  width:40px; 
+  height:40px; 
+  border-radius:var(--r-md); 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  flex-shrink:0; 
+}
+
+.summary-icon .material-symbols-outlined { 
+  font-size:20px; 
+}
+
+.summary-card.total    .summary-icon { 
+  background:var(--info-bg); 
+  color:var(--info); 
+}
+
 .summary-card.pending  .summary-icon { background:var(--warn-bg); color:var(--warn); }
 .summary-card.approved .summary-icon { background:var(--pass-bg); color:var(--pass); }
 .summary-card.rejected .summary-icon { background:var(--fail-bg); color:var(--fail); }
@@ -216,10 +252,10 @@ body {
 
 .btn-export-excel {
   display: flex; align-items: center; gap: 5px; padding: 8px 16px;
-  background: var(--accent); color: white; border: none;
+  background: var(--info1); color: white; border: none;
   border-radius: var(--r-md); font-family: var(--font); font-size: .78rem; font-weight: 500; cursor: pointer; white-space: nowrap;
 }
-.btn-export-excel:hover { background: var(--accent-dark); }
+.btn-export-excel:hover { background: var(--info2); }
 .btn-export-excel .material-symbols-outlined { font-size: 15px; }
 
 /* ── TABLE ── */

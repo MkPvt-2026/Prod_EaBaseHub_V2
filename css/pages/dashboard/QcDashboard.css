@@ -15,15 +15,19 @@
   --accent-light: #d1fae5;
   --accent-dark:  #059669;
   --pass:         #10b981;
+  --pass1:        #0C7ECC;
   --pass-bg:      rgba(16,185,129,0.08);
   --pass-border:  rgba(16,185,129,0.25);
   --fail:         #ef4444;
   --fail-bg:      rgba(239,68,68,0.08);
   --fail-border:  rgba(239,68,68,0.25);
   --warn:         #f59e0b;
+  --warn1:        #FBE929;
   --warn-bg:      rgba(245,158,11,0.08);
   --warn-border:  rgba(245,158,11,0.25);
   --info:         #3b82f6;
+  --info1:        #0473E6;
+  --info2:        #214098;
   --info-bg:      rgba(59,130,246,0.08);
   --text-1:       #111827;
   --text-2:       #6b7280;
@@ -190,7 +194,7 @@ body {
 .kpi-card:hover { border-color: var(--border-lit); }
 .kpi-label { font-size: 0.72rem; color: var(--text-2); font-weight: 500; }
 .kpi-val   { font-size: 1.5rem; font-weight: 600; color: var(--text-1); line-height: 1; font-family: var(--mono); }
-.kpi-val.pass { color: var(--pass); } 
+.kpi-val.pass { color: var(--pass1); } 
 .kpi-val.fail { color: var(--fail); } 
 .kpi-val.warn { color: var(--warn); }
 .kpi-sub  { font-size: 0.68rem; color: var(--text-2); }
@@ -245,7 +249,7 @@ body {
 .legend-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .legend-left { display: flex; align-items: center; gap: 7px; }
 .dot { width: 8px; height: 8px; border-radius: 2px; }
-.dot-pass { background: var(--pass); } 
+.dot-pass { background: var(--pass1); } 
 .dot-fail { background: var(--fail); } 
 .dot-pend { background: var(--warn); }
 .legend-label { font-size: 0.75rem; color: var(--text-2); }
@@ -282,7 +286,7 @@ body {
 .status-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 4px; font-size: .7rem; font-weight: 500; }
 .sb-pass    { background: var(--pass-bg); color: var(--accent-dark); }
 .sb-fail    { background: var(--fail-bg); color: #dc2626; }
-.sb-pending { background: var(--warn-bg); color: #b45309; }
+.sb-pending { background: var(--warn); color: #b45309; }
 
 /* ── TABLE ── */
 .table-card { padding: 22px; }
@@ -305,7 +309,7 @@ body {
   align-items: center; 
   gap: 5px; 
   padding: 8px 16px; 
-  background: var(--accent); 
+  background: var(--info1); 
   color: white; 
   border: none; 
   border-radius: var(--r-sm); 
@@ -315,7 +319,7 @@ body {
   cursor: pointer;
   text-decoration: none; 
 }
-.btn-goto-qc:hover { background: var(--accent-dark); }
+.btn-goto-qc:hover { background: var(--info2); }
 .btn-goto-qc .material-symbols-outlined { font-size: 15px; }
 
 .tbl-scroll { overflow-x: auto; }
