@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- 🔸 เปลี่ยนชื่อหน้าตรงนี้ -->
-  <title>managerDashboard | EABaseHub</title>
+  <title>ชื่อหน้า | EABaseHub</title>
 
 
   <!-- =====================================================
@@ -34,15 +34,13 @@
     👉 component = ปุ่ม / card
     👉 page = เฉพาะหน้านี้
   ===================================================== -->
-  <!-- <link rel="stylesheet" href="/css/base/adminBase.css"> -->
-  <link rel="stylesheet" href="/css/base/ิbassManager.css">
-  <!-- <link rel="stylesheet" href="/css/components/badgeButtom.css"> -->
+  <link rel="stylesheet" href="/css/base/adminBase.css">
 
   <!-- 🔸 ใส่ CSS component เพิ่มตรงนี้ -->
   <!-- <link rel="stylesheet" href="/css/components/xxx.css"> -->
 
   <!-- 🔸 CSS เฉพาะหน้า -->
-  <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
+  <link rel="stylesheet" href="/css/pages/your-page.css">
 
 </head>
 
@@ -71,11 +69,7 @@
       </div>
 
       <!-- 🔸 ปุ่ม logout -->
-    <div class="group">
-      <span class="badge badge--message-sent" onclick="logout()">
-      <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">Logout</span></span>
-      ออกจจากระบบ
-      </span>
+      <button id="logoutBtn">ออกจากระบบ</button>
     </div>
 
   </header>
@@ -88,9 +82,7 @@
   <nav class="app-nav">
 
     <!-- 🔸 active = หน้าปัจจุบัน -->
-    <a href="/pages/dashboard/managerDashboard.html" class="active">Dashboard</a>
-    <a href="/pages/reports/reportTracker.html">Report Dary</a>
-    <a href="/pages/admin/admintor.html">Admin</a>
+    <a href="/pages/dashboard.html" class="active">Dashboard</a>
 
     <!-- 🔸 เพิ่มเมนูตรงนี้ -->
     <!-- <a href="/pages/xxx.html">ชื่อเมนู</a> -->
