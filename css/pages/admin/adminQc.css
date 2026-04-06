@@ -29,7 +29,7 @@
   --text-1:       #111827;
   --text-2:       #6b7280;
   --text-3:       #9ca3af;
-  --font:         'IBM Plex Sans Thai', 'Kanit', sans-serif;
+  --font:         'kanit',Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
   --mono:         'IBM Plex Mono', monospace;
   --shadow:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:    0 4px 12px rgba(0,0,0,0.08);
@@ -54,7 +54,7 @@ body {
 /* ── THEME TOGGLE (hidden) ── */
 .theme-toggle-btn { display: none; }
 
-/* ── HEADER ── */
+/* ── HEADER ──
 .app-header {
   position: sticky; 
   top: 0; 
@@ -91,9 +91,9 @@ body {
   background: var(--bg-elevated); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--text-2);
 }
-.user-info .user-name { font-size: 0.8rem; color: var(--text-1); font-weight: 500; }
+.user-info .user-name { font-size: 0.8rem; color: var(--text-1); font-weight: 500; } */
 
-/* ── BADGE BUTTON (Logout) ── */
+/* ── BADGE BUTTON (Logout) ──
 .badge {
   display: inline-flex;
   align-items: center;
@@ -123,16 +123,16 @@ body {
 .badge-icon {
   display: flex;
   align-items: center;
-}
+} */
 
-.logout-btn {
+/* .logout-btn {
   background: none; border: none; color: var(--text-2); font-size: .75rem;
   cursor: pointer; font-family: var(--font); padding: 6px 10px; border-radius: var(--r-sm);
   transition: color .15s, background .15s;
-}
-.logout-btn:hover { color: var(--fail); background: var(--fail-bg); }
+} */
+/* .logout-btn:hover { color: var(--fail); background: var(--fail-bg); } */
 
-/* ── NAV ── */
+/* ── NAV ──
 .app-nav {
   display: flex; align-items: center; gap: 2px; padding: 0 28px;
   border-bottom: 1px solid var(--border); background: var(--bg-card); overflow-x: auto;
@@ -143,7 +143,7 @@ body {
   border-bottom: 2px solid transparent; white-space: nowrap; transition: color .15s, border-color .15s;
 }
 .app-nav a:hover  { color: var(--accent); }
-.app-nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+.app-nav a.active { color: var(--accent); border-bottom-color: var(--accent); } */
 
 /* ── PAGE HEADER ── */
 .page-header { 
@@ -151,7 +151,13 @@ body {
   border-bottom: 1px solid var(--border); 
   padding: 20px 28px; 
 }
-.page-header h1 { font-size: 1.05rem; font-weight: 600; color: var(--text-1); letter-spacing: -.01em; margin-bottom: 3px; }
+.page-header h1 { 
+  font-size: 18px; 
+  font-weight: 600; 
+  color: var(--text-1); 
+  letter-spacing: -.01em; 
+  margin-bottom: 3px; 
+}
 .page-header p  { font-size: .75rem; color: var(--text-2); letter-spacing: .04em; }
 
 /* ── CONTAINER ── */

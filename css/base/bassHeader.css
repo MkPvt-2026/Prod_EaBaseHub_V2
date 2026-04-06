@@ -17,7 +17,7 @@
   --warn-bg:      rgba(245,158,11,0.08);
   --warn-border:  rgba(245,158,11,0.25);
   --info:         #3b82f6;
-  --info1:     #1d4ed8;
+  --info1:        #1d4ed8;
   --info-bg:      rgba(59,130,246,0.08);
   --text-1:       #111827;
   --text-2:       #6b7280;
@@ -37,8 +37,11 @@
 }
 
 body {
-    font-family: kanit;
+  font-family: 'kanit',Segoe UI, Tahoma, Geneva, Verdana, sans-serif; 
+  
 }
+
+
 
 /* ── HEADER (Dark Green) ── */
 .app-header {
@@ -54,7 +57,6 @@ body {
 }
 
 
-
 .logo { 
     display: flex; 
     align-items: center; 
@@ -63,9 +65,9 @@ body {
 
 
 .logo-circle {
-  width: 34px; 
-  height: 34px; 
-  border-radius: var(--r-md);
+  width: 46px; 
+  height: 46px; 
+  border-radius: var(--r-full);
   background: var(--bg);
   display: flex; 
   align-items: center; 
@@ -75,13 +77,13 @@ body {
 
 
 .logo-circle img { 
-    width: 22px; 
-    height: 22px; 
+    width: 36px; 
+    height: 36px; 
     object-fit: contain; 
 }
 
 .logo h2 { 
-    font-size: 0.88rem; 
+    font-size: 18px; 
     font-weight: 600; 
     color: #fff; 
 }
@@ -107,10 +109,10 @@ body {
     gap: 10px; 
 }
 .user-avatar {
-  width: 28px; 
-  height: 28px; 
+  width: 36px; 
+  height: 36px; 
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.8);
   display: flex; 
   align-items: center; 
   justify-content: center; 
@@ -138,14 +140,15 @@ body {
     background: rgba(239,68,68,0.3); 
 }
 
-/* ── NAV (Dark Green) ── */
+/* ── NAV ── */
 .app-nav {
   display: flex; 
   align-items: center; 
-  color: #1d4ed8;
+  color: var(--text-2);
+  font-size: 14px;
   gap: 2px; 
   padding: 0 28px;
-  background: var(--nav-bg1); 
+  background: var(--bg-elevated); 
   overflow-x: auto;
 }
 
@@ -154,26 +157,65 @@ body {
   align-items: center; 
   gap: 6px; 
   padding: 12px 14px;
-  font-size: 0.8rem; 
+  font-size: 14px; 
   font-weight: 500; 
-  color: var(--info1); 
+  color: var(--text-2); 
   text-decoration: none;
-  border-bottom: 2px solid transparent; 
+  border-bottom: 3px solid transparent; 
   white-space: nowrap;
 }
 .app-nav a:hover { 
-    color: var(--bg-card); 
-    background: var(--text-3);
+    color: var(--info1); 
+    /* background: var(--text-3); */
     /* border: 1px solid rgba(255,255,255,0.2);  */
     /* border-radius: var(--r-xl); */
     padding: 5px 8px;
 }
 
 .app-nav a.active { 
-  color: var(--bg-card); 
+  color: var(--info1); 
   font-weight: 500;
-  border-radius: var(--r-md);
-  padding: 5px 8px ;
-  border-bottom-color: var(--text-3);
-  background: var(--info1);
+  /* border-radius: var(--r-md); */
+  /* padding: 5px 8px ; */
+  border-bottom-color: var(--info1);
+  /* background: var(--info1); */
 }
+
+.logout-btn {
+  background: none; 
+  border: 1px solid rgba(255,255,255,0.2); 
+  color: #fff; 
+  font-size: 0.75rem;
+  cursor: pointer; 
+  font-family: var(--font); 
+  padding: 6px 10px; 
+  border-radius: var(--r-sm);
+}
+.logout-btn:hover { background: rgba(239,68,68,0.3); }
+
+
+
+/* ── BADGE BUTTON (Logout) ── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+.badge--message-sent {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.badge--message-sent:hover {
+  background: rgba(239,68,68,0.3);
+  border-color: rgba(239,68,68,0.4);
+}
+.badge-icon { display: flex; align-items: center; }
