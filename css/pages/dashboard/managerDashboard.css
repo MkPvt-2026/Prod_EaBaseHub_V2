@@ -30,12 +30,12 @@
 }
 
 /* ── BASE ── */
-* { box-sizing: border-box; }
+/* * { box-sizing: border-box; } */
 body { 
   background: var(--primary); 
   color: var(--text-muted); 
   font-family: 'Kanit', sans-serif; 
-  min-height: 100vh; 
+  /* min-height: 100vh;  */
   -webkit-font-smoothing: antialiased;
 }
 

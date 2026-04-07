@@ -1,5 +1,5 @@
 // =====================================================
-// formClaim.js (Tablet-Optimized + Improved Loading)
+// formClaim.js (Updated - Better Icons + Custom "อื่นๆ")
 // =====================================================
 import { sendLineNotify } from "/js/services/lineNotify.js";
 
@@ -155,16 +155,140 @@ function showFatalError(msg) {
 }
 
 // =====================================================
+// 🛍️ ICON MAP - อัปเดตให้ตรงกับชื่อหมวดจริง + Icon สวยขึ้น
+// =====================================================
+const CATEGORY_ICON_MAP = {
+  // === ถุง ===
+  "ถุงอเนกประสงค์":    { icon: "shopping_bag",    color: "#f59e0b" },
+  "ถุง":               { icon: "shopping_bag",    color: "#f59e0b" },
+  "ถุงขยะ":            { icon: "delete",          color: "#6b7280" },
+  "ถุงเพาะชำ":         { icon: "potted_plant",    color: "#22c55e" },
+  
+  // === ท่อ ===
+  "ท่อ PE":            { icon: "plumbing",        color: "#3b82f6" },
+  "ท่อพีอี":           { icon: "plumbing",        color: "#3b82f6" },
+  
+  // === ตาข่าย ===
+  "ตาข่ายกรองแสง":     { icon: "grid_on",         color: "#8b5cf6" },
+  
+  // === พลาสติก ===
+  "พลาสติก PE":        { icon: "layers",          color: "#0d9488" },
+  "พลาสติกโรงเรือน":   { icon: "home",            color: "#0d9488" },
+  "พลาสติกปูบ่อ":      { icon: "water",           color: "#06b6d4" },
+  "พลาสติกคลุมดิน":    { icon: "grass",           color: "#84cc16" },
+  
+  // === เทป ===
+  "เทปน้ำพุ่ง":        { icon: "water_drop",      color: "#0ea5e9" },
+  
+  // === อื่นๆ ===
+  "สินค้า ซื้อมา-ขายไป": { icon: "inventory_2",   color: "#ec4899" },
+  "อื่นๆ":             { icon: "edit_note",       color: "#9ca3af", isCustom: true },
+};
+
+// Default icon สำหรับหมวดที่ไม่มีใน map
+const DEFAULT_ICON = { icon: "category", color: "#6b7280" };
+
+// =====================================================
 // 🛍️ OPEN PRODUCT MODAL
 // =====================================================
-window.openProductModal = async function (categoryId) {
+window.openProductModal = async function (categoryId, categoryName) {
+  // ถ้าเป็นหมวด "อื่นๆ" ให้เปิด input พิมพ์เอง
+  const iconInfo = CATEGORY_ICON_MAP[categoryName];
+  if (iconInfo?.isCustom) {
+    openCustomProductInput();
+    return;
+  }
+
   const modal = document.getElementById("productModal");
   if (!modal) return;
   modal.style.display = "flex";
   modal._currentCategoryId = categoryId;
+  modal._currentCategoryName = categoryName;
   modal._readyToClose = false;
   setTimeout(() => { modal._readyToClose = true; }, 150);
   await showProductList(categoryId);
+};
+
+// =====================================================
+// ✏️ CUSTOM PRODUCT INPUT (สำหรับหมวด "อื่นๆ")
+// =====================================================
+function openCustomProductInput() {
+  const modal = document.getElementById("productModal");
+  if (!modal) return;
+  
+  modal.style.display = "flex";
+  modal._readyToClose = false;
+  setTimeout(() => { modal._readyToClose = true; }, 150);
+
+  const modalBody = document.getElementById("modalBody");
+  modalBody.innerHTML = `
+    <div class="custom-product-container">
+      <p class="modal-step-label">✏️ กรอกชื่อสินค้าเอง</p>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">
+        สำหรับสินค้าที่ไม่อยู่ในหมวดหมู่อื่น
+      </p>
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="customProductName">ชื่อสินค้า <span style="color:#ef4444">*</span></label>
+        <input 
+          type="text" 
+          id="customProductName" 
+          placeholder="พิมพ์ชื่อสินค้าที่ต้องการเคลม..."
+          style="font-size: 16px;"
+          autofocus
+        >
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="customProductSpec">รายละเอียด/สเปค (ถ้ามี)</label>
+        <input 
+          type="text" 
+          id="customProductSpec" 
+          placeholder="เช่น ขนาด, สี, รุ่น..."
+        >
+      </div>
+      
+      <button class="modal-confirm-btn" onclick="confirmCustomProduct()">
+        ✅ ยืนยันเลือกสินค้านี้
+      </button>
+    </div>
+  `;
+
+  // Focus input
+  setTimeout(() => {
+    document.getElementById("customProductName")?.focus();
+  }, 100);
+
+  // Enter key to confirm
+  const nameInput = document.getElementById("customProductName");
+  nameInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      confirmCustomProduct();
+    }
+  });
+}
+
+window.confirmCustomProduct = function() {
+  const nameInput = document.getElementById("customProductName");
+  const specInput = document.getElementById("customProductSpec");
+  
+  const productName = nameInput?.value?.trim();
+  const productSpec = specInput?.value?.trim();
+  
+  if (!productName) {
+    showToast("กรุณากรอกชื่อสินค้า", "warning");
+    nameInput?.focus();
+    return;
+  }
+  
+  // รวมชื่อ + สเปค
+  const fullProductName = productSpec 
+    ? `${productName} (${productSpec})`
+    : productName;
+  
+  document.getElementById("product").value = fullProductName;
+  closeProductModal();
+  showToast(`เลือกสินค้า: ${fullProductName}`);
 };
 
 // =====================================================
@@ -210,7 +334,6 @@ async function showProductList(categoryId) {
 
 // =====================================================
 // 📦 STEP 2: แสดง Attributes
-// FIX: filter ด้วย product_id แทน category_id
 // =====================================================
 async function showAttributeSelectors(productId, productName) {
   const modalBody = document.getElementById("modalBody");
@@ -222,9 +345,6 @@ async function showAttributeSelectors(productId, productName) {
   modal._selectedAttrs      = {};
 
   try {
-    // FIX: ใช้ product_id แทน category_id
-    // เดิม: .eq("category_id", categoryId)  ← ดึงมาทุก product ในหมวด ปนกัน
-    // ใหม่: .eq("product_id", productId)    ← ดึงเฉพาะ product ที่เลือก
     const { data: attrs, error: attrErr } = await supabaseClient
       .from("attributes")
       .select("id, name, input_type, order_no")
@@ -752,6 +872,7 @@ async function logout() {
 
 // =====================================================
 // 🛍️ LOAD PRODUCT GRID (หมวดสินค้าหน้าหลัก)
+// พร้อม Icon สีสันและรองรับ "อื่นๆ" พิมพ์เอง
 // =====================================================
 async function loadProductGrid() {
   const grid = document.querySelector(".product-grid");
@@ -765,29 +886,31 @@ async function loadProductGrid() {
 
     if (error) throw error;
 
-    const iconMap = {
-      "ท่อพีอี":         "plumbing",
-      "ตาข่ายกรองแสง":   "grid_on",
-      "ถุงเพาะชำ":       "potted_plant",
-      "ถุงอเนกประสงค์":  "shopping_bag",
-      "ถุงขยะ":          "delete",
-      "พลาสติกโรงเรือน": "home",
-      "พลาสติกปูบ่อ":    "water",
-      "พลาสติกคลุมดิน":  "grass",
-      "เทปน้ำพุ่ง":      "water_drop",
-    };
-
     grid.innerHTML = "";
+    
     data.forEach((cat) => {
-      const icon = iconMap[cat.name] || "category";
+      // ดึง icon และ color จาก map
+      const iconInfo = CATEGORY_ICON_MAP[cat.name] || DEFAULT_ICON;
+      const { icon, color, isCustom } = iconInfo;
+
       const item = document.createElement("div");
       item.className = "product-item";
+      item.dataset.categoryId = cat.id;
+      item.dataset.categoryName = cat.name;
+      
+      // ถ้าเป็น "อื่นๆ" ให้มี style พิเศษ
+      if (isCustom) {
+        item.classList.add("product-item-custom");
+      }
+
       item.innerHTML = `
-        <div class="product-icon">
-          <span class="material-symbols-outlined">${icon}</span>
+        <div class="product-icon" style="color: ${color}">
+          <span class="material-symbols-outlined" style="color: ${color}">${icon}</span>
         </div>
-        ${cat.name}`;
-      item.addEventListener("click", () => openProductModal(cat.id));
+        <span class="product-name">${cat.name}</span>
+      `;
+      
+      item.addEventListener("click", () => openProductModal(cat.id, cat.name));
       grid.appendChild(item);
     });
 
@@ -798,4 +921,4 @@ async function loadProductGrid() {
   }
 }
 
-console.log("✅ formClaim.js (tablet-optimized) loaded");
+console.log("✅ formClaim.js (Updated with better icons + custom product) loaded");
