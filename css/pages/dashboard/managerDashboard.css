@@ -552,9 +552,9 @@
   transition: background 0.2s;
 }
 
-.claim-stat:hover {
+/* .claim-stat:hover {
   background: rgba(255, 255, 255, 0.18);
-}
+} */
 
 .claim-stat-value {
   font-size: 2rem;
