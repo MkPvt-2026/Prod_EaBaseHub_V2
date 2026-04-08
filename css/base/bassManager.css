@@ -1,0 +1,302 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap');  */
+
+
+:root {
+  --bg:           #f8fafc;
+  --bg-card:      #ffffff;
+  --bg-elevated:  #f1f5f9;
+  --border:       #e5e7eb;
+  --border-lit:   #d1d5db;
+  --accent:       #10b981;
+  --accent-light: #d1fae5;
+  --accent-dark:  #059669;
+  --pass:         #10b981;
+  --pass-bg:      rgba(16,185,129,0.08);
+  --pass-border:  rgba(16,185,129,0.25);
+  --fail:         #ef4444;
+  --fail-bg:      rgba(239,68,68,0.08);
+  --fail-border:  rgba(239,68,68,0.25);
+  --warn:         #f59e0b;
+  --warn-bg:      rgba(245,158,11,0.08);
+  --warn-border:  rgba(245,158,11,0.25);
+  --info:         #3b82f6;
+  --info1:        #1d4ed8;
+  --info-bg:      rgba(59,130,246,0.08);
+  --text-1:       #111827;
+  --text-2:       #6b7280;
+  --text-3:       #9ca3af;
+  --text-4:       #064e3b;
+  --text-5:       #059669;
+ 
+  --r-sm: 6px; 
+  --r-md: 10px; 
+  --r-lg: 14px; 
+  --r-xl: 20px; 
+  --r-full: 9999px;
+  
+  /* Header & Nav Dark Green */
+  --header-bg:    #064e3b;
+  --nav-bg:       #065f46;
+  --header-bg1:   linear-gradient(135deg, #149684 0%, #3db8b1 100%);
+  --nav-bg1:      #e5e7eb;
+}
+
+
+*,
+*::before,
+*::after{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+/* ลบขีดเส้นใต้และให้สีเหมือนกับ text ปกติ */
+a { 
+  text-decoration: none; 
+  color: inherit; 
+}
+
+body{
+  font-family:'Kanit',sans-serif;  
+  /* background:var(--bg-base); */
+}
+
+/* ================= STICKY HEADER ================= */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  background: var(--header-bg1);
+  padding: 10px 24px;
+  height: 64px;  
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(92,189,154,0.24);
+}
+
+.app-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 400;
+  font-size: 14px;
+  flex-direction: row;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.app-header .logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.logo h2 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.logo-circle{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.logo-circle img{
+  width:65%;
+}
+
+.header-divider { 
+    width: 1px; 
+    height: 20px; 
+    background: rgba(255,255,255,0.2); 
+}
+
+.header-title { 
+    font-size: 0.88rem; 
+    font-weight: 600; 
+    color: #fff; 
+}
+
+.header-sub   { 
+    font-size: 0.72rem; 
+    color: rgba(255,255,255,0.7); 
+    margin-top: 1px; 
+}
+
+
+/* ================= USER ================= */
+
+.user-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color: #fff;
+}
+
+.user-avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:var(--bg-card);
+  color: var(--mint-800);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 2px 6px rgba(92,189,154,0.20);
+}
+
+.logout-btn{
+  padding:6px 12px;
+  border:none;
+  border-radius:18px;
+  background:#fff;
+  color:var(--primary-dark);
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+}
+
+.logout-btn:hover{
+  background:#f0f9f8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+}
+
+/* ================= NAV ================= */
+
+.app-nav {
+  display: flex; 
+  align-items: center; 
+  color: var(--text-4);
+  font-size: 14px;
+  gap: 2px; 
+  padding: 0 28px;
+  background: var(--bg-elevated); 
+  overflow-x: auto;
+}
+
+.app-nav a {
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px; 
+  padding: 12px 14px;
+  font-size: 14px; 
+  font-weight: 500; 
+  color: var(--text-2); 
+  text-decoration: none;
+  border-bottom: 3px solid transparent; 
+  white-space: nowrap;
+}
+.app-nav a:hover { 
+    color: var(--text-5); 
+    /* background: var(--text-3); */
+    /* border: 1px solid rgba(255,255,255,0.2);  */
+    /* border-radius: var(--r-xl); */
+    padding: 5px 8px;
+}
+
+.app-nav a.active { 
+  color: var(--text-5); 
+  font-weight: 500;
+  /* border-radius: var(--r-md); */
+  /* padding: 5px 8px ; */
+  border-bottom-color: var(--text-5);
+  background: rgba(198, 253, 244, 0.4);
+}
+
+.logout-btn {
+  background: none; 
+  border: 1px solid rgba(255,255,255,0.2); 
+  color: #fff; 
+  font-size: 0.75rem;
+  cursor: pointer; 
+  font-family: var(--font); 
+  padding: 6px 10px; 
+  border-radius: var(--r-sm);
+}
+
+.logout-btn:hover { 
+  background: rgba(239,68,68,0.3); 
+}
+
+
+
+/* ── BADGE BUTTON (Logout) ── */
+
+.badge {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  align-items: center;
+}
+
+.badge--message-sent {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge--message-sent:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.829);
+  color:  #ffffff;
+}
+
+.badge-icon { 
+  display: flex; 
+  align-items: center; 
+}
+
+.logout-btn {
+  background: none; 
+  border: 1px solid rgba(255,255,255,0.2); 
+  color: #fff; 
+  font-size: 0.75rem;
+  cursor: pointer;   
+  padding: 6px 10px; 
+  border-radius: var(--r-sm);
+}
+
+.logout-btn:hover { 
+    background: rgba(239,68,68,0.3); 
+}
+
+
+/* ================= CONTAINER ================= */
+
+.container{
+  max-width:960px;
+  margin:auto;
+  padding:20px;
+}
+
+
+
+
+
+
+
+
+

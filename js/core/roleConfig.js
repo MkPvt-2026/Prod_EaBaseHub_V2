@@ -22,6 +22,7 @@ const ROLE_CONFIG = {
       '/pages/admin/adminShops.html',
       '/pages/admin/adminUsers.html',
       '/pages/admin/AddProductSpec.html',
+      '/pages/manager/index.html',
       '/pages/manager/managerDashboard.html',
       '/pages/manager/reportManager.html',
       '/pages/qc/qcDashboard.html',
@@ -54,6 +55,7 @@ const ROLE_CONFIG = {
       '/pages/dashboard/managerDashboard.html',
       '/pages/reports/reportTracker.html',
       '/pages/reports/reportManager.html',
+      '/index',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },

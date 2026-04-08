@@ -96,10 +96,12 @@
       <!-- ===================================================== -->
       <!-- PRODUCT PICKER SECTION                                 -->
       <!-- ===================================================== -->
+      
       <div class="form-section-divider">
         <span>📦 สินค้าที่จำหน่ายกับร้านนี้</span>
       </div>
-
+      
+      
       <!-- Picker: เลือกสินค้า 1 ชุด -->
       <div class="product-picker">
         <div class="form-grid">
@@ -123,27 +125,55 @@
         <button type="button" class="btn-add-product" id="addProductBtn">
           ➕ เพิ่มสินค้า
         </button>
+       
+
+       
       </div>
 
       <!-- รายการสินค้าที่เลือกแล้ว -->
-      <div class="selected-products-section">
-        <div class="selected-products-header">
-          <span>สินค้าที่ได้ขายกับร้านนี้</span>
-          <span class="selected-count" id="selectedProductCount">0</span>
-        </div>
-        <div id="selectedProductList" class="selected-product-list">
-          <div class="empty-product-list">ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
-        </div>
-      </div>
+      <!-- <div class="selected-products-section"> -->
 
+        <div class="product-status-card">
+  
+  <div class="status-left">
+    <span class="status-title">สินค้า</span>
+    <div class="status-count">
+      <span id="selectedProductCount">0</span>
+      <small>รายการ</small>
+    </div>
+  </div>
 
-      <div class="form-section-divider">
-        <span>>> สินค้าที่ร้านต้องการซื้อ <<</span>
-      </div>
+  <div class="status-right">
+    <label class="switch">
+      <input type="checkbox" id="noProductFlag">
+      <span class="slider"></span>
+    </label>
 
-      <div class="form-group full">
-          <label>สินค้าที่ร้านนี้ต้องการซื้อ</label>
-          <textarea id="productInterest" rows="1" placeholder="รายละเอียด / สินค้าที่ร้านค้าแนะนำ"></textarea>          
+    <span class="toggle-label">
+      ร้านนี้ยังไม่มีสินค้า
+    </span>
+  </div>
+
+</div>
+  
+  
+  
+  
+  <div>
+    <div id="selectedProductList" class="selected-product-list">
+      <div class="empty-product-list">ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
+    </div>
+    
+  </div>
+  
+  
+  <div class="form-section-divider">
+    <span>** สินค้าที่ร้านแนะนำ(ต้องการซื้อ) **</span>
+  </div>
+  
+  <div class="form-group full">
+    <label>ร้านค้าแนะนำสินค้า</label>
+    <textarea id="productInterest" rows="1" placeholder="สินค้าที่ร้านค้าแนะนำ / เหตุผล"></textarea>          
         </div>
 
       <!-- ปุ่ม Save Draft -->
@@ -157,7 +187,7 @@
       <p class="form-hint">
         💡 <strong>Save Draft</strong> = เก็บในเครื่องนี้ ยังไม่ส่งให้ผู้บริหาร
       </p>
-    </div>
+    <!-- </div> -->
 
 
     <!-- ===================================================== -->

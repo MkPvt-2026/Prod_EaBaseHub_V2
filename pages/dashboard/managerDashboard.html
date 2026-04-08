@@ -2,479 +2,389 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>EABaseHub | Manager Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Dashboard | EABaseHub</title>
 
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/base/layout.css">
-  <link rel="stylesheet" href="/css/components/badgeButtom.css">
+  <!-- Fonts / Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/base/bassManager.css">
   <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
-  
-  <style>
-    /* ── Date Range Picker Styles ── */
-    .date-range-section {
-      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
-      border: 1px solid rgba(0,212,170,0.2);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-    }
-    
-    .date-range-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    
-    .date-range-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-primary, #e8f0fe);
-    }
-    
-    .date-range-title .icon {
-      font-size: 1.25rem;
-    }
-    
-    .date-range-label {
-      background: rgba(0,212,170,0.15);
-      color: var(--accent, #00d4aa);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-    
-    .date-range-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    
-    .date-input-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0,0,0,0.2);
-      padding: 6px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .date-input-group label {
-      font-size: 0.75rem;
-      color: var(--text-muted, #7a9cc0);
-      white-space: nowrap;
-    }
-    
-    .date-input-group input[type="date"] {
-      background: transparent;
-      border: none;
-      color: var(--text-primary, #e8f0fe);
-      font-family: 'Kanit', sans-serif;
-      font-size: 0.9rem;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    
-    .date-input-group input[type="date"]:focus {
-      outline: none;
-      background: rgba(0,212,170,0.1);
-    }
-    
-    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.7);
-      cursor: pointer;
-    }
-    
-    .quick-range-btns {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-    
-    .quick-range-btn {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--text-muted, #7a9cc0);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      font-family: 'Kanit', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .quick-range-btn:hover {
-      background: rgba(0,212,170,0.1);
-      border-color: rgba(0,212,170,0.3);
-      color: var(--text-primary, #e8f0fe);
-    }
-    
-    .quick-range-btn.active {
-      background: rgba(0,212,170,0.2);
-      border-color: var(--accent, #00d4aa);
-      color: var(--accent, #00d4aa);
-      font-weight: 500;
-    }
-    
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      .date-range-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .date-range-controls {
-        width: 100%;
-      }
-      
-      .date-input-group {
-        flex: 1;
-        min-width: 140px;
-      }
-      
-      .quick-range-btns {
-        width: 100%;
-        justify-content: flex-start;
-      }
-    }
-  </style>
 </head>
+
 <body>
 
-  <!-- ── HEADER ── -->
+  <!-- ═══════════════ HEADER ═══════════════ -->
   <header class="app-header">
     <div class="logo">
-      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
       <h2>EABaseHub</h2>
     </div>
+
     <div class="user-box">
       <div class="user-avatar" id="userAvatar">👤</div>
       <div class="user-info">
         <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
-      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      <div class="group">
+        <span class="badge badge--message-sent" onclick="logout()">
+          <span class="badge-icon">
+            <span class="material-symbols-outlined" style="font-size:17px">logout</span>
+          </span>
+          ออกจากระบบ
+        </span>
+      </div>
     </div>
   </header>
 
-  <!-- ── NAV ── -->
-  <nav class="app-nav">
-    <a href="/pages/dashboard/managerDashboard.html" class="active">หน้าหลัก</a>
-    <a href="/pages/reports/reportTracker.html">รายงานเยี่ยมร้านค้า</a>
-    <a href="/commingSoon.html">นำเข้าข้อมูล</a>
-  </nav>
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <!-- <nav class="app-nav">
+    <a href="/pages/admin/adminDashboard.html" class="active">หน้าหลัก</a>
+      <a href="/pages/reports/reportTracker.html">รายงานเข้าร้านค้า</a>
+      <a href="/pages/admin/Adminannouncements.html">จัดการประชาสัมพันธ์</a>
+  </nav> -->
 
-  <main>
-  <div class="container">
+  <div id="navContainer"></div>
 
-    <!-- ══════════════════════════════════════════
-         PAGE HEADER
-         ══════════════════════════════════════════ -->
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="page-wrapper">
+
+    <!-- PAGE HEADER -->
     <div class="page-header">
-      <div class="page-header-text">
-        <h1>📊 Sales <span class="accent">Intelligence</span></h1>
-        <p>ภาพรวมยอดขาย กำไร และประสิทธิภาพทีม</p>
-      </div>
+      <h1>📊 Manager Dashboard</h1>
+      <button class="btn-refresh" onclick="NotificationCenter.refresh()">
+        <span class="material-symbols-outlined">refresh</span>
+        รีเฟรช
+      </button>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         DATE RANGE PICKER — เลือกช่วงวันที่
-         ══════════════════════════════════════════ -->
-    <div class="date-range-section">
-      <div class="date-range-header">
-        <div class="date-range-title">
-          <span class="icon">📅</span>
-          <span>ช่วงเวลา</span>
-          <span class="date-range-label" id="dateRangeLabel">—</span>
+    <!-- ═══════════════ NOTIFICATION CENTER ═══════════════ -->
+    <section class="notification-center" id="notificationCenter">
+      
+      <!-- ─── ALERT BARS ─── -->
+      <div class="content-card">
+        <div class="alert-bars" id="alertBars">
+          <div class="alert-bar" style="opacity: 0.6;">
+            <span class="alert-icon">⏳</span>
+            <div class="alert-content">
+              <p class="alert-title">กำลังโหลดการแจ้งเตือน...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SUMMARY CARDS ─── -->
+      <div class="content-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">monitoring</span>
+            สรุปภาพรวม
+          </h2>
+          <span class="section-date" id="summaryDate">—</span>
         </div>
         
-        <div class="date-range-controls">
-          <div class="date-input-group">
-            <label>เริ่ม</label>
-            <input type="date" id="dateStart">
+        <div class="notif-cards-grid" id="summaryCards">
+          <div class="notif-card" onclick="NotificationCenter.goToUnreadReports()">
+            <div class="notif-card-header">
+              <span class="notif-label">รายงานยังไม่อ่าน</span>
+              <span class="notif-badge badge-loading" id="badgeUnread">—</span>
+            </div>
+            <div class="notif-value" id="valueUnread">—</div>
+            <div class="notif-sub" id="subUnread">กำลังโหลด...</div>
+            <div class="notif-progress">
+              <div class="progress-bar" id="progressUnread" style="width: 0%"></div>
+            </div>
           </div>
-          <div class="date-input-group">
-            <label>สิ้นสุด</label>
-            <input type="date" id="dateEnd">
+
+          <div class="notif-card" onclick="NotificationCenter.viewAllInactiveSales()">
+            <div class="notif-card-header">
+              <span class="notif-label">เซลล์ส่งรายงาน</span>
+              <span class="notif-badge badge-loading" id="badgeSales">—</span>
+            </div>
+            <div class="notif-value" id="valueSales">—</div>
+            <div class="notif-sub" id="subSales">กำลังโหลด...</div>
+            <div class="notif-progress">
+              <div class="progress-bar progress-success" id="progressSales" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="notif-card">
+            <div class="notif-card-header">
+              <span class="notif-label">ร้านค้าเข้าเยี่ยม</span>
+              <span class="notif-badge badge-info" id="badgeShops">สัปดาห์นี้</span>
+            </div>
+            <div class="notif-value" id="valueShops">—</div>
+            <div class="notif-sub" id="subShops">กำลังโหลด...</div>
+            <div class="notif-progress">
+              <div class="progress-bar progress-info" id="progressShops" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- <div class="notif-card">
+            <div class="notif-card-header">
+              <span class="notif-label">KPI ทีม</span>
+              <span class="notif-badge badge-loading" id="badgeKPI">—</span>
+            </div>
+            <div class="notif-value" id="valueKPI">—</div>
+            <div class="notif-sub" id="subKPI">กำลังโหลด...</div>
+            <div class="notif-progress">
+              <div class="progress-bar" id="progressKPI" style="width: 0%"></div>
+            </div>
+          </div> -->
+        </div>
+      </div>
+
+       <!-- ─── CLAIMS SUMMARY ─── -->
+      <div class="content-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">inventory_2</span>
+            สถานะเคลมเดือนนี้
+          </h2>
+          <!-- <button class="btn-link" onclick="NotificationCenter.goToClaimsPage()">
+            จัดการเคลม →
+          </button> -->
+        </div>
+        
+        <div class="claims-summary-card" id="claimsSummary">
+          <div class="claims-header">
+            <span class="claims-title" id="claimsMonthTitle">เคลม —</span>
+            <span class="claims-updated" id="claimsUpdated">อัพเดท: —</span>
+          </div>
+          <div class="claims-stats-grid">
+            <div class="claim-stat">
+              <div class="claim-stat-value" id="claimTotal">—</div>
+              <div class="claim-stat-label">เคลมทั้งหมด</div>
+            </div>
+            <div class="claim-stat pending">
+              <div class="claim-stat-value" id="claimPending">—</div>
+              <div class="claim-stat-label">รอดำเนินการ</div>
+            </div>
+            <div class="claim-stat approved">
+              <div class="claim-stat-value" id="claimApproved">—</div>
+              <div class="claim-stat-label">อนุมัติแล้ว</div>
+            </div>
+            <div class="claim-stat rejected">
+              <div class="claim-stat-value" id="claimRejected">—</div>
+              <div class="claim-stat-label">ไม่อนุมัติ</div>
+            </div>
           </div>
         </div>
       </div>
-      
-      <div class="quick-range-btns">
-        <button class="quick-range-btn" data-range="today">วันนี้</button>
-        <button class="quick-range-btn" data-range="7days">7 วัน</button>
-        <button class="quick-range-btn active" data-range="30days">30 วัน</button>
-        <button class="quick-range-btn" data-range="thisWeek">สัปดาห์นี้</button>
-        <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
-        <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
-        <button class="quick-range-btn" data-range="thisQuarter">ไตรมาสนี้</button>
-        <button class="quick-range-btn" data-range="thisYear">ปีนี้</button>
-      </div>
-    </div>
 
-    <!-- ══════════════════════════════════════════
-         INSIGHT PILLS — ข้อมูลสำคัญแบบสรุป
-         ══════════════════════════════════════════ -->
-    <div class="insight-row">
-      <div class="insight-pill">
-        <span class="pill-icon">🏆</span>
-        <span class="pill-val" id="topSale">—</span>
-        <span class="pill-label">เซลล์ยอดสูงสุด</span>
-      </div>
-      <div class="insight-pill">
-        <span class="pill-icon">📦</span>
-        <span class="pill-val" id="topProduct">—</span>
-        <span class="pill-label">สินค้าขายดีอันดับ 1</span>
-      </div>
-      <div class="insight-pill">
-        <span class="pill-icon">🏪</span>
-        <span class="pill-val" id="topCustomer">—</span>
-        <span class="pill-label">ลูกค้ายอดสูงสุด</span>
-      </div>
-      <div class="insight-pill">
-        <span class="pill-icon">📈</span>
-        <span class="pill-val" id="growthRate">—</span>
-        <span class="pill-label">เติบโตเทียบช่วงก่อน</span>
-      </div>
-      <div class="insight-pill">
-        <span class="pill-icon">💎</span>
-        <span class="pill-val" id="avgProfitPct">—</span>
-        <span class="pill-label">อัตรากำไรเฉลี่ย</span>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════
-         KPI CARDS — ตัวเลขหลัก
-         ══════════════════════════════════════════ -->
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-green">
-        <div class="kpi-icon">💰</div>
-        <div class="kpi-body">
-          <div class="kpi-number" id="kpiAmount">—</div>
-          <div class="kpi-label">ยอดขายรวม (฿)</div>
-          <div class="kpi-change" id="kpiAmountChange">— vs ช่วงก่อน</div>
+      <!-- ─── SALES ALERT LIST ─── -->
+      <div class="content-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">warning</span>
+            เซลล์ที่ต้องติดตาม
+          </h2>
+          <!-- <button class="btn-link" onclick="NotificationCenter.viewAllInactiveSales()">
+            ดูทั้งหมด →
+          </button> -->
         </div>
-      </div>
-      <div class="kpi-card kpi-orange">
-        <div class="kpi-icon">🎯</div>
-        <div class="kpi-body">
-          <div class="kpi-number" id="kpiTargetPct">—</div>
-          <div class="kpi-label">% บรรลุเป้าหมาย</div>
-          <div class="kpi-change" id="kpiTargetSub">เป้า: —</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-icon">💎</div>
-        <div class="kpi-body">
-          <div class="kpi-number" id="kpiProfit">—</div>
-          <div class="kpi-label">กำไรรวม (฿)</div>
-          <div class="kpi-change" id="kpiProfitChange">— vs ช่วงก่อน</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-purple">
-        <div class="kpi-icon">👥</div>
-        <div class="kpi-body">
-          <div class="kpi-number" id="kpiSalesCount">—</div>
-          <div class="kpi-label">เซลล์ที่มียอดขาย</div>
-          <div class="kpi-change" id="kpiSalesSub">จากทั้งหมด — คน</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-pink">
-        <div class="kpi-icon">🏪</div>
-        <div class="kpi-body">
-          <div class="kpi-number" id="kpiCustomers">—</div>
-          <div class="kpi-label">ลูกค้า / ร้านค้า</div>
-          <div class="kpi-change" id="kpiCustomersSub">—</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-green">
-        <div class="kpi-icon">📦</div>
-        <div class="kpi-body">
-          <div class="kpi-number" id="kpiProducts">—</div>
-          <div class="kpi-label">จำนวนสินค้าที่ขายได้</div>
-          <div class="kpi-change" id="kpiQtyTotal">รวม — ชิ้น</div>
-        </div>
-      </div>
-    </div>
-
-
-     <!-- ══════════════════════════════════════════
-         ROW 4: ลูกค้า (doughnut) + สินค้า Slow-Moving
-         ══════════════════════════════════════════ -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🏪 ยอดขายแยกตามลูกค้า (Top 8)</div>
-        </div>
-        <div class="chart-wrap">
-          <canvas id="chartCustomer"></canvas>
+        
+        <div class="sales-alert-list" id="salesAlertList">
+          <div class="sales-alert-item" style="opacity: 0.6;">
+            <div class="sales-avatar">...</div>
+            <div class="sales-info">
+              <div class="sales-name">กำลังโหลด...</div>
+              <div class="sales-status">—</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🐌 สินค้า Slow-Moving</div>
-          <span class="card-badge">ขายน้อยที่สุด</span>
-        </div>
-        <div id="slowMovingList">
-          <div class="loading-text">กำลังโหลด...</div>
-        </div>
-      </div>
-    </div>
+     
 
+      <!-- ─── QUICK ACTIONS ─── -->
+      <!-- <div class="quick-actions" id="quickActions">
+        <button class="quick-btn" onclick="NotificationCenter.goToUnreadReports()">
+          <span class="material-symbols-outlined">mark_email_unread</span>
+          ดูรายงานใหม่
+        </button>
+        <button class="quick-btn" onclick="NotificationCenter.goToPendingClaims()">
+          <span class="material-symbols-outlined">pending_actions</span>
+          เคลมรอดำเนินการ
+        </button>
+        <button class="quick-btn" onclick="NotificationCenter.contactInactiveSales()">
+          <span class="material-symbols-outlined">contact_phone</span>
+          ติดต่อเซลล์
+        </button>
+        <button class="quick-btn" onclick="NotificationCenter.exportWeeklyReport()">
+          <span class="material-symbols-outlined">download</span>
+          สรุปรายสัปดาห์
+        </button>
+      </div> -->
 
-    <!-- ══════════════════════════════════════════
-         ROW 3: ยอดขายเซลล์ (bar) + ยอดรวมสินค้า (bar)
-         ══════════════════════════════════════════ -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📊 ยอดขายแยกตามเซลล์</div>
-        </div>
-        <div class="chart-wrap chart-tall">
-          <canvas id="chartSales"></canvas>
-        </div>
-      </div>
+    </section>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📦 ยอดรวมแยกตามสินค้า</div>
-        </div>
-        <div class="chart-wrap chart-tall">
-          <canvas id="chartProduct"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════
-         ROW 1: เป้าหมาย + แนวโน้มยอดขาย
-         ══════════════════════════════════════════ -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🎯 เป้าหมาย vs ยอดจริง (รายเซลล์)</div>
-          <span class="card-badge" id="targetBadge">—</span>
-        </div>
-        <div id="targetSection">
-          <div class="loading-text">กำลังโหลด...</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📈 แนวโน้มยอดขาย</div>
-          <span class="card-badge" id="trendBadge">— วัน</span>
-        </div>
-        <div class="chart-wrap">
-          <canvas id="chartWeekly"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════
-         ROW 2: Leaderboard + สินค้าขายดี + กำไรตามสินค้า
-         ══════════════════════════════════════════ -->
-    <div class="grid-3">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🏆 Leaderboard เซลล์</div>
-          <span class="card-badge">ยอดขาย</span>
-        </div>
-        <div id="leaderboard">
-          <div class="loading-text">กำลังโหลด...</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📦 สินค้าขายดี Top 8</div>
-          <span class="card-badge">จำนวน (ชิ้น)</span>
-        </div>
-        <div id="topProductsList">
-          <div class="loading-text">กำลังโหลด...</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">💎 กำไรสูงสุดตามสินค้า</div>
-          <span class="card-badge">Top 8</span>
-        </div>
-        <div id="topProfitProducts">
-          <div class="loading-text">กำลังโหลด...</div>
-        </div>
-      </div>
-    </div>
-
-    
-
-   
-    <!-- ══════════════════════════════════════════
-         ROW 5: กำไรแยกเซลล์ + Profit Margin Chart
-         ══════════════════════════════════════════ -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">💰 กำไรแยกตามเซลล์</div>
-        </div>
-        <div class="chart-wrap chart-tall">
-          <canvas id="chartProfitBySales"></canvas>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📉 อัตรากำไร (%) แยกตามเซลล์</div>
-        </div>
-        <div class="chart-wrap chart-tall">
-          <canvas id="chartMarginBySales"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════
-         HEATMAP — การเข้าเยี่ยมร้าน (reports)
-         ══════════════════════════════════════════ -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">🗓️ Heatmap การเข้าเยี่ยม (30 วัน)</div>
-        <span class="card-badge">Daily Activity</span>
-      </div>
-      <div class="heatmap-wrap" id="heatmapWrap">
-        <div class="loading-text">กำลังโหลด...</div>
-      </div>
-    </div>
-
-  </div>
   </main>
 
-  <div id="toast" class="toast"></div>
-  <footer class="footer">© 2026 EABaseHub | Sales Intelligence Dashboard</footer>
+  <!-- ═══════════════ MODAL ═══════════════ -->
+  <div id="mainModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">รายละเอียด</h3>
+        <button onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button onclick="closeModal()">ปิด</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- ═══════════════ SCRIPTS ═══════════════ -->
   <script src="/js/core/supabaseClient.js"></script>
-  <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/auth.js"></script>
-  <script src="/js/core/userService.js"></script>
-  <script src="/js/services/shopService.js"></script>
-  <script src="/js/services/categoryService.js"></script>
-  <script src="/js/services/reportService.js"></script>
-  <!-- ลบ Salesdashboard.js ออก เพื่อไม่ให้ซ้ำซ้อน -->
+  <script src="/js/services/managerNotification.js"></script>
   <script src="/js/pages/dashboard/managerDashboard.js"></script>
 
-  <script src="/js/core/splash.js"></script>
-  <script src="/js/core/loadingSplash.js"></script>
+
+
+
+  <script>
+    function openModal(title, content) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = content;
+      document.getElementById('mainModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+      document.getElementById('mainModal').style.display = 'none';
+    }
+    
+    document.getElementById('mainModal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) closeModal();
+    });
+ 
+
+  <!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+
+async function loadNav(role) {
+    const navFiles = {
+        admin: "/pages/components/nav-admin.html",
+        manager: "/pages/components/nav-manager.html"
+    };
+ 
+    const file = navFiles[role];
+ 
+    if (!file) {
+        console.warn("ไม่มี nav สำหรับ role:", role);
+        return;
+    }
+ 
+    console.log("LOAD NAV FILE =", file);
+ 
+    try {
+        const res = await fetch(file);
+ 
+        if (!res.ok) {
+            console.error("โหลด nav ไม่ได้:", file);
+            return;
+        }
+ 
+        const html = await res.text();
+        document.getElementById("navContainer").innerHTML = html;
+        setActiveMenu();
+    } catch (err) {
+        console.error("Error loading nav:", err);
+    }
+}
+ 
+function setActiveMenu() {
+    const links = document.querySelectorAll(".app-nav a");
+    const current = window.location.pathname;
+ 
+    links.forEach(link => {
+        if (link.getAttribute("href") === current) {
+            link.classList.add("active");
+        }
+    });
+}
+ 
+async function getUserRole(userId) {
+    // ✅ แก้จาก "users" เป็น "profiles"
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+ 
+    if (error) {
+        console.error("ดึง role ไม่ได้:", error.message);
+        return null;
+    }
+ 
+    console.log("PROFILE DATA =", data);
+    return data?.role || null;
+}
+ 
+// รอให้ supabaseClient พร้อมก่อน
+function waitForSupabaseClient(callback, maxAttempts = 50) {
+    let attempts = 0;
+    
+    const check = () => {
+        attempts++;
+        
+        if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+            console.log("✅ supabaseClient พร้อมแล้ว");
+            callback();
+        } else if (attempts < maxAttempts) {
+            setTimeout(check, 100);
+        } else {
+            console.error("❌ supabaseClient ไม่พร้อม หลังจากรอนานเกินไป");
+        }
+    };
+    
+    check();
+}
+ 
+async function initPage() {
+    try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+ 
+        console.log("USER =", user);
+ 
+        if (error || !user) {
+            console.error("ไม่พบผู้ใช้หรือไม่ได้ login");
+            return;
+        }
+ 
+        // อัพเดต UI แสดงชื่อผู้ใช้
+        const userName = user.user_metadata?.full_name || user.email || "ผู้ใช้";
+        document.getElementById("userName").textContent = userName;
+ 
+        // ดึง role จาก Supabase (ตาราง profiles)
+        const role = await getUserRole(user.id);
+ 
+        if (!role) {
+            console.error("ไม่พบ role ของผู้ใช้");
+            return;
+        }
+ 
+        console.log("✅ USER ROLE =", role);
+ 
+        // โหลด nav ตาม role
+        loadNav(role);
+ 
+    } catch (err) {
+        console.error("Error in initPage:", err);
+    }
+}
+ 
+document.addEventListener("DOMContentLoaded", () => {
+    waitForSupabaseClient(initPage);
+});
+</script>
+
 </body>
 </html>

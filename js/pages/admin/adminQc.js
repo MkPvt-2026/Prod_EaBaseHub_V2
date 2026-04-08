@@ -1,15 +1,14 @@
 // =====================================================
-// adminQC.js
+// adminQC.js (FIXED VERSION)
 // หน้า QC Dashboard — ตรวจสอบ อนุมัติ ปฏิเสธ Export
-// ต้องโหลดหลัง supabaseClient.js, userService.js, auth.js
 // =====================================================
 
 // =====================================================
-// STATE — เก็บข้อมูล global ของหน้า
+// STATE
 // =====================================================
-let allClaims      = [];   // ข้อมูลทั้งหมดจาก DB
-let filteredClaims = [];   // ข้อมูลหลัง filter
-let currentClaim   = null; // claim ที่กำลังดูใน modal
+let allClaims      = [];
+let filteredClaims = [];
+let currentClaim   = null;
 
 // =====================================================
 // 🛡️ ESCAPE HTML — ป้องกัน XSS
@@ -45,13 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!ready) { alert('ไม่สามารถเชื่อมต่อระบบได้'); return; }
     
     setupLogout();
-
     await protectPage(["admin", "adminQc", "adminqc"]);
-
-    // โหลดข้อมูล
     await loadClaims();
-
-    // Setup
     setupEventListeners();
 
   } catch (err) {
@@ -64,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 🎯 SETUP EVENT LISTENERS
 // =====================================================
 function setupEventListeners() {
-  // Search input — debounce 300ms
   const searchInput = document.getElementById('searchInput');
   if (searchInput) {
     let timer;
@@ -74,13 +67,11 @@ function setupEventListeners() {
     });
   }
 
-  // Filter dropdowns / date
   ['filterStatus', 'filterDateFrom', 'filterDateTo'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', applyFilters);
   });
 
-  // ปิด modal เมื่อคลิก overlay
   const modal = document.getElementById('qcModal');
   if (modal) {
     modal.addEventListener('click', e => {
@@ -97,8 +88,7 @@ function setupLogout() {
 }
 
 // =====================================================
-// 📋 LOAD CLAIMS จาก Supabase
-// ดึงเฉพาะ status = submitted, approved, rejected
+// 📋 LOAD CLAIMS
 // =====================================================
 async function loadClaims() {
   try {
@@ -130,35 +120,39 @@ async function loadClaims() {
 // 📊 UPDATE SUMMARY CARDS
 // =====================================================
 function updateSummaryCards() {
-  document.getElementById('sumTotal').textContent     = allClaims.length;
-  document.getElementById('sumPending').textContent   = allClaims.filter(c => c.status === 'submitted').length;
-  document.getElementById('sumApproved').textContent  = allClaims.filter(c => c.status === 'approved').length;
-  document.getElementById('sumRejected').textContent  = allClaims.filter(c => c.status === 'rejected').length;
+  const sumTotal = document.getElementById('sumTotal');
+  const sumPending = document.getElementById('sumPending');
+  const sumApproved = document.getElementById('sumApproved');
+  const sumRejected = document.getElementById('sumRejected');
+  
+  if (sumTotal) sumTotal.textContent = allClaims.length;
+  if (sumPending) sumPending.textContent = allClaims.filter(c => c.status === 'submitted').length;
+  if (sumApproved) sumApproved.textContent = allClaims.filter(c => c.status === 'approved').length;
+  if (sumRejected) sumRejected.textContent = allClaims.filter(c => c.status === 'rejected').length;
 }
 
 // =====================================================
 // 🔍 APPLY FILTERS
 // =====================================================
 function applyFilters() {
-  const search   = document.getElementById('searchInput').value.toLowerCase().trim();
-  const status   = document.getElementById('filterStatus').value;
-  const dateFrom = document.getElementById('filterDateFrom').value;
-  const dateTo   = document.getElementById('filterDateTo').value;
+  const searchEl = document.getElementById('searchInput');
+  const statusEl = document.getElementById('filterStatus');
+  const dateFromEl = document.getElementById('filterDateFrom');
+  const dateToEl = document.getElementById('filterDateTo');
+  
+  const search   = searchEl ? searchEl.value.toLowerCase().trim() : '';
+  const status   = statusEl ? statusEl.value : '';
+  const dateFrom = dateFromEl ? dateFromEl.value : '';
+  const dateTo   = dateToEl ? dateToEl.value : '';
 
   filteredClaims = allClaims.filter(c => {
-    // ค้นหา
     if (search) {
-      const text = `${c.product} ${c.customer} ${c.emp_name} ${c.area}`.toLowerCase();
+      const text = `${c.product || ''} ${c.customer || ''} ${c.emp_name || ''} ${c.area || ''}`.toLowerCase();
       if (!text.includes(search)) return false;
     }
-
-    // สถานะ
     if (status && c.status !== status) return false;
-
-    // วันที่
     if (dateFrom && c.claim_date < dateFrom) return false;
-    if (dateTo   && c.claim_date > dateTo)   return false;
-
+    if (dateTo && c.claim_date > dateTo) return false;
     return true;
   });
 
@@ -169,10 +163,15 @@ function applyFilters() {
 // ♻️ RESET FILTERS
 // =====================================================
 function resetFilters() {
-  document.getElementById('searchInput').value   = '';
-  document.getElementById('filterStatus').value  = '';
-  document.getElementById('filterDateFrom').value = '';
-  document.getElementById('filterDateTo').value   = '';
+  const searchEl = document.getElementById('searchInput');
+  const statusEl = document.getElementById('filterStatus');
+  const dateFromEl = document.getElementById('filterDateFrom');
+  const dateToEl = document.getElementById('filterDateTo');
+  
+  if (searchEl) searchEl.value = '';
+  if (statusEl) statusEl.value = '';
+  if (dateFromEl) dateFromEl.value = '';
+  if (dateToEl) dateToEl.value = '';
 
   filteredClaims = [...allClaims];
   renderTable(filteredClaims);
@@ -183,6 +182,7 @@ function resetFilters() {
 // =====================================================
 function renderTable(claims) {
   const tbody = document.getElementById('qcTableBody');
+  if (!tbody) return;
 
   if (!claims || claims.length === 0) {
     tbody.innerHTML = `
@@ -200,11 +200,9 @@ function renderTable(claims) {
     const tr = document.createElement('tr');
     tr.onclick = () => openModal(claim);
 
-    // Thumbnails
     const thumbHtml = buildThumbsHtml(claim.media_urls, 3, 'cell-thumb', 'cell-thumb-video');
-    const noMedia   = (!claim.media_urls || claim.media_urls.length === 0);
+    const noMedia = (!claim.media_urls || claim.media_urls.length === 0);
 
-    // Claim types — escape แต่ละ type
     const typesHtml = (claim.claim_types && claim.claim_types.length > 0)
       ? claim.claim_types.map(t => `<span class="type-tag">${escapeHtml(t)}</span>`).join('')
       : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>';
@@ -241,7 +239,6 @@ function renderTable(claims) {
     tbody.appendChild(tr);
   });
 
-  // เก็บ claims ใน window สำหรับ onclick ใน button
   window._claims = {};
   claims.forEach(c => { window._claims[c.id] = c; });
 }
@@ -285,82 +282,103 @@ function buildStatusBadge(status) {
 }
 
 // =====================================================
-// 📂 OPEN MODAL
+// 📂 OPEN MODAL (FIXED - ตรวจสอบ element ก่อนใช้)
 // =====================================================
 function openModal(claim) {
   if (!claim) return;
   currentClaim = claim;
 
   const modal = document.getElementById('qcModal');
+  if (!modal) return;
+  
   modal.classList.add('open');
 
   // Title
-  document.getElementById('modalTitle').textContent =
-    `เคลม #${claim.id.substring(0, 8).toUpperCase()}`;
-
-  // Info Grid — escape ทุก field ที่มาจาก DB
-  document.getElementById('modalInfoGrid').innerHTML = `
-    <div class="info-row">
-      <div class="info-label">พนักงานขาย</div>
-      <div class="info-value">${escapeHtml(claim.emp_name) || '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">เขตการขาย</div>
-      <div class="info-value">${escapeHtml(claim.area) || '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">ร้านค้า / ลูกค้า</div>
-      <div class="info-value">${escapeHtml(claim.customer) || '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">วันที่แจ้งเคลม</div>
-      <div class="info-value">${formatDate(claim.claim_date)}</div>
-    </div>
-    <div class="info-row full">
-      <div class="info-label">สินค้า</div>
-      <div class="info-value">${escapeHtml(claim.product) || '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">จำนวน</div>
-      <div class="info-value">${escapeHtml(claim.qty) || '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">วันที่เปิดบิล</div>
-      <div class="info-value">${formatDate(claim.buy_date)}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">วันที่ผลิต</div>
-      <div class="info-value">${formatDate(claim.mfg_date)}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">สถานะ</div>
-      <div class="info-value">${buildStatusBadge(claim.status)}</div>
-    </div>`;
-
-  // Claim Types — escape แต่ละ type
-  const typesEl = document.getElementById('modalClaimTypes');
-  if (claim.claim_types && claim.claim_types.length > 0) {
-    typesEl.innerHTML = claim.claim_types
-      .map(t => `<span class="modal-type-tag">${escapeHtml(t)}</span>`)
-      .join('');
-  } else {
-    typesEl.innerHTML = '<span style="color:#94a3b8;">ไม่ระบุ</span>';
+  const modalTitle = document.getElementById('modalTitle');
+  if (modalTitle) {
+    modalTitle.textContent = `เคลม #${claim.id.substring(0, 8).toUpperCase()}`;
   }
 
-  // Detail — ใช้ textContent ป้องกัน XSS อยู่แล้ว ✓
-  document.getElementById('modalDetail').textContent =
-    claim.detail || '—';
+  // Info Grid
+  const modalInfoGrid = document.getElementById('modalInfoGrid');
+  if (modalInfoGrid) {
+    modalInfoGrid.innerHTML = `
+      <div class="info-row">
+        <div class="info-label">พนักงานขาย</div>
+        <div class="info-value">${escapeHtml(claim.emp_name) || '—'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">เขตการขาย</div>
+        <div class="info-value">${escapeHtml(claim.area) || '—'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">ร้านค้า / ลูกค้า</div>
+        <div class="info-value">${escapeHtml(claim.customer) || '—'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">วันที่แจ้งเคลม</div>
+        <div class="info-value">${formatDate(claim.claim_date)}</div>
+      </div>
+      <div class="info-row full">
+        <div class="info-label">สินค้า</div>
+        <div class="info-value">${escapeHtml(claim.product) || '—'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">จำนวน</div>
+        <div class="info-value">${escapeHtml(claim.qty) || '—'}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">วันที่เปิดบิล</div>
+        <div class="info-value">${formatDate(claim.buy_date)}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">วันที่ผลิต</div>
+        <div class="info-value">${formatDate(claim.mfg_date)}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">สถานะ</div>
+        <div class="info-value">${buildStatusBadge(claim.status)}</div>
+      </div>
+      ${claim.qc_comment ? `
+      <div class="info-row full">
+        <div class="info-label">หมายเหตุ QC</div>
+        <div class="info-value">${escapeHtml(claim.qc_comment)}</div>
+      </div>` : ''}`;
+  }
+
+  // Claim Types
+  const typesEl = document.getElementById('modalClaimTypes');
+  if (typesEl) {
+    if (claim.claim_types && claim.claim_types.length > 0) {
+      typesEl.innerHTML = claim.claim_types
+        .map(t => `<span class="modal-type-tag">${escapeHtml(t)}</span>`)
+        .join('');
+    } else {
+      typesEl.innerHTML = '<span style="color:#94a3b8;">ไม่ระบุ</span>';
+    }
+  }
+
+  // Detail
+  const modalDetail = document.getElementById('modalDetail');
+  if (modalDetail) {
+    modalDetail.textContent = claim.detail || '—';
+  }
 
   // Media
   renderModalMedia(claim.media_urls);
 
-  // QC Status current — escape qc_comment
-  document.getElementById('qcStatusCurrent').innerHTML =
-    `สถานะปัจจุบัน: ${buildStatusBadge(claim.status)}
-     ${claim.qc_comment ? `<br><span style="color:#475569;font-size:0.82rem;">💬 ${escapeHtml(claim.qc_comment)}</span>` : ''}`;
+  // QC Status (ถ้ามี element - อาจถูก comment ออก)
+  const qcStatusEl = document.getElementById('qcStatusCurrent');
+  if (qcStatusEl) {
+    qcStatusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(claim.status)}
+      ${claim.qc_comment ? `<br><span style="color:#475569;font-size:0.82rem;">💬 ${escapeHtml(claim.qc_comment)}</span>` : ''}`;
+  }
 
-  // ล้าง comment input
-  document.getElementById('qcComment').value = claim.qc_comment || '';
+  // QC Comment input (ถ้ามี element - อาจถูก comment ออก)
+  const qcCommentEl = document.getElementById('qcComment');
+  if (qcCommentEl) {
+    qcCommentEl.value = claim.qc_comment || '';
+  }
 }
 
 // =====================================================
@@ -368,6 +386,7 @@ function openModal(claim) {
 // =====================================================
 function renderModalMedia(urls) {
   const grid = document.getElementById('modalMediaGrid');
+  if (!grid) return;
 
   if (!urls || urls.length === 0) {
     grid.innerHTML = '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>';
@@ -413,7 +432,10 @@ function renderModalMedia(urls) {
 // ❌ CLOSE MODAL
 // =====================================================
 function closeModal() {
-  document.getElementById('qcModal').classList.remove('open');
+  const modal = document.getElementById('qcModal');
+  if (modal) {
+    modal.classList.remove('open');
+  }
   currentClaim = null;
 }
 
@@ -423,17 +445,23 @@ function closeModal() {
 async function updateClaimStatus(newStatus) {
   if (!currentClaim) return;
 
-  const comment = document.getElementById('qcComment').value.trim();
+  const qcCommentEl = document.getElementById('qcComment');
+  const comment = qcCommentEl ? qcCommentEl.value.trim() : '';
   const label = newStatus === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
   const type  = newStatus === 'approved' ? 'success' : 'danger';
 
-  const ok = await ConfirmDialog.show({
-    title:   `ยืนยันการ${label}`,
-    message: `ยืนยันการ${label}เคลมนี้?`,
-    okText:  label,
-    type:    type,
-  });
-  if (!ok) return;
+  // ตรวจสอบว่ามี ConfirmDialog หรือไม่
+  if (typeof ConfirmDialog !== 'undefined') {
+    const ok = await ConfirmDialog.show({
+      title:   `ยืนยันการ${label}`,
+      message: `ยืนยันการ${label}เคลมนี้?`,
+      okText:  label,
+      type:    type,
+    });
+    if (!ok) return;
+  } else {
+    if (!confirm(`ยืนยันการ${label}เคลมนี้?`)) return;
+  }
 
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -452,7 +480,6 @@ async function updateClaimStatus(newStatus) {
 
     if (error) throw error;
 
-    // อัปเดต local state ให้ครบทุก field
     const idx = allClaims.findIndex(c => c.id === currentClaim.id);
     if (idx !== -1) {
       allClaims[idx].status     = newStatus;
@@ -461,22 +488,14 @@ async function updateClaimStatus(newStatus) {
       allClaims[idx].updated_at = updateData.updated_at;
     }
 
-    // Refresh UI
     updateSummaryCards();
     applyFilters();
-
-    // ปิด modal แล้วแสดง toast (เรียกครั้งเดียว)
     closeModal();
     showToast(`${label}เคลมสำเร็จ`, type);
 
   } catch (err) {
     console.error('❌ updateClaimStatus error:', err);
-    await ConfirmDialog.show({
-      title:   'เกิดข้อผิดพลาด',
-      message: err.message,
-      okText:  'ตกลง',
-      type:    'danger',
-    });
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'danger');
   }
 }
 
@@ -486,25 +505,30 @@ async function updateClaimStatus(newStatus) {
 function openLightbox(url) {
   const lb  = document.getElementById('lightbox');
   const img = document.getElementById('lightboxImg');
-  img.src   = url;
-  lb.classList.add('open');
+  if (lb && img) {
+    img.src = url;
+    lb.classList.add('open');
+  }
 }
 
 function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lightboxImg').src = '';
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightboxImg');
+  if (lb) lb.classList.remove('open');
+  if (img) img.src = '';
 }
 
 // =====================================================
-// 📄 EXPORT PDF
-// พิมพ์ modal เป็น PDF ผ่าน browser print
+// 📄 EXPORT PDF (เคลมเดี่ยว)
 // =====================================================
 function exportPDF() {
-  if (!currentClaim) return;
+  if (!currentClaim) {
+    showToast('กรุณาเลือกเคลมก่อน', 'warning');
+    return;
+  }
 
   const c = currentClaim;
 
-  // สร้าง HTML สำหรับ print — escape ข้อมูลจาก DB
   const mediaHtml = (c.media_urls && c.media_urls.length > 0)
     ? c.media_urls.filter(u => !isVideo(u))
         .map(u => `<img src="${escapeHtml(u)}" style="width:180px;height:180px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;" onerror="this.style.display='none'">`)
@@ -515,7 +539,14 @@ function exportPDF() {
     ? c.claim_types.map(t => `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:3px 12px;font-size:13px;margin-right:4px;">${escapeHtml(t)}</span>`).join('')
     : '—';
 
+  const statusLabel = c.status === 'submitted' ? '⏳ รออนุมัติ' : c.status === 'approved' ? '✅ อนุมัติ' : '❌ ปฏิเสธ';
+
   const printWin = window.open('', '_blank', 'width=900,height=700');
+  if (!printWin) {
+    showToast('กรุณาอนุญาต popup เพื่อพิมพ์ PDF', 'warning');
+    return;
+  }
+
   printWin.document.write(`
     <!DOCTYPE html>
     <html lang="th">
@@ -526,7 +557,7 @@ function exportPDF() {
       <style>
         * { box-sizing: border-box; }
         body { font-family: 'Kanit', sans-serif; color: #1e293b; padding: 32px; max-width: 800px; margin: auto; }
-        h1  { font-size: 1.4rem; color: #0f172a; margin-bottom: 4px; }
+        h1 { font-size: 1.4rem; color: #0f172a; margin-bottom: 4px; }
         .sub { color: #64748b; font-size: 0.85rem; margin-bottom: 24px; }
         .section { margin-bottom: 24px; }
         .section-title { font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
@@ -538,8 +569,8 @@ function exportPDF() {
         .media-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
         .status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
         .submitted { background: #fef9c3; color: #854d0e; }
-        .approved  { background: #dcfce7; color: #166534; }
-        .rejected  { background: #fee2e2; color: #991b1b; }
+        .approved { background: #dcfce7; color: #166534; }
+        .rejected { background: #fee2e2; color: #991b1b; }
         .footer-note { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 0.75rem; color: #94a3b8; display: flex; justify-content: space-between; }
         @media print { body { padding: 16px; } }
       </style>
@@ -557,7 +588,7 @@ function exportPDF() {
           <div class="info-box"><div class="info-lbl">วันที่แจ้งเคลม</div><div class="info-val">${formatDate(c.claim_date)}</div></div>
           <div class="info-box" style="grid-column:1/-1"><div class="info-lbl">สินค้า</div><div class="info-val">${escapeHtml(c.product) || '—'}</div></div>
           <div class="info-box"><div class="info-lbl">จำนวน</div><div class="info-val">${escapeHtml(c.qty) || '—'}</div></div>
-          <div class="info-box"><div class="info-lbl">สถานะ</div><div class="info-val"><span class="status-badge ${c.status}">${c.status === 'submitted' ? '⏳ รออนุมัติ' : c.status === 'approved' ? '✅ อนุมัติ' : '❌ ปฏิเสธ'}</span></div></div>
+          <div class="info-box"><div class="info-lbl">สถานะ</div><div class="info-val"><span class="status-badge ${c.status}">${statusLabel}</span></div></div>
         </div>
       </div>
 
@@ -588,111 +619,362 @@ function exportPDF() {
 }
 
 // =====================================================
-// 📊 EXPORT EXCEL (CSV)
+// 📊 EXPORT CSV (เคลมเดี่ยว - สำหรับปุ่มใน Modal)
 // =====================================================
-function exportExcel() {
-  if (filteredClaims.length === 0) {
-    alert('ไม่มีข้อมูลสำหรับ Export');
+function exportCSV() {
+  if (!currentClaim) {
+    showToast('กรุณาเลือกเคลมก่อน', 'warning');
     return;
   }
 
+  const c = currentClaim;
+  const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+
   const rows = [
-    // Header
-    ['วันที่แจ้งเคลม', 'พนักงานขาย', 'เขต', 'ร้านค้า', 'สินค้า', 'จำนวน', 'ประเภทปัญหา', 'รายละเอียด', 'สถานะ', 'วันที่บิล', 'วันที่ผลิต']
+    ['หัวข้อ', 'ค่า'],
+    ['เลขเคลม', c.id],
+    ['พนักงานขาย', c.emp_name || '-'],
+    ['เขต', c.area || '-'],
+    ['ร้านค้า / ลูกค้า', c.customer || '-'],
+    ['สินค้า', c.product || '-'],
+    ['จำนวน', c.qty || '-'],
+    ['ประเภทปัญหา', (c.claim_types || []).join(', ')],
+    ['รายละเอียด', (c.detail || '').replace(/\n/g, ' ')],
+    ['สถานะ', statusLabel],
+    ['วันที่แจ้งเคลม', formatDate(c.claim_date)],
+    ['วันที่เปิดบิล', formatDate(c.buy_date)],
+    ['วันที่ผลิต', formatDate(c.mfg_date)],
+    ['หมายเหตุ QC', c.qc_comment || '-'],
+    ['สร้างเมื่อ', formatDateTime(c.created_at)]
   ];
 
-  filteredClaims.forEach(c => {
-    rows.push([
-      formatDate(c.claim_date),
-      c.emp_name || '',
-      c.area     || '',
-      c.customer || '',
-      c.product  || '',
-      c.qty      || '',
-      (c.claim_types || []).join(', '),
-      (c.detail || '').replace(/\n/g, ' '),
-      c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ',
-      formatDate(c.buy_date),
-      formatDate(c.mfg_date),
-    ]);
-  });
-
-  // แปลงเป็น CSV (UTF-8 BOM สำหรับ Excel ภาษาไทย)
+  // UTF-8 BOM สำหรับ Excel ภาษาไทย
   const csv = '\uFEFF' + rows.map(row =>
     row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
   ).join('\n');
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `claims_export_${new Date().toISOString().split('T')[0]}.csv`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `claim_${c.id.substring(0, 8)}_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  console.log(`✅ Exported ${filteredClaims.length} rows`);
+  showToast('ดาวน์โหลด CSV สำเร็จ', 'success');
+}
+
+// =====================================================
+// 📊 EXPORT EXCEL (หลายรายการ - สำหรับปุ่ม Filter Bar)
+// หรือเคลมเดี่ยว ถ้าอยู่ใน Modal
+// =====================================================
+function exportExcel() {
+  // ถ้าอยู่ใน modal → export เคลมเดี่ยว
+  if (currentClaim) {
+    exportSingleClaimExcel();
+    return;
+  }
+
+  // ถ้าไม่มี filter data
+  if (!filteredClaims || filteredClaims.length === 0) {
+    showToast('ไม่มีข้อมูลสำหรับ Export', 'warning');
+    return;
+  }
+
+  const rows = [
+    ['วันที่แจ้งเคลม', 'พนักงานขาย', 'เขต', 'ร้านค้า', 'สินค้า', 'จำนวน', 'ประเภทปัญหา', 'รายละเอียด', 'สถานะ', 'วันที่บิล', 'วันที่ผลิต', 'หมายเหตุ QC']
+  ];
+
+  filteredClaims.forEach(c => {
+    const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+    rows.push([
+      formatDate(c.claim_date),
+      c.emp_name || '',
+      c.area || '',
+      c.customer || '',
+      c.product || '',
+      c.qty || '',
+      (c.claim_types || []).join(', '),
+      (c.detail || '').replace(/\n/g, ' '),
+      statusLabel,
+      formatDate(c.buy_date),
+      formatDate(c.mfg_date),
+      c.qc_comment || ''
+    ]);
+  });
+
+  // ใช้ SheetJS ถ้ามี
+  if (typeof XLSX !== 'undefined') {
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      
+      // ปรับความกว้างคอลัมน์
+      ws['!cols'] = [
+        { wch: 14 }, // วันที่แจ้งเคลม
+        { wch: 18 }, // พนักงานขาย
+        { wch: 12 }, // เขต
+        { wch: 20 }, // ร้านค้า
+        { wch: 25 }, // สินค้า
+        { wch: 8 },  // จำนวน
+        { wch: 20 }, // ประเภทปัญหา
+        { wch: 30 }, // รายละเอียด
+        { wch: 12 }, // สถานะ
+        { wch: 14 }, // วันที่บิล
+        { wch: 14 }, // วันที่ผลิต
+        { wch: 20 }, // หมายเหตุ QC
+      ];
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Claims");
+      XLSX.writeFile(wb, `claims_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      showToast(`ดาวน์โหลด ${filteredClaims.length} รายการสำเร็จ`, 'success');
+      return;
+    } catch (err) {
+      console.warn('XLSX export failed, falling back to CSV:', err);
+    }
+  }
+
+  // Fallback เป็น CSV
+  const csv = '\uFEFF' + rows.map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `claims_export_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast(`ดาวน์โหลด ${filteredClaims.length} รายการสำเร็จ`, 'success');
+}
+
+// =====================================================
+// 📊 EXPORT SINGLE CLAIM EXCEL (เคลมเดี่ยว)
+// =====================================================
+function exportSingleClaimExcel() {
+  if (!currentClaim) {
+    showToast('ไม่พบข้อมูลเคลม', 'warning');
+    return;
+  }
+
+  const c = currentClaim;
+  const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+
+  const data = [
+    ['หัวข้อ', 'ค่า'],
+    ['เลขเคลม', c.id],
+    ['พนักงานขาย', c.emp_name || '-'],
+    ['เขต', c.area || '-'],
+    ['ร้านค้า', c.customer || '-'],
+    ['สินค้า', c.product || '-'],
+    ['จำนวน', c.qty || '-'],
+    ['ประเภทปัญหา', (c.claim_types || []).join(', ')],
+    ['รายละเอียด', c.detail || '-'],
+    ['สถานะ', statusLabel],
+    ['วันที่เคลม', formatDate(c.claim_date)],
+    ['วันที่บิล', formatDate(c.buy_date)],
+    ['วันที่ผลิต', formatDate(c.mfg_date)],
+    ['QC Comment', c.qc_comment || '-'],
+    ['สร้างเมื่อ', formatDateTime(c.created_at)]
+  ];
+
+  // ใช้ SheetJS ถ้ามี
+  if (typeof XLSX !== 'undefined') {
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [{ wch: 20 }, { wch: 50 }];
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Claim Detail");
+      XLSX.writeFile(wb, `claim_${c.id.substring(0, 8)}.xlsx`);
+      
+      showToast('ดาวน์โหลด Excel สำเร็จ', 'success');
+      return;
+    } catch (err) {
+      console.warn('XLSX export failed, falling back to CSV:', err);
+    }
+  }
+
+  // Fallback เป็น CSV
+  const csv = '\uFEFF' + data.map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `claim_${c.id.substring(0, 8)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast('ดาวน์โหลด CSV สำเร็จ', 'success');
+}
+
+// =====================================================
+// 📊 EXPORT EXCEL PRO (พร้อม styling - ใช้ ExcelJS)
+// =====================================================
+async function exportCurrentClaimExcelPro() {
+  if (!currentClaim) {
+    showToast('ไม่พบข้อมูล', 'warning');
+    return;
+  }
+
+  if (typeof ExcelJS === 'undefined') {
+    console.warn('ExcelJS not loaded, using basic export');
+    exportSingleClaimExcel();
+    return;
+  }
+
+  const c = currentClaim;
+  const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+
+  try {
+    showToast('กำลังสร้างไฟล์...', 'info');
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Claim");
+
+    sheet.columns = [{ width: 25 }, { width: 50 }];
+
+    // Header
+    sheet.mergeCells('A1:B1');
+    const headerCell = sheet.getCell('A1');
+    headerCell.value = "ใบแจ้งเคลมสินค้า";
+    headerCell.font = { size: 18, bold: true };
+    headerCell.alignment = { horizontal: 'center' };
+
+    sheet.addRow([]);
+
+    // Data rows
+    const rows = [
+      ["เลขเคลม", c.id],
+      ["พนักงานขาย", c.emp_name || '-'],
+      ["เขต", c.area || '-'],
+      ["ร้านค้า", c.customer || '-'],
+      ["สินค้า", c.product || '-'],
+      ["จำนวน", c.qty || '-'],
+      ["ประเภทปัญหา", (c.claim_types || []).join(', ')],
+      ["รายละเอียด", c.detail || '-'],
+      ["สถานะ", statusLabel],
+      ["วันที่เคลม", formatDate(c.claim_date)],
+      ["วันที่บิล", formatDate(c.buy_date)],
+      ["วันที่ผลิต", formatDate(c.mfg_date)],
+    ];
+
+    rows.forEach(r => {
+      const row = sheet.addRow(r);
+      row.getCell(1).font = { bold: true };
+      row.getCell(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFEFEFEF' }
+      };
+      row.eachCell(cell => {
+        cell.border = {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    
+    if (typeof saveAs !== 'undefined') {
+      saveAs(new Blob([buffer]), `claim_${c.id.substring(0, 8)}.xlsx`);
+    } else {
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `claim_${c.id.substring(0, 8)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    showToast('ดาวน์โหลด Excel สำเร็จ', 'success');
+
+  } catch (err) {
+    console.error('Export Excel Pro error:', err);
+    showToast('เกิดข้อผิดพลาด กำลัง fallback...', 'warning');
+    exportSingleClaimExcel();
+  }
 }
 
 // =====================================================
 // 🔧 UTILITIES
 // =====================================================
 
-// ตรวจว่าเป็น video URL
 function isVideo(url) {
+  if (!url) return false;
   return /\.(mp4|mov|avi|webm|mkv)(\?|$)/i.test(url);
 }
 
-// แสดง loading ใน table
 function showTableLoading() {
-  document.getElementById('qcTableBody').innerHTML = `
-    <tr>
-      <td colspan="8" class="table-loading">
-        <span class="material-symbols-outlined spin">progress_activity</span>
-        กำลังโหลด...
-      </td>
-    </tr>`;
+  const tbody = document.getElementById('qcTableBody');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="table-loading">
+          <span class="material-symbols-outlined spin">progress_activity</span>
+          กำลังโหลด...
+        </td>
+      </tr>`;
+  }
 }
 
-// แสดง error ใน table
 function showTableError(msg) {
-  document.getElementById('qcTableBody').innerHTML = `
-    <tr>
-      <td colspan="8" class="table-loading" style="color:#dc2626;">
-        ❌ ${escapeHtml(msg)}
-      </td>
-    </tr>`;
+  const tbody = document.getElementById('qcTableBody');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="table-loading" style="color:#dc2626;">
+          ❌ ${escapeHtml(msg)}
+        </td>
+      </tr>`;
+  }
 }
 
-// แปลงวันที่ dd/mm/yyyy
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
-  if (isNaN(d)) return '—';
+  if (isNaN(d.getTime())) return '—';
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
 
-// แปลง timestamp
 function formatDateTime(ts) {
   if (!ts) return '—';
   const d = new Date(ts);
-  if (isNaN(d)) return '—';
+  if (isNaN(d.getTime())) return '—';
   return `${formatDate(ts)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-console.log('✅ adminQc.js loaded');
 
 // =====================================================
 // 🔔 TOAST NOTIFICATION
 // =====================================================
 function showToast(message, type = 'success') {
-  // ลบ toast เก่าถ้ามี
-  document.getElementById('ea-toast')?.remove();
+  // ลบ toast เก่า
+  const existingToast = document.getElementById('ea-toast');
+  if (existingToast) existingToast.remove();
 
   const colorMap = {
-    success: { bg: '#2e7d32', icon: '✅' },
-    danger:  { bg: '#c62828', icon: '❌' },
-    warning: { bg: '#e65100', icon: '⚠️' },
-    info:    { bg: '#1565c0', icon: 'ℹ️' },
+    success: { bg: '#10b981', icon: '✅' },
+    danger:  { bg: '#ef4444', icon: '❌' },
+    warning: { bg: '#f59e0b', icon: '⚠️' },
+    info:    { bg: '#3b82f6', icon: 'ℹ️' },
   };
   const c = colorMap[type] || colorMap.success;
 
@@ -704,15 +986,15 @@ function showToast(message, type = 'success') {
     right: 32px;
     background: ${c.bg};
     color: #fff;
-    font-family: "Kanit", sans-serif;
-    font-size: 15px;
+    font-family: "Kanit", "IBM Plex Sans Thai", sans-serif;
+    font-size: 14px;
     font-weight: 500;
-    padding: 14px 24px;
-    border-radius: 14px;
+    padding: 12px 20px;
+    border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     z-index: 99999;
     opacity: 0;
     transform: translateY(12px);
@@ -723,14 +1005,21 @@ function showToast(message, type = 'success') {
 
   // แสดง
   requestAnimationFrame(() => {
-    toast.style.opacity   = '1';
+    toast.style.opacity = '1';
     toast.style.transform = 'translateY(0)';
   });
 
-  // หายเองใน 2.5 วิ
+  // หายเองใน 3 วิ
   setTimeout(() => {
-    toast.style.opacity   = '0';
+    toast.style.opacity = '0';
     toast.style.transform = 'translateY(12px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 2500);
+    setTimeout(() => {
+      if (toast.parentNode) toast.remove();
+    }, 300);
+  }, 3000);
 }
+
+// =====================================================
+// ✅ LOADED
+// =====================================================
+console.log('✅ adminQc.js loaded (fixed version)');

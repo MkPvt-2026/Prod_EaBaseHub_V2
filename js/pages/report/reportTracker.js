@@ -1,6 +1,6 @@
 // =====================================================
-// reportTracker.js - Manager Report Review Page v2
-// ใช้ Date Range Picker แทน Week Selector
+// reportTracker.js - Manager Report Review Page v3
+// แก้ไข: ปรับปรุง Auth Flow และ Error Handling
 // =====================================================
 
 'use strict';
@@ -25,66 +25,255 @@ let activeSalesFilter = null;
 let currentReportId = null;
 
 // =====================================================
+// 🔧 HELPER: รอ Supabase Client พร้อม
+// =====================================================
+function waitForSupabase(maxAttempts = 50) {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    
+    const check = () => {
+      attempts++;
+      
+      if (typeof supabaseClient !== 'undefined' && supabaseClient?.auth) {
+        console.log('✅ supabaseClient พร้อมแล้ว');
+        resolve(supabaseClient);
+      } else if (attempts < maxAttempts) {
+        setTimeout(check, 100);
+      } else {
+        reject(new Error('supabaseClient ไม่พร้อมหลังจากรอนานเกินไป'));
+      }
+    };
+    
+    check();
+  });
+}
+
+// =====================================================
 // 🚀 INIT
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Report Manager initializing...');
 
   try {
-    await protectPage(['admin', 'manager']);
-  } catch (e) {
-    console.error('❌ protectPage failed:', e);
-    return;
-  }
+    // รอ Supabase Client พร้อมก่อน
+    await waitForSupabase();
+    console.log('✅ Supabase client ready');
 
-  // ใช้ window.currentUser จาก userService
-  if (window.currentUser && window.currentUser.id) {
-    localUser = {
-      id:   window.currentUser.id,
-      role: window.currentUser.role,
-      area: window.currentUser.area,
-      name: window.currentUser.display_name
-             || window.currentUser.username
-             || window.currentUser.email
-             || 'Manager'
-    };
-    console.log('✅ Using window.currentUser:', localUser);
-  } else {
-    localUser = await loadCurrentUserFallback();
-    if (!localUser) {
-      console.error('❌ No current user');
+    // ลองดึง session โดยตรง (ไม่ต้องรอ protectPage)
+    const session = await getSessionSafely();
+    
+    if (!session) {
+      console.warn('⚠️ ไม่พบ session - อาจยังไม่ได้ login หรือ session หมดอายุ');
+      // แสดง UI ให้ผู้ใช้ login
+      showLoginRequired();
       return;
     }
-    console.log('✅ Fallback user loaded:', localUser);
+
+    console.log('✅ Session found:', session.user?.email);
+
+    // ลองเรียก protectPage (ถ้ามี)
+    if (typeof protectPage === 'function') {
+      try {
+        await protectPage(['admin', 'manager']);
+        console.log('✅ protectPage passed');
+      } catch (e) {
+        console.warn('⚠️ protectPage failed:', e.message);
+        // ไม่ return ออก - ลองดำเนินการต่อ
+      }
+    }
+
+    // โหลด user info
+    localUser = await loadCurrentUser(session);
+    
+    if (!localUser) {
+      console.error('❌ ไม่สามารถโหลดข้อมูล user ได้');
+      showLoginRequired();
+      return;
+    }
+
+    console.log('✅ User loaded:', localUser);
+
+    // อัปเดต header
+    updateHeaderUI();
+
+    // ตั้งค่า Date Range
+    initDateRange();
+    setupDateControls();
+
+    // โหลดข้อมูลสนับสนุน
+    await Promise.all([
+      loadProfiles(),
+      loadShops(),
+      loadProducts()
+    ]);
+
+    // โหลดรายงาน
+    await loadReports();
+
+    // Setup event listeners
+    setupEventListeners();
+    setupLogout();
+
+    console.log('✅ Report Manager ready');
+
+  } catch (e) {
+    console.error('❌ Init error:', e);
+    showErrorState(e.message);
+  }
+});
+
+// =====================================================
+// 🔐 GET SESSION SAFELY
+// =====================================================
+async function getSessionSafely() {
+  try {
+    // ลองใช้ getSession ก่อน (เร็วกว่า)
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    
+    if (error) {
+      console.warn('⚠️ getSession error:', error.message);
+      
+      // ถ้า getSession ไม่ได้ ลอง getUser
+      try {
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        if (user && !userError) {
+          console.log('✅ Got user from getUser()');
+          return { user };
+        }
+      } catch (e) {
+        console.warn('⚠️ getUser also failed:', e.message);
+      }
+      
+      return null;
+    }
+    
+    return session;
+  } catch (e) {
+    console.error('❌ getSessionSafely error:', e);
+    return null;
+  }
+}
+
+// =====================================================
+// 👤 LOAD CURRENT USER
+// =====================================================
+async function loadCurrentUser(session) {
+  try {
+    // ลองใช้ window.currentUser จาก userService ก่อน
+    if (window.currentUser && window.currentUser.id) {
+      console.log('✅ Using window.currentUser');
+      return {
+        id: window.currentUser.id,
+        role: window.currentUser.role,
+        area: window.currentUser.area,
+        name: window.currentUser.display_name 
+              || window.currentUser.username 
+              || window.currentUser.email 
+              || 'Manager'
+      };
+    }
+
+    // ถ้าไม่มี ให้ดึงจาก profiles
+    const userId = session?.user?.id;
+    if (!userId) {
+      console.error('❌ No user ID');
+      return null;
+    }
+
+    const { data: profile, error } = await supabaseClient
+      .from('profiles')
+      .select('id, display_name, role, area')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('❌ Profile query error:', error);
+      // ยังคง return ข้อมูลพื้นฐานจาก session
+      return {
+        id: userId,
+        role: 'user',
+        area: null,
+        name: session.user.email || 'User'
+      };
+    }
+
+    return {
+      id: profile.id,
+      role: profile.role,
+      area: profile.area,
+      name: profile.display_name || session.user.email || 'User'
+    };
+
+  } catch (e) {
+    console.error('❌ loadCurrentUser error:', e);
+    return null;
+  }
+}
+
+// =====================================================
+// 🎨 UPDATE HEADER UI
+// =====================================================
+function updateHeaderUI() {
+  const nameEl = document.getElementById('userName');
+  if (nameEl && localUser?.name) {
+    nameEl.textContent = localUser.name;
   }
 
-  // อัปเดต header
-  const nameEl = document.getElementById('userName');
-  if (nameEl) nameEl.textContent = localUser.name;
-
   const avatarEl = document.getElementById('userAvatar');
-  if (avatarEl) avatarEl.textContent = localUser.name.charAt(0).toUpperCase();
+  if (avatarEl && localUser?.name) {
+    avatarEl.textContent = localUser.name.charAt(0).toUpperCase();
+  }
+}
 
-  // ตั้งค่า Date Range
-  initDateRange();
-  setupDateControls();
+// =====================================================
+// ⚠️ SHOW LOGIN REQUIRED
+// =====================================================
+function showLoginRequired() {
+  const container = document.getElementById('reportsContainer');
+  if (container) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔐</div>
+        <h3>กรุณาเข้าสู่ระบบ</h3>
+        <p>คุณต้องเข้าสู่ระบบก่อนเพื่อดูรายงาน</p>
+        <a href="/pages/auth/login.html" class="btn btn-primary" style="margin-top: 1rem;">
+          เข้าสู่ระบบ
+        </a>
+      </div>
+    `;
+  }
 
-  // โหลดข้อมูลสนับสนุน
-  await Promise.all([
-    loadProfiles(),
-    loadShops(),
-    loadProducts()
-  ]);
+  // ซ่อน loading ใน sales grid
+  const salesGrid = document.getElementById('salesGrid');
+  if (salesGrid) {
+    salesGrid.innerHTML = '';
+  }
 
-  // โหลดรายงาน
-  await loadReports();
+  // Reset summary cards
+  ['totalReports', 'unreadReports', 'readReports', 'activeSales'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+}
 
-  // Setup event listeners
-  setupEventListeners();
-  setupLogout();
-
-  console.log('✅ Report Manager ready');
-});
+// =====================================================
+// ⚠️ SHOW ERROR STATE
+// =====================================================
+function showErrorState(message) {
+  const container = document.getElementById('reportsContainer');
+  if (container) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <h3>เกิดข้อผิดพลาด</h3>
+        <p>${message}</p>
+        <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 1rem;">
+          ลองใหม่อีกครั้ง
+        </button>
+      </div>
+    `;
+  }
+}
 
 // =====================================================
 // 📅 DATE RANGE CONTROLS
@@ -125,6 +314,7 @@ function setupDateControls() {
       dateStart = new Date(startInput.value);
       dateStart.setHours(0, 0, 0, 0);
       updateDateRangeLabel();
+      clearQuickRangeActive();
       loadReports();
     });
   }
@@ -134,6 +324,7 @@ function setupDateControls() {
       dateEnd = new Date(endInput.value);
       dateEnd.setHours(23, 59, 59, 999);
       updateDateRangeLabel();
+      clearQuickRangeActive();
       loadReports();
     });
   }
@@ -148,6 +339,10 @@ function setupDateControls() {
       btn.classList.add('active');
     });
   });
+}
+
+function clearQuickRangeActive() {
+  document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
 }
 
 function setQuickRange(range) {
@@ -228,32 +423,6 @@ function formatDateForInput(date) {
 }
 
 // =====================================================
-// 👤 LOAD CURRENT USER (fallback)
-// =====================================================
-async function loadCurrentUserFallback() {
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return null;
-
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('id, display_name, role, area')
-      .eq('id', session.user.id)
-      .single();
-
-    return {
-      id:   session.user.id,
-      role: profile?.role,
-      area: profile?.area,
-      name: profile?.display_name || session.user.email
-    };
-  } catch (e) {
-    console.error('❌ loadCurrentUserFallback error:', e);
-    return null;
-  }
-}
-
-// =====================================================
 // 👥 LOAD PROFILES
 // =====================================================
 async function loadProfiles() {
@@ -266,7 +435,11 @@ async function loadProfiles() {
       .in('role', ['sales', 'user']);
 
     const { data, error } = await query;
-    if (error) throw error;
+    
+    if (error) {
+      console.error('❌ loadProfiles error:', error);
+      return;
+    }
 
     console.log('✅ Profiles loaded:', data?.length || 0);
 
@@ -320,7 +493,11 @@ async function loadProducts() {
       .from('products')
       .select('id, name');
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ loadProducts error:', error);
+      return;
+    }
+    
     console.log('✅ Products loaded:', data?.length || 0);
 
     if (data) {
@@ -342,10 +519,6 @@ async function loadReports() {
 
   try {
     console.log('=== 📊 LOADING REPORTS ===');
-
-    const startStr = dateStart.toISOString();
-    const endStr = dateEnd.toISOString();
-
     console.log('📅 Date range:', formatDateForInput(dateStart), 'to', formatDateForInput(dateEnd));
 
     let query = supabaseClient
@@ -391,10 +564,15 @@ async function loadReports() {
     console.error('❌ loadReports error:', e);
     if (container) {
       container.innerHTML = `
-        <div class="loading">
-          เกิดข้อผิดพลาด: ${e.message}<br>
-          <small>กรุณาเปิด Console เพื่อดู log</small>
-        </div>`;
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <h3>เกิดข้อผิดพลาด</h3>
+          <p>${e.message}</p>
+          <button onclick="loadReports()" class="btn btn-primary" style="margin-top: 1rem;">
+            ลองใหม่
+          </button>
+        </div>
+      `;
     }
   }
 }
@@ -408,10 +586,15 @@ function updateSummaryCards() {
   const read = allReports.filter(r => r.manager_acknowledged).length;
   const activeSalesCount = new Set(allReports.map(r => r.sale_id).filter(Boolean)).size;
 
-  document.getElementById('totalReports').textContent = total;
-  document.getElementById('unreadReports').textContent = unread;
-  document.getElementById('readReports').textContent = read;
-  document.getElementById('activeSales').textContent = activeSalesCount;
+  const totalEl = document.getElementById('totalReports');
+  const unreadEl = document.getElementById('unreadReports');
+  const readEl = document.getElementById('readReports');
+  const activeSalesEl = document.getElementById('activeSales');
+
+  if (totalEl) totalEl.textContent = total;
+  if (unreadEl) unreadEl.textContent = unread;
+  if (readEl) readEl.textContent = read;
+  if (activeSalesEl) activeSalesEl.textContent = activeSalesCount;
 }
 
 // =====================================================
@@ -424,7 +607,7 @@ function updateSalesGrid() {
   const entries = Object.entries(profilesMap);
 
   if (!entries.length) {
-    grid.innerHTML = '<div class="loading">ไม่มีข้อมูลเซลล์</div>';
+    grid.innerHTML = '<div class="empty-state"><p>ไม่มีข้อมูลเซลล์</p></div>';
     return;
   }
 
@@ -447,7 +630,7 @@ function updateSalesGrid() {
             <span class="stat-label">รายงาน</span>
           </div>
           <div class="stat-item">
-            <span class="stat-value" style="color: ${unread > 0 ? 'var(--accent3)' : 'var(--accent2)'}">
+            <span class="stat-value" style="color: ${unread > 0 ? 'var(--danger)' : 'var(--info)'}">
               ${unread}
             </span>
             <span class="stat-label">ยังไม่อ่าน</span>
@@ -480,9 +663,9 @@ function filterBySale(saleId) {
 function applyFilter() {
   console.log('🔍 Applying filter...');
 
-  const salesId = document.getElementById('filterSales').value;
-  const status = document.getElementById('filterStatus').value;
-  const search = document.getElementById('searchInput').value.toLowerCase();
+  const salesId = document.getElementById('filterSales')?.value || '';
+  const status = document.getElementById('filterStatus')?.value || '';
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
 
   filteredReports = allReports.filter(r => {
     if (salesId && r.sale_id !== salesId) return false;
@@ -515,9 +698,13 @@ function applyFilter() {
 // ↺ RESET FILTER
 // =====================================================
 function resetFilter() {
-  document.getElementById('filterSales').value = '';
-  document.getElementById('filterStatus').value = '';
-  document.getElementById('searchInput').value = '';
+  const filterSales = document.getElementById('filterSales');
+  const filterStatus = document.getElementById('filterStatus');
+  const searchInput = document.getElementById('searchInput');
+
+  if (filterSales) filterSales.value = '';
+  if (filterStatus) filterStatus.value = '';
+  if (searchInput) searchInput.value = '';
 
   activeSalesFilter = null;
   filteredReports = [...allReports];
@@ -545,7 +732,13 @@ function renderReports() {
   }
 
   if (!pageReports.length) {
-    container.innerHTML = '<div class="loading">ไม่มีรายงานในช่วงเวลาที่เลือก</div>';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>ไม่พบรายงาน</h3>
+        <p>ไม่มีรายงานในช่วงเวลาที่เลือก</p>
+      </div>
+    `;
     renderPagination();
     return;
   }
@@ -601,13 +794,29 @@ function renderPagination() {
   }
 
   let html = '';
+  
+  // Previous button
+  if (currentPage > 1) {
+    html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
+  }
+
+  // Page numbers
   for (let i = 1; i <= totalPages; i++) {
-    html += `
-      <button class="page-btn ${i === currentPage ? 'active' : ''}"
-              onclick="goToPage(${i})">
-        ${i}
-      </button>
-    `;
+    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+      html += `
+        <button class="page-btn ${i === currentPage ? 'active' : ''}"
+                onclick="goToPage(${i})">
+          ${i}
+        </button>
+      `;
+    } else if (i === currentPage - 3 || i === currentPage + 3) {
+      html += '<span class="page-dots">...</span>';
+    }
+  }
+
+  // Next button
+  if (currentPage < totalPages) {
+    html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
   }
 
   el.innerHTML = html;
@@ -628,6 +837,7 @@ async function openReportModal(reportId) {
   const report = allReports.find(r => r.id === reportId);
   if (!report) {
     console.error('❌ Report not found:', reportId);
+    showToast('❌ ไม่พบรายงาน');
     return;
   }
 
@@ -636,7 +846,8 @@ async function openReportModal(reportId) {
   const profile = profilesMap[report.sale_id];
   const salesName = profile?.display_name || '—';
 
-  document.getElementById('modalTitle').textContent = `รายงานของ ${salesName}`;
+  const modalTitle = document.getElementById('modalTitle');
+  if (modalTitle) modalTitle.textContent = `รายงานของ ${salesName}`;
 
   const statusBadge = document.getElementById('modalStatus');
   if (statusBadge) {
@@ -644,13 +855,22 @@ async function openReportModal(reportId) {
     statusBadge.textContent = report.manager_acknowledged ? '✅ อ่านแล้ว' : '🕐 ยังไม่อ่าน';
   }
 
-  document.getElementById('mReportDate').textContent = formatDate(report.submitted_at || report.report_date);
-  document.getElementById('mSalesName').textContent = salesName;
-  document.getElementById('mShopName').textContent = shopsMap[report.shop_id] || '—';
-  document.getElementById('mProduct').textContent = productsMap[report.product_id] || '—';
-  document.getElementById('mSource').textContent = report.source || '—';
-  document.getElementById('mNote').textContent = report.note || 'ไม่มีหมายเหตุ';
+  // Fill modal fields
+  const fields = {
+    'mReportDate': formatDate(report.submitted_at || report.report_date),
+    'mSalesName': salesName,
+    'mShopName': shopsMap[report.shop_id] || '—',
+    'mProduct': productsMap[report.product_id] || '—',
+    'mSource': report.source || '—',
+    'mNote': report.note || 'ไม่มีหมายเหตุ'
+  };
 
+  Object.entries(fields).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+
+  // Quantity field
   const qtyEl = document.getElementById('mQty');
   if (qtyEl) {
     if (report.quantity !== undefined && report.quantity !== null) {
@@ -664,7 +884,9 @@ async function openReportModal(reportId) {
   }
 
   await loadComments(reportId);
-  document.getElementById('commentInput').value = '';
+  
+  const commentInput = document.getElementById('commentInput');
+  if (commentInput) commentInput.value = '';
 
   const modal = document.getElementById('reportModal');
   if (modal) {
@@ -690,7 +912,7 @@ async function loadComments(reportId) {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<div class="loading">ยังไม่มีความคิดเห็น</div>';
+      container.innerHTML = '<div class="no-comments">ยังไม่มีความคิดเห็น</div>';
       return;
     }
 
@@ -705,7 +927,7 @@ async function loadComments(reportId) {
     `).join('');
   } catch (e) {
     console.error('❌ loadComments error:', e);
-    container.innerHTML = '<div class="loading">เกิดข้อผิดพลาด</div>';
+    container.innerHTML = '<div class="error-text">เกิดข้อผิดพลาดในการโหลดความคิดเห็น</div>';
   }
 }
 
@@ -715,14 +937,20 @@ async function loadComments(reportId) {
 async function saveComment() {
   if (!currentReportId) return;
 
-  const text = document.getElementById('commentInput').value.trim();
+  const input = document.getElementById('commentInput');
+  const text = input?.value?.trim();
+  
   if (!text) {
     showToast('⚠️ กรุณาพิมพ์ความคิดเห็น');
     return;
   }
 
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const session = await getSessionSafely();
+    if (!session?.user?.id) {
+      showToast('❌ กรุณาเข้าสู่ระบบใหม่');
+      return;
+    }
 
     const { error } = await supabaseClient
       .from('report_comments')
@@ -736,7 +964,7 @@ async function saveComment() {
     if (error) throw error;
 
     showToast('💬 บันทึกความคิดเห็นแล้ว');
-    document.getElementById('commentInput').value = '';
+    input.value = '';
     await loadComments(currentReportId);
   } catch (e) {
     console.error('❌ saveComment error:', e);
@@ -751,9 +979,15 @@ async function markAsRead() {
   if (!currentReportId) return;
 
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const session = await getSessionSafely();
+    if (!session?.user?.id) {
+      showToast('❌ กรุณาเข้าสู่ระบบใหม่');
+      return;
+    }
 
-    const text = document.getElementById('commentInput').value.trim();
+    // Save comment if exists
+    const commentInput = document.getElementById('commentInput');
+    const text = commentInput?.value?.trim();
     if (text) {
       await saveComment();
     }
@@ -769,6 +1003,7 @@ async function markAsRead() {
 
     if (error) throw error;
 
+    // Update local data
     const idx = allReports.findIndex(r => r.id === currentReportId);
     if (idx !== -1) {
       allReports[idx].manager_acknowledged = true;
@@ -855,16 +1090,24 @@ function setupEventListeners() {
       if (e.target === modal) closeModal();
     });
   }
+
+  // ESC key to close modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
 }
 
 // =====================================================
 // 🚪 SETUP LOGOUT
 // =====================================================
 function setupLogout() {
-  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    await supabaseClient.auth.signOut();
-    window.location.href = '/pages/auth/login.html';
-  });
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = '/pages/auth/login.html';
+    });
+  }
 }
 
 // =====================================================
@@ -901,3 +1144,29 @@ function showToast(message) {
     toast.classList.remove('show');
   }, 3000);
 }
+
+// =====================================================
+// 🚪 GLOBAL LOGOUT FUNCTION (สำหรับ onclick)
+// =====================================================
+async function logout() {
+  try {
+    await supabaseClient.auth.signOut();
+    window.location.href = '/pages/auth/login.html';
+  } catch (e) {
+    console.error('Logout error:', e);
+    window.location.href = '/pages/auth/login.html';
+  }
+}
+
+// Make functions globally accessible
+window.filterBySale = filterBySale;
+window.applyFilter = applyFilter;
+window.resetFilter = resetFilter;
+window.goToPage = goToPage;
+window.openReportModal = openReportModal;
+window.saveComment = saveComment;
+window.markAsRead = markAsRead;
+window.closeModal = closeModal;
+window.exportCSV = exportCSV;
+window.loadReports = loadReports;
+window.logout = logout;

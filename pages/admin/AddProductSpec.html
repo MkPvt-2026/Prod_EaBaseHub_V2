@@ -4,35 +4,49 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EABaseHub | จัดการข้อมูลสินค้า</title>
+  
+  <!-- Fonts: Kanit (ตาม bassManager.css) -->
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  
+  <!-- Material Symbols สำหรับไอคอน -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/js/core/supabaseClient.js"></script>
-  <script src="/js/core/userService.js"></script>
-  <script src="/js/core/auth.js"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/css/base/bassManager.css"/>
   <link rel="stylesheet" href="/css/pages/admin/AddProductSpec.css"/>
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- ═══════════════ HEADER ═══════════════ -->
   <header class="app-header">
     <div class="logo">
-      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"/></div>
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo"/>
+      </div>
       <h2>EABaseHub</h2>
     </div>
+
     <div class="user-box">
-      <div class="user-avatar" id="userAvatar">A</div>
-      <div class="user-name" id="userName">Admin</div>
-      <button class="logout-btn" id="logoutBtn">ออกจากระบบ</button>
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <div class="group">
+        <span class="badge badge--message-sent" onclick="logout()">
+          <span class="badge-icon">
+            <span class="material-symbols-outlined" style="font-size:17px">logout</span>
+          </span>
+          ออกจากระบบ
+        </span>
+      </div>
     </div>
   </header>
 
-
-  <!-- NAV -->
-  <nav class="app-nav">
-    <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>    
-    <a href="/pages/admin/admintor.html">การจัดการสิทธิ์</a>
-    <a href="/pages/admin/AddProductSpec.html" class="active">การจัดการสินค้า</a>    
-  </nav>
+  <!-- NAV Container (โหลดตาม role) -->
+  <div id="navContainer"></div>
 
   <!-- MODAL OVERLAY -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
@@ -65,7 +79,7 @@
       <button class="am-tab active" data-tab="cat">📂 หมวดหมู่</button>
       <button class="am-tab" data-tab="prod">📦 สินค้า</button>
       <button class="am-tab" data-tab="attr">🏷️ Attributes</button>
-      <!-- <button class="am-tab" data-tab="var">🔩 Variants</button> -->
+      <button class="am-tab" data-tab="var">🔩 Variants</button>
       <button class="am-tab" data-tab="opt">⚙️ Options</button>
     </div>
 
@@ -77,11 +91,13 @@
       </div>
       <div class="am-table-wrap">
         <table class="am-table">
-          <thead><tr>
-            <th>ชื่อหมวดหมู่</th>
-            <th>วันที่สร้าง</th>
-            <th style="width:120px">จัดการ</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th>ชื่อหมวดหมู่</th>
+              <th>วันที่สร้าง</th>
+              <th style="width:120px">จัดการ</th>
+            </tr>
+          </thead>
           <tbody id="cat-body">
             <tr><td colspan="3" class="am-empty">⏳ กำลังโหลด...</td></tr>
           </tbody>
@@ -102,13 +118,15 @@
       </div>
       <div class="am-table-wrap">
         <table class="am-table">
-          <thead><tr>
-            <th>ชื่อสินค้า</th>
-            <th>หมวดหมู่</th>
-            <th>SKU</th>
-            <th>คำอธิบาย</th>
-            <th style="width:120px">จัดการ</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th>ชื่อสินค้า</th>
+              <th>หมวดหมู่</th>
+              <th>SKU</th>
+              <th>คำอธิบาย</th>
+              <th style="width:120px">จัดการ</th>
+            </tr>
+          </thead>
           <tbody id="prod-body">
             <tr><td colspan="5" class="am-empty">⏳ กำลังโหลด...</td></tr>
           </tbody>
@@ -117,7 +135,6 @@
     </div>
 
     <!-- ═══ TAB: ATTRIBUTES ═══ -->
-    <!-- FIX #1/#2: เปลี่ยน header คอลัมน์ 2 จาก "หมวดหมู่" → "สินค้า" ให้ตรงกับ JS -->
     <div class="am-panel" id="tab-attr">
       <div class="am-toolbar">
         <div class="am-filters">
@@ -130,13 +147,15 @@
       </div>
       <div class="am-table-wrap">
         <table class="am-table">
-          <thead><tr>
-            <th>ชื่อ Attribute</th>
-            <th>สินค้า</th><!-- แก้จาก "หมวดหมู่" → "สินค้า" -->
-            <th>ประเภท Input</th>
-            <th>ลำดับ</th>
-            <th style="width:120px">จัดการ</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th>ชื่อ Attribute</th>
+              <th>สินค้า</th>
+              <th>ประเภท Input</th>
+              <th>ลำดับ</th>
+              <th style="width:120px">จัดการ</th>
+            </tr>
+          </thead>
           <tbody id="attr-body">
             <tr><td colspan="5" class="am-empty">⏳ กำลังโหลด...</td></tr>
           </tbody>
@@ -160,18 +179,20 @@
       </div>
       <div class="am-table-wrap">
         <table class="am-table">
-          <thead><tr>
-            <th>สินค้า</th>
-            <th>SKU</th>
-            <th>สี</th>
-            <th>ยาว</th>
-            <th>กว้าง</th>
-            <th>หนา</th>
-            <th>ยี่ห้อ</th>
-            <th>Feature</th>
-            <th>Status</th>
-            <th style="width:120px">จัดการ</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th>สินค้า</th>
+              <th>SKU</th>
+              <th>สี</th>
+              <th>ยาว</th>
+              <th>กว้าง</th>
+              <th>หนา</th>
+              <th>ยี่ห้อ</th>
+              <th>Feature</th>
+              <th>Status</th>
+              <th style="width:120px">จัดการ</th>
+            </tr>
+          </thead>
           <tbody id="var-body">
             <tr><td colspan="10" class="am-empty">⏳ กำลังโหลด...</td></tr>
           </tbody>
@@ -195,12 +216,14 @@
       </div>
       <div class="am-table-wrap">
         <table class="am-table">
-          <thead><tr>
-            <th>ค่า (Value)</th>
-            <th>Attribute</th>
-            <th>หมวดหมู่</th>
-            <th style="width:100px">จัดการ</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th>ค่า (Value)</th>
+              <th>Attribute</th>
+              <th>หมวดหมู่</th>
+              <th style="width:100px">จัดการ</th>
+            </tr>
+          </thead>
           <tbody id="opt-body">
             <tr><td colspan="4" class="am-empty">⏳ กำลังโหลด...</td></tr>
           </tbody>
@@ -213,8 +236,152 @@
   <!-- TOAST -->
   <div id="amToast" class="am-toast"></div>
 
+  <!-- FOOTER -->
   <footer class="footer">© 2026 EABaseHub | จัดการข้อมูลสินค้า</footer>
 
+  <!-- Core Scripts -->
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/auth.js"></script>
   <script src="/js/pages/admin/AddProductSpec.js"></script>
+
+  <!-- Nav Loader + Role Check -->
+  <script>
+    // ═══════════════════════════════════════════════════════════
+    // NAV LOADER
+    // ═══════════════════════════════════════════════════════════
+    async function loadNav(role) {
+      const navFiles = {
+        admin: "/pages/components/nav-admin.html",
+        manager: "/pages/components/nav-manager.html"
+      };
+
+      const file = navFiles[role];
+
+      if (!file) {
+        console.warn("ไม่มี nav สำหรับ role:", role);
+        return;
+      }
+
+      console.log("LOAD NAV FILE =", file);
+
+      try {
+        const res = await fetch(file);
+
+        if (!res.ok) {
+          console.error("โหลด nav ไม่ได้:", file);
+          return;
+        }
+
+        const html = await res.text();
+        document.getElementById("navContainer").innerHTML = html;
+        setActiveMenu();
+      } catch (err) {
+        console.error("Error loading nav:", err);
+      }
+    }
+
+    function setActiveMenu() {
+      const links = document.querySelectorAll(".app-nav a");
+      const current = window.location.pathname;
+
+      links.forEach(link => {
+        if (link.getAttribute("href") === current) {
+          link.classList.add("active");
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // GET USER ROLE FROM SUPABASE
+    // ═══════════════════════════════════════════════════════════
+    async function getUserRole(userId) {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("ดึง role ไม่ได้:", error.message);
+        return null;
+      }
+
+      console.log("PROFILE DATA =", data);
+      return data?.role || null;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // WAIT FOR SUPABASE CLIENT
+    // ═══════════════════════════════════════════════════════════
+    function waitForSupabaseClient(callback, maxAttempts = 50) {
+      let attempts = 0;
+
+      const check = () => {
+        attempts++;
+
+        if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+          console.log("✅ supabaseClient พร้อมแล้ว");
+          callback();
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 100);
+        } else {
+          console.error("❌ supabaseClient ไม่พร้อม หลังจากรอนานเกินไป");
+        }
+      };
+
+      check();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // INIT PAGE
+    // ═══════════════════════════════════════════════════════════
+    async function initPage() {
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+
+        console.log("USER =", user);
+
+        if (error || !user) {
+          console.error("ไม่พบผู้ใช้หรือไม่ได้ login");
+          return;
+        }
+
+        // อัพเดต UI แสดงชื่อผู้ใช้
+        const userName = user.user_metadata?.full_name || user.email || "ผู้ใช้";
+        document.getElementById("userName").textContent = userName;
+
+        // อัพเดต Avatar (แสดงตัวอักษรแรกของชื่อ)
+        const avatarEl = document.getElementById("userAvatar");
+        if (avatarEl && userName) {
+          avatarEl.textContent = userName.charAt(0).toUpperCase();
+        }
+
+        // ดึง role จาก Supabase (ตาราง profiles)
+        const role = await getUserRole(user.id);
+
+        if (!role) {
+          console.error("ไม่พบ role ของผู้ใช้");
+          return;
+        }
+
+        console.log("✅ USER ROLE =", role);
+
+        // โหลด nav ตาม role
+        loadNav(role);
+
+      } catch (err) {
+        console.error("Error in initPage:", err);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // DOM READY
+    // ═══════════════════════════════════════════════════════════
+    document.addEventListener("DOMContentLoaded", () => {
+      waitForSupabaseClient(initPage);
+    });
+  </script>
+
 </body>
 </html>

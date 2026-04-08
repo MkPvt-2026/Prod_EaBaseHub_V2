@@ -7,151 +7,14 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/base/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base/bassManager.css">
   <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
-  
-  <style>
-    /* ── Date Range Picker Styles ── */
-    .date-range-section {
-      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
-      border: 1px solid rgba(0,212,170,0.2);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-    }
-    
-    .date-range-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    
-    .date-range-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-primary, #e8f0fe);
-    }
-    
-    .date-range-title .icon {
-      font-size: 1.25rem;
-    }
-    
-    .date-range-label {
-      background: rgba(0,212,170,0.15);
-      color: var(--accent, #00d4aa);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-    
-    .date-range-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    
-    .date-input-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0,0,0,0.2);
-      padding: 6px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .date-input-group label {
-      font-size: 0.75rem;
-      color: var(--text-muted, #7a9cc0);
-      white-space: nowrap;
-    }
-    
-    .date-input-group input[type="date"] {
-      background: transparent;
-      border: none;
-      color: var(--text-primary, #e8f0fe);
-      font-family: 'Kanit', sans-serif;
-      font-size: 0.9rem;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    
-    .date-input-group input[type="date"]:focus {
-      outline: none;
-      background: rgba(0,212,170,0.1);
-    }
-    
-    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.7);
-      cursor: pointer;
-    }
-    
-    .quick-range-btns {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-    
-    .quick-range-btn {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--text-muted, #7a9cc0);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      font-family: 'Kanit', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .quick-range-btn:hover {
-      background: rgba(0,212,170,0.1);
-      border-color: rgba(0,212,170,0.3);
-      color: var(--text-primary, #e8f0fe);
-    }
-    
-    .quick-range-btn.active {
-      background: rgba(0,212,170,0.2);
-      border-color: var(--accent, #00d4aa);
-      color: var(--accent, #00d4aa);
-      font-weight: 500;
-    }
-    
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      .date-range-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .date-range-controls {
-        width: 100%;
-      }
-      
-      .date-input-group {
-        flex: 1;
-        min-width: 140px;
-      }
-      
-      .quick-range-btns {
-        width: 100%;
-        justify-content: flex-start;
-      }
-    }
-  </style>
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- ── HEADER ── -->
   <header class="app-header">
     <div class="logo">
       <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
@@ -162,17 +25,19 @@
       <div class="user-info">
         <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
-      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      <div class="group">
+        <span class="badge badge--message-sent" onclick="logout()">
+          <span class="badge-icon">
+            <span class="material-symbols-outlined" style="font-size:17px">logout</span>
+          </span>
+          ออกจากระบบ
+        </span>
+      </div>
     </div>
   </header>
 
-  <!-- NAV -->
-  <nav class="app-nav">       
-    <a href="/index.html">หน้าหลัก</a>
-    <!-- <a href="/pages/dashboard/managerDashboard.html" class="active">หน้าหลัก</a> -->
-    <a href="/pages/reports/reportManager.html" class="active">รายงานเข้าร้าน</a>
-    <a href="/UnderDev.html">จัดการประชาสัมพันธ์</a>
-  </nav>
+  <!-- NAV Container -->
+  <div id="navContainer"></div>
 
   <main>
   <div class="container">
@@ -376,14 +241,114 @@
 
   <!-- =====================================================
        JAVASCRIPT FILES
-       ลำดับโหลด: supabaseClient → userService → roleConfig → auth → page script
+       ลำดับโหลด: supabaseClient → userService → auth → reportTracker
        ===================================================== -->
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/userService.js"></script>
-  <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/auth.js"></script>
-  <script src="/js/core/loadingSplash.js"></script>
+  
+  <!-- ✅ โหลด reportTracker.js -->
   <script src="/js/pages/report/reportTracker.js"></script>
+
+  <!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+  <script>
+  async function loadNav(role) {
+    const navFiles = {
+      admin: "/pages/components/nav-admin.html",
+      manager: "/pages/components/nav-manager.html"
+    };
+
+    const file = navFiles[role];
+
+    if (!file) {
+      console.warn("ไม่มี nav สำหรับ role:", role);
+      return;
+    }
+
+    console.log("LOAD NAV FILE =", file);
+
+    try {
+      const res = await fetch(file);
+
+      if (!res.ok) {
+        console.error("โหลด nav ไม่ได้:", file);
+        return;
+      }
+
+      const html = await res.text();
+      document.getElementById("navContainer").innerHTML = html;
+      setActiveMenu();
+    } catch (err) {
+      console.error("Error loading nav:", err);
+    }
+  }
+
+  function setActiveMenu() {
+    const links = document.querySelectorAll(".app-nav a");
+    const current = window.location.pathname;
+
+    links.forEach(link => {
+      if (link.getAttribute("href") === current) {
+        link.classList.add("active");
+      }
+    });
+  }
+
+  async function getUserRole(userId) {
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("ดึง role ไม่ได้:", error.message);
+      return null;
+    }
+
+    console.log("PROFILE DATA =", data);
+    return data?.role || null;
+  }
+
+  // รอให้ supabaseClient พร้อมก่อน แล้วโหลด nav
+  function waitForSupabaseAndLoadNav(maxAttempts = 50) {
+    let attempts = 0;
+    
+    const check = async () => {
+      attempts++;
+      
+      if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+        console.log("✅ supabaseClient พร้อมแล้ว - กำลังโหลด nav");
+        
+        try {
+          // ลองดึง session
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          
+          if (session?.user) {
+            const role = await getUserRole(session.user.id);
+            if (role) {
+              loadNav(role);
+            }
+          } else {
+            console.warn("ไม่พบ session - ไม่โหลด nav");
+          }
+        } catch (err) {
+          console.error("Error loading nav:", err);
+        }
+      } else if (attempts < maxAttempts) {
+        setTimeout(check, 100);
+      } else {
+        console.error("❌ supabaseClient ไม่พร้อม หลังจากรอนานเกินไป");
+      }
+    };
+    
+    check();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    waitForSupabaseAndLoadNav();
+  });
+  </script>
 
 </body>
 </html>

@@ -35,6 +35,9 @@
     <div class="page">
       <div class="paper"><h1>ฟอร์มแผนการเดินทางและเบิกจ่าย ๑</h1></div>
 
+
+      
+
       <!-- SECTION: ข้อมูลพนักงาน -->
       <div class="section summary-section">
         <h3>ข้อมูลพนักงาน / ช่วงเวลา</h3>
@@ -92,17 +95,26 @@
         <div id="localDraftList"><p style="text-align:center;color:#aaa;padding:20px 0;font-size:13px;">กำลังโหลด...</p></div>
       </div>
 
-      <!-- SECTION: Completed (Supabase) -->
+    <!-- ===========================================================
+     แก้ไข SECTION: Completed (Supabase) ใน formPlan.html
+     เปลี่ยนจาก Export All CSV → Export All PDF
+     =========================================================== -->
+
+      <!-- SECTION: Completed (Supabase) — ✅ UPDATED v3.6 -->
       <div class="section summary-section" id="completedSection">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <h3 style="margin:0;border:none;padding:0;">✅ แผนที่บันทึกในระบบแล้ว
             <span id="completedCountBadge" style="background:#e8f5f4;color:#0f6e56;font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid #5DCAA5;margin-left:8px;font-weight:500;vertical-align:middle;">0 รายการ</span>
           </h3>
-          <button type="button" onclick="loadCompletedList()" style="background:none;border:1px solid #ccc;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;">🔄 รีเฟรช</button>
+          <div style="display:flex;gap:6px">
+            <button type="button" onclick="exportAllCompletedPDF()" style="background:#EFF6FF;color:#1E40AF;border:1px solid #93C5FD;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-weight:600;">📤 Export All PDF</button>
+            <button type="button" onclick="loadCompletedList()" style="background:none;border:1px solid #ccc;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;">🔄 รีเฟรช</button>
+          </div>
         </div>
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">กดที่การ์ดเพื่อดูรายละเอียด · กด 👁 ดูข้อมูล เพื่อเปิด Preview · Export PDF ได้ทันที</p>
         <div id="completedList"><p style="text-align:center;color:#aaa;padding:20px 0;font-size:13px;">กำลังโหลด...</p></div>
       </div>
-
+      
     </div><!-- /page -->
   </main>
 </div>
