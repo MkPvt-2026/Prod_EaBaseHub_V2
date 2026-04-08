@@ -37,12 +37,8 @@
     </div>
 </header>
 
-<!-- NAV -->
-<nav class="app-nav">
-    <a href="/pages/admin/adminDashboard.html">หน้าหลัก</a>
-    <a href="/pages/reports/reportTracker.html">รายงานเข้าร้านค้า</a>
-    <a href="/pages/admin/Adminannouncements.html" class="active">จัดการประชาสัมพันธ์</a>
-</nav>
+<!-- โหลด Nav ตาม Role -->
+<div id="navContainer"></div>      
 
 <main class="admin-announce-page">
     <h1>
@@ -188,6 +184,125 @@
 
 <!-- 3. Page Script -->
 <script src="/js/pages/admin/Adminannouncements.js"></script>
+
+<!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+<script>
+async function loadNav(role) {
+    const navFiles = {
+        admin: "/pages/components/nav-admin.html",
+        manager: "/pages/components/nav-manager.html"
+    };
+
+    const file = navFiles[role];
+
+    if (!file) {
+        console.warn("ไม่มี nav สำหรับ role:", role);
+        return;
+    }
+
+    console.log("LOAD NAV FILE =", file);
+
+    try {
+        const res = await fetch(file);
+
+        if (!res.ok) {
+            console.error("โหลด nav ไม่ได้:", file);
+            return;
+        }
+
+        const html = await res.text();
+        document.getElementById("navContainer").innerHTML = html;
+        setActiveMenu();
+    } catch (err) {
+        console.error("Error loading nav:", err);
+    }
+}
+
+function setActiveMenu() {
+    const links = document.querySelectorAll(".app-nav a");
+    const current = window.location.pathname;
+
+    links.forEach(link => {
+        if (link.getAttribute("href") === current) {
+            link.classList.add("active");
+        }
+    });
+}
+
+async function getUserRole(userId) {
+    // ✅ แก้จาก "users" เป็น "profiles"
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+    if (error) {
+        console.error("ดึง role ไม่ได้:", error.message);
+        return null;
+    }
+
+    console.log("PROFILE DATA =", data);
+    return data?.role || null;
+}
+
+// รอให้ supabaseClient พร้อมก่อน
+function waitForSupabaseClient(callback, maxAttempts = 50) {
+    let attempts = 0;
+    
+    const check = () => {
+        attempts++;
+        
+        if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+            console.log("✅ supabaseClient พร้อมแล้ว");
+            callback();
+        } else if (attempts < maxAttempts) {
+            setTimeout(check, 100);
+        } else {
+            console.error("❌ supabaseClient ไม่พร้อม หลังจากรอนานเกินไป");
+        }
+    };
+    
+    check();
+}
+
+async function initPage() {
+    try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+
+        console.log("USER =", user);
+
+        if (error || !user) {
+            console.error("ไม่พบผู้ใช้หรือไม่ได้ login");
+            return;
+        }
+
+        // อัพเดต UI แสดงชื่อผู้ใช้
+        const userName = user.user_metadata?.full_name || user.email || "ผู้ใช้";
+        document.getElementById("userName").textContent = userName;
+
+        // ดึง role จาก Supabase (ตาราง profiles)
+        const role = await getUserRole(user.id);
+
+        if (!role) {
+            console.error("ไม่พบ role ของผู้ใช้");
+            return;
+        }
+
+        console.log("✅ USER ROLE =", role);
+
+        // โหลด nav ตาม role
+        loadNav(role);
+
+    } catch (err) {
+        console.error("Error in initPage:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    waitForSupabaseClient(initPage);
+});
+</script>
 
 </body>
 </html>

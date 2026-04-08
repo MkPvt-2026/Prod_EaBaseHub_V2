@@ -1,0 +1,371 @@
+/* =====================================================
+   dailyProductSales.css — Daily Product Sales Styles
+   ===================================================== */
+
+/* ── Daily Section Container ── */
+.daily-section {
+  background: linear-gradient(135deg, rgba(77,159,255,0.08) 0%, rgba(168,85,247,0.08) 100%);
+  border: 1px solid rgba(77,159,255,0.2);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.daily-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.daily-section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.daily-section-title h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #e8f0fe);
+  margin: 0;
+}
+
+.daily-section-title .icon {
+  font-size: 1.5rem;
+}
+
+.daily-date-badge {
+  background: rgba(77,159,255,0.2);
+  color: var(--accent2, #4d9fff);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ── Date Select Dropdown ── */
+.daily-date-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.daily-date-selector label {
+  font-size: 0.85rem;
+  color: var(--text-muted, #7a9cc0);
+}
+
+.daily-date-select {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: var(--text-primary, #e8f0fe);
+  font-family: 'Kanit', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.daily-date-select:hover {
+  border-color: rgba(77,159,255,0.4);
+  background: rgba(77,159,255,0.1);
+}
+
+.daily-date-select:focus {
+  outline: none;
+  border-color: var(--accent2, #4d9fff);
+  box-shadow: 0 0 0 3px rgba(77,159,255,0.2);
+}
+
+.daily-date-select option {
+  background: #1e2d42;
+  color: var(--text-primary, #e8f0fe);
+}
+
+/* ── Daily Summary Mini Cards ── */
+.daily-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.daily-mini-card {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.daily-mini-card .mini-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent, #00d4aa);
+  margin-bottom: 4px;
+}
+
+.daily-mini-card:nth-child(2) .mini-value { color: var(--accent2, #4d9fff); }
+.daily-mini-card:nth-child(3) .mini-value { color: #a855f7; }
+.daily-mini-card:nth-child(4) .mini-value { color: #f5a623; }
+
+.daily-mini-card .mini-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #7a9cc0);
+}
+
+/* ── Daily Content Grid ── */
+.daily-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.daily-content-grid .card {
+  background: rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.daily-chart-wrap {
+  height: 350px;
+  position: relative;
+}
+
+/* ── Daily Date Group ── */
+.daily-date-group {
+  margin-bottom: 24px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.daily-date-group:last-child {
+  margin-bottom: 0;
+}
+
+.daily-date-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(90deg, rgba(77,159,255,0.15), rgba(168,85,247,0.1));
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.daily-date-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #e8f0fe);
+}
+
+.daily-date-icon {
+  font-size: 1.1rem;
+}
+
+.daily-date-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.daily-stat {
+  font-size: 0.85rem;
+  color: var(--text-muted, #7a9cc0);
+  background: rgba(0,0,0,0.2);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ── Daily Table ── */
+.daily-table-wrap {
+  overflow-x: auto;
+  padding: 8px;
+}
+
+.daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.daily-table thead th {
+  text-align: left;
+  padding: 10px 12px;
+  color: var(--text-muted, #7a9cc0);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.daily-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.daily-table tbody tr:hover {
+  background: rgba(77,159,255,0.08);
+}
+
+.daily-table tbody td {
+  padding: 12px;
+  color: var(--text-primary, #e8f0fe);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.daily-table .rank-col {
+  width: 40px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--accent2, #4d9fff);
+}
+
+.daily-table .product-col {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-table .qty-col {
+  white-space: nowrap;
+  color: var(--accent, #00d4aa);
+  font-weight: 500;
+}
+
+.daily-table .amount-col {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #f5a623;
+}
+
+.daily-table .seller-col {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.seller-tag {
+  display: inline-block;
+  background: rgba(168,85,247,0.2);
+  color: #a855f7;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.seller-more {
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+  color: var(--text-muted, #7a9cc0);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+}
+
+/* ── Max Height & Scroll for Table Container ── */
+#dailyProductTable {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+#dailyProductTable::-webkit-scrollbar {
+  width: 6px;
+}
+
+#dailyProductTable::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+#dailyProductTable::-webkit-scrollbar-thumb {
+  background: rgba(77,159,255,0.4);
+  border-radius: 3px;
+}
+
+#dailyProductTable::-webkit-scrollbar-thumb:hover {
+  background: rgba(77,159,255,0.6);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .daily-content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .daily-summary-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .daily-section {
+    padding: 16px;
+  }
+  
+  .daily-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .daily-date-selector {
+    width: 100%;
+  }
+  
+  .daily-date-select {
+    width: 100%;
+  }
+  
+  .daily-summary-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .daily-date-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .daily-table .product-col {
+    max-width: 120px;
+  }
+  
+  .daily-table .seller-col {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .daily-summary-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .daily-mini-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+  
+  .daily-mini-card .mini-value {
+    order: 2;
+    font-size: 1.1rem;
+  }
+  
+  .daily-mini-card .mini-label {
+    order: 1;
+  }
+}
