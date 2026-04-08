@@ -904,7 +904,7 @@ async function loadProductGrid() {
       }
 
       item.innerHTML = `
-        <div class="product-icon" style="color: ${color}">
+        <div class="product-icon">
           <span class="material-symbols-outlined" style="color: ${color}">${icon}</span>
         </div>
         <span class="product-name">${cat.name}</span>
