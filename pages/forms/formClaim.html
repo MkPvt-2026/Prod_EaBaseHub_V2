@@ -10,14 +10,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <!-- 🔧 FIX: ใช้ URL แบบไม่ระบุ axis เพื่อให้โหลด font ได้ครบถ้วน -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
 
   <!-- Stylesheet -->
-  <!-- เพิ่มบรรทัดนี้ใน <head> ต่อจาก formClaim.css -->  
   <link rel="stylesheet" href="/css/base/layout.css">
   <link rel="stylesheet" href="/css/pages/forms/formClaim.css">
-  <link rel="stylesheet" href="/css/base/formClaim_icons.css">
+  <link rel="stylesheet" href="/css/pages/forms/formClaim_icons.css">
   <link rel="stylesheet" href="/css/pages/forms/formClaim_warning.css"> 
 </head>
 
@@ -125,46 +125,7 @@
     <div class="section-title">🛍️ เลือกประเภทสินค้า</div>
 
     <div class="product-grid">
-      <!-- <div class="product-item" onclick="openProductModal('b10f48d6-3909-4396-9df4-19aaef03f823')">
-        <div class="product-icon"><span class="material-symbols-outlined">plumbing</span></div>
-        ท่อพีอี
-      </div>
-      <div class="product-item" onclick="openProductModal('0f4bff06-fc48-4220-bb97-f8ad21415739')">
-        <div class="product-icon"><span class="material-symbols-outlined">grid_on</span></div>
-        ตาข่ายกรองแสง
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">potted_plant</span></div>
-        ถุงเพาะชำ
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">shopping_bag</span></div>
-        ถุงอเนกประสงค์
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">delete</span></div>
-        ถุงขยะ
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">home</span></div>
-        พลาสติกโรงเรือน
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">water</span></div>
-        พลาสติกปูบ่อ
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">grass</span></div>
-        พลาสติกคลุมดิน
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">water_drop</span></div>
-        เทปน้ำพุ่ง
-      </div>
-      <div class="product-item">
-        <div class="product-icon"><span class="material-symbols-outlined">category</span></div>
-        สินค้าอื่นๆ
-      </div> -->
+      <!-- JS จะ render product items ที่นี่ -->
     </div>
 
     <div class="section-title">📝 รายละเอียดสินค้า</div>
@@ -304,7 +265,7 @@
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
-  <!-- <script src="/js/services/categoryService.js"></script> -->
+  <script src="/js/services/categoryService.js"></script>
   <script src="/js/pages/forms/formClaim.js" type="module"></script>
 
   <script src="/js/core/splash.js"></script> 
