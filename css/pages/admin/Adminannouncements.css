@@ -2,6 +2,10 @@
    EABaseHub: Admin Announcements Management
    File: /css/pages/admin/Adminannouncements.css
    ============================================= */
+   :root{
+    --bg-head: linear-gradient(135deg, #149684, #3DB8B1) ;
+
+   }
 
 /* --- Page Layout --- */
 .admin-announce-page {
@@ -60,6 +64,8 @@
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
     display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
 }
 
 @keyframes spin {
@@ -74,13 +80,6 @@
     flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 20px;
-}
-
-.admin-announce-toolbar-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
 }
 
 .admin-announce-filters {
@@ -107,7 +106,7 @@
 }
 
 .admin-announce-filter-btn.active {
-    background: linear-gradient(135deg, #1a5c57, #3FB7AE);
+    background: var(--bg-head);
     color: #fff;
     border-color: transparent;
 }
@@ -148,7 +147,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(135deg, #1a5c57, #3FB7AE);
+    background: linear-gradient(135deg, #149684, #3DB8B1);
     color: #fff;
     border: none;
     border-radius: 10px;
@@ -188,7 +187,7 @@
 }
 
 .admin-announce-table thead {
-    background: linear-gradient(135deg, #0f3d3a, #1a5c57);
+    background: linear-gradient(135deg, #149684, #3DB8B1);
 }
 
 .admin-announce-table thead th {
@@ -343,15 +342,6 @@
     background: #fde68a;
 }
 
-.admin-announce-actions .btn-archive {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.admin-announce-actions .btn-archive:hover:not(:disabled) {
-    background: #e2e8f0;
-}
-
 .admin-announce-actions .btn-delete {
     background: #fee2e2;
     color: #dc2626;
@@ -470,11 +460,6 @@
     color: #ef4444;
 }
 
-.announce-form-group .file-hint {
-    font-weight: 400;
-    color: #94a3b8;
-}
-
 .announce-form-group input[type="text"],
 .announce-form-group input[type="url"],
 .announce-form-group textarea,
@@ -511,136 +496,18 @@
     resize: vertical;
 }
 
-/* Character count */
-.char-count {
-    display: block;
-    text-align: right;
-    font-size: 11px;
-    color: #94a3b8;
-    margin-top: 4px;
-}
-
-.char-count.near-limit {
-    color: #f59e0b;
-}
-
-.char-count.at-limit {
-    color: #ef4444;
-}
-
-/* Input hint */
-.input-hint {
-    display: block;
-    font-size: 11px;
-    color: #94a3b8;
-    margin-top: 4px;
-}
-
-.input-hint.error {
-    color: #ef4444;
-}
-
-/* --- File Upload Area --- */
-.file-upload-area {
-    position: relative;
-    border: 2px dashed #d1d5db;
-    border-radius: 10px;
-    padding: 24px;
-    text-align: center;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-.file-upload-area:hover {
-    border-color: #3FB7AE;
-    background: #f8fcfb;
-}
-
-.file-upload-area input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.file-upload-placeholder {
-    pointer-events: none;
-}
-
-.file-upload-placeholder .material-symbols-outlined {
-    font-size: 40px;
-    color: #94a3b8;
-}
-
-.file-upload-placeholder p {
-    margin: 8px 0 0;
-    font-size: 13px;
-    color: #64748b;
-}
-
 /* --- Cover image preview --- */
-.announce-cover-preview-wrap {
-    position: relative;
-    margin-top: 12px;
-    display: none;
-}
-
-.announce-cover-preview-wrap.visible {
-    display: block;
-}
-
 .announce-cover-preview {
     width: 100%;
     max-height: 180px;
     object-fit: cover;
     border-radius: 10px;
-}
-
-.btn-remove-cover {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.btn-remove-cover:hover {
-    background: rgba(0, 0, 0, 0.8);
-}
-
-.btn-remove-cover .material-symbols-outlined {
-    font-size: 18px;
-}
-
-/* --- Attachment info --- */
-.attachment-info {
-    display: none;
-    align-items: center;
-    gap: 6px;
     margin-top: 8px;
-    padding: 8px 12px;
-    background: #f8fcfb;
-    border-radius: 8px;
-    font-size: 13px;
-    color: #1a3c3a;
+    display: none;
 }
 
-.attachment-info.visible {
-    display: flex;
-}
-
-.attachment-info .material-symbols-outlined {
-    font-size: 18px;
-    color: #3FB7AE;
+.announce-cover-preview.visible {
+    display: block;
 }
 
 /* --- Toggle switch for pin --- */
@@ -742,9 +609,6 @@
     color: #92400e;
     cursor: pointer;
     transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .btn-form-draft:hover:not(:disabled) {
@@ -767,9 +631,6 @@
     color: #fff;
     cursor: pointer;
     transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .btn-form-publish:hover:not(:disabled) {
@@ -781,11 +642,6 @@
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
-}
-
-.btn-loading {
-    display: inline-flex;
-    align-items: center;
 }
 
 /* --- Toast System --- */
@@ -830,33 +686,9 @@
     background: #f59e0b;
 }
 
-.toast-icon {
+.toast .material-symbols-outlined {
     font-size: 20px;
     flex-shrink: 0;
-}
-
-.toast-message {
-    flex: 1;
-}
-
-.toast-close {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-}
-
-.toast-close:hover {
-    color: #fff;
-}
-
-.toast-close .material-symbols-outlined {
-    font-size: 18px;
 }
 
 /* --- Delete Confirm Modal --- */
@@ -981,10 +813,6 @@
     .admin-announce-toolbar {
         flex-direction: column;
         align-items: stretch;
-    }
-
-    .admin-announce-toolbar-right {
-        flex-direction: column;
     }
 
     .admin-announce-search {

@@ -1,6 +1,6 @@
 /* =============================================
    EABaseHub: Admin Announcements Management
-   File: /js/pages/Adminannouncements.js
+   File: /js/pages/admin/Adminannouncements.js
    
    Dependencies: supabaseClient.js, userService.js, auth.js
    ============================================= */
@@ -8,22 +8,12 @@
 const AdminAnnouncements = (() => {
     'use strict';
 
-    // ---- Configuration ----
-    const CONFIG = {
-        MAX_COVER_SIZE: 5 * 1024 * 1024,      // 5MB
-        MAX_ATTACHMENT_SIZE: 10 * 1024 * 1024, // 10MB
-        ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
-        DEBOUNCE_DELAY: 300,
-        TOAST_DURATION: 3000,
-    };
-
     // ---- State ----
     let allAnnouncements = [];
     let currentFilter = 'all';
     let searchQuery = '';
     let editingId = null;
     let currentUser = null;
-    let isLoading = false;
     let isSaving = false;
 
     // ---- Helpers ----
@@ -58,43 +48,22 @@ const AdminAnnouncements = (() => {
     }
 
     function getCategoryClass(cat) {
-        const validCategories = ['general', 'important', 'update', 'event'];
-        return validCategories.includes(cat) ? cat : 'general';
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+        const valid = ['general', 'important', 'update', 'event'];
+        return valid.includes(cat) ? cat : 'general';
     }
 
     async function getSupabase() {
         if (window.supabaseClient) return window.supabaseClient;
         return new Promise((resolve, reject) => {
             let attempts = 0;
-            const maxAttempts = 50; // 5 seconds timeout
             const interval = setInterval(() => {
                 attempts++;
                 if (window.supabaseClient) {
                     clearInterval(interval);
                     resolve(window.supabaseClient);
-                } else if (attempts >= maxAttempts) {
+                } else if (attempts >= 50) {
                     clearInterval(interval);
-                    reject(new Error('Supabase client not available'));
+                    reject(new Error('Supabase not available'));
                 }
             }, 100);
         });
@@ -102,75 +71,57 @@ const AdminAnnouncements = (() => {
 
     // ---- Toast System ----
     function showToast(message, type = 'success') {
-        const container = document.getElementById('toastContainer') || createToastContainer();
-        
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            document.body.appendChild(container);
+        }
+
         const icons = {
             success: 'check_circle',
             error: 'error',
-            warning: 'warning',
+            warning: 'warning'
         };
 
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
         toast.innerHTML = `
-            <span class="material-symbols-outlined toast-icon">${icons[type] || 'info'}</span>
-            <span class="toast-message">${escapeHtml(message)}</span>
-            <button class="toast-close" onclick="this.parentElement.remove()">
-                <span class="material-symbols-outlined">close</span>
-            </button>
+            <span class="material-symbols-outlined">${icons[type] || 'info'}</span>
+            <span>${escapeHtml(message)}</span>
         `;
-        
         container.appendChild(toast);
 
         // Trigger animation
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
-        });
+        requestAnimationFrame(() => toast.classList.add('show'));
 
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
-        }, CONFIG.TOAST_DURATION);
-    }
-
-    function createToastContainer() {
-        const container = document.createElement('div');
-        container.id = 'toastContainer';
-        document.body.appendChild(container);
-        return container;
+        }, 3000);
     }
 
     // ---- Loading States ----
     function setPageLoading(loading) {
-        isLoading = loading;
         const loadingEl = document.getElementById('announceLoading');
         const tableWrap = document.getElementById('announceTableWrap');
-        
         if (loadingEl) loadingEl.style.display = loading ? 'flex' : 'none';
         if (tableWrap) tableWrap.style.display = loading ? 'none' : 'block';
     }
 
-    function setSaveLoading(loading, buttonType = 'both') {
+    function setSaveLoading(loading) {
         isSaving = loading;
         const btnDraft = document.getElementById('btnDraft');
         const btnPublish = document.getElementById('btnPublish');
         
-        const buttons = buttonType === 'both' ? [btnDraft, btnPublish] : 
-                        buttonType === 'draft' ? [btnDraft] : [btnPublish];
+        if (btnDraft) btnDraft.disabled = loading;
+        if (btnPublish) btnPublish.disabled = loading;
         
-        buttons.forEach(btn => {
-            if (!btn) return;
-            btn.disabled = loading;
-            const textEl = btn.querySelector('.btn-text');
-            const loadingEl = btn.querySelector('.btn-loading');
-            if (textEl) textEl.style.display = loading ? 'none' : 'inline';
-            if (loadingEl) loadingEl.style.display = loading ? 'inline-flex' : 'none';
-        });
-
-        // Disable other form elements
-        const formElements = document.querySelectorAll('.announce-form-body input, .announce-form-body textarea, .announce-form-body select');
-        formElements.forEach(el => el.disabled = loading);
+        if (btnPublish) {
+            btnPublish.innerHTML = loading 
+                ? '<span class="loading-spinner-small"></span> กำลังบันทึก...'
+                : 'เผยแพร่ประกาศ';
+        }
     }
 
     // ---- Fetch & Render ----
@@ -189,7 +140,7 @@ const AdminAnnouncements = (() => {
             render();
         } catch (err) {
             console.error('[AdminAnnouncements] Fetch error:', err);
-            showToast('โหลดข้อมูลผิดพลาด: ' + (err.message || 'Unknown error'), 'error');
+            showToast('โหลดข้อมูลผิดพลาด: ' + (err.message || ''), 'error');
         } finally {
             setPageLoading(false);
         }
@@ -197,22 +148,16 @@ const AdminAnnouncements = (() => {
 
     function getFiltered() {
         let filtered = [...allAnnouncements];
-
-        // Filter by status
         if (currentFilter !== 'all') {
             filtered = filtered.filter(a => a.status === currentFilter);
         }
-
-        // Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(a =>
                 (a.title || '').toLowerCase().includes(q) ||
-                (a.content || '').toLowerCase().includes(q) ||
-                (a.created_by_name || '').toLowerCase().includes(q)
+                (a.content || '').toLowerCase().includes(q)
             );
         }
-
         return filtered;
     }
 
@@ -235,12 +180,13 @@ const AdminAnnouncements = (() => {
             const safeId = escapeHtml(item.id);
             const safeTitle = escapeHtml(item.title || 'ไม่มีหัวข้อ');
             const safeContent = escapeHtml((item.content || '').substring(0, 60));
-            const hasMoreContent = (item.content || '').length > 60;
-            const categoryClass = getCategoryClass(item.category);
-            const categoryLabel = getCategoryLabel(item.category);
+            const hasMore = (item.content || '').length > 60;
+            const catClass = getCategoryClass(item.category);
+            const catLabel = getCategoryLabel(item.category);
             const safeCreator = escapeHtml(item.created_by_name || '-');
             
             let statusHtml = '';
+            const statusClass = item.status || 'unknown';
             switch (item.status) {
                 case 'published':
                     statusHtml = '<span class="material-symbols-outlined">check_circle</span> เผยแพร่';
@@ -252,44 +198,36 @@ const AdminAnnouncements = (() => {
                     statusHtml = '<span class="material-symbols-outlined">archive</span> เก็บถาวร';
                     break;
                 default:
-                    statusHtml = escapeHtml(item.status || 'ไม่ระบุ');
+                    statusHtml = 'ไม่ระบุ';
             }
 
             return `
-                <tr data-id="${safeId}">
+                <tr>
                     <td>
-                        ${item.is_pinned
-                            ? '<span class="material-symbols-outlined pin-indicator" title="ปักหมุด">push_pin</span>'
-                            : ''}
+                        ${item.is_pinned ? '<span class="material-symbols-outlined pin-indicator">push_pin</span>' : ''}
                     </td>
                     <td class="td-title">
                         <span>${safeTitle}</span>
-                        <small>${safeContent}${hasMoreContent ? '...' : ''}</small>
+                        <small>${safeContent}${hasMore ? '...' : ''}</small>
                     </td>
                     <td>
-                        <span class="announce-category category-${categoryClass}">${categoryLabel}</span>
+                        <span class="announce-category category-${catClass}">${catLabel}</span>
                     </td>
                     <td>
-                        <span class="status-badge status-${escapeHtml(item.status || 'unknown')}">
-                            ${statusHtml}
-                        </span>
+                        <span class="status-badge status-${statusClass}">${statusHtml}</span>
                     </td>
                     <td>${formatDate(item.published_at || item.created_at)}</td>
                     <td>${safeCreator}</td>
                     <td>
                         <div class="admin-announce-actions">
-                            <button class="btn-edit" title="แก้ไข" onclick="AdminAnnouncements.openForm('${safeId}')" type="button">
+                            <button class="btn-edit" title="แก้ไข" onclick="AdminAnnouncements.openForm('${safeId}')">
                                 <span class="material-symbols-outlined">edit</span>
                             </button>
                             <button class="btn-pin" title="${item.is_pinned ? 'เลิกปักหมุด' : 'ปักหมุด'}" 
-                                    onclick="AdminAnnouncements.togglePin('${safeId}', ${!item.is_pinned})" type="button">
+                                    onclick="AdminAnnouncements.togglePin('${safeId}', ${!item.is_pinned})">
                                 <span class="material-symbols-outlined">${item.is_pinned ? 'push_pin' : 'keep'}</span>
                             </button>
-                            <button class="btn-archive" title="${item.status === 'archived' ? 'ยกเลิกเก็บถาวร' : 'เก็บถาวร'}"
-                                    onclick="AdminAnnouncements.toggleArchive('${safeId}')" type="button">
-                                <span class="material-symbols-outlined">${item.status === 'archived' ? 'unarchive' : 'archive'}</span>
-                            </button>
-                            <button class="btn-delete" title="ลบ" onclick="AdminAnnouncements.confirmDelete('${safeId}')" type="button">
+                            <button class="btn-delete" title="ลบ" onclick="AdminAnnouncements.confirmDelete('${safeId}')">
                                 <span class="material-symbols-outlined">delete</span>
                             </button>
                         </div>
@@ -312,7 +250,7 @@ const AdminAnnouncements = (() => {
         if (id) {
             const item = allAnnouncements.find(a => a.id === id);
             if (!item) {
-                showToast('ไม่พบประกาศที่ต้องการแก้ไข', 'error');
+                showToast('ไม่พบประกาศ', 'error');
                 return;
             }
 
@@ -324,30 +262,12 @@ const AdminAnnouncements = (() => {
             document.getElementById('formLink').value = item.external_link || '';
             document.getElementById('formPinned').checked = item.is_pinned || false;
 
-            // Update character counts
-            updateCharCount('formAnnounceTitle', 'titleCharCount', 200);
-            updateCharCount('formContent', 'contentCharCount', 5000);
-
-            // Show existing cover
-            const previewWrap = document.getElementById('coverPreviewWrap');
             const preview = document.getElementById('coverPreview');
             if (item.cover_image_url) {
                 preview.src = item.cover_image_url;
-                previewWrap.classList.add('visible');
+                preview.classList.add('visible');
             } else {
-                previewWrap.classList.remove('visible');
-            }
-
-            // Show existing attachment info
-            const attachmentInfo = document.getElementById('attachmentInfo');
-            if (item.attachment_name) {
-                attachmentInfo.innerHTML = `
-                    <span class="material-symbols-outlined">attach_file</span>
-                    <span>${escapeHtml(item.attachment_name)}</span>
-                `;
-                attachmentInfo.classList.add('visible');
-            } else {
-                attachmentInfo.classList.remove('visible');
+                preview.classList.remove('visible');
             }
         } else {
             titleEl.textContent = 'สร้างประกาศใหม่';
@@ -356,8 +276,8 @@ const AdminAnnouncements = (() => {
 
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
-
-        // Focus on title input
+        
+        // Focus on title
         setTimeout(() => {
             document.getElementById('formAnnounceTitle')?.focus();
         }, 300);
@@ -367,136 +287,58 @@ const AdminAnnouncements = (() => {
         if (isSaving) return;
         
         const overlay = document.getElementById('announceFormOverlay');
-        if (overlay) {
-            overlay.classList.remove('active');
-        }
+        if (overlay) overlay.classList.remove('active');
         document.body.style.overflow = '';
         editingId = null;
     }
 
     function clearForm() {
-        const fields = ['formId', 'formAnnounceTitle', 'formContent', 'formLink'];
-        fields.forEach(id => {
+        ['formId', 'formAnnounceTitle', 'formContent', 'formLink'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
-
-        const categoryEl = document.getElementById('formCategory');
-        if (categoryEl) categoryEl.value = 'general';
-
-        const pinnedEl = document.getElementById('formPinned');
-        if (pinnedEl) pinnedEl.checked = false;
-
-        const coverInput = document.getElementById('formCoverImage');
-        if (coverInput) coverInput.value = '';
-
-        const attachmentInput = document.getElementById('formAttachment');
-        if (attachmentInput) attachmentInput.value = '';
-
-        const previewWrap = document.getElementById('coverPreviewWrap');
-        if (previewWrap) previewWrap.classList.remove('visible');
-
-        const attachmentInfo = document.getElementById('attachmentInfo');
-        if (attachmentInfo) attachmentInfo.classList.remove('visible');
-
-        // Reset character counts
-        updateCharCount('formAnnounceTitle', 'titleCharCount', 200);
-        updateCharCount('formContent', 'contentCharCount', 5000);
-    }
-
-    function updateCharCount(inputId, counterId, max) {
-        const input = document.getElementById(inputId);
-        const counter = document.getElementById(counterId);
-        if (input && counter) {
-            const length = input.value.length;
-            counter.textContent = length;
-            counter.parentElement.classList.toggle('near-limit', length > max * 0.9);
-            counter.parentElement.classList.toggle('at-limit', length >= max);
-        }
-    }
-
-    // ---- File Handling ----
-    function previewCover(input) {
-        const previewWrap = document.getElementById('coverPreviewWrap');
+        const cat = document.getElementById('formCategory');
+        if (cat) cat.value = 'general';
+        const pin = document.getElementById('formPinned');
+        if (pin) pin.checked = false;
+        const cover = document.getElementById('formCoverImage');
+        if (cover) cover.value = '';
+        const attach = document.getElementById('formAttachment');
+        if (attach) attach.value = '';
         const preview = document.getElementById('coverPreview');
-        
-        if (!input.files || !input.files[0]) return;
-        
-        const file = input.files[0];
-
-        // Validate file type
-        if (!CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
-            showToast('รองรับเฉพาะไฟล์ JPG, PNG, WebP เท่านั้น', 'warning');
-            input.value = '';
-            return;
-        }
-
-        // Validate file size
-        if (file.size > CONFIG.MAX_COVER_SIZE) {
-            showToast(`ไฟล์ใหญ่เกินไป (สูงสุด ${formatFileSize(CONFIG.MAX_COVER_SIZE)})`, 'warning');
-            input.value = '';
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.src = e.target.result;
-            previewWrap.classList.add('visible');
-        };
-        reader.onerror = () => {
-            showToast('ไม่สามารถอ่านไฟล์ได้', 'error');
-        };
-        reader.readAsDataURL(file);
+        if (preview) preview.classList.remove('visible');
     }
 
-    function removeCover() {
-        const input = document.getElementById('formCoverImage');
-        const previewWrap = document.getElementById('coverPreviewWrap');
-        
-        if (input) input.value = '';
-        if (previewWrap) previewWrap.classList.remove('visible');
+    function previewCover(input) {
+        const preview = document.getElementById('coverPreview');
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('ไฟล์ใหญ่เกินไป (สูงสุด 5MB)', 'warning');
+                input.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.classList.add('visible');
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
-    function validateAttachment() {
-        const input = document.getElementById('formAttachment');
-        const attachmentInfo = document.getElementById('attachmentInfo');
-        
-        if (!input || !input.files || !input.files[0]) return true;
-
-        const file = input.files[0];
-
-        if (file.size > CONFIG.MAX_ATTACHMENT_SIZE) {
-            showToast(`ไฟล์แนบใหญ่เกินไป (สูงสุด ${formatFileSize(CONFIG.MAX_ATTACHMENT_SIZE)})`, 'warning');
-            input.value = '';
-            return false;
-        }
-
-        // Show file info
-        if (attachmentInfo) {
-            attachmentInfo.innerHTML = `
-                <span class="material-symbols-outlined">attach_file</span>
-                <span>${escapeHtml(file.name)} (${formatFileSize(file.size)})</span>
-            `;
-            attachmentInfo.classList.add('visible');
-        }
-
-        return true;
-    }
-
-    // ---- Upload to Supabase Storage ----
+    // ---- Upload ----
     async function uploadFile(file, folder) {
         const sb = await getSupabase();
-        const ext = file.name.split('.').pop().toLowerCase();
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).slice(2, 10);
-        const fileName = `${folder}/${timestamp}_${randomStr}.${ext}`;
+        const ext = file.name.split('.').pop();
+        const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
         const { data, error } = await sb.storage
             .from('announcements')
-            .upload(fileName, file, { 
-                cacheControl: '3600', 
-                upsert: false 
-            });
+            .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
         if (error) throw error;
 
@@ -507,10 +349,10 @@ const AdminAnnouncements = (() => {
         return urlData.publicUrl;
     }
 
-    // ---- Save (Create / Update) ----
+    // ---- Save ----
     async function save(status) {
         if (isSaving) return;
-
+        
         const title = document.getElementById('formAnnounceTitle')?.value.trim();
         if (!title) {
             showToast('กรุณาระบุหัวข้อประกาศ', 'warning');
@@ -518,50 +360,39 @@ const AdminAnnouncements = (() => {
             return;
         }
 
-        // Validate URL if provided
-        const linkValue = document.getElementById('formLink')?.value.trim();
-        if (linkValue && !isValidUrl(linkValue)) {
-            showToast('รูปแบบ URL ไม่ถูกต้อง', 'warning');
-            document.getElementById('formLink')?.focus();
-            return;
-        }
-
-        // Validate attachment
-        if (!validateAttachment()) return;
-
-        const buttonType = status === 'draft' ? 'draft' : 'publish';
-        setSaveLoading(true, buttonType);
+        setSaveLoading(true);
 
         try {
             const sb = await getSupabase();
             const coverFile = document.getElementById('formCoverImage')?.files[0];
             const attachFile = document.getElementById('formAttachment')?.files[0];
 
-            // Get existing values if editing
-            const existingItem = editingId 
-                ? allAnnouncements.find(a => a.id === editingId) 
-                : null;
+            const existing = editingId ? allAnnouncements.find(a => a.id === editingId) : null;
 
-            let cover_image_url = existingItem?.cover_image_url || null;
-            let attachment_url = existingItem?.attachment_url || null;
-            let attachment_name = existingItem?.attachment_name || null;
+            let cover_image_url = existing?.cover_image_url || null;
+            let attachment_url = existing?.attachment_url || null;
+            let attachment_name = existing?.attachment_name || null;
 
             // Upload cover if new
             if (coverFile) {
+                console.log('📤 Uploading cover image...');
                 cover_image_url = await uploadFile(coverFile, 'covers');
+                console.log('✅ Cover uploaded:', cover_image_url);
             }
-
+            
             // Upload attachment if new
             if (attachFile) {
+                console.log('📤 Uploading attachment...');
                 attachment_url = await uploadFile(attachFile, 'attachments');
                 attachment_name = attachFile.name;
+                console.log('✅ Attachment uploaded:', attachment_url);
             }
 
             const payload = {
                 title,
                 category: document.getElementById('formCategory')?.value || 'general',
                 content: document.getElementById('formContent')?.value.trim() || '',
-                external_link: linkValue || null,
+                external_link: document.getElementById('formLink')?.value.trim() || null,
                 is_pinned: document.getElementById('formPinned')?.checked || false,
                 cover_image_url,
                 attachment_url,
@@ -570,17 +401,14 @@ const AdminAnnouncements = (() => {
                 updated_at: new Date().toISOString(),
             };
 
+            console.log('📝 Saving payload:', payload);
+
             if (editingId) {
                 // Update existing
-                if (status === 'published' && existingItem?.status !== 'published') {
+                if (status === 'published' && existing?.status !== 'published') {
                     payload.published_at = new Date().toISOString();
                 }
-
-                const { error } = await sb
-                    .from('announcements')
-                    .update(payload)
-                    .eq('id', editingId);
-
+                const { error } = await sb.from('announcements').update(payload).eq('id', editingId);
                 if (error) throw error;
                 showToast('อัปเดตประกาศสำเร็จ');
             } else {
@@ -590,11 +418,8 @@ const AdminAnnouncements = (() => {
                 }
                 payload.created_by = currentUser?.id || null;
                 payload.created_by_name = currentUser?.full_name || currentUser?.display_name || 'Admin';
-
-                const { error } = await sb
-                    .from('announcements')
-                    .insert(payload);
-
+                
+                const { error } = await sb.from('announcements').insert(payload);
                 if (error) throw error;
                 showToast(status === 'published' ? 'เผยแพร่ประกาศสำเร็จ' : 'บันทึกแบบร่างสำเร็จ');
             }
@@ -603,18 +428,9 @@ const AdminAnnouncements = (() => {
             await fetchAll();
         } catch (err) {
             console.error('[AdminAnnouncements] Save error:', err);
-            showToast('บันทึกผิดพลาด: ' + (err.message || 'Unknown error'), 'error');
+            showToast('บันทึกผิดพลาด: ' + (err.message || ''), 'error');
         } finally {
-            setSaveLoading(false, buttonType);
-        }
-    }
-
-    function isValidUrl(string) {
-        try {
-            new URL(string);
-            return true;
-        } catch {
-            return false;
+            setSaveLoading(false);
         }
     }
 
@@ -624,43 +440,13 @@ const AdminAnnouncements = (() => {
             const sb = await getSupabase();
             const { error } = await sb
                 .from('announcements')
-                .update({ 
-                    is_pinned: pinState, 
-                    updated_at: new Date().toISOString() 
-                })
+                .update({ is_pinned: pinState, updated_at: new Date().toISOString() })
                 .eq('id', id);
-
             if (error) throw error;
-            showToast(pinState ? 'ปักหมุดประกาศแล้ว' : 'เลิกปักหมุดแล้ว');
+            showToast(pinState ? 'ปักหมุดแล้ว' : 'เลิกปักหมุดแล้ว');
             await fetchAll();
         } catch (err) {
-            console.error('[AdminAnnouncements] Pin toggle error:', err);
-            showToast('เกิดข้อผิดพลาด', 'error');
-        }
-    }
-
-    // ---- Toggle Archive ----
-    async function toggleArchive(id) {
-        const item = allAnnouncements.find(a => a.id === id);
-        if (!item) return;
-
-        const newStatus = item.status === 'archived' ? 'draft' : 'archived';
-
-        try {
-            const sb = await getSupabase();
-            const { error } = await sb
-                .from('announcements')
-                .update({ 
-                    status: newStatus, 
-                    updated_at: new Date().toISOString() 
-                })
-                .eq('id', id);
-
-            if (error) throw error;
-            showToast(newStatus === 'archived' ? 'เก็บถาวรประกาศแล้ว' : 'ยกเลิกเก็บถาวรแล้ว');
-            await fetchAll();
-        } catch (err) {
-            console.error('[AdminAnnouncements] Archive toggle error:', err);
+            console.error('[AdminAnnouncements] Pin error:', err);
             showToast('เกิดข้อผิดพลาด', 'error');
         }
     }
@@ -678,47 +464,28 @@ const AdminAnnouncements = (() => {
                 <h3>ลบประกาศนี้?</h3>
                 <p>"${escapeHtml(item.title)}"<br>การลบจะไม่สามารถกู้คืนได้</p>
                 <div class="confirm-buttons">
-                    <button class="btn-cancel" type="button">ยกเลิก</button>
-                    <button class="btn-danger" type="button">ลบประกาศ</button>
+                    <button class="btn-cancel">ยกเลิก</button>
+                    <button class="btn-danger">ลบประกาศ</button>
                 </div>
             </div>
         `;
-
         document.body.appendChild(overlay);
 
         // Event listeners
-        const cancelBtn = overlay.querySelector('.btn-cancel');
-        const deleteBtn = overlay.querySelector('.btn-danger');
-
-        cancelBtn.onclick = () => overlay.remove();
-        deleteBtn.onclick = async () => {
+        overlay.querySelector('.btn-cancel').onclick = () => overlay.remove();
+        overlay.querySelector('.btn-danger').onclick = async () => {
             overlay.remove();
             await deleteAnnouncement(id);
         };
-
-        // Click outside to close
         overlay.onclick = (e) => {
             if (e.target === overlay) overlay.remove();
         };
-
-        // ESC to close
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                overlay.remove();
-                document.removeEventListener('keydown', handleEsc);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
     }
 
     async function deleteAnnouncement(id) {
         try {
             const sb = await getSupabase();
-            const { error } = await sb
-                .from('announcements')
-                .delete()
-                .eq('id', id);
-
+            const { error } = await sb.from('announcements').delete().eq('id', id);
             if (error) throw error;
             showToast('ลบประกาศสำเร็จ');
             await fetchAll();
@@ -743,98 +510,49 @@ const AdminAnnouncements = (() => {
     function setupSearch() {
         const input = document.getElementById('searchInput');
         if (!input) return;
-
-        const debouncedSearch = debounce((value) => {
-            searchQuery = value.trim();
-            render();
-        }, CONFIG.DEBOUNCE_DELAY);
-
-        input.addEventListener('input', (e) => {
-            debouncedSearch(e.target.value);
+        let timeout;
+        input.addEventListener('input', () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                searchQuery = input.value.trim();
+                render();
+            }, 300);
         });
-    }
-
-    function setupFormEvents() {
-        // Character count for title
-        const titleInput = document.getElementById('formAnnounceTitle');
-        if (titleInput) {
-            titleInput.addEventListener('input', () => {
-                updateCharCount('formAnnounceTitle', 'titleCharCount', 200);
-            });
-        }
-
-        // Character count for content
-        const contentInput = document.getElementById('formContent');
-        if (contentInput) {
-            contentInput.addEventListener('input', () => {
-                updateCharCount('formContent', 'contentCharCount', 5000);
-            });
-        }
-
-        // Attachment validation
-        const attachmentInput = document.getElementById('formAttachment');
-        if (attachmentInput) {
-            attachmentInput.addEventListener('change', validateAttachment);
-        }
-
-        // URL validation hint
-        const linkInput = document.getElementById('formLink');
-        const linkHint = document.getElementById('linkHint');
-        if (linkInput && linkHint) {
-            linkInput.addEventListener('blur', () => {
-                const value = linkInput.value.trim();
-                if (value && !isValidUrl(value)) {
-                    linkHint.textContent = 'รูปแบบ URL ไม่ถูกต้อง';
-                    linkHint.classList.add('error');
-                } else {
-                    linkHint.textContent = '';
-                    linkHint.classList.remove('error');
-                }
-            });
-        }
-
-        // Click outside modal to close
-        const overlay = document.getElementById('announceFormOverlay');
-        if (overlay) {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay && !isSaving) {
-                    closeForm();
-                }
-            });
-        }
     }
 
     // ---- Init ----
     async function init() {
         try {
-            // Wait for auth if available
-            if (typeof protectPage === 'function') {
-                await protectPage(['admin', 'adminQc', 'manager']);
-            }
-
+            console.log('🚀 AdminAnnouncements initializing...');
+            
+            // Get current user
             currentUser = window.currentUser || null;
             
             setupFilterButtons();
             setupSearch();
-            setupFormEvents();
             
-            await fetchAll();
-
-            // Keyboard shortcuts
+            // Keyboard: ESC to close
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !isSaving) {
-                    closeForm();
-                }
+                if (e.key === 'Escape' && !isSaving) closeForm();
             });
 
-            console.log('[AdminAnnouncements] Initialized successfully');
+            // Click outside modal
+            const overlay = document.getElementById('announceFormOverlay');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay && !isSaving) closeForm();
+                });
+            }
+
+            await fetchAll();
+            console.log('✅ AdminAnnouncements initialized');
         } catch (err) {
             console.error('[AdminAnnouncements] Init error:', err);
             showToast('เกิดข้อผิดพลาดในการโหลดหน้า', 'error');
         }
     }
 
-    // Auto-init when DOM ready
+    // Auto-init
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
@@ -847,10 +565,8 @@ const AdminAnnouncements = (() => {
         closeForm,
         save,
         togglePin,
-        toggleArchive,
         confirmDelete,
         previewCover,
-        removeCover,
         refresh: fetchAll,
     };
 })();
