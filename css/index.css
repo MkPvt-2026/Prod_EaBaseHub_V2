@@ -402,6 +402,49 @@ body {
 .btn-secondary {
   background: linear-gradient(135deg, #e4ad17, #f1b84c);
 }
+
+
+/* =========================
+   BUTTON LOADING STATE
+   ========================= */
+
+/* ซ่อน spinner ปกติ */
+.btn-ea .spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  display: none;
+  animation: spinBtn 0.8s linear infinite;
+}
+
+/* ตอน loading */
+.btn-ea.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* ซ่อน text + icon */
+.btn-ea.loading .btn-text,
+.btn-ea.loading .icon {
+  display: none;
+}
+
+/* แสดง spinner */
+.btn-ea.loading .spinner {
+  display: inline-block;
+}
+
+/* หมุน */
+@keyframes spinBtn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
 /* =========================
    LOGOUT BTN
    ========================= */
