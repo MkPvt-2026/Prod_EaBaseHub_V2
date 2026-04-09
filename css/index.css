@@ -323,7 +323,85 @@ body {
   gap: 10px;
   flex-shrink: 0;
 }
+/* =========================
+   EA BUTTON STYLE (ใช้แทน Uiverse เดิม)
+   ========================= */
+.btn-ea {
+  position: relative;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-family: 'Kanit', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+
+  color: #fff;
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(255,255,255,0.2);
+
+  background: linear-gradient(135deg, #0076c5, #45c7fa);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+/* ICON */
+.btn-ea .icon {
+  font-size: 18px;
+  transition: 0.3s;
+}
+
+/* HOVER */
+.btn-ea:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.btn-ea:hover .icon {
+  transform: translateX(4px);
+}
+
+/* SHINE EFFECT */
+.btn-ea::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 100%;
+  top: 0;
+  left: -100px;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.6),
+    transparent
+  );
+
+  opacity: 0.5;
+}
+
+.btn-ea:hover::before {
+  animation: shine 1.5s ease-out infinite;
+}
+
+@keyframes shine {
+  0% { left: -100px; }
+  60% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* ADMIN (สีรอง) */
+.btn-secondary {
+  background: linear-gradient(135deg, #e4ad17, #f1b84c);
+}
 /* =========================
    LOGOUT BTN
    ========================= */
@@ -508,6 +586,8 @@ body {
   border-color: #f0d0d0;
 }
 .theme-pink::before { background: #e8b8b8; }
+
+
 
 /* =========================
    PROGRESS CARD

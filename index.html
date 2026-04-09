@@ -243,6 +243,21 @@
                 </div>
               </div>
 
+              <!-- ปุ่มสำหรับ Manager - ย้ายมาอยู่ใต้ Profile Card -->
+             <button id="managerDashboardBtn" class="btn-ea" onclick="goToManagerDashboard()">
+  Marketing Manager
+  <span class="material-symbols-outlined icon">open_in_new</span>
+</button>
+
+                <!-- ปุ่มสำหรับ Admin เท่านั้น -->
+              <button class="btn-ea btn-secondary" onclick="goToAdmin()">
+  จัดการผู้ใช้
+  <span class="material-symbols-outlined icon">admin_panel_settings</span>
+</button>
+
+
+              
+
               <!-- =========================
                    CALENDAR CARD
                    ========================= -->
@@ -285,48 +300,7 @@
                 <span class="open-shop-badge">Coming Soon</span>
               </div>
 
-              <!-- ปุ่มสำหรับ Admin เท่านั้น -->
-              <button class="admin-only" onclick="goToAdmin()" style="
-                  width: 100%;
-                  padding: 12px;
-                  background: var(--secondary-700);
-                  color: white;
-                  border: none;
-                  border-radius: var(--radius-md);
-                  font-family: 'Kanit', sans-serif;
-                  font-weight: 500;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                "
-              >
-                <span
-                  class="material-symbols-outlined"
-                  style="font-size: 18px; vertical-align: middle"
-                  >admin_panel_settings</span
-                >
-                จัดการผู้ใช้
-              </button>
-
-              <!-- ปุ่มสำหรับ Manager -->
-              <button id="managerDashboardBtn" onclick="goToManagerDashboard()"
-                style="
-                  display: none;
-                  width: 100%;
-                  padding: 12px;
-                  margin-top: 8px;
-                  background: linear-gradient(135deg, #1a365d 0%, #2d4a6f 100%);
-                  color: white;
-                  border: none;
-                  border-radius: var(--radius-md);
-                  font-family: 'Kanit', sans-serif;
-                  font-weight: 500;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                "
-              >
-                <span  class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle">monitoring</span>
-                Manager Dashboard
-              </button>
+            
             </aside>
           </div>
         </div>
