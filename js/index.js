@@ -522,6 +522,23 @@ async function init() {
   renderReportList();
   renderWeeklyProgress();
   renderCalendar();
+
+  // 6️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
+  // if (typeof AnnouncementsModule !== 'undefined') {
+
+  console.log("🔍 Checking AnnouncementsModule:", typeof AnnouncementsModule);
+if (typeof AnnouncementsModule !== 'undefined') {
+
+  
+    try {
+      await AnnouncementsModule.init(currentUser);
+      console.log("✅ AnnouncementsModule initialized");
+    } catch (err) {
+      console.error("❌ AnnouncementsModule init error:", err);
+    }
+  } else {
+    console.warn("⚠️ AnnouncementsModule not loaded");
+  }
 }
 
 /* =================================================
