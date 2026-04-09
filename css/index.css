@@ -444,6 +444,75 @@ body {
 }
 
 
+/* =========================
+   AVATAR UPLOAD WITH CAMERA ICON
+   ========================= */
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.avatar-wrapper img {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--mint-200);
+  transition: all 0.3s ease;
+}
+
+.avatar-wrapper:hover img {
+  opacity: 0.7;
+  border-color: var(--mint-400);
+}
+
+/* Camera Icon */
+.avatar-edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  background: var(--mint-500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+.avatar-edit-icon .material-symbols-outlined {
+  font-size: 14px;
+  color: white;
+}
+
+.avatar-wrapper:hover .avatar-edit-icon {
+  background: var(--mint-600);
+  transform: scale(1.1);
+}
+
+/* Loading State */
+.avatar-wrapper.uploading img {
+  opacity: 0.5;
+}
+
+.avatar-wrapper.uploading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--mint-200);
+  border-top-color: var(--mint-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 
 /* =========================
    LOGOUT BTN

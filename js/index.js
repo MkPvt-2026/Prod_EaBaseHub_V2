@@ -608,10 +608,12 @@ async function initAvatarUpload() {
   // โหลดรูปโปรไฟล์ปัจจุบันจาก database
   await loadCurrentAvatar(profileImage);
 
+  // คลิกที่ wrapper เพื่อเลือกไฟล์
   avatarWrapper.addEventListener("click", () => {
     uploadInput.click();
   });
 
+  // เมื่อเลือกไฟล์
   uploadInput.addEventListener("change", async function () {
     const file = this.files[0];
     if (!file) return;
@@ -636,7 +638,7 @@ async function initAvatarUpload() {
     reader.readAsDataURL(file);
 
     // อัปโหลดไป Supabase
-    await uploadAvatar(file, profileImage);
+    await uploadAvatar(file, profileImage, avatarWrapper);
   });
 }
 
@@ -661,35 +663,41 @@ async function loadCurrentAvatar(imgElement) {
 }
 
 // อัปโหลดรูปไป Supabase Storage
-async function uploadAvatar(file, imgElement) {
+async function uploadAvatar(file, imgElement, wrapperElement) {
   try {
     // แสดง loading
-    imgElement.style.opacity = "0.5";
+    wrapperElement.classList.add("uploading");
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("ไม่พบ user");
 
     // สร้างชื่อไฟล์ unique
-    const fileExt = file.name.split(".").pop();
+    const fileExt = file.name.split(".").pop().toLowerCase();
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const filePath = `${fileName}`;
 
     // ลบรูปเก่า (ถ้ามี)
-    const { data: oldProfile } = await supabaseClient
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single();
+    try {
+      const { data: oldProfile } = await supabaseClient
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
 
-    if (oldProfile?.avatar_url) {
-      const oldPath = oldProfile.avatar_url.split("/").pop();
-      await supabaseClient.storage
-        .from("avatars")
-        .remove([`avatars/${oldPath}`]);
+      if (oldProfile?.avatar_url) {
+        const oldFileName = oldProfile.avatar_url.split("/").pop();
+        if (oldFileName && !oldFileName.includes("default")) {
+          await supabaseClient.storage
+            .from("avatars")
+            .remove([oldFileName]);
+        }
+      }
+    } catch (e) {
+      console.log("ไม่มีรูปเก่าหรือลบไม่ได้:", e);
     }
 
     // อัปโหลดรูปใหม่
-    const { error: uploadError } = await supabaseClient.storage
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from("avatars")
       .upload(filePath, file, {
         cacheControl: "3600",
@@ -714,14 +722,15 @@ async function uploadAvatar(file, imgElement) {
     if (updateError) throw updateError;
 
     // อัปเดตรูปใน UI
-    imgElement.src = publicUrl;
-    imgElement.style.opacity = "1";
-
+    imgElement.src = publicUrl + "?t=" + Date.now(); // cache bust
+    
     console.log("✅ อัปโหลดรูปโปรไฟล์สำเร็จ");
 
   } catch (err) {
     console.error("❌ อัปโหลดรูปไม่สำเร็จ:", err);
     alert("อัปโหลดรูปไม่สำเร็จ: " + err.message);
-    imgElement.style.opacity = "1";
+  } finally {
+    // ซ่อน loading
+    wrapperElement.classList.remove("uploading");
   }
 }
