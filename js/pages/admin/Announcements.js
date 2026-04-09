@@ -1,6 +1,6 @@
 /* =============================================
    EABaseHub: ประชาสัมพันธ์ - Homepage Module
-   File: /js/components/announcements.js
+   File: announcements.js
    
    Dependencies: supabaseClient.js, userService.js
    ============================================= */
