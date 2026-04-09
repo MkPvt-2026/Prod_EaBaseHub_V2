@@ -517,7 +517,12 @@ async function init() {
   renderCalendar();
 
   // 6️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
-  if (typeof AnnouncementsModule !== 'undefined') {
+  // if (typeof AnnouncementsModule !== 'undefined') {
+
+  console.log("🔍 Checking AnnouncementsModule:", typeof AnnouncementsModule);
+if (typeof AnnouncementsModule !== 'undefined') {
+
+  
     try {
       await AnnouncementsModule.init(currentUser);
       console.log("✅ AnnouncementsModule initialized");
