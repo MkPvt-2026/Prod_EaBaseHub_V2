@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>EABaseHub | QC</title>
+
+  <link rel="stylesheet" href="/css/base/adminBase.css">  
+  <link rel="stylesheet" href="/css/pages/admin/adminQc.css">
+
+  
+</head>
+
+<body>
+
+<header class="app-header">
+  <h2>QC ตรวจสอบเคลม</h2>
+</header>
+
+<nav class="app-nav">
+  <a href="/pages/dashboard/QcDashboard.html">Dashboard</a>
+  <a href="#" class="active">QC</a>
+</nav>
+
+<main class="container">
+
+  <!-- 🔍 FILTER -->
+  <div class="qc-filter-bar">
+    <input type="text" id="searchInput" placeholder="🔍 ค้นหา สินค้า / ร้านค้า..." />
+    
+    <select id="filterStatus">
+      <option value="">ทั้งหมด</option>
+      <option value="pending">🟡 รอตรวจ</option>
+      <option value="checked">✅ ตรวจแล้ว</option>
+    </select>
+
+    <button onclick="exportExcel()">📊 Export</button>
+  </div>
+
+  <!-- 📊 SUMMARY -->
+  <div class="qc-summary">
+    <div class="summary-card">
+      <div>ทั้งหมด</div>
+      <b id="sumTotal">0</b>
+    </div>
+    <div class="summary-card">
+      <div>รอตรวจ</div>
+      <b id="sumPending">0</b>
+    </div>
+    <div class="summary-card">
+      <div>ตรวจแล้ว</div>
+      <b id="sumChecked">0</b>
+    </div>
+  </div>
+
+  <!-- 📋 TABLE -->
+  <table class="qc-table">
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>สินค้า</th>
+        <th>ร้านค้า</th>
+        <th>สถานะ</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="qcTableBody"></tbody>
+  </table>
+
+</main>
+
+<!-- MODAL -->
+<div class="qc-form">
+
+  <!-- 🔹 1. ประเภทสินค้า -->
+  <div class="qc-group">
+    <label>📦 ประเภทสินค้า</label>
+    <select id="qcProductType">
+      <option value="">-- เลือก --</option>
+      <option value="good">ของดี (กลับมาใช้ได้)</option>
+      <option value="rework">ของชำรุด (ปรับสเปคได้)</option>
+      <option value="waste">ของเสีย (ต้องทำลาย)</option>
+    </select>
+  </div>
+
+  <!-- 🔹 2. ลักษณะปัญหา -->
+  <div class="qc-group">
+    <label>🔍 ลักษณะปัญหา</label>
+    <select id="qcIssueType">
+      <option value="">-- เลือก --</option>
+      <option value="external">ภายนอก (แพ็คเกจ / ขนส่ง)</option>
+      <option value="internal">ภายใน (คุณภาพสินค้า)</option>
+    </select>
+  </div>
+
+  <!-- 🔹 3. แนวทางจัดการ -->
+  <div class="qc-group">
+    <label>⚙️ แนวทางดำเนินการ</label>
+    <select id="qcAction">
+      <option value="">-- เลือก --</option>
+      <option value="repack">เปลี่ยนแพ็คเกจ</option>
+      <option value="resize">ปรับสเปคสินค้า</option>
+      <option value="return">รับคืน</option>
+      <option value="destroy">ทำลาย / บด</option>
+    </select>
+  </div>
+
+  <!-- 🔹 4. สรุปผล -->
+  <div class="qc-group">
+    <label>📌 สรุปผล</label>
+    <select id="qcSummary">
+      <option value="">-- เลือก --</option>
+      <option value="approve">อนุมัติ</option>
+      <option value="reject">ไม่อนุมัติ</option>
+      <option value="recheck">ต้องตรวจสอบเพิ่ม</option>
+    </select>
+  </div>
+
+  <!-- 🔹 5. หมายเหตุพิเศษ (สำคัญมาก) -->
+  <div class="qc-group">
+    <label>📝 รายละเอียดเพิ่มเติม / กรณีพิเศษ</label>
+    <textarea id="qcNote" placeholder="เช่น สินค้าชำรุดเฉพาะส่วนต้น 3 เมตร สามารถตัดออกแล้วขายเป็น 90 เมตรได้"></textarea>
+  </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/auth.js"></script>
+
+<script src="/js/pages/admin/adminQc.js"></script>
+
+</body>
+</html>

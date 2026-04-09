@@ -173,6 +173,7 @@ body {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 28px 28px 24px;
+  margin-top: 10px;
   margin-bottom: 20px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
@@ -231,6 +232,12 @@ input, select, textarea {
   appearance: none;
   -webkit-appearance: none;
 }
+
+textarea {
+  background: #fafffe;
+}
+
+
 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235cbd9a' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -252,6 +259,10 @@ textarea {
   min-height: 100px;
   line-height: 1.6;
 }
+
+
+
+
 
 /* =====================================================
    DYNAMIC ATTRIBUTES
@@ -383,6 +394,72 @@ button:active { transform: scale(0.97); }
   flex-wrap: wrap;
   gap: 10px;
 }
+
+/* =====================================================
+   TOGGLE ไม่มีสินค้ากับร้านนี้
+   ===================================================== */
+.no-product-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+/* ตัว switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* พื้นหลัง */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.3s;
+}
+
+/* วงกลม */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* ตอน ON */
+.switch input:checked + .slider {
+  background-color: #10b981; /* เขียวสวย */
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* label */
+.toggle-label {
+  color: #333;
+}
+
 
 /* =====================================================
    TABLE — FIXED
@@ -731,7 +808,7 @@ tbody tr:last-child td { border-bottom: none; }
    PRODUCT PICKER + SELECTED LIST
    ===================================================== */
 .product-picker {
-  background: #f8faf8;
+  background: #f8fafc;
   border: 1px dashed #c5dcc5;
   border-radius: 10px;
   padding: 16px;
@@ -805,6 +882,7 @@ tbody tr:last-child td { border-bottom: none; }
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
+  margin-top: 10px;
 }
 
 .empty-product-list {
@@ -873,6 +951,104 @@ tbody tr:last-child td { border-bottom: none; }
 .btn-remove-product:hover {
   background: #fecaca;
 }
+
+.product-status-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-top: 12px;
+  transition: 0.3s;
+}
+
+/* ซ้าย */
+.status-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-title {
+  font-size: 13px;
+  color: #666;
+}
+
+.status-count {
+  font-size: 20px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.status-count small {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ขวา */
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* toggle */
+.switch {
+  position: relative;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  background-color: #ccc;
+  border-radius: 34px;
+  inset: 0;
+  transition: 0.3s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background-color: #10b981;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* label */
+.toggle-label {
+  font-size: 14px;
+  color: #333;
+}
+
+/* 🔥 highlight ตอน toggle */
+.product-status-card.active {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+
+
+
 
 @media (max-width: 767px) {
   .product-picker {

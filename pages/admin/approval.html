@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>EABaseHub | Approval</title>
+
+  <link rel="stylesheet" href="/css/base/adminBase.css">
+  <link rel="stylesheet" href="/css/pages/admin/adminQc.css">
+
+  <style>
+    .tabs { display:flex; gap:10px; margin-bottom:16px; }
+    .tab { padding:8px 16px; border-radius:20px; cursor:pointer; background:#1e293b; }
+    .tab.active { background:#2563eb; color:#fff; }
+
+    .exec-actions { display:flex; gap:10px; margin-top:10px; }
+    .btn-approve { background:#16a34a; color:#fff; }
+    .btn-reject { background:#dc2626; color:#fff; }
+  </style>
+</head>
+
+<body>
+
+<header class="app-header">
+  <h2>Approval (ผู้บริหาร)</h2>
+</header>
+
+<nav class="app-nav">
+  <a href="/pages/dashboard/QcDashboard.html">Dashboard</a>
+  <a href="/pages/admin/adminQc.html">QC</a>
+  <a href="/pages/admin/approval.html" class="active">Approval</a>
+</nav>
+
+<main class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-tab="pending">🟡 รออนุมัติ</div>
+    <div class="tab" data-tab="approved">✅ อนุมัติแล้ว</div>
+    <div class="tab" data-tab="rejected">❌ ไม่อนุมัติ</div>
+  </div>
+
+  <!-- TABLE -->
+  <table class="qc-table">
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>สินค้า</th>
+        <th>ร้านค้า</th>
+        <th>QC</th>
+        <th>สถานะ</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+</main>
+
+<!-- MODAL -->
+<div class="qc-modal" id="modal">
+  <div class="qc-modal-box">
+
+    <div class="qc-modal-header">
+      <h3 id="modalTitle">รายละเอียด</h3>
+      <button onclick="closeModal()">❌</button>
+    </div>
+
+    <div class="qc-modal-body" id="modalBody"></div>
+
+    <div class="exec-actions">
+      <button class="btn-approve" onclick="updateExec('approved')">อนุมัติ</button>
+      <button class="btn-reject" onclick="updateExec('rejected')">ไม่อนุมัติ</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/auth.js"></script>
+
+<script src="/js/pages/admin/approval.js"></script>
+
+</body>
+</html>

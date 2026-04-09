@@ -1,0 +1,200 @@
+/* =====================================================
+   FORM CLAIM - PRODUCT GRID ENHANCEMENTS
+   เพิ่ม icon สีสัน + หมวด "อื่นๆ" พิมพ์เอง
+   ===================================================== */
+
+/* ================= PRODUCT GRID - COLORED ICONS ================= */
+.product-grid .product-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-grid .product-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.product-grid .product-item:hover::before {
+  opacity: 0.6;
+}
+
+.product-grid .product-item .product-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  background: currentColor;
+  opacity: 0.12;
+  position: relative;
+}
+
+.product-grid .product-item .product-icon .material-symbols-outlined {
+  position: absolute;
+  font-size: 28px;
+  transition: transform 0.2s ease;
+}
+
+.product-grid .product-item:hover .product-icon .material-symbols-outlined {
+  transform: scale(1.15);
+}
+
+.product-grid .product-item.active .product-icon {
+  background: rgba(255,255,255,0.2);
+  opacity: 1;
+}
+
+.product-grid .product-item.active .product-icon .material-symbols-outlined {
+  color: #fff !important;
+}
+
+.product-grid .product-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.product-grid .product-item:hover .product-name {
+  color: var(--text-primary);
+}
+
+.product-grid .product-item.active .product-name {
+  color: #fff;
+}
+
+/* ================= "อื่นๆ" - CUSTOM PRODUCT ITEM ================= */
+.product-item-custom {
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+
+.product-item-custom:hover {
+  border-style: solid !important;
+}
+
+.product-item-custom .product-icon {
+  background: transparent !important;
+  border: 2px dashed currentColor;
+  opacity: 0.5;
+}
+
+.product-item-custom:hover .product-icon {
+  opacity: 1;
+  border-style: solid;
+}
+
+/* ================= CUSTOM PRODUCT INPUT (Modal) ================= */
+.custom-product-container {
+  padding: 8px 0;
+}
+
+.custom-product-container .form-group {
+  margin-bottom: 20px;
+}
+
+.custom-product-container label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.custom-product-container input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #fafffe;
+  transition: all 0.2s ease;
+}
+
+.custom-product-container input:focus {
+  outline: none;
+  border-color: var(--teal-400);
+  box-shadow: 0 0 0 4px rgba(63,183,174,0.12);
+  background: #fff;
+}
+
+.custom-product-container input::placeholder {
+  color: var(--text-light);
+}
+
+/* ================= TOOLTIP FOR ICONS ================= */
+.product-item[data-tooltip] {
+  position: relative;
+}
+
+.product-item[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--teal-900);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.product-item[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 767px) {
+  .product-grid .product-item .product-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+
+  .product-grid .product-item .product-icon .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  .product-grid .product-name {
+    font-size: 11px;
+  }
+
+  .custom-product-container input {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+}
+
+@media (max-width: 480px) {
+  .product-grid .product-item .product-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .product-grid .product-item .product-icon .material-symbols-outlined {
+    font-size: 20px;
+  }
+}

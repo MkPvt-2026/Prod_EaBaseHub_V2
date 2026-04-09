@@ -1,0 +1,83 @@
+<!-- ══════════════════════════════════════════════════════════════════
+     DAILY PRODUCT SALES SECTION — ข้อมูลสินค้ารายวัน
+     ══════════════════════════════════════════════════════════════════
+     
+     📝 วิธีใช้:
+     1. คัดลอก HTML ด้านล่างไปวางใน managerDashboard.html 
+        (ตำแหน่งที่ต้องการ เช่น หลัง KPI Cards หรือก่อน Charts)
+     
+     2. เพิ่ม CSS ใน <head>:
+        <link rel="stylesheet" href="/css/pages/dashboard/dailyProductSales.css">
+     
+     3. เพิ่ม JS ก่อน </body>:
+        <script src="/js/pages/dashboard/dailyProductSales.js"></script>
+     
+     4. ใน managerDashboard.js เพิ่มบรรทัดนี้ใน loadDashboard() หลัง render อื่นๆ:
+        initDailyProductSection();
+     
+     ══════════════════════════════════════════════════════════════════ -->
+
+<!-- DAILY PRODUCT SALES SECTION -->
+<div class="daily-section">
+  <div class="daily-section-header">
+    <div class="daily-section-title">
+      <span class="icon">📦</span>
+      <h3>ข้อมูลสินค้ารายวัน</h3>
+      <span class="daily-date-badge" id="dailyDateBadge">—</span>
+    </div>
+    
+    <div class="daily-date-selector">
+      <label>เลือกวันที่:</label>
+      <select id="dailyDateSelect" class="daily-date-select">
+        <option value="">📅 กำลังโหลด...</option>
+      </select>
+    </div>
+  </div>
+  
+  <!-- Mini Summary Cards -->
+  <div class="daily-summary-row">
+    <div class="daily-mini-card">
+      <div class="mini-value" id="dailyTotalQty">—</div>
+      <div class="mini-label">จำนวนรวม</div>
+    </div>
+    <div class="daily-mini-card">
+      <div class="mini-value" id="dailyTotalAmount">—</div>
+      <div class="mini-label">ยอดขายรวม</div>
+    </div>
+    <div class="daily-mini-card">
+      <div class="mini-value" id="dailyProductCount">—</div>
+      <div class="mini-label">สินค้า</div>
+    </div>
+    <div class="daily-mini-card">
+      <div class="mini-value" id="dailySalesCount">—</div>
+      <div class="mini-label">เซลล์</div>
+    </div>
+  </div>
+  
+  <!-- Content: Table + Chart -->
+  <div class="daily-content-grid">
+    
+    <!-- Left: Table -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 รายการสินค้าแยกวัน</div>
+      </div>
+      <div id="dailyProductTable">
+        <div class="loading-text">กำลังโหลด...</div>
+      </div>
+    </div>
+    
+    <!-- Right: Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📊 กราฟยอดขายสินค้า</div>
+        <span class="card-badge">แยกตามวัน</span>
+      </div>
+      <div class="daily-chart-wrap">
+        <canvas id="chartDailyProducts"></canvas>
+      </div>
+    </div>
+    
+  </div>
+</div>
+<!-- END DAILY PRODUCT SALES SECTION -->

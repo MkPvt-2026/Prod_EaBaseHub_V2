@@ -1,4 +1,5 @@
-/* AddProductSpec.css — Modern redesign */
+/* AddProductSpec.css — Modern redesign (Fixed) */
+/* Header & Nav styles อยู่ใน bassManager.css */
 
 /* ── Google Font: Sarabun (Thai + Latin), Display: Prompt ── */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@300;400;500;600&display=swap');
@@ -12,6 +13,12 @@
   --green-500: #22c55e;
   --green-100: #dcfce7;
   --green-50:  #f0fdf4;
+
+  --mint-A:      #149684;
+  --mint-B:      #3db8b1;
+
+
+  --BG-mint:      linear-gradient(135deg, #149684 0%, #3db8b1 100%);;
 
   --slate-950: #020617;
   --slate-900: #0f172a;
@@ -38,188 +45,18 @@
   --shadow-lg: 0 12px 40px rgba(0,0,0,.14);
   --shadow-xl: 0 24px 64px rgba(0,0,0,.18);
 
-  --header-h: 62px;
-  --nav-h:    50px;
-  --total-top: 112px;
-
   --transition: .18s cubic-bezier(.4,0,.2,1);
   --spring: .3s cubic-bezier(.34,1.56,.64,1);
 }
 
-/* ── Reset ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* ═══════════════════════════════
+   PAGE BODY (Override for this page)
+═══════════════════════════════ */
 body {
-  font-family: 'Sarabun', sans-serif;
   background: #f0f4f0;
-  color: var(--slate-800);
-  font-size: 14px;
-  line-height: 1.6;
-  min-height: 100vh;
-  padding-top: var(--total-top);
   /* subtle dot grid */
   background-image: radial-gradient(circle, #c8dfc8 1px, transparent 1px);
   background-size: 28px 28px;
-}
-
-/* ═══════════════════════════════
-   HEADER
-═══════════════════════════════ */
-.app-header {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: var(--header-h);
-  background: var(--green-900);
-  /* grain texture overlay */
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E"),
-    linear-gradient(135deg, #15532e 0%, #0d3d1f 100%);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  box-shadow: 0 1px 0 rgba(255,255,255,.06), var(--shadow-md);
-  z-index: 50;
-}
-
-/* accent line at bottom of header */
-.app-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--green-600), var(--green-500), transparent);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo-circle {
-  width: 40px; height: 40px;
-  background: rgba(255,255,255,.12);
-  border: 1.5px solid rgba(255,255,255,.22);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-  backdrop-filter: blur(4px);
-  transition: var(--transition);
-}
-
-.logo-circle:hover { background: rgba(255,255,255,.2); }
-
-.logo-circle img { width: 100%; height: 100%; object-fit: cover; }
-
-.logo h2 {
-  font-family: 'Prompt', sans-serif;
-  color: var(--white);
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -.02em;
-}
-
-.logo h2 span { color: var(--green-500); }
-
-.user-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-avatar {
-  width: 34px; height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--green-600), var(--green-700));
-  color: var(--white);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Prompt', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  border: 1.5px solid rgba(255,255,255,.2);
-  box-shadow: 0 2px 8px rgba(0,0,0,.25);
-}
-
-.user-name {
-  color: rgba(255,255,255,.85);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.logout-btn {
-  padding: 7px 16px;
-  background: rgba(255,255,255,.08);
-  color: rgba(255,255,255,.9);
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: var(--radius-md);
-  font-family: 'Sarabun', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-  backdrop-filter: blur(4px);
-}
-
-.logout-btn:hover {
-  background: rgba(255,255,255,.16);
-  border-color: rgba(255,255,255,.3);
-  transform: translateY(-1px);
-}
-
-/* ═══════════════════════════════
-   NAV
-═══════════════════════════════ */
-.app-nav {
-  position: fixed;
-  top: var(--header-h);
-  left: 0; right: 0;
-  height: var(--nav-h);
-  background: rgba(255,255,255,.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--slate-200);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  gap: 2px;
-  z-index: 49;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.app-nav::-webkit-scrollbar { display: none; }
-
-.app-nav a {
-  padding: 7px 16px;
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  color: var(--slate-500);
-  font-size: 13.5px;
-  font-weight: 500;
-  transition: var(--transition);
-  white-space: nowrap;
-  position: relative;
-}
-
-.app-nav a:hover {
-  background: var(--slate-100);
-  color: var(--slate-800);
-}
-
-.app-nav a.active {
-  background: var(--green-50);
-  color: var(--green-700);
-  font-weight: 600;
-}
-
-.app-nav a.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px; left: 16px; right: 16px;
-  height: 2px;
-  background: var(--green-600);
-  border-radius: var(--radius-pill);
 }
 
 /* ═══════════════════════════════
@@ -313,7 +150,7 @@ body {
 }
 
 .am-tab.active {
-  background: var(--green-700);
+  background: var(--BG-mint);
   color: var(--white);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(21,128,61,.3);
@@ -376,7 +213,7 @@ body {
 
 .btn-add {
   padding: 9px 20px;
-  background: var(--green-700);
+  background: var(--BG-mint);
   color: var(--white);
   border: none;
   border-radius: var(--radius-md);
@@ -454,8 +291,8 @@ body {
   font-size: 13px;
 }
 
-/* ── Badges ── */
-.badge {
+/* ── Table Badges (Override from bassManager) ── */
+.am-table .badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
@@ -463,6 +300,9 @@ body {
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: .02em;
+  cursor: default;
+  border: none;
+  gap: 0;
 }
 
 .badge-teal   { background: #d1fae5; color: #065f46; }
@@ -856,12 +696,6 @@ body {
    RESPONSIVE
 ═══════════════════════════════ */
 @media (max-width: 768px) {
-  :root { --total-top: 106px; }
-
-  body { padding-top: var(--total-top); }
-
-  .user-name { display: none; }
-
   .am-page { padding: 16px 12px 70px; }
 
   .am-tabs { gap: 0; padding: 4px; }

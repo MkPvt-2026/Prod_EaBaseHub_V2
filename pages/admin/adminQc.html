@@ -14,10 +14,15 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/css/base/adminBase.css">  
-  <link rel="stylesheet" href="/css/components/badgeButtom.css"> 
+  <!-- <link rel="stylesheet" href="/css/base/adminBase.css">   -->
+  <link rel="stylesheet" href="/css/components/badgeButtom.css">  
+  <link rel="stylesheet" href="/css/base/bassHeader.css"/>
   <link rel="stylesheet" href="/css/pages/admin/adminQc.css">
 </head>
 <body>
@@ -164,6 +169,13 @@
           <button class="btn-export-pdf" onclick="exportPDF()">
             <span class="material-symbols-outlined">picture_as_pdf</span> PDF
           </button>
+          <button class="btn-export-csv" onclick="exportCSV()">
+    <span class="material-symbols-outlined">table_view</span> CSV
+  </button>
+
+  <button class="btn-export-excel" onclick="exportExcel()">
+    <span class="material-symbols-outlined">grid_on</span> Excel
+  </button>
           <button class="modal-close-btn" onclick="closeModal()">
             <span class="material-symbols-outlined">close</span>
           </button>
@@ -197,7 +209,7 @@
           <div class="modal-media-grid" id="modalMediaGrid"></div>
         </div>
 
-        <div class="modal-section qc-action-section">
+        <!-- <div class="modal-section qc-action-section">
           <div class="modal-section-label">
             <span class="material-symbols-outlined">rate_review</span> ผลการพิจารณา QC
           </div>
@@ -211,7 +223,7 @@
               <span class="material-symbols-outlined">cancel</span> ปฏิเสธ
             </button>
           </div>
-        </div>
+        </div> -->
 
       </div>
     </div>

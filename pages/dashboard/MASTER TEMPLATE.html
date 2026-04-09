@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <!-- =====================================================
+    🔹 META (ตั้งค่าพื้นฐานของหน้าเว็บ)
+    👉 ใส่: title / SEO / encoding / responsive
+  ===================================================== -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 🔸 เปลี่ยนชื่อหน้าตรงนี้ -->
+  <title>ชื่อหน้า | EABaseHub</title>
+
+
+  <!-- =====================================================
+    🔹 LIBRARIES (JS/CDN ที่ใช้ทั้งระบบ)
+    👉 เช่น: Supabase, Chart.js, Excel, etc.
+  ===================================================== -->
+  <!-- ตัวอย่าง -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
+
+
+  <!-- =====================================================
+    🔹 FONTS / ICONS
+    👉 Font + icon ที่ใช้ทั้งระบบ
+  ===================================================== -->
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+
+  <!-- =====================================================
+    🔹 CSS (เรียงลำดับ: base → component → page)
+    👉 base = layout
+    👉 component = ปุ่ม / card
+    👉 page = เฉพาะหน้านี้
+  ===================================================== -->
+  <link rel="stylesheet" href="/css/base/adminBase.css">
+
+  <!-- 🔸 ใส่ CSS component เพิ่มตรงนี้ -->
+  <!-- <link rel="stylesheet" href="/css/components/xxx.css"> -->
+
+  <!-- 🔸 CSS เฉพาะหน้า -->
+  <link rel="stylesheet" href="/css/pages/your-page.css">
+
+</head>
+
+<body>
+
+  <!-- =====================================================
+    🔹 HEADER (หัวระบบด้านบน)
+    👉 logo / user / logout
+  ===================================================== -->
+  <header class="app-header">
+
+    <!-- 🔸 LOGO -->
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <h2>EABaseHub</h2>
+    </div>
+
+    <!-- 🔸 USER INFO -->
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+
+      <!-- 🔸 ปุ่ม logout -->
+      <button id="logoutBtn">ออกจากระบบ</button>
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+    🔹 NAVBAR (เมนูหลัก)
+    👉 ใส่ link ไปแต่ละหน้า
+  ===================================================== -->
+  <nav class="app-nav">
+
+    <!-- 🔸 active = หน้าปัจจุบัน -->
+    <a href="/pages/dashboard.html" class="active">Dashboard</a>
+
+    <!-- 🔸 เพิ่มเมนูตรงนี้ -->
+    <!-- <a href="/pages/xxx.html">ชื่อเมนู</a> -->
+
+  </nav>
+
+
+  <!-- =====================================================
+    🔹 MAIN CONTENT (เนื้อหาหลักของหน้า)
+  ===================================================== -->
+  <main class="page-wrapper">
+
+    <!-- =====================================================
+      🔸 PAGE HEADER (ชื่อหน้า + ปุ่ม)
+      👉 optional (ใส่หรือไม่ใส่ก็ได้)
+    ===================================================== -->
+    <div class="page-header">
+      <h1>ชื่อหน้า</h1>
+
+      <!-- 🔸 ปุ่ม action เช่น add / export -->
+      <div class="page-actions">
+        <!-- <button>เพิ่มข้อมูล</button> -->
+      </div>
+    </div>
+
+
+    <!-- =====================================================
+      🔸 CARD / SECTION (แบ่ง block ของหน้า)
+      👉 copy block นี้ไปใช้ซ้ำได้
+    ===================================================== -->
+    <section class="card">
+
+      <!-- 🔹 TITLE -->
+      <div class="card-header">
+        <h3>หัวข้อ section</h3>
+      </div>
+
+      <!-- 🔹 CONTENT -->
+      <div class="card-body">
+
+        <!-- 👉 ใส่ content ตรงนี้ -->
+        <!-- เช่น: form / table / chart -->
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+      🔸 TABLE SECTION (ถ้ามีตาราง)
+    ===================================================== -->
+    <section class="card">
+
+      <div class="card-header">
+        <h3>ตารางข้อมูล</h3>
+      </div>
+
+      <div class="card-body">
+
+        <!-- 🔍 FILTER / SEARCH -->
+        <div class="toolbar">
+          <input type="text" placeholder="ค้นหา...">
+
+          <!-- 👉 filter เพิ่ม -->
+          <!-- <select></select> -->
+        </div>
+
+        <!-- 📊 TABLE -->
+        <div class="table-wrap">
+          <table class="data-table">
+
+            <thead>
+              <tr>
+                <!-- 🔸 ใส่หัว column -->
+                <th>Column 1</th>
+                <th>Column 2</th>
+              </tr>
+            </thead>
+
+            <tbody id="tableBody">
+              <!-- 🔸 JS render -->
+              <tr>
+                <td colspan="100%">⏳ กำลังโหลด...</td>
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+
+  </main>
+
+
+  <!-- =====================================================
+    🔹 MODAL (popup)
+    👉 ใช้ซ้ำได้ทั้งระบบ
+  ===================================================== -->
+  <div id="mainModal" class="modal-overlay" style="display:none">
+
+    <div class="modal-box">
+
+      <!-- HEADER -->
+      <div class="modal-header">
+        <h3>หัวข้อ Modal</h3>
+
+        <button onclick="closeModal()">✕</button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body">
+
+        <!-- 👉 form / detail -->
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button onclick="closeModal()">ยกเลิก</button>
+        <button onclick="save()">บันทึก</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+    🔹 TEMPLATE (สำหรับ JS clone)
+    👉 ใช้ render list/table
+  ===================================================== -->
+  <template id="row-template">
+
+    <tr>
+      <td data-field="col1"></td>
+      <td data-field="col2"></td>
+
+      <!-- 🔸 action -->
+      <td>
+        <button data-action="edit">Edit</button>
+      </td>
+    </tr>
+
+  </template>
+
+
+  <!-- =====================================================
+    🔹 SCRIPTS (เรียง: core → page)
+    👉 ห้ามสลับมั่ว เดี๋ยวบัค
+  ===================================================== -->
+
+  <!-- 🔸 CORE -->
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/auth.js"></script>
+
+  <!-- 🔸 SERVICE -->
+  <!-- <script src="/js/core/xxxService.js"></script> -->
+
+  <!-- 🔸 PAGE LOGIC -->
+  <script src="/js/pages/your-page.js"></script>
+
+
+</body>
+</html>
