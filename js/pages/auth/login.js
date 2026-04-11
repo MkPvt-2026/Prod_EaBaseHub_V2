@@ -45,7 +45,7 @@ async function redirectIfLoggedIn() {
     } else if (profile.role === "manager") {
       window.location.href = "/index.html";
     } else if (profile.role === "executive") {
-      window.location.href = "/pages/dashboard/executiveDashboard.html";
+      window.location.href = "/pages/executive/executiveHome.html";
     }
   } catch (error) {
     console.error("Error checking session:", error);

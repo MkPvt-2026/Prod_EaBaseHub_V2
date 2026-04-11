@@ -1,5 +1,5 @@
 // =====================================================
-// report.js  v6.0  — Product Picker + List Pattern
+// report.js  v6.1  — Product Picker + List Pattern
 // Draft  → localStorage  (ไม่ขึ้น Supabase)
 // Submit → Supabase (status = 'submitted')
 // =====================================================
@@ -621,6 +621,7 @@ async function handleView(id) {
   set("m-product", productsMap[r.product_id] || "—");
   set("m-source",  r.source||"—");
   set("m-status",  "✅ ส่งแล้ว" + (r.manager_acknowledged ? " • 👁️ ผู้บริหารอ่านแล้ว" : ""));
+  set("m-product-interest", r.product_interest || "—");
 
   const attrEl = document.getElementById("m-attributes");
   if (attrEl) attrEl.innerHTML = await formatAttributesBlock(r.attributes);
@@ -635,27 +636,60 @@ async function handleView(id) {
   openModal();
 }
 
+// =====================================================
+// 💬 LOAD MANAGER COMMENTS - ✅ แสดง Role Badge
+// =====================================================
 async function loadManagerComments(reportId) {
   const container = document.getElementById("m-manager-comments");
   if (!container) return;
+  
   try {
+    // ✅ ดึง role มาด้วย
     const { data } = await supabaseClient
       .from("report_comments")
-      .select("comment, created_at, profiles(display_name)")
-      .eq("report_id", reportId).order("created_at", { ascending: true });
+      .select("comment, created_at, profiles(display_name, role)")
+      .eq("report_id", reportId)
+      .order("created_at", { ascending: true });
 
     if (!data?.length) {
-      container.innerHTML = `<div style="color:#aaa;font-size:12px;padding:4px 0;">ยังไม่มี comment จากผู้บริหาร</div>`;
+      container.innerHTML = `<div style="color:#aaa;font-size:12px;padding:4px 0;">ยังไม่มี comment</div>`;
       return;
     }
-    container.innerHTML = data.map(c => `
-      <div style="background:#f0fdf4;border-left:3px solid #10b981;border-radius:6px;padding:8px 10px;margin-bottom:6px;">
-        <div style="font-size:11px;color:#888;margin-bottom:3px;">
-          <strong>${escapeHtml(c.profiles?.display_name||"ผู้บริหาร")}</strong> · ${formatDate(c.created_at)}
+    
+    container.innerHTML = data.map(c => {
+      const role = c.profiles?.role || 'manager';
+      const displayName = c.profiles?.display_name || 'ผู้ใช้';
+      
+      // ✅ กำหนดสีและ badge ตาม role
+      let roleBadge = '';
+      let borderColor = '#10b981';
+      let bgColor = '#f0fdf4';
+      
+      if (role === 'admin') {
+        roleBadge = '<span style="background:linear-gradient(135deg,#f0ad4e,#ec971f);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;">👑 ผู้บริหาร</span>';
+        borderColor = '#f0ad4e';
+        bgColor = '#fff9e6';
+      } else if (role === 'manager') {
+        roleBadge = '<span style="background:linear-gradient(135deg,#17a2b8,#138496);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;">👔 ผู้จัดการ</span>';
+        borderColor = '#17a2b8';
+        bgColor = '#e8f4fd';
+      }
+      
+      return `
+        <div style="background:${bgColor};border-left:3px solid ${borderColor};border-radius:6px;padding:8px 10px;margin-bottom:6px;">
+          <div style="font-size:11px;color:#555;margin-bottom:3px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+            <strong>${escapeHtml(displayName)}</strong>
+            ${roleBadge}
+            <span style="color:#999;margin-left:auto;">${formatDateTime(c.created_at)}</span>
+          </div>
+          <div style="font-size:13px;color:#333;">${escapeHtml(c.comment)}</div>
         </div>
-        <div style="font-size:13px;">${escapeHtml(c.comment)}</div>
-      </div>`).join("");
-  } catch(e) { container.innerHTML = ""; }
+      `;
+    }).join("");
+  } catch(e) { 
+    console.error("loadManagerComments error:", e);
+    container.innerHTML = ""; 
+  }
 }
 
 function openModal()  { const m=document.getElementById("reportModal"); if(m){ m.style.display="flex"; document.body.style.overflow="hidden"; } }
@@ -846,6 +880,20 @@ function exportData(type) {
 function formatDate(s) {
   if (!s) return "—";
   try { return new Date(s).toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"}); }
+  catch(e) { return "—"; }
+}
+
+// ✅ เพิ่ม formatDateTime
+function formatDateTime(s) {
+  if (!s) return "—";
+  try { 
+    return new Date(s).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    }); 
+  }
   catch(e) { return "—"; }
 }
 

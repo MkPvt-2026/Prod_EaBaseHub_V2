@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รายงานการเข้าร้านค้า | Manager</title>
+  <title>รายงานการเข้าร้านค้า | Admin</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -11,6 +11,29 @@
 
   <link rel="stylesheet" href="/css/base/bassManager.css">
   <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
+  <link rel="stylesheet" href="/css/comment-styles.css">
+  
+  <style>
+    /* Admin Badge */
+    .admin-header-badge {
+      background: linear-gradient(135deg, #f0ad4e, #ec971f);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    
+    /* Summary Card - Admin Theme */
+    .sum-card.admin-theme {
+      border-left: 4px solid #f0ad4e;
+    }
+    
+    .sum-card.admin-theme .sum-icon {
+      background: linear-gradient(135deg, #fff9e6, #fff3cd);
+    }
+  </style>
 </head>
 <body>
 
@@ -19,6 +42,7 @@
     <div class="logo">
       <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
       <h2>EABaseHub</h2>
+      <span class="admin-header-badge">👑 Admin</span>
     </div>
     <div class="user-box">
       <div class="user-avatar" id="userAvatar">👤</div>
@@ -45,14 +69,12 @@
     <!-- PAGE HEADER -->
     <div class="page-header">
       <div>
-        <h1>📋 รายงานการเข้าร้านค้า</h1>
-        <p>ติดตามและอ่านรายงานของทีมเซลล์</p>
+        <h1>👑 รายงานการเข้าร้านค้า (Admin)</h1>
+        <p>ดูรายงานทั้งหมด • Comment • ติดตามทีมงาน</p>
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         DATE RANGE PICKER — เลือกช่วงวันที่
-         ══════════════════════════════════════════ -->
+    <!-- DATE RANGE PICKER -->
     <div class="date-range-section">
       <div class="date-range-header">
         <div class="date-range-title">
@@ -86,7 +108,7 @@
 
     <!-- SUMMARY CARDS -->
     <div class="summary-cards">
-      <div class="sum-card">
+      <div class="sum-card admin-theme">
         <div class="sum-icon">📝</div>
         <div class="sum-content">
           <div class="sum-value" id="totalReports">—</div>
@@ -108,11 +130,22 @@
         </div>
       </div>
       <div class="sum-card">
-        <div class="sum-icon">👥</div>
+        <div class="sum-icon">💬</div>
         <div class="sum-content">
-          <div class="sum-value" id="activeSales">—</div>
-          <div class="sum-label">เซลล์ส่งรายงาน</div>
+          <div class="sum-value" id="commentedReports">—</div>
+          <div class="sum-label">มี Comment</div>
         </div>
+      </div>
+    </div>
+
+    <!-- MANAGER OVERVIEW -->
+    <div class="card">
+      <div class="card-header">
+        <h2>👔 ภาพรวมผู้จัดการ</h2>
+        <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
+      </div>
+      <div class="sales-grid" id="managerGrid">
+        <div class="loading">กำลังโหลด...</div>
       </div>
     </div>
 
@@ -131,6 +164,12 @@
     <div class="filter-section">
       <div class="filter-row">
         <div class="filter-group">
+          <label>ผู้จัดการ</label>
+          <select id="filterManager">
+            <option value="">— ทั้งหมด —</option>
+          </select>
+        </div>
+        <div class="filter-group">
           <label>เซลล์</label>
           <select id="filterSales">
             <option value="">— ทั้งหมด —</option>
@@ -142,6 +181,7 @@
             <option value="">— ทั้งหมด —</option>
             <option value="unread">🕐 ยังไม่อ่าน</option>
             <option value="read">✅ อ่านแล้ว</option>
+            <option value="commented">💬 มี Comment</option>
           </select>
         </div>
         <div class="filter-group">
@@ -195,10 +235,13 @@
             <span id="mSalesName" class="info-value">—</span>
           </div>
           <div class="info-item">
+            <span class="info-label">👔 ผู้จัดการ</span>
+            <span id="mManagerName" class="info-value">—</span>
+          </div>
+          <div class="info-item">
             <span class="info-label">🏪 ร้านค้า</span>
             <span id="mShopName" class="info-value">—</span>
           </div>
-          <!-- ✅ เพิ่มจังหวัด -->
           <div class="info-item">
             <span class="info-label">📍 จังหวัด</span>
             <span id="mProvince" class="info-value">—</span>
@@ -225,7 +268,7 @@
 
         <!-- Comments -->
         <div class="comment-section">
-          <div class="comment-header">💬 ความคิดเห็นจากผู้จัดการ</div>
+          <div class="comment-header">💬 ความคิดเห็น</div>
           <div id="commentsHistory" class="comments-list"></div>
           <textarea id="commentInput" 
                     placeholder="พิมพ์ความคิดเห็น คำแนะนำ หรือข้อเสนอแนะ..."
@@ -242,20 +285,17 @@
   <!-- TOAST -->
   <div id="toast" class="toast"></div>
 
-  <footer class="footer">© 2026 EABaseHub | Report Manager</footer>
+  <footer class="footer">© 2026 EABaseHub | Admin Report Dashboard</footer>
 
-  <!-- =====================================================
-       JAVASCRIPT FILES
-       ลำดับโหลด: supabaseClient → userService → auth → reportTracker
-       ===================================================== -->
+  <!-- JAVASCRIPT FILES -->
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
   
-  <!-- ✅ โหลด reportTracker.js -->
-  <script src="/js/pages/report/reportTracker.js"></script>
+  <!-- Admin Report Tracker JS -->
+  <script src="/js/pages/admin/adminReportTracker.js"></script>
 
-  <!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+  <!-- Load Nav -->
   <script>
   async function loadNav(role) {
     const navFiles = {
@@ -264,22 +304,11 @@
     };
 
     const file = navFiles[role];
-
-    if (!file) {
-      console.warn("ไม่มี nav สำหรับ role:", role);
-      return;
-    }
-
-    console.log("LOAD NAV FILE =", file);
+    if (!file) return;
 
     try {
       const res = await fetch(file);
-
-      if (!res.ok) {
-        console.error("โหลด nav ไม่ได้:", file);
-        return;
-      }
-
+      if (!res.ok) return;
       const html = await res.text();
       document.getElementById("navContainer").innerHTML = html;
       setActiveMenu();
@@ -291,7 +320,6 @@
   function setActiveMenu() {
     const links = document.querySelectorAll(".app-nav a");
     const current = window.location.pathname;
-
     links.forEach(link => {
       if (link.getAttribute("href") === current) {
         link.classList.add("active");
@@ -305,17 +333,9 @@
       .select("role")
       .eq("id", userId)
       .single();
-
-    if (error) {
-      console.error("ดึง role ไม่ได้:", error.message);
-      return null;
-    }
-
-    console.log("PROFILE DATA =", data);
     return data?.role || null;
   }
 
-  // รอให้ supabaseClient พร้อมก่อน แล้วโหลด nav
   function waitForSupabaseAndLoadNav(maxAttempts = 50) {
     let attempts = 0;
     
@@ -323,27 +343,17 @@
       attempts++;
       
       if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
-        console.log("✅ supabaseClient พร้อมแล้ว - กำลังโหลด nav");
-        
         try {
-          // ลองดึง session
           const { data: { session } } = await supabaseClient.auth.getSession();
-          
           if (session?.user) {
             const role = await getUserRole(session.user.id);
-            if (role) {
-              loadNav(role);
-            }
-          } else {
-            console.warn("ไม่พบ session - ไม่โหลด nav");
+            if (role) loadNav(role);
           }
         } catch (err) {
           console.error("Error loading nav:", err);
         }
       } else if (attempts < maxAttempts) {
         setTimeout(check, 100);
-      } else {
-        console.error("❌ supabaseClient ไม่พร้อม หลังจากรอนานเกินไป");
       }
     };
     

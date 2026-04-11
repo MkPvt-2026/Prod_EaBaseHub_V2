@@ -1,8 +1,8 @@
 /*************************************************
- * HOME.JS (Production Ready)
+ * HOME.JS (Production Ready - Fixed)
  * ------------------------------------------------
  * - Protect page (Supabase session)
- * - Load data from localStorage safely
+ * - Load data from Supabase
  * - Render Dashboard summary
  * - Render My Reports list
  * - Weekly report progress
@@ -15,7 +15,6 @@
    1️⃣ Utilities
 ================================================= */
 
-// Safe JSON parse
 function getStorageArray(key) {
   try {
     const data = JSON.parse(localStorage.getItem(key));
@@ -26,7 +25,6 @@ function getStorageArray(key) {
   }
 }
 
-// Format Date → YYYY-MM-DD
 function formatDate(date) {
   return date.toISOString().split("T")[0];
 }
@@ -42,33 +40,43 @@ let claims = [];
 let currentDate = new Date();
 
 /* =================================================
-   3️⃣ Protect Page (Auth Required)
+   3️⃣ Notifications Helpers
 ================================================= */
 
-async function protectPage() {
-  const {
-    data: { session },
-  } = await supabaseClient.auth.getSession();
+/**
+ * สร้าง notification ลงตาราง notifications
+ * มีการตรวจ duplicate ก่อนสร้าง
+ */
+async function createNotification(userId, type, title, message) {
+  try {
+    const isDup = await isDuplicate(type, userId);
+    if (isDup) return; // ไม่สร้างซ้ำ
 
-  if (!session) {
-    window.location.href = "/pages/auth/login.html";
+    await supabaseClient.from("notifications").insert([
+      { user_id: userId, type, title, message },
+    ]);
+  } catch (err) {
+    console.error("createNotification error:", err);
   }
 }
 
-async function loadUserEmail() {
-  const {
-    data: { user },
-    error,
-  } = await supabaseClient.auth.getUser();
+/**
+ * ตรวจว่ามี notification ประเภทนี้ที่ยังไม่อ่านอยู่แล้วหรือไม่
+ */
+async function isDuplicate(type, userId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("notifications")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("type", type)
+      .eq("is_read", false);
 
-  if (error || !user) {
-    console.log("ไม่พบ user");
-    return;
-  }
-
-  const emailEl = document.getElementById("userEmail");
-  if (emailEl) {
-    emailEl.textContent = user.email;
+    if (error) throw error;
+    return data && data.length > 0;
+  } catch (err) {
+    console.error("isDuplicate error:", err);
+    return false;
   }
 }
 
@@ -108,95 +116,12 @@ async function loadData() {
   }
 }
 
-async function loadUserProfile() {
-  const {
-    data: { user },
-  } = await supabaseClient.auth.getUser();
-
-  if (!user) return;
-
-  const { data: profile, error } = await supabaseClient
-    .from("profiles")
-    .select("display_name, username, role")
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    console.error("โหลด profile ไม่ได้:", error);
-    return;
-  }
-
-  const fullName = profile?.display_name || profile?.username || user.email;
-
-  const userNameEl = document.getElementById("userName");
-  const displayEl = document.getElementById("displayName");
-  const emailEl = document.getElementById("userEmail");
-  const roleEl = document.getElementById("userRole");
-
-  if (userNameEl) userNameEl.textContent = fullName;
-  if (displayEl) displayEl.textContent = fullName;
-  if (emailEl) emailEl.textContent = user.email;
-  if (roleEl) roleEl.textContent = profile?.role || "Sales Executive";
-}
-
-/* =================================================
-   🌍 Load User Area
-   - แสดง Area ที่ Sales รับผิดชอบ
-================================================= */
-async function loadUserArea() {
-  try {
-    const {
-      data: { user },
-      error,
-    } = await supabaseClient.auth.getUser();
-
-    if (error || !user) return;
-
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("area")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError) {
-      console.error("โหลด area ไม่ได้:", profileError);
-      return;
-    }
-
-    const areaEl = document.getElementById("areaCount");
-
-    if (areaEl) {
-      areaEl.textContent = profile?.area || "ยังไม่ได้กำหนด";
-    }
-  } catch (err) {
-    console.error("Error loadUserArea:", err.message);
-  }
-}
-
-/* =================================================
-  Load User Data
-================================================= */
-async function loadUserInfo() {
-  const {
-    data: { user },
-    error,
-  } = await supabaseClient.auth.getUser();
-
-  if (error || !user) {
-    console.log("ไม่พบ user");
-    return;
-  }
-
-  document.getElementById("userName").textContent = user.email;
-}
-
 /* =================================================
    5️⃣ Render Dashboard Summary
 ================================================= */
 
 function renderSummary() {
   const claimCountEl = document.getElementById("claimCount");
-
   if (claimCountEl) claimCountEl.textContent = claims.length;
 }
 
@@ -210,15 +135,13 @@ function renderReportList() {
 
   listEl.innerHTML = "";
 
-  const items = [
-    ...reports.map((r) => ({
-      type: "report",
-      title: r.title || "รายงาน (ยังไม่ตั้งชื่อ)",
-      date: r.report_date,
-      link: `report.html?id=${r.id}`,
-      id: r.id,
-    })),
-  ];
+  const items = reports.map((r) => ({
+    type: "report",
+    title: r.title || "รายงาน (ยังไม่ตั้งชื่อ)",
+    date: r.report_date,
+    link: `report.html?id=${r.id}`,
+    id: r.id,
+  }));
 
   if (!items.length) {
     listEl.innerHTML = `<p style="color:#999">ยังไม่มีข้อมูล</p>`;
@@ -230,7 +153,6 @@ function renderReportList() {
     .forEach((item) => {
       const div = document.createElement("div");
       div.className = "report-item";
-
       div.innerHTML = `
         <div class="report-left">
           📄 <a href="${item.link}">${item.title}</a>
@@ -240,7 +162,6 @@ function renderReportList() {
           <button onclick="deleteItem('${item.type}','${item.id}')">🗑️</button>
         </div>
       `;
-
       listEl.appendChild(div);
     });
 }
@@ -262,6 +183,7 @@ async function deleteItem(type, id) {
 
 /* =================================================
    7️⃣ Weekly Report Progress
+   แก้ไข: ใช้ report_date แทน date
 ================================================= */
 
 function renderWeeklyProgress() {
@@ -274,11 +196,12 @@ function renderWeeklyProgress() {
     return;
   }
 
-  const latestReport = reports.sort(
-    (a, b) => new Date(b.date) - new Date(a.date),
+  // ✅ แก้: ใช้ report_date แทน date
+  const latestReport = [...reports].sort(
+    (a, b) => new Date(b.report_date || b.created_at) - new Date(a.report_date || a.created_at)
   )[0];
 
-  const lastDate = new Date(latestReport.date);
+  const lastDate = new Date(latestReport.report_date || latestReport.created_at);
   const now = new Date();
 
   const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
@@ -286,7 +209,6 @@ function renderWeeklyProgress() {
   if (reportDaysEl) reportDaysEl.textContent = diffDays;
 
   const percent = Math.min((diffDays / 7) * 100, 100);
-
   if (progressFill) progressFill.style.width = percent + "%";
 }
 
@@ -296,7 +218,7 @@ function renderWeeklyProgress() {
 
 function getReportDates() {
   return reports
-    .map((r) => r.date)
+    .map((r) => r.report_date)
     .filter(Boolean)
     .map((d) => d.split("T")[0]);
 }
@@ -313,25 +235,15 @@ function renderCalendar() {
   const today = new Date();
 
   const monthNames = [
-    "มกราคม",
-    "กุมภาพันธ์",
-    "มีนาคม",
-    "เมษายน",
-    "พฤษภาคม",
-    "มิถุนายน",
-    "กรกฎาคม",
-    "สิงหาคม",
-    "กันยายน",
-    "ตุลาคม",
-    "พฤศจิกายน",
-    "ธันวาคม",
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน",
+    "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม",
+    "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
   ];
 
   title.textContent = `${monthNames[month]} ${year}`;
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
   const reportDates = getReportDates();
 
   const dayHeaders = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
@@ -399,7 +311,6 @@ async function logout() {
 ================================================= */
 
 async function init() {
-  // 1️⃣ ตรวจ session ก่อนเลย (บล็อกอย่างเดียว)
   const {
     data: { session },
   } = await supabaseClient.auth.getSession();
@@ -408,33 +319,28 @@ async function init() {
     return;
   }
 
-  // 2️⃣ ยิง query ทุกอันพร้อมกันเลย
   const [profileResult, reportsResult, claimsResult, storeResult] =
     await Promise.all([
-      // โหลด profile (รวม role + area ในครั้งเดียว)
       supabaseClient
         .from("profiles")
         .select("display_name, username, role, area")
         .eq("id", session.user.id)
         .single(),
 
-      // โหลด reports
       supabaseClient
         .from("reports")
         .select("*")
+        .eq("sale_id", session.user.id)
         .order("created_at", { ascending: false }),
 
-      // โหลด claims
       supabaseClient.from("claims").select("id"),
 
-      // นับร้านค้า
       supabaseClient
         .from("shops")
         .select("*", { count: "exact", head: true })
         .eq("sale_id", session.user.id),
     ]);
 
-  // 3️⃣ นำข้อมูลมาใส่ UI
   const profile = profileResult.data;
   reports = reportsResult.data || [];
   claims = claimsResult.data || [];
@@ -443,7 +349,6 @@ async function init() {
   const fullName =
     profile?.display_name || profile?.username || session.user.email;
 
-  // อัพเดท UI ทีเดียว
   const userNameEl = document.getElementById("userName");
   const displayNameEl = document.getElementById("displayName");
   const userEmailEl = document.getElementById("userEmail");
@@ -460,22 +365,18 @@ async function init() {
   if (storeCountEl) storeCountEl.textContent = storeCount;
   if (claimCountEl) claimCountEl.textContent = claims.length;
 
-  // Admin badge
   if (profile?.role === "admin") document.body.classList.add("is-admin");
 
-  // 🆕 Manager Dashboard Button - แสดงเมื่อ role เป็น manager หรือ admin
   if (profile?.role === "manager" || profile?.role === "admin") {
     const managerBtn = document.getElementById("managerDashboardBtn");
-    if (managerBtn) managerBtn.style.display = "flex"; // เปลี่ยนเป็น flex
+    if (managerBtn) managerBtn.style.display = "flex";
   }
 
-  // 🆕 Admin Dashboard Button - แสดงเฉพาะ admin เท่านั้น
   if (profile?.role === "admin") {
     const adminBtn = document.getElementById("adminDashboardBtn");
     if (adminBtn) adminBtn.style.display = "flex";
   }
 
-  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ (ย้ายมาก่อน checkNotifications)
   const currentUser = {
     id: session.user.id,
     email: session.user.email,
@@ -483,20 +384,16 @@ async function init() {
     display_name: fullName,
   };
 
-  // เก็บไว้ใน window สำหรับ modules อื่นใช้
   window.currentUser = currentUser;
 
-  // 5️⃣ Render UI
   initAvatarUpload();
   renderSummary();
   renderReportList();
   renderWeeklyProgress();
   renderCalendar();
 
-  // 6️⃣ ตรวจสอบการแจ้งเตือน (ย้ายมาหลังสร้าง currentUser และ profile แล้ว)
   await checkNotifications(currentUser, profile);
 
-  // 7️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
   console.log("🔍 Checking AnnouncementsModule:", typeof AnnouncementsModule);
   if (typeof AnnouncementsModule !== "undefined") {
     try {
@@ -511,8 +408,7 @@ async function init() {
 }
 
 /* =================================================
-   📷 Avatar Upload - บันทึกลง Supabase Storage
-   (รวมเป็นฟังก์ชันเดียว - ลบ duplicate)
+   📷 Avatar Upload
 ================================================= */
 
 async function initAvatarUpload() {
@@ -522,44 +418,36 @@ async function initAvatarUpload() {
 
   if (!uploadInput || !profileImage || !avatarWrapper) return;
 
-  // โหลดรูปโปรไฟล์ปัจจุบันจาก database
   await loadCurrentAvatar(profileImage);
 
-  // คลิกที่ wrapper เพื่อเลือกไฟล์
   avatarWrapper.addEventListener("click", () => {
     uploadInput.click();
   });
 
-  // เมื่อเลือกไฟล์
   uploadInput.addEventListener("change", async function () {
     const file = this.files[0];
     if (!file) return;
 
-    // ตรวจสอบประเภทไฟล์
     if (!file.type.startsWith("image/")) {
       alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
       return;
     }
 
-    // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
     if (file.size > 2 * 1024 * 1024) {
       alert("ไฟล์ใหญ่เกินไป (ไม่เกิน 2MB)");
       return;
     }
 
-    // แสดง preview ก่อน
     const reader = new FileReader();
     reader.onload = (e) => {
       profileImage.src = e.target.result;
     };
     reader.readAsDataURL(file);
 
-    // อัปโหลดไป Supabase
     await uploadAvatar(file, profileImage, avatarWrapper);
   });
 }
 
-// โหลดรูปโปรไฟล์ปัจจุบัน
 async function loadCurrentAvatar(imgElement) {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -579,21 +467,16 @@ async function loadCurrentAvatar(imgElement) {
   }
 }
 
-// อัปโหลดรูปไป Supabase Storage
 async function uploadAvatar(file, imgElement, wrapperElement) {
   try {
-    // แสดง loading
     wrapperElement.classList.add("uploading");
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("ไม่พบ user");
 
-    // สร้างชื่อไฟล์ unique
     const fileExt = file.name.split(".").pop().toLowerCase();
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
 
-    // ลบรูปเก่า (ถ้ามี)
     try {
       const { data: oldProfile } = await supabaseClient
         .from("profiles")
@@ -604,33 +487,25 @@ async function uploadAvatar(file, imgElement, wrapperElement) {
       if (oldProfile?.avatar_url) {
         const oldFileName = oldProfile.avatar_url.split("/").pop();
         if (oldFileName && !oldFileName.includes("default")) {
-          await supabaseClient.storage
-            .from("avatars")
-            .remove([oldFileName]);
+          await supabaseClient.storage.from("avatars").remove([oldFileName]);
         }
       }
     } catch (e) {
       console.log("ไม่มีรูปเก่าหรือลบไม่ได้:", e);
     }
 
-    // อัปโหลดรูปใหม่
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+    const { error: uploadError } = await supabaseClient.storage
       .from("avatars")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: true
-      });
+      .upload(fileName, file, { cacheControl: "3600", upsert: true });
 
     if (uploadError) throw uploadError;
 
-    // สร้าง public URL
     const { data: urlData } = supabaseClient.storage
       .from("avatars")
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
 
     const publicUrl = urlData.publicUrl;
 
-    // บันทึก URL ลง profiles table
     const { error: updateError } = await supabaseClient
       .from("profiles")
       .update({ avatar_url: publicUrl })
@@ -638,35 +513,23 @@ async function uploadAvatar(file, imgElement, wrapperElement) {
 
     if (updateError) throw updateError;
 
-    // อัปเดตรูปใน UI
-    imgElement.src = publicUrl + "?t=" + Date.now(); // cache bust
-    
+    imgElement.src = publicUrl + "?t=" + Date.now();
     console.log("✅ อัปโหลดรูปโปรไฟล์สำเร็จ");
-
   } catch (err) {
     console.error("❌ อัปโหลดรูปไม่สำเร็จ:", err);
     alert("อัปโหลดรูปไม่สำเร็จ: " + err.message);
   } finally {
-    // ซ่อน loading
     wrapperElement.classList.remove("uploading");
   }
 }
 
-document.addEventListener("DOMContentLoaded", init);
-
-console.log("Home loaded (Production Ready) 🚀");
-
 /* =================================================
-   🏪 Load Store Count (Dashboard Card)
-   - นับจำนวนร้านค้าของ Sales ที่ login อยู่
+   🏪 Load Store Count
 ================================================= */
+
 async function loadStoreCount() {
   try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError) throw userError;
     if (!user) return;
 
@@ -686,34 +549,25 @@ async function loadStoreCount() {
   }
 }
 
-/*====================================================
-Spinner + Loading State
-====================================================*/
+/* =================================================
+   Spinner + Loading State
+================================================= */
 
 function handleManagerClick(btn) {
-  // ใส่ loading
   btn.classList.add("loading");
-
-  // ดีเลย์นิดให้เห็น effect (optional)
-  setTimeout(() => {
-    goToManagerDashboard();
-  }, 500);
+  setTimeout(() => goToManagerDashboard(), 500);
 }
 
 function handleAdminClick(btn) {
   btn.classList.add("loading");
-
-  setTimeout(() => {
-    goToAdmin();
-  }, 500);
+  setTimeout(() => goToAdmin(), 500);
 }
 
 /* =================================================
-   ===== แจ้งเตือน ระบบงาน =====
-   (แก้ไข: เพิ่ม null check และเปลี่ยนชื่อตัวแปร reports เป็น weeklyReports)
+   🔔 Check Notifications
 ================================================= */
+
 async function checkNotifications(currentUser, profile) {
-  // ✅ เพิ่ม null check
   if (!currentUser || !profile) {
     console.warn("checkNotifications: currentUser หรือ profile เป็น null");
     return;
@@ -723,17 +577,15 @@ async function checkNotifications(currentUser, profile) {
   const today = new Date();
   const isSaturday = today.getDay() === 6;
 
-  // ===== 📅 ช่วงสัปดาห์ =====
   const start = new Date(today);
-  start.setDate(today.getDate() - today.getDay() + 1); // จันทร์
+  start.setDate(today.getDate() - today.getDay() + 1); // วันจันทร์
 
   const end = new Date(start);
-  end.setDate(start.getDate() + 6); // อาทิตย์
+  end.setDate(start.getDate() + 6); // วันอาทิตย์
 
   const startStr = start.toISOString();
   const endStr = end.toISOString();
 
-  // ===== 📊 โหลด reports ทั้งหมด (เปลี่ยนชื่อตัวแปรเป็น weeklyReports) =====
   const { data: weeklyReports } = await supabaseClient
     .from("reports")
     .select("*")
@@ -746,14 +598,19 @@ async function checkNotifications(currentUser, profile) {
   // 🟢 SALES
   // =========================
   if (currentUser.role === "sales") {
-    const myReports = reportsData.filter(r => r.sale_id === currentUser.id);
-
-    const REQUIRED = 5; // 👈 ปรับได้
+    const myReports = reportsData.filter((r) => r.sale_id === currentUser.id);
+    const REQUIRED = 5;
 
     if (isSaturday && myReports.length < REQUIRED) {
       notificationCount++;
-
       showToast("⚠️ คุณยังส่งรายงานประจำสัปดาห์ไม่ครบ");
+
+      await createNotification(
+        currentUser.id,
+        "missing_report",
+        "ยังส่งรายงานไม่ครบ",
+        "คุณยังส่งรายงานประจำสัปดาห์ไม่ครบ"
+      );
     }
   }
 
@@ -761,65 +618,68 @@ async function checkNotifications(currentUser, profile) {
   // 🔵 MANAGER
   // =========================
   if (currentUser.role === "manager") {
-
-    // 👥 ลูกทีม
     const { data: team } = await supabaseClient
       .from("profiles")
       .select("id")
       .eq("manager_id", currentUser.id);
 
-    const teamData = team || [];
-    const teamIds = teamData.map(u => u.id);
+    const teamIds = (team || []).map((u) => u.id);
 
-    // 📄 reports ของทีม
-    const teamReports = reportsData.filter(r => teamIds.includes(r.sale_id));
-
-    const submittedIds = [...new Set(teamReports.map(r => r.sale_id))];
-
-    const missingUsers = teamIds.filter(id => !submittedIds.includes(id));
+    const teamReports = reportsData.filter((r) => teamIds.includes(r.sale_id));
+    const submittedIds = [...new Set(teamReports.map((r) => r.sale_id))];
+    const missingUsers = teamIds.filter((id) => !submittedIds.includes(id));
 
     if (missingUsers.length > 0) {
       notificationCount += missingUsers.length;
-
       showToast(`⚠️ มี ${missingUsers.length} คน ยังไม่ส่งรายงาน`);
+
+      await createNotification(
+        currentUser.id,
+        "team_missing",
+        "ลูกทีมยังไม่ส่งรายงาน",
+        `มี ${missingUsers.length} คน ยังไม่ส่งรายงาน`
+      );
     }
 
-    // 📄 unread (ต้องมี field is_read ใน DB)
-    const unread = teamReports.filter(r => !r.is_read);
+    const unread = teamReports.filter((r) => !r.is_read);
 
     if (unread.length > 0) {
       notificationCount += unread.length;
-
       showToast(`📄 มีรายงานใหม่ ${unread.length} รายการ`);
+
+      await createNotification(
+        currentUser.id,
+        "unread_report",
+        "มีรายงานใหม่",
+        `มีรายงานใหม่ ${unread.length} รายการ`
+      );
     }
   }
 
-  // =========================
-  // 🎯 UPDATE UI
-  // =========================
   updateNotificationUI(notificationCount);
 }
 
-
-/* =========================
-   Toast (สวยๆ ไม่ใช้ alert)
-   ========================= */
+/* =================================================
+   Toast
+================================================= */
 
 function showToast(message) {
   const div = document.createElement("div");
   div.className = "toast-notification";
   div.innerText = message;
 
-  div.style.position = "fixed";
-  div.style.top = "20px";
-  div.style.right = "20px";
-  div.style.background = "#333";
-  div.style.color = "#fff";
-  div.style.padding = "10px 16px";
-  div.style.borderRadius = "8px";
-  div.style.zIndex = "9999";
-  div.style.fontSize = "13px";
-  div.style.animation = "slideIn 0.3s ease";
+  Object.assign(div.style, {
+    position: "fixed",
+    top: "20px",
+    right: "20px",
+    background: "#333",
+    color: "#fff",
+    padding: "10px 16px",
+    borderRadius: "8px",
+    zIndex: "9999",
+    fontSize: "13px",
+    animation: "slideIn 0.3s ease",
+  });
 
   document.body.appendChild(div);
 
@@ -829,9 +689,9 @@ function showToast(message) {
   }, 4000);
 }
 
-/* =========================
-   Update Badge
-   ========================= */
+/* =================================================
+   Update Notification Badge
+================================================= */
 
 function updateNotificationUI(count) {
   const badge = document.getElementById("notifyBadge");
@@ -848,3 +708,19 @@ function updateNotificationUI(count) {
     }
   }
 }
+
+/* =================================================
+   Navigation
+================================================= */
+
+function goToNotifications() {
+  window.location.href = "/pages/notifications.html";
+}
+
+/* =================================================
+   DOMContentLoaded
+================================================= */
+
+document.addEventListener("DOMContentLoaded", init);
+
+console.log("Home loaded (Production Ready) 🚀");
