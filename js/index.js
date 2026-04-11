@@ -475,7 +475,7 @@ async function init() {
     if (adminBtn) adminBtn.style.display = "flex";
   }
 
-  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ
+  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ (ย้ายมาก่อน checkNotifications)
   const currentUser = {
     id: session.user.id,
     email: session.user.email,
@@ -493,9 +493,10 @@ async function init() {
   renderWeeklyProgress();
   renderCalendar();
 
-  // 6️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
-  // if (typeof AnnouncementsModule !== 'undefined') {
+  // 6️⃣ ตรวจสอบการแจ้งเตือน (ย้ายมาหลังสร้าง currentUser และ profile แล้ว)
+  await checkNotifications(currentUser, profile);
 
+  // 7️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
   console.log("🔍 Checking AnnouncementsModule:", typeof AnnouncementsModule);
   if (typeof AnnouncementsModule !== "undefined") {
     try {
@@ -510,92 +511,8 @@ async function init() {
 }
 
 /* =================================================
-   📷 Avatar Upload
-================================================= */
-
-function initAvatarUpload() {
-  const uploadInput = document.getElementById("uploadAvatar");
-  const profileImage = document.getElementById("profileImage");
-  const avatarWrapper = document.querySelector(".avatar-wrapper");
-
-  if (!uploadInput || !profileImage || !avatarWrapper) return;
-
-  avatarWrapper.addEventListener("click", () => {
-    uploadInput.click();
-  });
-
-  uploadInput.addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      profileImage.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", init);
-
-console.log("Home loaded (Production Ready) 🚀");
-
-/* =================================================
-   🏪 Load Store Count (Dashboard Card)
-   - นับจำนวนร้านค้าของ Sales ที่ login อยู่
-================================================= */
-async function loadStoreCount() {
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-
-    if (userError) throw userError;
-    if (!user) return;
-
-    const { count, error } = await supabaseClient
-      .from("shops")
-      .select("*", { count: "exact", head: true })
-      .eq("sale_id", user.id);
-
-    if (error) throw error;
-
-    const el = document.getElementById("storeCount");
-    if (el) el.textContent = count ?? 0;
-  } catch (err) {
-    console.error("โหลดจำนวนร้านไม่สำเร็จ:", err.message);
-    const el = document.getElementById("storeCount");
-    if (el) el.textContent = 0;
-  }
-}
-
-/*====================================================
-Spinner + Loading State
-====================================================*/
-
-function handleManagerClick(btn) {
-  // ใส่ loading
-  btn.classList.add("loading");
-
-  // ดีเลย์นิดให้เห็น effect (optional)
-  setTimeout(() => {
-    goToManagerDashboard();
-  }, 500);
-}
-
-function handleAdminClick(btn) {
-  btn.classList.add("loading");
-
-  setTimeout(() => {
-    goToAdmin();
-  }, 500);
-}
-
-
-
-/* =================================================
    📷 Avatar Upload - บันทึกลง Supabase Storage
+   (รวมเป็นฟังก์ชันเดียว - ลบ duplicate)
 ================================================= */
 
 async function initAvatarUpload() {
@@ -732,5 +649,202 @@ async function uploadAvatar(file, imgElement, wrapperElement) {
   } finally {
     // ซ่อน loading
     wrapperElement.classList.remove("uploading");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+console.log("Home loaded (Production Ready) 🚀");
+
+/* =================================================
+   🏪 Load Store Count (Dashboard Card)
+   - นับจำนวนร้านค้าของ Sales ที่ login อยู่
+================================================= */
+async function loadStoreCount() {
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) return;
+
+    const { count, error } = await supabaseClient
+      .from("shops")
+      .select("*", { count: "exact", head: true })
+      .eq("sale_id", user.id);
+
+    if (error) throw error;
+
+    const el = document.getElementById("storeCount");
+    if (el) el.textContent = count ?? 0;
+  } catch (err) {
+    console.error("โหลดจำนวนร้านไม่สำเร็จ:", err.message);
+    const el = document.getElementById("storeCount");
+    if (el) el.textContent = 0;
+  }
+}
+
+/*====================================================
+Spinner + Loading State
+====================================================*/
+
+function handleManagerClick(btn) {
+  // ใส่ loading
+  btn.classList.add("loading");
+
+  // ดีเลย์นิดให้เห็น effect (optional)
+  setTimeout(() => {
+    goToManagerDashboard();
+  }, 500);
+}
+
+function handleAdminClick(btn) {
+  btn.classList.add("loading");
+
+  setTimeout(() => {
+    goToAdmin();
+  }, 500);
+}
+
+/* =================================================
+   ===== แจ้งเตือน ระบบงาน =====
+   (แก้ไข: เพิ่ม null check และเปลี่ยนชื่อตัวแปร reports เป็น weeklyReports)
+================================================= */
+async function checkNotifications(currentUser, profile) {
+  // ✅ เพิ่ม null check
+  if (!currentUser || !profile) {
+    console.warn("checkNotifications: currentUser หรือ profile เป็น null");
+    return;
+  }
+
+  let notificationCount = 0;
+  const today = new Date();
+  const isSaturday = today.getDay() === 6;
+
+  // ===== 📅 ช่วงสัปดาห์ =====
+  const start = new Date(today);
+  start.setDate(today.getDate() - today.getDay() + 1); // จันทร์
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6); // อาทิตย์
+
+  const startStr = start.toISOString();
+  const endStr = end.toISOString();
+
+  // ===== 📊 โหลด reports ทั้งหมด (เปลี่ยนชื่อตัวแปรเป็น weeklyReports) =====
+  const { data: weeklyReports } = await supabaseClient
+    .from("reports")
+    .select("*")
+    .gte("created_at", startStr)
+    .lte("created_at", endStr);
+
+  const reportsData = weeklyReports || [];
+
+  // =========================
+  // 🟢 SALES
+  // =========================
+  if (currentUser.role === "sales") {
+    const myReports = reportsData.filter(r => r.sale_id === currentUser.id);
+
+    const REQUIRED = 5; // 👈 ปรับได้
+
+    if (isSaturday && myReports.length < REQUIRED) {
+      notificationCount++;
+
+      showToast("⚠️ คุณยังส่งรายงานประจำสัปดาห์ไม่ครบ");
+    }
+  }
+
+  // =========================
+  // 🔵 MANAGER
+  // =========================
+  if (currentUser.role === "manager") {
+
+    // 👥 ลูกทีม
+    const { data: team } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("manager_id", currentUser.id);
+
+    const teamData = team || [];
+    const teamIds = teamData.map(u => u.id);
+
+    // 📄 reports ของทีม
+    const teamReports = reportsData.filter(r => teamIds.includes(r.sale_id));
+
+    const submittedIds = [...new Set(teamReports.map(r => r.sale_id))];
+
+    const missingUsers = teamIds.filter(id => !submittedIds.includes(id));
+
+    if (missingUsers.length > 0) {
+      notificationCount += missingUsers.length;
+
+      showToast(`⚠️ มี ${missingUsers.length} คน ยังไม่ส่งรายงาน`);
+    }
+
+    // 📄 unread (ต้องมี field is_read ใน DB)
+    const unread = teamReports.filter(r => !r.is_read);
+
+    if (unread.length > 0) {
+      notificationCount += unread.length;
+
+      showToast(`📄 มีรายงานใหม่ ${unread.length} รายการ`);
+    }
+  }
+
+  // =========================
+  // 🎯 UPDATE UI
+  // =========================
+  updateNotificationUI(notificationCount);
+}
+
+
+/* =========================
+   Toast (สวยๆ ไม่ใช้ alert)
+   ========================= */
+
+function showToast(message) {
+  const div = document.createElement("div");
+  div.className = "toast-notification";
+  div.innerText = message;
+
+  div.style.position = "fixed";
+  div.style.top = "20px";
+  div.style.right = "20px";
+  div.style.background = "#333";
+  div.style.color = "#fff";
+  div.style.padding = "10px 16px";
+  div.style.borderRadius = "8px";
+  div.style.zIndex = "9999";
+  div.style.fontSize = "13px";
+  div.style.animation = "slideIn 0.3s ease";
+
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    div.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => div.remove(), 300);
+  }, 4000);
+}
+
+/* =========================
+   Update Badge
+   ========================= */
+
+function updateNotificationUI(count) {
+  const badge = document.getElementById("notifyBadge");
+  const number = document.getElementById("notificationCount");
+
+  if (number) number.textContent = count;
+
+  if (badge) {
+    if (count > 0) {
+      badge.style.display = "inline-block";
+      badge.textContent = count;
+    } else {
+      badge.style.display = "none";
+    }
   }
 }

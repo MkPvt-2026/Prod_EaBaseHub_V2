@@ -1039,7 +1039,7 @@ function closeModal() {
 }
 
 // =====================================================
-// 📥 EXPORT CSV
+// 📥 EXPORT CSV - ✅ เพิ่มช่องหมายเหตุ
 // =====================================================
 function exportCSV() {
   if (!filteredReports.length) {
@@ -1047,13 +1047,16 @@ function exportCSV() {
     return;
   }
 
-  const headers = ['วันที่', 'เซลล์', 'ร้านค้า', 'สินค้า', 'สถานะ'];
+  // ✅ เพิ่ม 'หมายเหตุ' ใน headers
+  const headers = ['วันที่', 'เซลล์', 'ร้านค้า', 'สินค้า', 'หมายเหตุ', 'สถานะ'];
 
   const rows = filteredReports.map(r => [
     formatDate(r.submitted_at || r.report_date),
     profilesMap[r.sale_id]?.display_name || '—',
     shopsMap[r.shop_id] || '—',
     productsMap[r.product_id] || '—',
+    // ✅ เพิ่มช่องหมายเหตุ - ลบ newlines และ escape quotes
+    (r.note || '—').replace(/[\r\n]+/g, ' ').replace(/"/g, '""'),
     r.manager_acknowledged ? 'อ่านแล้ว' : 'ยังไม่อ่าน'
   ]);
 

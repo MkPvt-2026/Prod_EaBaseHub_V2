@@ -159,6 +159,7 @@
                  MINI CARDS - การ์ดสรุปข้อมูลแบบย่อ
                  ========================= -->
             <div class="shop-cards">
+              <!-- Card 1: ร้านที่รับผิดชอบ -->
               <a
                 href="/pages/forms/shopUser.html"
                 class="mini-card shop"
@@ -173,6 +174,7 @@
                 </div>
               </a>
 
+              <!-- Card 2: พื้นที่ -->
               <div class="mini-card trip">
                 <div class="icon-box">
                   <span class="material-symbols-outlined">map</span>
@@ -183,14 +185,17 @@
                 </div>
               </div>
 
-              <div class="mini-card claim">
+              <!-- Card 3: แจ้งเตือน -->
+              <div class="mini-card claim" style="position: relative;">
                 <div class="icon-box">
                   <span class="material-symbols-outlined">crisis_alert</span>
                 </div>
                 <div class="card-info">
-                  <h3 id="claimCount">0</h3>
-                  <p>Coomming Soon</p>
+                  <h3 id="notificationCount">0</h3>
+                  <p>แจ้งเตือน</p>
                 </div>
+                <!-- 🔴 Badge -->
+                <span id="notifyBadge" class="notify-badge">0</span>
               </div>
             </div>
 
