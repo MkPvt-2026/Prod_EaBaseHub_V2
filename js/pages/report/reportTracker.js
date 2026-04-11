@@ -757,7 +757,7 @@ function renderReports() {
         <div class="report-info">
           <div class="report-header">
             <span class="report-sales">${escapeHtml(salesName)}</span>
-            <span class="report-date">${formatDate(report.submitted_at || report.report_date)}</span>
+            <span class="report-date">${formatDate(report.report_date || report.submitted_at)}</span>
           </div>
           <div class="report-details">
             <div class="report-detail-item">
@@ -857,7 +857,7 @@ async function openReportModal(reportId) {
 
   // Fill modal fields
   const fields = {
-    'mReportDate': formatDate(report.submitted_at || report.report_date),
+    'mReportDate': formatDate(report.report_date || report.submitted_at),
     'mSalesName': salesName,
     'mShopName': shopsMap[report.shop_id] || '—',
     'mProduct': productsMap[report.product_id] || '—',
@@ -1051,7 +1051,8 @@ function exportCSV() {
   const headers = ['วันที่', 'เซลล์', 'ร้านค้า', 'สินค้า', 'หมายเหตุ', 'สถานะ'];
 
   const rows = filteredReports.map(r => [
-    formatDate(r.submitted_at || r.report_date),
+    // ✅ ใช้ report_date (วันที่เข้าร้าน) เป็นหลัก
+    formatDate(r.report_date || r.submitted_at),
     profilesMap[r.sale_id]?.display_name || '—',
     shopsMap[r.shop_id] || '—',
     productsMap[r.product_id] || '—',
