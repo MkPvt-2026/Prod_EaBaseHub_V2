@@ -15,8 +15,7 @@
   --mint-900: #1a3d30;
   --mint-1000: #25A385;
 
-
-   --mint-light-50: #E8F6F3;
+  --mint-light-50: #E8F6F3;
   --mint-light-100: #B5E3D9;
   --mint-light-200: #82D1BF;
   --mint-light-300: #4FBEA5;
@@ -26,8 +25,6 @@
   --mint-dark-600: #176250;
   --mint-dark-700: #104135;
   --mint-dark-800: #08211B;
-
-
 
   /* === Sage Green — secondary / badge / tag === */
   --sage-50:  #f0f6f0;
@@ -64,7 +61,7 @@
   --text-secondary: #4a7060;    /* เขียวกลาง */
   --text-muted:     #7a9b8b;    /* เขียวอ่อน */
   --text-on-dark:   #e8f5f0;    /* บน sidebar */
-  --text-dark:   #ffffff;    /* บน sidebar */
+  --text-dark:      #ffffff;    /* บน sidebar */
 
   --accent:        var(--mint-300);  /* accent หลัก — อ่อนกว่าเดิมเยอะ */
   --accent-light:  var(--mint-100);
@@ -154,7 +151,7 @@ body {
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.55);
+  background: var(--bg-main);
   border: 2px solid rgba(111,201,159,0.30);
   display: flex;
   align-items: center;
@@ -205,7 +202,6 @@ body {
   font-weight: 600;
 }
 
-
 .menu-icon {
   font-size: 19px;
   opacity: 0.85;
@@ -213,14 +209,13 @@ body {
   color: var(--mint-200);
 }
 
-
-/* Hamburger */
+/* Hamburger - FIXED: แก้ typo จาก --mint --mint-1000 เป็น --mint-1000 */
 .hamburger {
   display: none;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--mint --mint-1000);
+  color: var(--mint-1000);
   padding: 5px;
   align-self: flex-start;
 }
@@ -325,6 +320,194 @@ body {
 }
 
 /* =========================
+   EA BUTTON STYLE (ใช้แทน Uiverse เดิม)
+   ========================= */
+.btn-ea {
+  position: relative;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-family: 'Kanit', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+
+  color: #fff;
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(255,255,255,0.2);
+
+  background: linear-gradient(135deg, #0076c5, #45c7fa);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+/* ICON */
+.btn-ea .icon {
+  font-size: 18px;
+  transition: 0.3s;
+}
+
+/* HOVER */
+.btn-ea:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.btn-ea:hover .icon {
+  transform: translateX(4px);
+}
+
+/* SHINE EFFECT */
+.btn-ea::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 100%;
+  top: 0;
+  left: -100px;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.6),
+    transparent
+  );
+
+  opacity: 0.5;
+}
+
+.btn-ea:hover::before {
+  animation: shine 1.5s ease-out infinite;
+}
+
+@keyframes shine {
+  0% { left: -100px; }
+  60% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* ADMIN (สีรอง) */
+.btn-secondary {
+  background: linear-gradient(135deg, #e4ad17, #f1b84c);
+}
+
+/* =========================
+   BUTTON LOADING STATE
+   ========================= */
+
+/* ซ่อน spinner ปกติ */
+.btn-ea .spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  display: none;
+  animation: spinBtn 0.8s linear infinite;
+}
+
+/* ตอน loading */
+.btn-ea.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* ซ่อน text + icon */
+.btn-ea.loading .btn-text,
+.btn-ea.loading .icon {
+  display: none;
+}
+
+/* แสดง spinner */
+.btn-ea.loading .spinner {
+  display: inline-block;
+}
+
+/* หมุน */
+@keyframes spinBtn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   AVATAR UPLOAD WITH CAMERA ICON
+   ========================= */
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.avatar-wrapper img {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--mint-200);
+  transition: all 0.3s ease;
+}
+
+.avatar-wrapper:hover img {
+  opacity: 0.7;
+  border-color: var(--mint-400);
+}
+
+/* Camera Icon */
+.avatar-edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  background: var(--mint-500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+.avatar-edit-icon .material-symbols-outlined {
+  font-size: 14px;
+  color: white;
+}
+
+.avatar-wrapper:hover .avatar-edit-icon {
+  background: var(--mint-600);
+  transform: scale(1.1);
+}
+
+/* Loading State */
+.avatar-wrapper.uploading img {
+  opacity: 0.5;
+}
+
+.avatar-wrapper.uploading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--mint-200);
+  border-top-color: var(--mint-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* =========================
    LOGOUT BTN
    ========================= */
 .logout-btn {
@@ -421,6 +604,20 @@ body {
 .claim { border-left: 3px solid #e8b8b8; }
 .claim .icon-box { background: #fef5f5; }
 .claim .icon-box .material-symbols-outlined { color: #c77777; }
+
+/* แจ้งเตือน */
+.notify-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff4d4f;
+  color: white;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: none;
+}
 
 /* =========================
    ACTION CARDS
@@ -642,19 +839,6 @@ body {
   box-shadow: var(--shadow-xs);
 }
 
-.avatar-wrapper {
-  position: relative;
-  cursor: pointer;
-}
-
-.avatar-wrapper img {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--mint-200);
-}
-
 .user-info h4 {
   margin: 0 0 4px;
   font-size: 15.5px;
@@ -869,6 +1053,39 @@ body.is-admin .admin-only:hover {
    ========================= */
 #loadingOverlay {
   background: rgba(249,252,251,0.94) !important;
+}
+
+/* =========================
+   TOAST ANIMATIONS
+   ========================= */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* =========================
+   SPIN ANIMATION (for loading states)
+   ========================= */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* =========================

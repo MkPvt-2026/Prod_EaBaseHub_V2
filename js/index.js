@@ -10,7 +10,6 @@
  * - UI controls (menu / sidebar)
  *************************************************/
 
-
 /* =================================================
    1️⃣ Utilities
 ================================================= */
@@ -31,36 +30,35 @@ function formatDate(date) {
   return date.toISOString().split("T")[0];
 }
 
-
 /* =================================================
    2️⃣ Global State
 ================================================= */
 
 let reports = [];
-let areas   = [];
-let claims  = [];
+let areas = [];
+let claims = [];
 
 let currentDate = new Date();
-
 
 /* =================================================
    3️⃣ Protect Page (Auth Required)
 ================================================= */
 
 async function protectPage() {
-  const { data: { session } } =
-    await supabaseClient.auth.getSession();
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
 
   if (!session) {
     window.location.href = "/pages/auth/login.html";
   }
 }
 
-
 async function loadUserEmail() {
-
-  const { data: { user }, error } =
-    await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabaseClient.auth.getUser();
 
   if (error || !user) {
     console.log("ไม่พบ user");
@@ -73,109 +71,91 @@ async function loadUserEmail() {
   }
 }
 
-
 /* =================================================
    4️⃣ Load Data
 ================================================= */
 
 async function loadData() {
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
   if (!user) return;
 
-  // ✅ ลอง auth.uid() แทน user_id ก่อน — หรือดึงทั้งหมดแล้วกรองทีหลัง
-  const { data: reportData, error: reportError } =
-    await supabaseClient
-      .from("reports")
-      .select("*")
-      .eq("sale_id", user.id)   // เปลี่ยน user_id ให้ตรงกับชื่อจริง
-      .order("created_at", { ascending: false });
+  const { data: reportData, error: reportError } = await supabaseClient
+    .from("reports")
+    .select("*")
+    .eq("sale_id", user.id)
+    .order("created_at", { ascending: false });
 
   if (reportError) {
     console.error("โหลด reports ไม่ได้:", reportError.message);
   }
 
-  const { data: claimData, error: claimError } =
-    await supabaseClient
-      .from("claims")
-      .select("*");
+  const { data: claimData, error: claimError } = await supabaseClient
+    .from("claims")
+    .select("*");
 
   if (claimError) {
     console.error("โหลด claims ไม่ได้:", claimError.message);
   }
 
   reports = reportData || [];
-  claims  = claimData  || [];
-  
-  // แสดงใน console เพื่อดูว่า column ชื่ออะไร
+  claims = claimData || [];
+
   if (reports.length > 0) {
     console.log("📋 Report columns:", Object.keys(reports[0]));
   }
 }
 
-
-
-
 async function loadUserProfile() {
-
-  const { data: { user } } =
-    await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
 
   if (!user) return;
 
-  const { data: profile, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("display_name, username, role")
-      .eq("id", user.id)
-      .single();
+  const { data: profile, error } = await supabaseClient
+    .from("profiles")
+    .select("display_name, username, role")
+    .eq("id", user.id)
+    .single();
 
   if (error) {
     console.error("โหลด profile ไม่ได้:", error);
     return;
   }
 
-  // ✅ ใช้ตัวแปรเดียวให้ถูกต้อง
-  const fullName =
-    profile?.display_name ||
-    profile?.username ||
-    user.email;
+  const fullName = profile?.display_name || profile?.username || user.email;
 
-  // ใส่ค่าลง element (เช็คก่อนกันพัง)
-  const userNameEl  = document.getElementById("userName");
-  const displayEl   = document.getElementById("displayName");
-  const emailEl     = document.getElementById("userEmail");
-  const roleEl      = document.getElementById("userRole");
+  const userNameEl = document.getElementById("userName");
+  const displayEl = document.getElementById("displayName");
+  const emailEl = document.getElementById("userEmail");
+  const roleEl = document.getElementById("userRole");
 
   if (userNameEl) userNameEl.textContent = fullName;
-  if (displayEl)  displayEl.textContent  = fullName;
-  if (emailEl)    emailEl.textContent    = user.email;
-  if (roleEl)     roleEl.textContent     = profile?.role || "Sales Executive";
+  if (displayEl) displayEl.textContent = fullName;
+  if (emailEl) emailEl.textContent = user.email;
+  if (roleEl) roleEl.textContent = profile?.role || "Sales Executive";
 }
-
-
 
 /* =================================================
    🌍 Load User Area
    - แสดง Area ที่ Sales รับผิดชอบ
 ================================================= */
 async function loadUserArea() {
-
   try {
-
-    // 1️⃣ ดึง user ที่ login อยู่
-    const { data: { user }, error } =
-      await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabaseClient.auth.getUser();
 
     if (error || !user) return;
 
-    // 2️⃣ ดึงค่า area จาก profiles
-    const { data: profile, error: profileError } =
-      await supabaseClient
-        .from("profiles")
-        .select("area")
-        .eq("id", user.id)
-        .single();
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("area")
+      .eq("id", user.id)
+      .single();
 
     if (profileError) {
       console.error("โหลด area ไม่ได้:", profileError);
@@ -186,10 +166,8 @@ async function loadUserArea() {
     const areaEl = document.getElementById("areaCount");
 
     if (areaEl) {
-      areaEl.textContent =
-        profile?.area || "ยังไม่ได้กำหนด";
+      areaEl.textContent = profile?.area || "ยังไม่ได้กำหนด";
     }
-
   } catch (err) {
     console.error("Error loadUserArea:", err.message);
   }
@@ -199,33 +177,28 @@ async function loadUserArea() {
   Load User Data
 ================================================= */
 async function loadUserInfo() {
-
-  const { data: { user }, error } =
-    await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabaseClient.auth.getUser();
 
   if (error || !user) {
     console.log("ไม่พบ user");
     return;
   }
 
-  document.getElementById("userName").textContent =
-    user.email;  // ชั่วคราวใช้ email ก่อน
+  document.getElementById("userName").textContent = user.email;
 }
-
-
 
 /* =================================================
    5️⃣ Render Dashboard Summary
 ================================================= */
 
 function renderSummary() {
-  
   const claimCountEl = document.getElementById("claimCount");
 
-  
   if (claimCountEl) claimCountEl.textContent = claims.length;
 }
-
 
 /* =================================================
    6️⃣ Render My Reports
@@ -238,12 +211,12 @@ function renderReportList() {
   listEl.innerHTML = "";
 
   const items = [
-    ...reports.map(r => ({
+    ...reports.map((r) => ({
       type: "report",
       title: r.title || "รายงาน (ยังไม่ตั้งชื่อ)",
       date: r.report_date,
       link: `report.html?id=${r.id}`,
-      id: r.id
+      id: r.id,
     })),
     // ...trips.map(t => ({
     //   type: "trip",
@@ -255,14 +228,13 @@ function renderReportList() {
   ];
 
   if (!items.length) {
-    listEl.innerHTML =
-      `<p style="color:#999">ยังไม่มีข้อมูล</p>`;
+    listEl.innerHTML = `<p style="color:#999">ยังไม่มีข้อมูล</p>`;
     return;
   }
 
   items
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-    .forEach(item => {
+    .forEach((item) => {
       const div = document.createElement("div");
       div.className = "report-item";
 
@@ -281,18 +253,12 @@ function renderReportList() {
 }
 
 async function deleteItem(type, id) {
-
   if (!confirm("ต้องการลบใช่หรือไม่?")) return;
 
   const table =
-    type === "report" ? "reports" :
-    type === "trip"   ? "trips" :
-                        "claims";
+    type === "report" ? "reports" : type === "trip" ? "trips" : "claims";
 
-  const { error } = await supabaseClient
-    .from(table)
-    .delete()
-    .eq("id", id);
+  const { error } = await supabaseClient.from(table).delete().eq("id", id);
 
   if (error) {
     console.error("ลบไม่สำเร็จ:", error);
@@ -300,8 +266,6 @@ async function deleteItem(type, id) {
     await init();
   }
 }
-
-
 
 /* =================================================
    7️⃣ Weekly Report Progress
@@ -317,24 +281,21 @@ function renderWeeklyProgress() {
     return;
   }
 
-  const latestReport =
-    reports.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+  const latestReport = reports.sort(
+    (a, b) => new Date(b.date) - new Date(a.date),
+  )[0];
 
   const lastDate = new Date(latestReport.date);
   const now = new Date();
 
-  const diffDays = Math.floor(
-    (now - lastDate) / (1000 * 60 * 60 * 24)
-  );
+  const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
 
   if (reportDaysEl) reportDaysEl.textContent = diffDays;
 
   const percent = Math.min((diffDays / 7) * 100, 100);
 
-  if (progressFill)
-    progressFill.style.width = percent + "%";
+  if (progressFill) progressFill.style.width = percent + "%";
 }
-
 
 /* =================================================
    8️⃣ Calendar
@@ -342,9 +303,9 @@ function renderWeeklyProgress() {
 
 function getReportDates() {
   return reports
-    .map(r => r.date)
+    .map((r) => r.date)
     .filter(Boolean)
-    .map(d => d.split("T")[0]);
+    .map((d) => d.split("T")[0]);
 }
 
 function renderCalendar() {
@@ -359,20 +320,29 @@ function renderCalendar() {
   const today = new Date();
 
   const monthNames = [
-    "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-    "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
   ];
 
   title.textContent = `${monthNames[month]} ${year}`;
 
   const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth =
-    new Date(year, month + 1, 0).getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const reportDates = getReportDates();
 
-  const dayHeaders = ["อา","จ","อ","พ","พฤ","ศ","ส"];
-  dayHeaders.forEach(d => {
+  const dayHeaders = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+  dayHeaders.forEach((d) => {
     const el = document.createElement("div");
     el.className = "calendar-day-header";
     el.textContent = d;
@@ -388,11 +358,9 @@ function renderCalendar() {
     dateEl.className = "calendar-day";
     dateEl.textContent = day;
 
-    const dateStr =
-      `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    if (reportDates.includes(dateStr))
-      dateEl.classList.add("has-report");
+    if (reportDates.includes(dateStr)) dateEl.classList.add("has-report");
 
     if (
       day === today.getDate() &&
@@ -416,7 +384,6 @@ function nextMonth() {
   renderCalendar();
 }
 
-
 /* =================================================
    9️⃣ UI Controls
 ================================================= */
@@ -426,8 +393,7 @@ function toggleMenu() {
 }
 
 function toggleSidebar() {
-  document.getElementById("sidebar")
-    ?.classList.toggle("collapsed");
+  document.getElementById("sidebar")?.classList.toggle("collapsed");
 }
 
 async function logout() {
@@ -435,56 +401,55 @@ async function logout() {
   window.location.href = "/pages/auth/login.html";
 }
 
-
 /* =================================================
    🔟 INIT
 ================================================= */
 
 // ✅ แบบใหม่ - รันพร้อมกัน (~200-300ms)
 async function init() {
-
   // 1️⃣ ตรวจ session ก่อนเลย (บล็อกอย่างเดียว)
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
   if (!session) {
     window.location.href = "/pages/auth/login.html";
     return;
   }
 
   // 2️⃣ ยิง query ทุกอันพร้อมกันเลย
-  const [profileResult, reportsResult, claimsResult, storeResult] = await Promise.all([
-    
-    // โหลด profile (รวม role + area ในครั้งเดียว)
-    supabaseClient
-      .from("profiles")
-      .select("display_name, username, role, area")
-      .eq("id", session.user.id)
-      .single(),
+  const [profileResult, reportsResult, claimsResult, storeResult] =
+    await Promise.all([
+      // โหลด profile (รวม role + area ในครั้งเดียว)
+      supabaseClient
+        .from("profiles")
+        .select("display_name, username, role, area")
+        .eq("id", session.user.id)
+        .single(),
 
-    // โหลด reports
-    supabaseClient
-      .from("reports")
-      .select("*")
-      .order("created_at", { ascending: false }),
+      // โหลด reports
+      supabaseClient
+        .from("reports")
+        .select("*")
+        .order("created_at", { ascending: false }),
 
-    // โหลด claims
-    supabaseClient
-      .from("claims")
-      .select("id"),   // select แค่ id พอ ไม่ต้องดึงทั้งหมด
+      // โหลด claims
+      supabaseClient.from("claims").select("id"),
 
-    // นับร้านค้า
-    supabaseClient
-      .from("shops")
-      .select("*", { count: "exact", head: true })
-      .eq("sale_id", session.user.id)
-  ]);
+      // นับร้านค้า
+      supabaseClient
+        .from("shops")
+        .select("*", { count: "exact", head: true })
+        .eq("sale_id", session.user.id),
+    ]);
 
   // 3️⃣ นำข้อมูลมาใส่ UI
   const profile = profileResult.data;
   reports = reportsResult.data || [];
-  claims  = claimsResult.data  || [];
+  claims = claimsResult.data || [];
   const storeCount = storeResult.count ?? 0;
 
-  const fullName = profile?.display_name || profile?.username || session.user.email;
+  const fullName =
+    profile?.display_name || profile?.username || session.user.email;
 
   // อัพเดท UI ทีเดียว
   document.getElementById("userName")?.textContent  && (document.getElementById("userName").textContent = fullName);
@@ -501,15 +466,21 @@ async function init() {
   // 🆕 Manager Dashboard Button - แสดงเมื่อ role เป็น manager หรือ admin
   if (profile?.role === "manager" || profile?.role === "admin") {
     const managerBtn = document.getElementById("managerDashboardBtn");
-    if (managerBtn) managerBtn.style.display = "block";
+    if (managerBtn) managerBtn.style.display = "flex"; // เปลี่ยนเป็น flex
   }
 
-  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ
+  // 🆕 Admin Dashboard Button - แสดงเฉพาะ admin เท่านั้น
+  if (profile?.role === "admin") {
+    const adminBtn = document.getElementById("adminDashboardBtn");
+    if (adminBtn) adminBtn.style.display = "flex";
+  }
+
+  // 4️⃣ สร้าง currentUser object สำหรับ modules อื่นๆ (ย้ายมาก่อน checkNotifications)
   const currentUser = {
     id: session.user.id,
     email: session.user.email,
-    role: profile?.role || 'user',
-    display_name: fullName
+    role: profile?.role || "user",
+    display_name: fullName,
   };
 
   // เก็บไว้ใน window สำหรับ modules อื่นใช้
@@ -523,13 +494,12 @@ async function init() {
   renderWeeklyProgress();
   renderCalendar();
 
-  // 6️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
-  // if (typeof AnnouncementsModule !== 'undefined') {
+  // 6️⃣ ตรวจสอบการแจ้งเตือน (ย้ายมาหลังสร้าง currentUser และ profile แล้ว)
+  await checkNotifications(currentUser, profile);
 
+  // 7️⃣ ⭐ เรียก AnnouncementsModule.init() ⭐
   console.log("🔍 Checking AnnouncementsModule:", typeof AnnouncementsModule);
-if (typeof AnnouncementsModule !== 'undefined') {
-
-  
+  if (typeof AnnouncementsModule !== "undefined") {
     try {
       await AnnouncementsModule.init(currentUser);
       console.log("✅ AnnouncementsModule initialized");
@@ -542,40 +512,150 @@ if (typeof AnnouncementsModule !== 'undefined') {
 }
 
 /* =================================================
-   📷 Avatar Upload
+   📷 Avatar Upload - บันทึกลง Supabase Storage
+   (รวมเป็นฟังก์ชันเดียว - ลบ duplicate)
 ================================================= */
 
-function initAvatarUpload() {
-
+async function initAvatarUpload() {
   const uploadInput = document.getElementById("uploadAvatar");
   const profileImage = document.getElementById("profileImage");
   const avatarWrapper = document.querySelector(".avatar-wrapper");
 
   if (!uploadInput || !profileImage || !avatarWrapper) return;
 
+  // โหลดรูปโปรไฟล์ปัจจุบันจาก database
+  await loadCurrentAvatar(profileImage);
+
+  // คลิกที่ wrapper เพื่อเลือกไฟล์
   avatarWrapper.addEventListener("click", () => {
     uploadInput.click();
   });
 
-  uploadInput.addEventListener("change", function () {
+  // เมื่อเลือกไฟล์
+  uploadInput.addEventListener("change", async function () {
     const file = this.files[0];
     if (!file) return;
 
+    // ตรวจสอบประเภทไฟล์
+    if (!file.type.startsWith("image/")) {
+      alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+
+    // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("ไฟล์ใหญ่เกินไป (ไม่เกิน 2MB)");
+      return;
+    }
+
+    // แสดง preview ก่อน
     const reader = new FileReader();
-    reader.onload = function (e) {
+    reader.onload = (e) => {
       profileImage.src = e.target.result;
     };
     reader.readAsDataURL(file);
-  });
 
+    // อัปโหลดไป Supabase
+    await uploadAvatar(file, profileImage, avatarWrapper);
+  });
 }
 
+// โหลดรูปโปรไฟล์ปัจจุบัน
+async function loadCurrentAvatar(imgElement) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.avatar_url) {
+      imgElement.src = profile.avatar_url;
+    }
+  } catch (err) {
+    console.error("โหลดรูปโปรไฟล์ไม่สำเร็จ:", err);
+  }
+}
+
+// อัปโหลดรูปไป Supabase Storage
+async function uploadAvatar(file, imgElement, wrapperElement) {
+  try {
+    // แสดง loading
+    wrapperElement.classList.add("uploading");
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) throw new Error("ไม่พบ user");
+
+    // สร้างชื่อไฟล์ unique
+    const fileExt = file.name.split(".").pop().toLowerCase();
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // ลบรูปเก่า (ถ้ามี)
+    try {
+      const { data: oldProfile } = await supabaseClient
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (oldProfile?.avatar_url) {
+        const oldFileName = oldProfile.avatar_url.split("/").pop();
+        if (oldFileName && !oldFileName.includes("default")) {
+          await supabaseClient.storage
+            .from("avatars")
+            .remove([oldFileName]);
+        }
+      }
+    } catch (e) {
+      console.log("ไม่มีรูปเก่าหรือลบไม่ได้:", e);
+    }
+
+    // อัปโหลดรูปใหม่
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+      .from("avatars")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true
+      });
+
+    if (uploadError) throw uploadError;
+
+    // สร้าง public URL
+    const { data: urlData } = supabaseClient.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+
+    // บันทึก URL ลง profiles table
+    const { error: updateError } = await supabaseClient
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", user.id);
+
+    if (updateError) throw updateError;
+
+    // อัปเดตรูปใน UI
+    imgElement.src = publicUrl + "?t=" + Date.now(); // cache bust
+    
+    console.log("✅ อัปโหลดรูปโปรไฟล์สำเร็จ");
+
+  } catch (err) {
+    console.error("❌ อัปโหลดรูปไม่สำเร็จ:", err);
+    alert("อัปโหลดรูปไม่สำเร็จ: " + err.message);
+  } finally {
+    // ซ่อน loading
+    wrapperElement.classList.remove("uploading");
+  }
+}
 
 document.addEventListener("DOMContentLoaded", init);
 
 console.log("Home loaded (Production Ready) 🚀");
-
-
 
 /* =================================================
    🏪 Load Store Count (Dashboard Card)
@@ -583,27 +663,24 @@ console.log("Home loaded (Production Ready) 🚀");
 ================================================= */
 async function loadStoreCount() {
   try {
-
-    // ดึง user ปัจจุบัน
-    const { data: { user }, error: userError } =
-      await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
 
     if (userError) throw userError;
     if (!user) return;
 
-    // นับจำนวนร้าน (ไม่ดึงข้อมูลจริง ใช้ head:true เพื่อความเร็ว)
-    const { count, error } =
-      await supabaseClient
-        .from("shops")
-        .select("*", { count: "exact", head: true })
-        .eq("sale_id", user.id);
+    const { count, error } = await supabaseClient
+      .from("shops")
+      .select("*", { count: "exact", head: true })
+      .eq("sale_id", user.id);
 
     if (error) throw error;
 
     // แสดงผลใน card
     const el = document.getElementById("storeCount");
     if (el) el.textContent = count ?? 0;
-
   } catch (err) {
     console.error("โหลดจำนวนร้านไม่สำเร็จ:", err.message);
     const el = document.getElementById("storeCount");
@@ -611,4 +688,165 @@ async function loadStoreCount() {
   }
 }
 
+/*====================================================
+Spinner + Loading State
+====================================================*/
 
+function handleManagerClick(btn) {
+  // ใส่ loading
+  btn.classList.add("loading");
+
+  // ดีเลย์นิดให้เห็น effect (optional)
+  setTimeout(() => {
+    goToManagerDashboard();
+  }, 500);
+}
+
+function handleAdminClick(btn) {
+  btn.classList.add("loading");
+
+  setTimeout(() => {
+    goToAdmin();
+  }, 500);
+}
+
+/* =================================================
+   ===== แจ้งเตือน ระบบงาน =====
+   (แก้ไข: เพิ่ม null check และเปลี่ยนชื่อตัวแปร reports เป็น weeklyReports)
+================================================= */
+async function checkNotifications(currentUser, profile) {
+  // ✅ เพิ่ม null check
+  if (!currentUser || !profile) {
+    console.warn("checkNotifications: currentUser หรือ profile เป็น null");
+    return;
+  }
+
+  let notificationCount = 0;
+  const today = new Date();
+  const isSaturday = today.getDay() === 6;
+
+  // ===== 📅 ช่วงสัปดาห์ =====
+  const start = new Date(today);
+  start.setDate(today.getDate() - today.getDay() + 1); // จันทร์
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6); // อาทิตย์
+
+  const startStr = start.toISOString();
+  const endStr = end.toISOString();
+
+  // ===== 📊 โหลด reports ทั้งหมด (เปลี่ยนชื่อตัวแปรเป็น weeklyReports) =====
+  const { data: weeklyReports } = await supabaseClient
+    .from("reports")
+    .select("*")
+    .gte("created_at", startStr)
+    .lte("created_at", endStr);
+
+  const reportsData = weeklyReports || [];
+
+  // =========================
+  // 🟢 SALES
+  // =========================
+  if (currentUser.role === "sales") {
+    const myReports = reportsData.filter(r => r.sale_id === currentUser.id);
+
+    const REQUIRED = 5; // 👈 ปรับได้
+
+    if (isSaturday && myReports.length < REQUIRED) {
+      notificationCount++;
+
+      showToast("⚠️ คุณยังส่งรายงานประจำสัปดาห์ไม่ครบ");
+    }
+  }
+
+  // =========================
+  // 🔵 MANAGER
+  // =========================
+  if (currentUser.role === "manager") {
+
+    // 👥 ลูกทีม
+    const { data: team } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("manager_id", currentUser.id);
+
+    const teamData = team || [];
+    const teamIds = teamData.map(u => u.id);
+
+    // 📄 reports ของทีม
+    const teamReports = reportsData.filter(r => teamIds.includes(r.sale_id));
+
+    const submittedIds = [...new Set(teamReports.map(r => r.sale_id))];
+
+    const missingUsers = teamIds.filter(id => !submittedIds.includes(id));
+
+    if (missingUsers.length > 0) {
+      notificationCount += missingUsers.length;
+
+      showToast(`⚠️ มี ${missingUsers.length} คน ยังไม่ส่งรายงาน`);
+    }
+
+    // 📄 unread (ต้องมี field is_read ใน DB)
+    const unread = teamReports.filter(r => !r.is_read);
+
+    if (unread.length > 0) {
+      notificationCount += unread.length;
+
+      showToast(`📄 มีรายงานใหม่ ${unread.length} รายการ`);
+    }
+  }
+
+  // =========================
+  // 🎯 UPDATE UI
+  // =========================
+  updateNotificationUI(notificationCount);
+}
+
+
+/* =========================
+   Toast (สวยๆ ไม่ใช้ alert)
+   ========================= */
+
+function showToast(message) {
+  const div = document.createElement("div");
+  div.className = "toast-notification";
+  div.innerText = message;
+
+  div.style.position = "fixed";
+  div.style.top = "20px";
+  div.style.right = "20px";
+  div.style.background = "#333";
+  div.style.color = "#fff";
+  div.style.padding = "10px 16px";
+  div.style.borderRadius = "8px";
+  div.style.zIndex = "9999";
+  div.style.fontSize = "13px";
+  div.style.animation = "slideIn 0.3s ease";
+
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    div.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => div.remove(), 300);
+  }, 4000);
+}
+
+/* =========================
+   Update Badge
+   ========================= */
+
+function updateNotificationUI(count) {
+  const badge = document.getElementById("notifyBadge");
+  const number = document.getElementById("notificationCount");
+
+  if (number) number.textContent = count;
+
+  if (badge) {
+    if (count > 0) {
+      badge.style.display = "inline-block";
+      badge.textContent = count;
+    } else {
+      badge.style.display = "none";
+    }
+  }
+}
