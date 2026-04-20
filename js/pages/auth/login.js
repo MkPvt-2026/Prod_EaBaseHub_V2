@@ -37,7 +37,7 @@ async function redirectIfLoggedIn() {
 
     // Redirect ตาม Role (ไม่แสดง overlay เพราะ user ไม่ได้กด login)
     if (profile.role === "admin") {
-      window.location.href = "/pages/admin/adminDashboard.html";
+      window.location.href = "/pages/dashboard/adminDashboard.html";
     } else if (profile.role === "adminQc") {
       window.location.href = "/pages/dashboard/QcDashboard.html";
     } else if (profile.role === "sales") {
@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔥 แสดง overlay ก่อน redirect ตาม Role
       if (profile.role === "admin") {
-        showLoginOverlay("/pages/admin/adminDashboard.html");
+        showLoginOverlay("/pages/dashboard/adminDashboard.html");
       } else if (profile.role === "adminQc") {
         showLoginOverlay("/pages/dashboard/QcDashboard.html");
       } else if (profile.role === "sales") {
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (profile.role === "manager") {
         showLoginOverlay("/index.html");
       } else if (profile.role === "executive") {
-        showLoginOverlay("/pages/dashboard/executiveDashboard.html");
+        showLoginOverlay("/pages/executive/executiveHome.html");
       } else {
         await supabaseClient.auth.signOut();
         throw new Error("คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้");
