@@ -531,6 +531,134 @@ body {
   background: #fff8f8;
 }
 
+
+/* =================================================
+   🔔 Notification Alert Animations
+================================================= */
+
+/* การ์ดแจ้งเตือนที่มีของค้าง - สั่น + เรืองแสง */
+.mini-card.claim.has-unread {
+  animation: card-pulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: visible;
+}
+
+@keyframes card-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+    transform: scale(1.02);
+  }
+}
+
+/* ไอคอนกระดิ่งสั่น */
+.mini-card.claim.has-unread .icon-box {
+  animation: bell-shake 1.5s ease-in-out infinite;
+  transform-origin: top center;
+  background: linear-gradient(135deg, #fee2e2, #fecaca) !important;
+}
+
+.mini-card.claim.has-unread .icon-box span {
+  color: #dc2626 !important;
+}
+
+@keyframes bell-shake {
+  0%, 50%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-12deg); }
+  20% { transform: rotate(10deg); }
+  30% { transform: rotate(-8deg); }
+  40% { transform: rotate(6deg); }
+}
+
+/* Badge แดง pulse + เด้งเข้าครั้งแรก */
+.notify-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 11px;
+  border: 2px solid #fff;
+  z-index: 2;
+  animation: badge-bounce 0.5s ease-out, badge-pulse 1.8s ease-in-out infinite 0.5s;
+}
+
+@keyframes badge-bounce {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* เลขจำนวนแจ้งเตือนในการ์ด - สีแดงตัวหนาเมื่อมีของค้าง */
+.mini-card.claim.has-unread .card-info h3 {
+  color: #dc2626 !important;
+  animation: number-flash 2s ease-in-out infinite;
+}
+
+@keyframes number-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+/* Ripple effect รอบการ์ดเมื่อมีของค้าง */
+.mini-card.claim.has-unread::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  border: 2px solid #ef4444;
+  animation: ripple 2s ease-out infinite;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes ripple {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.08); opacity: 0; }
+}
+
+/* Hover ให้แอนิเมชันหยุดชั่วคราว (ให้ผู้ใช้อ่านง่ายตอนจะคลิก) */
+.mini-card.claim.has-unread:hover,
+.mini-card.claim.has-unread:hover .icon-box,
+.mini-card.claim.has-unread:hover .card-info h3,
+.mini-card.claim.has-unread:hover .notify-badge {
+  animation-play-state: paused;
+}
+
+/* ปิด animation ถ้าผู้ใช้ตั้งค่า reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .mini-card.claim.has-unread,
+  .mini-card.claim.has-unread .icon-box,
+  .mini-card.claim.has-unread .card-info h3,
+  .mini-card.claim.has-unread::before,
+  .notify-badge {
+    animation: none !important;
+  }
+}
+
+
 /* =========================
    MINI CARDS
    ========================= */
@@ -605,6 +733,8 @@ body {
 .claim .icon-box { background: #fef5f5; }
 .claim .icon-box .material-symbols-outlined { color: #c77777; }
 
+
+
 /* แจ้งเตือน */
 .notify-badge {
   position: absolute;
@@ -616,8 +746,10 @@ body {
   padding: 3px 7px;
   border-radius: 999px;
   font-weight: 600;
-  display: none;
+  /* display: none; */
 }
+
+
 
 /* =========================
    ACTION CARDS

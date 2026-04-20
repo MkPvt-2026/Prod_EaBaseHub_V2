@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ลองเรียก protectPage (ถ้ามี)
     if (typeof protectPage === 'function') {
       try {
-        await protectPage(['admin', 'manager']);
+        await protectPage(['admin', 'executive','manager']);
         console.log('✅ protectPage passed');
       } catch (e) {
         console.warn('⚠️ protectPage failed:', e.message);

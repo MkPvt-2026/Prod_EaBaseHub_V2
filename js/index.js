@@ -394,6 +394,8 @@ async function init() {
 
   await checkNotifications(currentUser, profile);
 
+  setupNotificationRealtime(currentUser.id);
+
   console.log("🔍 Checking AnnouncementsModule:", typeof AnnouncementsModule);
   if (typeof AnnouncementsModule !== "undefined") {
     try {
@@ -656,7 +658,11 @@ async function checkNotifications(currentUser, profile) {
     }
   }
 
-  updateNotificationUI(notificationCount);
+  // ดึงจำนวน unread ทั้งหมดจาก database (รวม report_comment ด้วย)
+  const dbUnreadCount = await loadUnreadNotificationCount();
+  
+  // ใช้จำนวนจาก DB เป็นหลัก (แม่นยำกว่า)
+  updateNotificationUI(dbUnreadCount);
 }
 
 /* =================================================
@@ -696,16 +702,41 @@ function showToast(message) {
 function updateNotificationUI(count) {
   const badge = document.getElementById("notifyBadge");
   const number = document.getElementById("notificationCount");
+  const card = document.querySelector(".mini-card.claim"); // ✅ เพิ่ม
 
   if (number) number.textContent = count;
 
   if (badge) {
     if (count > 0) {
-      badge.style.display = "inline-block";
-      badge.textContent = count;
+      badge.style.display = "inline-flex";
+      badge.textContent = count > 99 ? "99+" : count;
     } else {
       badge.style.display = "none";
     }
+  }
+
+  // ✅ เพิ่ม: toggle class has-unread ที่การ์ด
+  if (card) {
+    if (count > 0) {
+      card.classList.add("has-unread");
+    } else {
+      card.classList.remove("has-unread");
+    }
+  }
+
+  // ✅ เพิ่ม: เปลี่ยน favicon และ title เมื่อมีแจ้งเตือน
+  updateDocumentTitle(count);
+}
+
+/* =================================================
+   🔔 Update Document Title + Favicon
+================================================= */
+function updateDocumentTitle(count) {
+  const baseTitle = "Home - EABaseHub";
+  if (count > 0) {
+    document.title = `(${count}) 🔔 ${baseTitle}`;
+  } else {
+    document.title = baseTitle;
   }
 }
 
@@ -714,7 +745,7 @@ function updateNotificationUI(count) {
 ================================================= */
 
 function goToNotifications() {
-  window.location.href = "/pages/notifications.html";
+  window.location.href = "/pages/components/notifications.html";
 }
 
 /* =================================================
@@ -724,3 +755,96 @@ function goToNotifications() {
 document.addEventListener("DOMContentLoaded", init);
 
 console.log("Home loaded (Production Ready) 🚀");
+
+
+/* =================================================
+   🔔 Load Unread Notifications Count (จาก DB)
+================================================= */
+async function loadUnreadNotificationCount() {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return 0;
+
+    const { count, error } = await supabaseClient
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (err) {
+    console.error("โหลดจำนวนแจ้งเตือนไม่สำเร็จ:", err);
+    return 0;
+  }
+}
+
+/* =================================================
+   🔔 Realtime Notification Badge
+================================================= */
+function setupNotificationRealtime(userId) {
+  let isFirstLoad = true;
+
+  supabaseClient
+    .channel("home-notifications-" + userId)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",  // เฉพาะตอน insert ใหม่
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`
+      },
+      async (payload) => {
+        const count = await loadUnreadNotificationCount();
+        updateNotificationUI(count);
+
+        // เล่นเสียง + toast เมื่อมีแจ้งเตือนใหม่ (ไม่ใช่ครั้งแรกโหลด)
+        if (!isFirstLoad) {
+          playNotificationSound();
+          showToast("🔔 " + (payload.new.title || "มีแจ้งเตือนใหม่"));
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`
+      },
+      async () => {
+        const count = await loadUnreadNotificationCount();
+        updateNotificationUI(count);
+      }
+    )
+    .subscribe(() => {
+      setTimeout(() => { isFirstLoad = false; }, 2000);
+    });
+}
+
+/* =================================================
+   🔊 Notification Sound (ใช้ Web Audio API ไม่ต้องมีไฟล์)
+================================================= */
+function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    // เสียง 2 tone แบบ "ติ๊ง-ติ๊ง"
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (err) {
+    console.log("ไม่สามารถเล่นเสียงได้:", err);
+  }
+}
