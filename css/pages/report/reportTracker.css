@@ -16,6 +16,7 @@
   --accent2-light:#fef3c7;
   --accent3:      #ef4444;
   --blue:         #3b82f6;
+  --blue-dark:    #0447b4;
   --purple:       #8b5cf6;
   --text:         #111827;
   --text-muted:   #6b7280;
@@ -50,6 +51,27 @@ body {
   margin: 0 auto;
   padding: 24px;
 }
+
+/* ===================================================
+   MATERIAL ICONS - Base Setup
+=================================================== */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-secondary);
+  user-select: none;
+  flex-shrink: 0;
+  /* 🔑 สามบรรทัดสำคัญ */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /* ── PAGE HEADER ── */
 .page-header {
@@ -429,12 +451,12 @@ body {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--blue);
   color: white;
 }
 
 .btn-primary:hover {
-  background: var(--accent-dark);
+  background: var(--blue-dark);
   box-shadow: 0 4px 12px rgba(16,185,129,0.3);
 }
 
@@ -576,7 +598,18 @@ body {
   color: var(--accent-dark);
 }
 
-
+.report-province {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
 
 /* =====================================================
    COMMENT STYLES - แยก Admin / Manager
@@ -654,7 +687,7 @@ body {
 }
 
 .comment-role-badge.comment-user {
-  background: #6c757d;
+  background: #7d7d6c;
   color: #fff;
 }
 
@@ -890,6 +923,11 @@ body {
   color: var(--text-muted);
 }
 
+.material-symbols-outlined{
+        font-size:18px;
+        color: darkcyan;
+}
+
 .info-value {
   font-size: 15px;
   color: var(--text);
@@ -1017,6 +1055,182 @@ body {
   transform: translateY(0);
   pointer-events: auto;
 }
+
+
+
+/* =====================================================
+   Modal Readability Improvements
+   เพิ่มใน reportTracker.css หรือวางท้ายไฟล์นั้น
+   ===================================================== */
+
+/* จัด info-grid ให้มี spacing ดีขึ้น */
+.modal-body .info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+  background: #fafbfc;
+  padding: 18px 20px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  border: 1px solid #eef0f2;
+}
+
+/* แต่ละ info-item จัด label/value แนวตั้ง */
+.modal-body .info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.modal-body .info-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modal-body .info-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* Section สำหรับสินค้า (span ทั้งแถว) */
+.modal-body .info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+/* หมายเหตุ — กล่องแยกสะอาด */
+.modal-body .info-section {
+  background: #fff8e7;
+  border-left: 4px solid #f0ad4e;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
+
+.modal-body .info-section .info-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.modal-body .note-box {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* Comment section */
+.modal-body .comment-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modal-body .comment-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+  .modal-body .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+}
+
+
+/* =====================================================
+   Modal Header Fix — แก้ badge ทับปุ่มปิด
+   วางท้ายไฟล์ reportTracker.css
+   ===================================================== */
+
+/* ให้ modal-content เป็น relative เพื่อ position ปุ่มปิด */
+.modal-content {
+  position: relative;
+}
+
+/* ปุ่มปิด — ลอยมุมขวาบน */
+.modal-content .close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.modal-content .close-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+  transform: scale(1.05);
+}
+
+/* modal-header — จัดให้ title + badge อยู่แถวเดียวกัน มี padding ขวาเผื่อปุ่มปิด */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 60px 18px 22px;  /* padding ขวาเผื่อปุ่มปิด */
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+  min-width: 0;
+}
+
+/* modal-badges — อยู่ขวาของ title */
+.modal-badges {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+  .modal-header {
+    padding: 16px 52px 16px 18px;
+  }
+  
+  .modal-header h3 {
+    font-size: 15px;
+    width: 100%;
+  }
+  
+  .modal-badges {
+    margin-top: 4px;
+  }
+}
+
 
 /* ── FOOTER ── */
 .footer {
@@ -1230,3 +1444,69 @@ body {
         justify-content: flex-start;
       }
     }
+
+
+
+
+
+
+
+    /* ===================================================
+   🎯 GLOBAL ICON ALIGNMENT FIX
+   บังคับ icon + text ทุกที่ให้อยู่ baseline เดียวกัน
+=================================================== */
+
+/* Icon ทุกตัว */
+.material-symbols-outlined {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  vertical-align: middle;
+}
+
+/* Container ที่มี icon + text ทั้งหมด */
+.badge,
+.badge-comment,
+.badge-visit,
+.badge--message-sent,
+.btn,
+.manager-tag,
+.comment-role-badge,
+.report-detail-item,
+.report-province,
+.report-date,
+.report-sales,
+.quick-range-btn,
+.date-range-label,
+.sales-name,
+.stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+/* Header ที่มี icon (h1, h2, label) */
+.page-header h1,
+.card-header h2,
+.date-range-title,
+.comment-header,
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+/* Flex container ที่ wrap ได้ */
+.report-header,
+.report-details,
+.report-status,
+.filter-actions,
+.modal-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}

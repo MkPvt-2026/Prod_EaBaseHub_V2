@@ -738,7 +738,7 @@ function renderReports() {
   if (!pageGroups.length) {
     container.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">📭</div>
+        <span class="material-symbols-outlined empty-icon-mat">inbox</span>
         <h3>ไม่พบรายงาน</h3>
         <p>ไม่มีรายงานในช่วงเวลาที่เลือก</p>
       </div>`;
@@ -769,39 +769,67 @@ function renderReports() {
     // Comment badge
     const commentCount = getGroupCommentCount(g);
     const commentBadge = commentCount > 0
-      ? `<span class="badge-comment" title="${commentCount} ความคิดเห็น">💬 ${commentCount}</span>`
+      ? `
+        <span class="badge-comment" title="${commentCount} ความคิดเห็น">
+          <span class="material-symbols-outlined icon-sm">chat_bubble</span>
+          ${commentCount}
+        </span>
+      `
       : '';
 
-    // Status visit badge
-    const visitBadge = g.status_visit
-      ? `<span class="badge-visit">${escapeHtml(g.status_visit)}</span>`
+    
+
+    // Province chip
+    const provinceHtml = province
+      ? `
+        <span class="report-province">
+          <span class="material-symbols-outlined icon-sm icon-red">location_on</span>
+          ${escapeHtml(province)}
+        </span>
+      `
       : '';
 
     return `
       <div class="report-item ${isUnread ? 'unread' : ''}"
            onclick="openGroupModal('${g.key}')">
+
         <div class="report-icon">${salesName.charAt(0).toUpperCase()}</div>
+
         <div class="report-info">
+
           <div class="report-header">
             <span class="report-sales">${escapeHtml(salesName)}</span>
-            <span class="report-date">${formatDate(g.report_date || g.submitted_at)}</span>
+            <span class="report-date">
+              <span class="material-symbols-outlined icon-sm">calendar_month</span>
+              ${formatDate(g.report_date || g.submitted_at)}
+            </span>
           </div>
+
           <div class="report-details">
             <div class="report-detail-item">
-              🏪 ${escapeHtml(shopName)}${province ? ` <span style="color:#999;font-size:11px;">(${escapeHtml(province)})</span>` : ''}
+              <span class="material-symbols-outlined icon-sm icon-blue">storefront</span>
+              ${escapeHtml(shopName)}
             </div>
+            ${provinceHtml}
             <div class="report-detail-item">
-              📦 ${escapeHtml(productSummary)}
+              <span class="material-symbols-outlined icon-sm icon-orange">inventory_2</span>
+              ${escapeHtml(productSummary)}
             </div>
           </div>
+
         </div>
+
         <div class="report-status">
-          ${visitBadge}
+          
           ${commentBadge}
           <span class="badge ${isUnread ? 'badge-unread' : 'badge-read'}">
-            ${isUnread ? '🕐 ยังไม่อ่าน' : '✅ อ่านแล้ว'}
+            <span class="material-symbols-outlined icon-sm">
+              ${isUnread ? 'schedule' : 'check_circle'}
+            </span>
+            ${isUnread ? 'ยังไม่อ่าน' : 'อ่านแล้ว'}
           </span>
         </div>
+
       </div>`;
   }).join('');
 

@@ -3,32 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รายงานการเข้าร้านค้า | Manager</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <title>รายงานการเข้าร้านค้า | Admin</title>
 
-  <link rel="stylesheet" href="/css/base/bassManager.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base/bassHeader.css">
   <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
 </head>
 <body>
 
-  <!-- ── HEADER ── -->
+  <!-- ══════════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════════ -->
   <header class="app-header">
     <div class="logo">
-      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
       <h2>EABaseHub</h2>
     </div>
+
     <div class="user-box">
-      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-avatar" id="userAvatar">
+        <span class="material-symbols-outlined icon-white">person</span>
+      </div>
       <div class="user-info">
         <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
       <div class="group">
-        <span class="badge badge--message-sent" onclick="logout()">
+        <span class="badge--message-sent" onclick="logout()">
           <span class="badge-icon">
-            <span class="material-symbols-outlined" style="font-size:17px">logout</span>
+            <span class="material-symbols-outlined icon-white icon-sm">logout</span>
           </span>
           ออกจากระบบ
         </span>
@@ -40,142 +47,218 @@
   <div id="navContainer"></div>
 
   <main>
-  <div class="container">
+    <div class="container">
 
-    <!-- PAGE HEADER -->
-    <div class="page-header">
-      <div>
-        <h1>📋 รายงานการเข้าร้านค้า</h1>
-        <p>ติดตามและอ่านรายงานของทีมเซลล์</p>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════
-         DATE RANGE PICKER — เลือกช่วงวันที่
-         ══════════════════════════════════════════ -->
-    <div class="date-range-section">
-      <div class="date-range-header">
-        <div class="date-range-title">
-          <span class="icon">📅</span>
-          <span>ช่วงเวลา</span>
-          <span class="date-range-label" id="dateRangeLabel">—</span>
+      <!-- ══════════════════════════════════════════════════
+           PAGE HEADER
+      ══════════════════════════════════════════════════ -->
+      <div class="page-header">
+        <div>
+          <h1>
+            <span class="material-symbols-outlined">analytics</span>
+            รายงานการเข้าร้านค้า
+          </h1>
+          <p>ดูรายงานทั้งหมด • Comment • ติดตามทีมงาน</p>
         </div>
-        
-        <div class="date-range-controls">
-          <div class="date-input-group">
-            <label>เริ่ม</label>
-            <input type="date" id="dateStart">
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           DATE RANGE PICKER
+      ══════════════════════════════════════════════════ -->
+      <div class="date-range-section">
+        <div class="date-range-header">
+          <div class="date-range-title">
+            <span class="icon">
+              <span class="material-symbols-outlined">calendar_clock</span>
+              <span>ช่วงเวลา</span>
+            </span>
+            <span class="date-range-label" id="dateRangeLabel">—</span>
           </div>
-          <div class="date-input-group">
-            <label>สิ้นสุด</label>
-            <input type="date" id="dateEnd">
+
+          <div class="date-range-controls">
+            <div class="date-input-group">
+              <label>เริ่ม</label>
+              <input type="date" id="dateStart">
+            </div>
+            <div class="date-input-group">
+              <label>สิ้นสุด</label>
+              <input type="date" id="dateEnd">
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-range-btns">
+          <button class="quick-range-btn" data-range="today">วันนี้</button>
+          <button class="quick-range-btn" data-range="7days">7 วัน</button>
+          <button class="quick-range-btn active" data-range="thisWeek">สัปดาห์นี้</button>
+          <button class="quick-range-btn" data-range="lastWeek">สัปดาห์ที่แล้ว</button>
+          <button class="quick-range-btn" data-range="30days">30 วัน</button>
+          <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
+          <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           SUMMARY CARDS
+      ══════════════════════════════════════════════════ -->
+      <div class="summary-cards">
+        <div class="sum-card admin-theme">
+          <div class="sum-icon">
+            <span class="material-symbols-outlined icon-orange">description</span>
+          </div>
+          <div class="sum-content">
+            <div class="sum-value" id="totalReports">—</div>
+            <div class="sum-label">รายงานทั้งหมด</div>
+          </div>
+        </div>
+
+        <div class="sum-card un-read">
+          <div class="sum-icon">
+            <span class="material-symbols-outlined icon-yellow">schedule</span>
+          </div>
+          <div class="sum-content">
+            <div class="sum-value" id="unreadReports">—</div>
+            <div class="sum-label">ยังไม่อ่าน</div>
+          </div>
+        </div>
+
+        <div class="sum-card">
+          <div class="sum-icon">
+            <span class="material-symbols-outlined icon-green">check_circle</span>
+          </div>
+          <div class="sum-content">
+            <div class="sum-value" id="readReports">—</div>
+            <div class="sum-label">อ่านแล้ว</div>
+          </div>
+        </div>
+
+        <div class="sum-card">
+          <div class="sum-icon">
+            <span class="material-symbols-outlined icon-cyan">chat</span>
+          </div>
+          <div class="sum-content">
+            <div class="sum-value" id="commentedReports">—</div>
+            <div class="sum-label">มี Comment</div>
           </div>
         </div>
       </div>
-      
-      <div class="quick-range-btns">
-        <button class="quick-range-btn" data-range="today">วันนี้</button>
-        <button class="quick-range-btn" data-range="7days">7 วัน</button>
-        <button class="quick-range-btn active" data-range="thisWeek">สัปดาห์นี้</button>
-        <button class="quick-range-btn" data-range="lastWeek">สัปดาห์ที่แล้ว</button>
-        <button class="quick-range-btn" data-range="30days">30 วัน</button>
-        <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
-        <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
-      </div>
-    </div>
 
-    <!-- SUMMARY CARDS -->
-    <div class="summary-cards">
-      <div class="sum-card">
-        <div class="sum-icon">📝</div>
-        <div class="sum-content">
-          <div class="sum-value" id="totalReports">—</div>
-          <div class="sum-label">รายงานทั้งหมด</div>
+      <!-- ══════════════════════════════════════════════════
+           MANAGER OVERVIEW (เปิดใช้ถ้าต้องการ)
+      ══════════════════════════════════════════════════ -->
+      <!--
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-symbols-outlined">supervisor_account</span>
+            ภาพรวมผู้จัดการ
+          </h2>
+          <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
+        </div>
+        <div class="sales-grid" id="managerGrid">
+          <div class="loading">กำลังโหลด...</div>
         </div>
       </div>
-      <div class="sum-card">
-        <div class="sum-icon">🕐</div>
-        <div class="sum-content">
-          <div class="sum-value" id="unreadReports">—</div>
-          <div class="sum-label">ยังไม่อ่าน</div>
-        </div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-icon">✅</div>
-        <div class="sum-content">
-          <div class="sum-value" id="readReports">—</div>
-          <div class="sum-label">อ่านแล้ว</div>
-        </div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-icon">👥</div>
-        <div class="sum-content">
-          <div class="sum-value" id="activeSales">—</div>
-          <div class="sum-label">เซลล์ส่งรายงาน</div>
-        </div>
-      </div>
-    </div>
+      -->
 
-    <!-- SALES OVERVIEW -->
-    <div class="card">
-      <div class="card-header">
-        <h2>👥 ภาพรวมทีมเซลล์</h2>
-        <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
-      </div>
-      <div class="sales-grid" id="salesGrid">
-        <div class="loading">กำลังโหลด...</div>
-      </div>
-    </div>
-
-    <!-- FILTERS -->
-    <div class="filter-section">
-      <div class="filter-row">
-        <div class="filter-group">
-          <label>เซลล์</label>
-          <select id="filterSales">
-            <option value="">— ทั้งหมด —</option>
-          </select>
+      <!-- ══════════════════════════════════════════════════
+           SALES OVERVIEW
+      ══════════════════════════════════════════════════ -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-symbols-outlined">groups</span>
+            ภาพรวมทีมเซลล์
+          </h2>
+          <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
         </div>
-        <div class="filter-group">
-          <label>สถานะ</label>
-          <select id="filterStatus">
-            <option value="">— ทั้งหมด —</option>
-            <option value="unread">🕐 ยังไม่อ่าน</option>
-            <option value="read">✅ อ่านแล้ว</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>ค้นหา</label>
-          <input type="text" id="searchInput" placeholder="ชื่อร้าน, สินค้า, จังหวัด...">
+        <div class="sales-grid" id="salesGrid">
+          <div class="loading">กำลังโหลด...</div>
         </div>
       </div>
-      <div class="filter-actions">
-        <button onclick="applyFilter()" class="btn btn-primary">🔍 กรอง</button>
-        <button onclick="resetFilter()" class="btn btn-secondary">↺ รีเซ็ต</button>
-        <button onclick="exportCSV()" class="btn btn-export">📥 Export</button>
-      </div>
-    </div>
 
-    <!-- REPORTS LIST -->
-    <div class="card">
-      <div class="card-header">
-        <h2>📋 รายการรายงาน</h2>
-        <span id="reportCount" class="card-hint"></span>
-      </div>
-      <div class="reports-container" id="reportsContainer">
-        <div class="loading">กำลังโหลด...</div>
-      </div>
-      <div class="pagination" id="pagination"></div>
-    </div>
+      <!-- ══════════════════════════════════════════════════
+           FILTERS
+      ══════════════════════════════════════════════════ -->
+      <div class="filter-section">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>ผู้จัดการ</label>
+            <select id="filterManager">
+              <option value="">— ทั้งหมด —</option>
+            </select>
+          </div>
 
-  </div>
+          <div class="filter-group">
+            <label>เซลล์</label>
+            <select id="filterSales">
+              <option value="">— ทั้งหมด —</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>สถานะ</label>
+            <select id="filterStatus">
+              <option value="">— ทั้งหมด —</option>
+              <option value="unread">ยังไม่อ่าน</option>
+              <option value="read">อ่านแล้ว</option>
+              <option value="commented">มี Comment</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>ค้นหา</label>
+            <input type="text" id="searchInput" placeholder="ชื่อร้าน, สินค้า, จังหวัด...">
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button onclick="applyFilter()" class="btn btn-primary">
+            <span class="material-symbols-outlined icon-white">search</span>
+            กรอง
+          </button>
+
+          <button onclick="resetFilter()" class="btn btn-secondary">
+            <span class="material-symbols-outlined">refresh</span>
+            รีเซ็ต
+          </button>
+
+          <button onclick="exportCSV()" class="btn btn-export">
+            <span class="material-symbols-outlined icon-orange">download</span>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           REPORTS LIST
+      ══════════════════════════════════════════════════ -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-symbols-outlined">list_alt</span>
+            รายการรายงาน
+          </h2>
+          <span id="reportCount" class="card-hint"></span>
+        </div>
+        <div class="reports-container" id="reportsContainer">
+          <div class="loading">กำลังโหลด...</div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+
+    </div>
   </main>
 
-  <!-- MODAL -->
+  <!-- ══════════════════════════════════════════════════
+       MODAL: REPORT DETAIL
+  ══════════════════════════════════════════════════ -->
   <div id="reportModal" class="modal">
     <div class="modal-content">
-      <button class="close-btn" onclick="closeModal()">✕</button>
-      
+      <button class="close-btn" onclick="closeModal()" title="ปิด">
+        <span class="material-symbols-outlined icon-sm">close</span>
+      </button>
+
       <div class="modal-header">
         <h3 id="modalTitle">รายละเอียดรายงาน</h3>
         <div class="modal-badges">
@@ -184,175 +267,188 @@
       </div>
 
       <div class="modal-body">
+
         <!-- ข้อมูลหลัก -->
         <div class="info-grid">
           <div class="info-item">
-            <span class="info-label">📅 วันที่รายงาน</span>
+            <span class="info-label">
+              <span class="material-symbols-outlined icon-primary">calendar_month</span>
+              วันที่รายงาน
+            </span>
             <span id="mReportDate" class="info-value">—</span>
           </div>
+
           <div class="info-item">
-            <span class="info-label">👤 เซลล์</span>
+            <span class="info-label">
+              <span class="material-symbols-outlined icon-primary">account_box</span>
+              เซลล์ผู้รับผิดชอบ
+            </span>
             <span id="mSalesName" class="info-value">—</span>
           </div>
+
           <div class="info-item">
-            <span class="info-label">🏪 ร้านค้า</span>
+            <span class="info-label">
+              <span class="material-symbols-outlined icon-primary">storefront</span>
+              ร้านค้า
+            </span>
             <span id="mShopName" class="info-value">—</span>
           </div>
-          <!-- ✅ เพิ่มจังหวัด -->
+
           <div class="info-item">
-            <span class="info-label">📍 จังหวัด</span>
+            <span class="info-label">
+              <span class="material-symbols-outlined icon-primary">location_on</span>
+              จังหวัด
+            </span>
             <span id="mProvince" class="info-value">—</span>
           </div>
+
           <div class="info-item">
-            <span class="info-label">📦 สินค้า</span>
+            <span class="info-label">
+              <span class="material-symbols-outlined icon-primary">inventory_2</span>
+              สินค้า
+            </span>
             <span id="mProduct" class="info-value">—</span>
           </div>
+
           <div class="info-item">
-            <span class="info-label">📊 จำนวน</span>
+            <span class="info-label">
+              <span class="material-symbols-outlined icon-primary">inventory</span>
+              จำนวน
+            </span>
             <span id="mQty" class="info-value">—</span>
           </div>
-          <!-- <div class="info-item">
-            <span class="info-label">📍 แหล่งข้อมูล</span>
-            <span id="mSource" class="info-value">—</span>
-          </div> -->
+
+          <!-- ซ่อน mManagerName/mSource แต่คง element ไว้เผื่อ JS เรียก -->
+          <span id="mManagerName" style="display:none">—</span>
+          <span id="mSource" style="display:none">—</span>
         </div>
 
         <!-- หมายเหตุ -->
         <div class="info-section">
-          <div class="info-label">📝 หมายเหตุ</div>
+          <div class="info-label">
+            <span class="material-symbols-outlined icon-brown">edit_note</span>
+            รายละเอียดการเข้าพบ
+          </div>
           <div id="mNote" class="note-box">—</div>
         </div>
 
         <!-- Comments -->
         <div class="comment-section">
-          <div class="comment-header">💬 ความคิดเห็น</div>
+          <div class="comment-header">
+            <span class="material-symbols-outlined">forum</span>
+            ความคิดเห็น
+          </div>
+
           <div id="commentsHistory" class="comments-list"></div>
-          <textarea id="commentInput" 
+
+          <textarea id="commentInput"
                     placeholder="พิมพ์ความคิดเห็น คำแนะนำ หรือข้อเสนอแนะ..."
                     rows="3"></textarea>
+
           <div class="modal-actions">
-            <button onclick="saveComment()" class="btn btn-primary">💬 บันทึกความคิดเห็น</button>
-            <button onclick="markAsRead()" class="btn btn-success">✅ ทำเครื่องหมายว่าอ่านแล้ว</button>
+            <button onclick="saveComment()" class="btn btn-primary">
+              <span class="material-symbols-outlined icon-white">add_comment</span>
+              บันทึกความคิดเห็น
+            </button>
+            <button onclick="markAsRead()" class="btn btn-success">
+              <span class="material-symbols-outlined icon-white">check_circle</span>
+              ทำเครื่องหมายว่าอ่านแล้ว
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TOAST -->
+  <!-- ══════════════════════════════════════════════════
+       TOAST
+  ══════════════════════════════════════════════════ -->
   <div id="toast" class="toast"></div>
 
-  <footer class="footer">© 2026 EABaseHub | Report Manager</footer>
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════ -->
+  <footer class="footer">© 2026 EABaseHub | Executive</footer>
 
-  <!-- =====================================================
-       JAVASCRIPT FILES
-       ลำดับโหลด: supabaseClient → userService → auth → reportTracker
-       ===================================================== -->
+  <!-- ══════════════════════════════════════════════════
+       JAVASCRIPT
+  ══════════════════════════════════════════════════ -->
   <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
-  
-  <!-- ✅ โหลด reportTracker.js -->
-  <script src="/js/pages/report/reportTracker.js"></script>
+  <script src="/js/pages/executive/executiveHome.js"></script>
+  <!-- <script src="/js/pages/report/reportTracker.js"></script> -->
 
-  <!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+  <!-- Load Nav -->
   <script>
-  async function loadNav(role) {
-    const navFiles = {
-      admin: "/pages/components/nav-admin.html",
-      manager: "/pages/components/nav-manager.html"
-    };
+    async function loadNav(role) {
+      const navFiles = {
+        admin: "/pages/components/nav-admin.html",
+        executive: "/pages/components/nav-executive.html",
+        manager: "/pages/components/nav-manager.html"
+      };
 
-    const file = navFiles[role];
+      const file = navFiles[role];
+      if (!file) return;
 
-    if (!file) {
-      console.warn("ไม่มี nav สำหรับ role:", role);
-      return;
-    }
-
-    console.log("LOAD NAV FILE =", file);
-
-    try {
-      const res = await fetch(file);
-
-      if (!res.ok) {
-        console.error("โหลด nav ไม่ได้:", file);
-        return;
+      try {
+        const res = await fetch(file);
+        if (!res.ok) return;
+        const html = await res.text();
+        document.getElementById("navContainer").innerHTML = html;
+        setActiveMenu();
+      } catch (err) {
+        console.error("Error loading nav:", err);
       }
-
-      const html = await res.text();
-      document.getElementById("navContainer").innerHTML = html;
-      setActiveMenu();
-    } catch (err) {
-      console.error("Error loading nav:", err);
-    }
-  }
-
-  function setActiveMenu() {
-    const links = document.querySelectorAll(".app-nav a");
-    const current = window.location.pathname;
-
-    links.forEach(link => {
-      if (link.getAttribute("href") === current) {
-        link.classList.add("active");
-      }
-    });
-  }
-
-  async function getUserRole(userId) {
-    const { data, error } = await supabaseClient
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("ดึง role ไม่ได้:", error.message);
-      return null;
     }
 
-    console.log("PROFILE DATA =", data);
-    return data?.role || null;
-  }
-
-  // รอให้ supabaseClient พร้อมก่อน แล้วโหลด nav
-  function waitForSupabaseAndLoadNav(maxAttempts = 50) {
-    let attempts = 0;
-    
-    const check = async () => {
-      attempts++;
-      
-      if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
-        console.log("✅ supabaseClient พร้อมแล้ว - กำลังโหลด nav");
-        
-        try {
-          // ลองดึง session
-          const { data: { session } } = await supabaseClient.auth.getSession();
-          
-          if (session?.user) {
-            const role = await getUserRole(session.user.id);
-            if (role) {
-              loadNav(role);
-            }
-          } else {
-            console.warn("ไม่พบ session - ไม่โหลด nav");
-          }
-        } catch (err) {
-          console.error("Error loading nav:", err);
+    function setActiveMenu() {
+      const links = document.querySelectorAll(".app-nav a");
+      const current = window.location.pathname;
+      links.forEach(link => {
+        if (link.getAttribute("href") === current) {
+          link.classList.add("active");
         }
-      } else if (attempts < maxAttempts) {
-        setTimeout(check, 100);
-      } else {
-        console.error("❌ supabaseClient ไม่พร้อม หลังจากรอนานเกินไป");
-      }
-    };
-    
-    check();
-  }
+      });
+    }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    waitForSupabaseAndLoadNav();
-  });
+    async function getUserRole(userId) {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+      return data?.role || null;
+    }
+
+    function waitForSupabaseAndLoadNav(maxAttempts = 50) {
+      let attempts = 0;
+
+      const check = async () => {
+        attempts++;
+
+        if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.user) {
+              const role = await getUserRole(session.user.id);
+              if (role) loadNav(role);
+            }
+          } catch (err) {
+            console.error("Error loading nav:", err);
+          }
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 100);
+        }
+      };
+
+      check();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      waitForSupabaseAndLoadNav();
+    });
   </script>
 
 </body>
