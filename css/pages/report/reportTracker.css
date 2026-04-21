@@ -17,10 +17,12 @@
   --accent3:      #ef4444;
   --blue:         #3b82f6;
   --blue-dark:    #0447b4;
+  --blue-light:   #8dbffc;
   --purple:       #8b5cf6;
   --text:         #111827;
   --text-muted:   #6b7280;
   --text-light:   #9ca3af;
+  --text-med:     #5493ff;
   --border:       #e5e7eb;
   --border-accent: rgba(16,185,129,0.25);
   --shadow:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
@@ -72,6 +74,29 @@ body {
   justify-content: center;
 }
 
+/* Color variants */
+.icon-primary  { color: var(--primary); }
+.icon-blue     { color: #3b82f6; }
+.icon-green    { color: var(--success); }
+.icon-red      { color: var(--danger); }
+.icon-orange   { color: #f59e0b; }
+.icon-yellow   { color: #eab308; }
+.icon-purple   { color: #a855f7; }
+.icon-brown    { color: #92400e; }
+.icon-cyan     { color: var(--info); }
+.icon-white    { color: #ffffff; }
+.icon-muted    { color: var(--text-muted); }
+
+/* Size variants */
+.icon-sm { font-size: 16px; }
+.icon-md { font-size: 20px; }
+.icon-lg { font-size: 24px; }
+.icon-xl { font-size: 32px; }
+
+/* Filled variant */
+.icon-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 500;
+}
 
 /* ── PAGE HEADER ── */
 .page-header {
@@ -526,8 +551,8 @@ body {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-sm);
-  background: var(--accent-light);
-  color: var(--accent-dark);
+  background: var(--blue-light);
+  color: var(--blue-dark);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -557,7 +582,7 @@ body {
 
 .report-date {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-med);
 }
 
 .report-details {
@@ -923,10 +948,7 @@ body {
   color: var(--text-muted);
 }
 
-.material-symbols-outlined{
-        font-size:18px;
-        color: darkcyan;
-}
+
 
 .info-value {
   font-size: 15px;

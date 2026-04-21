@@ -597,7 +597,7 @@ function updateManagerGrid() {
         <div class="sales-name">${escapeHtml(displayName)}</div>
         <div class="sales-stats">
           <div class="stat-item">
-            <span class="stat-label">👔 ผู้จัดการ</span>
+            <span class="stat-label">ผู้จัดการ</span>
           </div>
         </div>
       </div>`;
@@ -812,7 +812,7 @@ function renderReports() {
             </div>
             ${provinceHtml}
             <div class="report-detail-item">
-              <span class="material-symbols-outlined icon-sm icon-orange">inventory_2</span>
+              <span class="material-symbols-outlined icon-sm icon-brown">inventory_2</span>
               ${escapeHtml(productSummary)}
             </div>
           </div>
