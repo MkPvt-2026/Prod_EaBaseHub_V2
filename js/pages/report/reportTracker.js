@@ -1,6 +1,7 @@
 // =====================================================
-// reportTracker.js v4 — Group by Shop Visit
+// reportTracker.js v5 — Group by Shop Visit + Role Hierarchy
 // 1 รายการ = 1 ร้านค้า (รวมสินค้าทั้งหมด)
+// รองรับ role: admin > executive > manager > sales/user
 // =====================================================
 
 'use strict';
@@ -61,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // ✅ protectPage รวม admin + executive + manager (admin ผ่านอัตโนมัติ)
     if (typeof protectPage === 'function') {
       try { await protectPage(['admin', 'executive', 'manager']); }
       catch (e) { console.warn('⚠️ protectPage failed:', e.message); }
@@ -119,7 +121,7 @@ async function loadCurrentUser(session) {
         id: window.currentUser.id,
         role: window.currentUser.role,
         area: window.currentUser.area,
-        name: window.currentUser.display_name || window.currentUser.username || window.currentUser.email || 'Manager'
+        name: window.currentUser.display_name || window.currentUser.username || window.currentUser.email || 'User'
       };
     }
 
@@ -323,22 +325,34 @@ function formatDateForInput(date) {
 
 // =====================================================
 // 👥 LOAD PROFILES
+// ✅ โหลดทุก role ที่อาจ comment ได้ (admin, executive, manager, sales, user)
 // =====================================================
 async function loadProfiles() {
   try {
-    // โหลดทุก role ที่เป็น sales/user + manager
+    // Sales / User (สำหรับ dropdown และ sales grid)
     const { data: salesData } = await supabaseClient
       .from('profiles')
       .select('id, display_name, role, area')
       .in('role', ['sales', 'user']);
 
+    // Manager (สำหรับ dropdown และ manager grid)
     const { data: mgrData } = await supabaseClient
       .from('profiles')
       .select('id, display_name, role, area')
       .in('role', ['manager']);
 
+    // ✅ Admin + Executive (สำหรับ lookup comment เท่านั้น)
+    const { data: execData } = await supabaseClient
+      .from('profiles')
+      .select('id, display_name, role, area')
+      .in('role', ['admin', 'executive']);
+
     // รวม profiles ทั้งหมดเพื่อ lookup
-    const allProfiles = [...(salesData || []), ...(mgrData || [])];
+    const allProfiles = [
+      ...(salesData || []),
+      ...(mgrData || []),
+      ...(execData || [])
+    ];
     profilesMap = Object.fromEntries(allProfiles.map(p => [p.id, p]));
 
     // Sales dropdown
@@ -449,11 +463,8 @@ function groupReportRows(reports) {
         note: r.note,
         product_interest: r.product_interest,
         source: r.source,
-        // ใช้ manager_acknowledged จาก row แรก — จะ update จาก all rows ข้างล่าง
         manager_acknowledged: r.manager_acknowledged,
-        // สะสม products
         products: [],
-        // เก็บ report ids ทั้งหมด
         reportIds: []
       });
     }
@@ -461,7 +472,6 @@ function groupReportRows(reports) {
     const group = map.get(key);
     group.reportIds.push(r.id);
 
-    // ถ้ามี product_id ให้เก็บ
     if (r.product_id) {
       group.products.push({
         product_id: r.product_id,
@@ -470,18 +480,15 @@ function groupReportRows(reports) {
       });
     }
 
-    // ถ้า note ยังว่างแต่ row นี้มี ให้เอามา
     if (!group.note && r.note) group.note = r.note;
     if (!group.product_interest && r.product_interest) group.product_interest = r.product_interest;
     if (!group.status_visit && r.status_visit) group.status_visit = r.status_visit;
 
-    // manager_acknowledged: ถ้ามี row ไหนยังไม่อ่าน → group ยังไม่อ่าน
     if (!r.manager_acknowledged) {
       group.manager_acknowledged = false;
     }
   }
 
-  // เรียงลำดับ: ล่าสุดก่อน
   return [...map.values()].sort((a, b) => {
     const da = new Date(a.submitted_at || a.report_date || a.created_at || 0);
     const db = new Date(b.submitted_at || b.report_date || b.created_at || 0);
@@ -517,7 +524,6 @@ async function loadReports() {
     const { data, error } = await query;
     if (error) throw error;
 
-    // Filter วันที่
     const startTime = dateStart.getTime();
     const endTime = dateEnd.getTime();
 
@@ -528,10 +534,8 @@ async function loadReports() {
       return t >= startTime && t <= endTime;
     });
 
-    // โหลด comment counts
     await loadCommentCounts(allReports.map(r => r.id));
 
-    // 🔗 Group by shop visit
     groupedReports = groupReportRows(allReports);
     filteredGroups = [...groupedReports];
     activeSalesFilter = null;
@@ -580,7 +584,6 @@ function updateManagerGrid() {
   const grid = document.getElementById('managerGrid');
   if (!grid) return;
 
-  // หา managers จาก profilesMap
   const managers = Object.entries(profilesMap).filter(([, p]) => p.role === 'manager');
 
   if (!managers.length) {
@@ -588,7 +591,6 @@ function updateManagerGrid() {
     return;
   }
 
-  // TODO: ถ้ามี manager_id ใน reports ให้ใช้ แต่ตอนนี้แสดงเป็น card เปล่าก่อน
   grid.innerHTML = managers.map(([id, profile]) => {
     const displayName = profile.display_name || '—';
     return `
@@ -676,12 +678,10 @@ function applyFilter() {
   filteredGroups = groupedReports.filter(g => {
     if (salesId && g.sale_id !== salesId) return false;
 
-    // Filter สถานะ
     if (status === 'unread' && g.manager_acknowledged) return false;
     if (status === 'read' && !g.manager_acknowledged) return false;
     if (status === 'commented' && getGroupCommentCount(g) === 0) return false;
 
-    // Search
     if (search) {
       const shopData = shopsMap[g.shop_id];
       const shopName = shopData?.name || '';
@@ -754,7 +754,6 @@ function renderReports() {
     const province = shopData?.province || '';
     const isUnread = !g.manager_acknowledged;
 
-    // สรุปสินค้า
     const productCount = g.products.length;
     let productSummary = '—';
     if (productCount === 1) {
@@ -766,20 +765,16 @@ function renderReports() {
       productSummary = 'ไม่มีสินค้า';
     }
 
-    // Comment badge
     const commentCount = getGroupCommentCount(g);
     const commentBadge = commentCount > 0
       ? `
         <span class="badge-comment" title="${commentCount} ความคิดเห็น">
-          <span class="material-symbols-outlined icon-sm">chat_bubble</span>
+          <span class="material-symbols-outlined icon-sm icon-blue">chat_bubble</span>
           ${commentCount}
         </span>
       `
       : '';
 
-    
-
-    // Province chip
     const provinceHtml = province
       ? `
         <span class="report-province">
@@ -800,7 +795,7 @@ function renderReports() {
           <div class="report-header">
             <span class="report-sales">${escapeHtml(salesName)}</span>
             <span class="report-date">
-              <span class="material-symbols-outlined icon-sm">calendar_month</span>
+              <span class="material-symbols-outlined icon-sm icon-blue-dark">calendar_month</span>
               ${formatDate(g.report_date || g.submitted_at)}
             </span>
           </div>
@@ -820,7 +815,6 @@ function renderReports() {
         </div>
 
         <div class="report-status">
-          
           ${commentBadge}
           <span class="badge ${isUnread ? 'badge-unread' : 'badge-read'}">
             <span class="material-symbols-outlined icon-sm">
@@ -868,7 +862,7 @@ function goToPage(page) {
 }
 
 // =====================================================
-// 📋 OPEN GROUP MODAL — แสดงสินค้าทั้งหมดของ visit นั้น
+// 📋 OPEN GROUP MODAL
 // =====================================================
 async function openGroupModal(groupKey) {
   const group = groupedReports.find(g => g.key === groupKey);
@@ -879,25 +873,21 @@ async function openGroupModal(groupKey) {
 
   currentGroupKey = groupKey;
   currentGroupRows = allReports.filter(r => group.reportIds.includes(r.id));
-  // ยังเก็บ currentReportId สำหรับ comment (ใช้ id แรกของกลุ่ม)
   currentReportId = group.reportIds[0];
 
   const profile = profilesMap[group.sale_id];
   const salesName = profile?.display_name || '—';
   const shopData = shopsMap[group.shop_id];
 
-  // Modal title
   const modalTitle = document.getElementById('modalTitle');
   if (modalTitle) modalTitle.textContent = `รายงานของ ${salesName}`;
 
-  // Status badge
   const statusBadge = document.getElementById('modalStatus');
   if (statusBadge) {
     statusBadge.className = `badge ${group.manager_acknowledged ? 'badge-read' : 'badge-unread'}`;
     statusBadge.textContent = group.manager_acknowledged ? '✅ อ่านแล้ว' : '🕐 ยังไม่อ่าน';
   }
 
-  // Fill fields
   const set = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.textContent = val || '—';
@@ -910,7 +900,6 @@ async function openGroupModal(groupKey) {
   set('mSource', group.source || '—');
   set('mNote', group.note || 'ไม่มีหมายเหตุ');
 
-  // 📦 สินค้า — แสดงรายการทั้งหมด
   const productEl = document.getElementById('mProduct');
   if (productEl) {
     if (group.products.length === 0) {
@@ -920,7 +909,6 @@ async function openGroupModal(groupKey) {
         const name = productsMap[p.product_id] || '—';
         const attrParts = [];
         if (p.attributes && Object.keys(p.attributes).length) {
-          // แสดง attribute values แบบ inline
           Object.values(p.attributes).forEach(v => { if (v) attrParts.push(v); });
         }
         const attrText = attrParts.length ? ` <span style="color:#888;font-size:12px;">(${escapeHtml(attrParts.join(', '))})</span>` : '';
@@ -929,7 +917,6 @@ async function openGroupModal(groupKey) {
     }
   }
 
-  // Quantity — ซ่อนถ้าไม่มี
   const qtyEl = document.getElementById('mQty');
   if (qtyEl) {
     const totalQty = group.products.reduce((sum, p) => sum + (p.quantity || 0), 0);
@@ -943,7 +930,6 @@ async function openGroupModal(groupKey) {
     }
   }
 
-  // โหลด comments (จาก report id แรก — ถ้า comment ผูกกับ report_id ตัวใดตัวหนึ่ง)
   await loadCommentsForGroup(group.reportIds);
 
   const commentInput = document.getElementById('commentInput');
@@ -957,7 +943,8 @@ async function openGroupModal(groupKey) {
 }
 
 // =====================================================
-// 💬 LOAD COMMENTS FOR GROUP — รวม comments จากทุก report id ในกลุ่ม
+// 💬 LOAD COMMENTS FOR GROUP
+// ✅ แยก badge 4 roles: admin / executive / manager / user
 // =====================================================
 async function loadCommentsForGroup(reportIds) {
   const container = document.getElementById('commentsHistory');
@@ -977,7 +964,7 @@ async function loadCommentsForGroup(reportIds) {
       return;
     }
 
-    // Deduplicate (ถ้ามี comment เดียวกันจากหลาย report id)
+    // Deduplicate
     const seen = new Set();
     const unique = data.filter(c => {
       const key = `${c.created_at}__${c.comment}`;
@@ -990,13 +977,23 @@ async function loadCommentsForGroup(reportIds) {
       const role = c.profiles?.role || 'manager';
       const displayName = c.profiles?.display_name || 'ผู้ใช้';
 
-      let roleBadge = '', roleClass = '';
-      if (role === 'admin') {
-        roleBadge = '👑 ผู้บริหาร'; roleClass = 'comment-admin';
-      } else if (role === 'manager') {
-        roleBadge = '👔 ผู้จัดการ'; roleClass = 'comment-manager';
+      // ✅ ใช้ getRoleMeta ถ้ามี (จาก roleConfig.js) ไม่มีก็ fallback
+      let roleBadge, roleClass;
+      if (typeof getRoleMeta === 'function') {
+        const meta = getRoleMeta(role);
+        roleBadge = meta.label;
+        roleClass = meta.cssClass;
       } else {
-        roleBadge = '👤 ' + role; roleClass = 'comment-user';
+        // Fallback กรณีไม่ได้โหลด roleConfig.js
+        if (role === 'admin') {
+          roleBadge = 'Admin';   roleClass = 'comment-admin';
+        } else if (role === 'executive') {
+          roleBadge = 'Executive';   roleClass = 'comment-executive';
+        } else if (role === 'manager') {
+          roleBadge = 'Manager';     roleClass = 'comment-manager';
+        } else {
+          roleBadge = '👤 ' + role;  roleClass = 'comment-user';
+        }
       }
 
       return `
@@ -1016,7 +1013,7 @@ async function loadCommentsForGroup(reportIds) {
 }
 
 // =====================================================
-// 💬 SAVE COMMENT — ผูกกับ report id แรกของกลุ่ม
+// 💬 SAVE COMMENT
 // =====================================================
 async function saveComment() {
   if (!currentReportId) return;
@@ -1049,7 +1046,6 @@ async function saveComment() {
     showToast('💬 บันทึกความคิดเห็นแล้ว');
     input.value = '';
 
-    // Reload comments
     const group = groupedReports.find(g => g.key === currentGroupKey);
     if (group) {
       await loadCommentsForGroup(group.reportIds);
@@ -1061,7 +1057,7 @@ async function saveComment() {
 }
 
 // =====================================================
-// ✅ MARK AS READ — mark ทุก report ในกลุ่ม
+// ✅ MARK AS READ
 // =====================================================
 async function markAsRead() {
   if (!currentGroupKey) return;
@@ -1076,12 +1072,10 @@ async function markAsRead() {
       return;
     }
 
-    // Save comment ถ้ามี
     const commentInput = document.getElementById('commentInput');
     const text = commentInput?.value?.trim();
     if (text) await saveComment();
 
-    // Update ทุก report id ในกลุ่ม
     const { error } = await supabaseClient
       .from('reports')
       .update({
@@ -1093,14 +1087,12 @@ async function markAsRead() {
 
     if (error) throw error;
 
-    // Update local data
     group.manager_acknowledged = true;
     for (const rid of group.reportIds) {
       const r = allReports.find(x => x.id === rid);
       if (r) r.manager_acknowledged = true;
     }
 
-    // Update filtered
     const fg = filteredGroups.find(g => g.key === currentGroupKey);
     if (fg) fg.manager_acknowledged = true;
 
@@ -1131,7 +1123,7 @@ function closeModal() {
 }
 
 // =====================================================
-// 📥 EXPORT CSV — grouped
+// 📥 EXPORT CSV
 // =====================================================
 function exportCSV() {
   if (!filteredGroups.length) {

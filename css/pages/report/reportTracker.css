@@ -1,6 +1,7 @@
 /* =====================================================
    reportTracker.css - Report Manager Page Styles
    ธีม: Clean White + Green Accent
+   รองรับ role: admin / executive / manager / user
    ===================================================== */
 
 /* ── VARIABLES ── */
@@ -18,6 +19,8 @@
   --blue:         #3b82f6;
   --blue-dark:    #0447b4;
   --blue-light:   #8dbffc;
+  --blue-light1:  #aed7fd;
+  --cyan-light:   #e7e7e7;
   --purple:       #8b5cf6;
   --text:         #111827;
   --text-muted:   #6b7280;
@@ -31,7 +34,7 @@
   --radius:       12px;
   --radius-sm:    8px;
   --transition:   0.15s ease;
-  --unread-bg:    #fef3c7;
+  --unread-bg:    #f7f6b9;
   --unread-border: #f59e0b;
 
   --line-radius:    #10c98b;
@@ -65,10 +68,9 @@ body {
     'opsz' 24;
   font-size: 20px;
   line-height: 1;
-  color: var(--text-secondary);
+  color: var(--accent-dark);
   user-select: none;
   flex-shrink: 0;
-  /* 🔑 สามบรรทัดสำคัญ */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -77,6 +79,7 @@ body {
 /* Color variants */
 .icon-primary  { color: var(--primary); }
 .icon-blue     { color: #3b82f6; }
+.icon-blue-dark{ color: #0093ad; }
 .icon-green    { color: var(--success); }
 .icon-red      { color: var(--danger); }
 .icon-orange   { color: #f59e0b; }
@@ -121,117 +124,6 @@ body {
   font-size: 14px;
 }
 
-/* ── DATE RANGE SECTION ── */
-.date-range-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow);
-}
-
-.date-range-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.date-range-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #064e3b;
-}
-
-.date-range-title .icon {
-  font-size: 1.1rem;
-}
-
-.date-range-label {
-  background: var(--accent-light);
-  color: var(--accent-dark);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.date-range-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.date-input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface2);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-}
-
-.date-input-group label {
-  font-size: 12px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.date-input-group input[type="date"] {
-  background: transparent;
-  border: none;
-  color: var(--accent-dark);
-  font-family: 'Kanit', sans-serif;
-  font-size: 14px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.date-input-group input[type="date"]:focus {
-  outline: none;
-  background: var(--accent-light);
-}
-
-.quick-range-btns {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.quick-range-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-family: 'Kanit', sans-serif;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.quick-range-btn:hover {
-  background: var(--surface2);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.quick-range-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-  font-weight: 500;
-}
-
 /* ── SUMMARY CARDS ── */
 .summary-cards {
   display: grid;
@@ -265,6 +157,42 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--accent-light);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.sum-icon-desc {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue-light1);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.sum-icon-unread {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent2-light);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.sum-icon-cyan {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
@@ -473,11 +401,14 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  justify-content: center; /*จักกลาง*/
+  
 }
 
 .btn-primary {
   background: var(--blue);
   color: white;
+  
 }
 
 .btn-primary:hover {
@@ -537,7 +468,7 @@ body {
 }
 
 .report-item:hover {
-  border-color: var(--accent);
+  border-color: var(--blue);
   box-shadow: var(--shadow-md);
 }
 
@@ -637,8 +568,11 @@ body {
 }
 
 /* =====================================================
-   COMMENT STYLES - แยก Admin / Manager
-   เพิ่มไฟล์นี้ใน reportTracker.css หรือ import แยก
+   💬 COMMENT STYLES — แยก 4 roles
+   - admin     : สีแดง (สิทธิ์สูงสุด)
+   - executive : สีทอง/ส้ม
+   - manager   : สีฟ้า
+   - user      : สีเทา
    ===================================================== */
 
 /* Comment Item Base */
@@ -650,21 +584,28 @@ body {
   background: #f9f9f9;
 }
 
-/* ✅ Admin Comment - สีทอง/ส้ม */
+/* 🛡️ Admin Comment - สีแดง (สิทธิ์สูงสุด) */
 .comment-item.comment-admin {
+  background: linear-gradient(135deg, #fde8e8 0%, #fbd5d5 100%);
+  border-left-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+/* 👑 Executive Comment - สีทอง/ส้ม */
+.comment-item.comment-executive {
   background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
   border-left-color: #f0ad4e;
   box-shadow: 0 2px 8px rgba(240, 173, 78, 0.15);
 }
 
-/* ✅ Manager Comment - สีฟ้า */
+/* 👔 Manager Comment - สีฟ้า */
 .comment-item.comment-manager {
   background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
   border-left-color: #17a2b8;
   box-shadow: 0 2px 8px rgba(23, 162, 184, 0.15);
 }
 
-/* User Comment - สีเทา */
+/* 👤 User / Sales Comment - สีเทา */
 .comment-item.comment-user {
   background: #f5f5f5;
   border-left-color: #6c757d;
@@ -691,7 +632,7 @@ body {
   margin-left: auto;
 }
 
-/* ✅ Role Badge */
+/* Role Badge */
 .comment-role-badge {
   font-size: 11px;
   padding: 3px 10px;
@@ -700,6 +641,12 @@ body {
 }
 
 .comment-role-badge.comment-admin {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.comment-role-badge.comment-executive {
   background: linear-gradient(135deg, #f0ad4e, #ec971f);
   color: #fff;
   box-shadow: 0 2px 4px rgba(240, 173, 78, 0.3);
@@ -811,11 +758,6 @@ body {
   min-width: 150px;
 }
 
-
-
-
-
-
 /* ── PAGINATION ── */
 .pagination {
   display: flex;
@@ -882,168 +824,137 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
-.close-btn {
+/* ปุ่มปิด — ลอยมุมขวาบน */
+.modal-content .close-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 14px;
+  right: 14px;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: var(--radius-sm);
-  font-size: 18px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 50%;
+  font-size: 16px;
   cursor: pointer;
-  transition: all var(--transition);
-  z-index: 1;
-  color: var(--text-muted);
-}
-
-.close-btn:hover {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
-.modal-header {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.modal-content .close-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+  transform: scale(1.05);
+}
+
+/* modal-header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
+  padding: 18px 60px 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
 }
 
 .modal-header h3 {
+  margin: 0;
   font-size: 17px;
   font-weight: 600;
-  color: var(--text);
-  margin: 0;
+  color: #111827;
+  flex: 1;
+  min-width: 0;
 }
 
 .modal-badges {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .modal-body {
   padding: 24px;
 }
 
-.info-grid {
+/* info-grid */
+.modal-body .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+  background: #fafbfc;
+  padding: 18px 20px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  border: 1px solid #eef0f2;
 }
 
-.info-item {
+.modal-body .info-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
-.info-label {
+.modal-body .info-label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-muted);
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-
-
-.info-value {
+.modal-body .info-value {
   font-size: 15px;
-  color: var(--text);
-  font-weight: 500;
+  font-weight: 600;
+  color: #111827;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
-.info-section {
-  margin-bottom: 24px;
+.modal-body .info-item.full-width {
+  grid-column: 1 / -1;
 }
 
-.note-box {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+/* หมายเหตุ */
+.modal-body .info-section {
+  background: #fff8e7;
+  border-left: 4px solid #f0ad4e;
   padding: 14px 16px;
-  margin-top: 8px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
+
+.modal-body .info-section .info-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.modal-body .note-box {
   font-size: 14px;
-  color: var(--text-muted);
+  color: #374151;
   line-height: 1.7;
   white-space: pre-wrap;
 }
 
-.comment-section {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
+/* Comment section in modal */
+.modal-body .comment-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
 }
 
-.comment-header {
+.modal-body .comment-header {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text);
-  margin-bottom: 14px;
-}
-
-.comments-list {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 14px;
-}
-
-.comment-item {
-  background: var(--surface2);
-  border-left: 3px solid var(--accent);
-  padding: 12px 14px;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  margin-bottom: 10px;
-}
-
-.comment-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 13px;
-}
-
-.comment-author {
-  font-weight: 600;
-  color: var(--accent-dark);
-}
-
-.comment-date {
-  color: var(--text-light);
-}
-
-.comment-text {
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
-#commentInput {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: 'Kanit', sans-serif;
-  font-size: 14px;
-  resize: vertical;
-  margin-bottom: 14px;
-  background: var(--surface);
-  color: var(--text);
-  transition: border-color var(--transition);
-}
-
-#commentInput:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  color: #111827;
+  margin-bottom: 12px;
 }
 
 /* ── LOADING ── */
@@ -1078,188 +989,183 @@ body {
   pointer-events: auto;
 }
 
-
-
-/* =====================================================
-   Modal Readability Improvements
-   เพิ่มใน reportTracker.css หรือวางท้ายไฟล์นั้น
-   ===================================================== */
-
-/* จัด info-grid ให้มี spacing ดีขึ้น */
-.modal-body .info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 24px;
-  background: #fafbfc;
-  padding: 18px 20px;
-  border-radius: 10px;
-  margin-bottom: 18px;
-  border: 1px solid #eef0f2;
-}
-
-/* แต่ละ info-item จัด label/value แนวตั้ง */
-.modal-body .info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.modal-body .info-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.modal-body .info-value {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
-  word-break: break-word;
-  line-height: 1.5;
-}
-
-/* Section สำหรับสินค้า (span ทั้งแถว) */
-.modal-body .info-item.full-width {
-  grid-column: 1 / -1;
-}
-
-/* หมายเหตุ — กล่องแยกสะอาด */
-.modal-body .info-section {
-  background: #fff8e7;
-  border-left: 4px solid #f0ad4e;
-  padding: 14px 16px;
-  border-radius: 8px;
-  margin-bottom: 18px;
-}
-
-.modal-body .info-section .info-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #92400e;
-  margin-bottom: 8px;
-}
-
-.modal-body .note-box {
-  font-size: 14px;
-  color: #374151;
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
-/* Comment section */
-.modal-body .comment-section {
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.modal-body .comment-header {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 12px;
-}
-
-/* Responsive mobile */
-@media (max-width: 600px) {
-  .modal-body .info-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 14px;
-  }
-}
-
-
-/* =====================================================
-   Modal Header Fix — แก้ badge ทับปุ่มปิด
-   วางท้ายไฟล์ reportTracker.css
-   ===================================================== */
-
-/* ให้ modal-content เป็น relative เพื่อ position ปุ่มปิด */
-.modal-content {
-  position: relative;
-}
-
-/* ปุ่มปิด — ลอยมุมขวาบน */
-.modal-content .close-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: #f3f4f6;
-  color: #6b7280;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  z-index: 10;
-}
-
-.modal-content .close-btn:hover {
-  background: #e5e7eb;
-  color: #111827;
-  transform: scale(1.05);
-}
-
-/* modal-header — จัดให้ title + badge อยู่แถวเดียวกัน มี padding ขวาเผื่อปุ่มปิด */
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 60px 18px 22px;  /* padding ขวาเผื่อปุ่มปิด */
-  border-bottom: 1px solid #e5e7eb;
-  flex-wrap: wrap;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: #111827;
-  flex: 1;
-  min-width: 0;
-}
-
-/* modal-badges — อยู่ขวาของ title */
-.modal-badges {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-/* Responsive mobile */
-@media (max-width: 600px) {
-  .modal-header {
-    padding: 16px 52px 16px 18px;
-  }
-  
-  .modal-header h3 {
-    font-size: 15px;
-    width: 100%;
-  }
-  
-  .modal-badges {
-    margin-top: 4px;
-  }
-}
-
-
 /* ── FOOTER ── */
 .footer {
   text-align: center;
   padding: 24px;
   color: var(--text-light);
   font-size: 13px;
+}
+
+/* =====================================================
+   DATE RANGE SECTION
+   ===================================================== */
+.date-range-section {
+  background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
+  border: 1px solid rgba(0,212,170,0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.date-range-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.date-range-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted, #e8f0fe);
+}
+
+.date-range-title .icon {
+  font-size: 1.25rem;
+}
+
+.date-range-label {
+  background: rgba(0,212,170,0.15);
+  color: var(--accent, #00d4aa);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.date-range-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 1);
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line-radius);
+}
+
+.date-input-group label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #7a9cc0);
+  white-space: nowrap;
+}
+
+.date-input-group input[type="date"] {
+  background: transparent;
+  border: none;
+  color: var(--text, #a4ffd9);
+  font-family: 'Kanit', sans-serif;
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.date-input-group input[type="date"]:focus {
+  outline: none;
+  background: rgba(240, 243, 242, 0.1);
+}
+
+.date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+
+.quick-range-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.quick-range-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted, #7a9cc0);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-family: 'Kanit', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-range-btn:hover {
+  background: rgba(0,212,170,0.1);
+  border-color: rgba(0,212,170,0.3);
+  color: var(--text-primary, #e8f0fe);
+}
+
+.quick-range-btn.active {
+  background: rgba(0,212,170,0.2);
+  border-color: var(--accent, #00d4aa);
+  color: var(--accent, #00d4aa);
+  font-weight: 500;
+}
+
+/* ===================================================
+   🎯 GLOBAL ICON ALIGNMENT FIX
+=================================================== */
+.material-symbols-outlined {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  vertical-align: middle;
+}
+
+.badge,
+.badge-comment,
+.badge-visit,
+.badge--message-sent,
+.btn,
+.manager-tag,
+.comment-role-badge,
+.report-detail-item,
+.report-province,
+.report-date,
+.report-sales,
+.quick-range-btn,
+.date-range-label,
+.sales-name,
+.stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.page-header h1,
+.card-header h2,
+.date-range-title,
+.comment-header,
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.report-header,
+.report-details,
+.report-status,
+.filter-actions,
+.modal-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* ── RESPONSIVE ── */
@@ -1289,6 +1195,7 @@ body {
 
   .quick-range-btns {
     width: 100%;
+    justify-content: flex-start;
   }
 
   .summary-cards {
@@ -1327,208 +1234,23 @@ body {
   }
 }
 
+@media (max-width: 600px) {
+  .modal-body .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
 
+  .modal-header {
+    padding: 16px 52px 16px 18px;
+  }
 
+  .modal-header h3 {
+    font-size: 15px;
+    width: 100%;
+  }
 
-  /* ── Date Range Picker Styles ── */
-    .date-range-section {
-      background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, rgba(77,159,255,0.08) 100%);
-      border: 1px solid rgba(0,212,170,0.2);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-    }
-    
-    .date-range-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    
-    .date-range-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-muted, #e8f0fe);
-    }
-    
-    .date-range-title .icon {
-      font-size: 1.25rem;
-    }
-    
-    .date-range-label {
-      background: rgba(0,212,170,0.15);
-      color: var(--accent, #00d4aa);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-    
-    .date-range-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    /* วันที่-วันที่(เริ่ม-สิ้นสุด) */
-    .date-input-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 1);
-      padding: 6px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--line-radius);
-    }
-    
-    .date-input-group label {
-      font-size: 0.75rem;
-      color: var(--text-muted, #7a9cc0);
-      white-space: nowrap;
-    }
-    
-    .date-input-group input[type="date"] {
-      background: transparent;
-      border: none;
-      color: var(--text, #a4ffd9);
-      font-family: 'Kanit', sans-serif;
-      font-size: 0.9rem;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    
-    .date-input-group input[type="date"]:focus {
-      outline: none;
-      background: rgba(240, 243, 242, 0.1);
-    }
-    
-    .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.7);
-      cursor: pointer;
-    }
-    
-    .quick-range-btns {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-    
-    .quick-range-btn {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--text-muted, #7a9cc0);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      font-family: 'Kanit', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .quick-range-btn:hover {
-      background: rgba(0,212,170,0.1);
-      border-color: rgba(0,212,170,0.3);
-      color: var(--text-primary, #e8f0fe);
-    }
-    
-    .quick-range-btn.active {
-      background: rgba(0,212,170,0.2);
-      border-color: var(--accent, #00d4aa);
-      color: var(--accent, #00d4aa);
-      font-weight: 500;
-    }
-    
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      .date-range-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .date-range-controls {
-        width: 100%;
-      }
-      
-      .date-input-group {
-        flex: 1;
-        min-width: 140px;
-      }
-      
-      .quick-range-btns {
-        width: 100%;
-        justify-content: flex-start;
-      }
-    }
-
-
-
-
-
-
-
-    /* ===================================================
-   🎯 GLOBAL ICON ALIGNMENT FIX
-   บังคับ icon + text ทุกที่ให้อยู่ baseline เดียวกัน
-=================================================== */
-
-/* Icon ทุกตัว */
-.material-symbols-outlined {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  line-height: 1 !important;
-  vertical-align: middle;
-}
-
-/* Container ที่มี icon + text ทั้งหมด */
-.badge,
-.badge-comment,
-.badge-visit,
-.badge--message-sent,
-.btn,
-.manager-tag,
-.comment-role-badge,
-.report-detail-item,
-.report-province,
-.report-date,
-.report-sales,
-.quick-range-btn,
-.date-range-label,
-.sales-name,
-.stat-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  line-height: 1;
-}
-
-/* Header ที่มี icon (h1, h2, label) */
-.page-header h1,
-.card-header h2,
-.date-range-title,
-.comment-header,
-.info-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  line-height: 1.2;
-}
-
-/* Flex container ที่ wrap ได้ */
-.report-header,
-.report-details,
-.report-status,
-.filter-actions,
-.modal-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  .modal-badges {
+    margin-top: 4px;
+  }
 }

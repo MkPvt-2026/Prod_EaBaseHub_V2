@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รายงานการเข้าร้านค้า | Admin</title>
+  <title>รายงานการเข้าร้านค้า | Executive</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -55,7 +55,7 @@
       <div class="page-header">
         <div>
           <h1>
-            <span class="material-symbols-outlined">analytics</span>
+            <span class="material-symbols-outlined icon-lg">assignment</span>
             รายงานการเข้าร้านค้า
           </h1>
           <p>ดูรายงานทั้งหมด • Comment • ติดตามทีมงาน</p>
@@ -69,7 +69,7 @@
         <div class="date-range-header">
           <div class="date-range-title">
             <span class="icon">
-              <span class="material-symbols-outlined">calendar_clock</span>
+              <span class="material-symbols-outlined icon-md">calendar_clock</span>
               <span>ช่วงเวลา</span>
             </span>
             <span class="date-range-label" id="dateRangeLabel">—</span>
@@ -102,9 +102,9 @@
            SUMMARY CARDS
       ══════════════════════════════════════════════════ -->
       <div class="summary-cards">
-        <div class="sum-card admin-theme">
-          <div class="sum-icon">
-            <span class="material-symbols-outlined icon-orange">description</span>
+        <div class="sum-card total-theme">
+          <div class="sum-icon-desc">
+            <span class="material-symbols-outlined icon-blue">description</span>
           </div>
           <div class="sum-content">
             <div class="sum-value" id="totalReports">—</div>
@@ -113,8 +113,8 @@
         </div>
 
         <div class="sum-card un-read">
-          <div class="sum-icon">
-            <span class="material-symbols-outlined icon-yellow">schedule</span>
+          <div class="sum-icon-unread">
+            <span class="material-symbols-outlined icon-orange">schedule</span>
           </div>
           <div class="sum-content">
             <div class="sum-value" id="unreadReports">—</div>
@@ -133,7 +133,7 @@
         </div>
 
         <div class="sum-card">
-          <div class="sum-icon">
+          <div class="sum-icon-cyan">
             <span class="material-symbols-outlined icon-cyan">chat</span>
           </div>
           <div class="sum-content">
@@ -142,24 +142,6 @@
           </div>
         </div>
       </div>
-
-      <!-- ══════════════════════════════════════════════════
-           MANAGER OVERVIEW (เปิดใช้ถ้าต้องการ)
-      ══════════════════════════════════════════════════ -->
-      <!--
-      <div class="card">
-        <div class="card-header">
-          <h2>
-            <span class="material-symbols-outlined">supervisor_account</span>
-            ภาพรวมผู้จัดการ
-          </h2>
-          <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
-        </div>
-        <div class="sales-grid" id="managerGrid">
-          <div class="loading">กำลังโหลด...</div>
-        </div>
-      </div>
-      -->
 
       <!-- ══════════════════════════════════════════════════
            SALES OVERVIEW
@@ -182,12 +164,6 @@
       ══════════════════════════════════════════════════ -->
       <div class="filter-section">
         <div class="filter-row">
-          <div class="filter-group">
-            <label>ผู้จัดการ</label>
-            <select id="filterManager">
-              <option value="">— ทั้งหมด —</option>
-            </select>
-          </div>
 
           <div class="filter-group">
             <label>เซลล์</label>
@@ -272,15 +248,15 @@
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">
-              <span class="material-symbols-outlined icon-primary">calendar_month</span>
-              วันที่รายงาน
+              <span class="material-symbols-outlined icon-blue-dark">calendar_month</span>
+              รายงานวันที่
             </span>
             <span id="mReportDate" class="info-value">—</span>
           </div>
 
           <div class="info-item">
             <span class="info-label">
-              <span class="material-symbols-outlined icon-primary">account_box</span>
+              <span class="material-symbols-outlined icon-blue-dark">account_box</span>
               เซลล์ผู้รับผิดชอบ
             </span>
             <span id="mSalesName" class="info-value">—</span>
@@ -288,7 +264,7 @@
 
           <div class="info-item">
             <span class="info-label">
-              <span class="material-symbols-outlined icon-primary">storefront</span>
+              <span class="material-symbols-outlined icon-blue-dark">storefront</span>
               ร้านค้า
             </span>
             <span id="mShopName" class="info-value">—</span>
@@ -296,7 +272,7 @@
 
           <div class="info-item">
             <span class="info-label">
-              <span class="material-symbols-outlined icon-primary">location_on</span>
+              <span class="material-symbols-outlined icon-blue-dark">location_on</span>
               จังหวัด
             </span>
             <span id="mProvince" class="info-value">—</span>
@@ -304,8 +280,8 @@
 
           <div class="info-item">
             <span class="info-label">
-              <span class="material-symbols-outlined icon-primary">inventory_2</span>
-              สินค้า
+              <span class="material-symbols-outlined icon-blue-dark">inventory_2</span>
+              สินค้าที่ติดต่อจำหน่ายกับร้าน
             </span>
             <span id="mProduct" class="info-value">—</span>
           </div>
@@ -326,7 +302,7 @@
         <!-- หมายเหตุ -->
         <div class="info-section">
           <div class="info-label">
-            <span class="material-symbols-outlined icon-brown">edit_note</span>
+            <span class="material-symbols-outlined icon-brown icon-lg">edit_note</span>
             รายละเอียดการเข้าพบ
           </div>
           <div id="mNote" class="note-box">—</div>
@@ -335,7 +311,7 @@
         <!-- Comments -->
         <div class="comment-section">
           <div class="comment-header">
-            <span class="material-symbols-outlined">forum</span>
+            <span class="material-symbols-outlined icon-blue-dark">forum</span>
             ความคิดเห็น
           </div>
 
@@ -377,7 +353,7 @@
   <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
-  <script src="/js/pages/executive/executiveHome.js"></script>
+  <script src="/js/pages/report/reportTracker.js"></script>
   <!-- <script src="/js/pages/report/reportTracker.js"></script> -->
 
   <!-- Load Nav -->

@@ -8,7 +8,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
 
 
   <link rel="stylesheet" href="/css/components/badgeButtom.css">
@@ -23,19 +23,21 @@
       <h2>EABaseHub</h2>
     </div>
     <div class="user-box">
-      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-avatar" id="userAvatar">
+        <span class="material-symbols-outlined">person</span>
+      </div>
       <div class="user-info">
         <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
 
       <div class="group">
-  <span class="badge badge--message-sent">
-    <span class="badge-icon"><span class="material-symbols-rounded" style="font-size:17px">Logout</span></span>
-    ออกจจากระบบ
-  </span>
+        <span class="badge badge--message-sent">
+          <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">logout</span></span>
+          ออกจากระบบ
+        </span>
       </div>
 
-
+    </div>
   </header>
 
   <nav class="app-nav">
@@ -51,7 +53,10 @@
 
     <!-- PAGE HEADER -->
     <div class="page-header">
-      <h1>📋 Report Management</h1>
+      <h1>
+        <span class="material-symbols-outlined">description</span>
+        Report Management
+      </h1>
       <p>กรอกข้อมูล • Save Draft (เก็บในเครื่อง) • ส่งรายงานสัปดาห์</p>
     </div>
 
@@ -59,7 +64,10 @@
     <!-- SECTION 1: FORM                                        -->
     <!-- ===================================================== -->
     <div class="card">
-      <h2>📝 กรอกข้อมูลรายงาน</h2>
+      <h2>
+        <span class="material-symbols-outlined">edit_note</span>
+        กรอกข้อมูลรายงาน
+      </h2>
 
       <div class="form-grid">
 
@@ -96,12 +104,15 @@
       <!-- ===================================================== -->
       <!-- PRODUCT PICKER SECTION                                 -->
       <!-- ===================================================== -->
-      
+
       <div class="form-section-divider">
-        <span>📦 สินค้าที่จำหน่ายกับร้านนี้</span>
+        <span>
+          <span class="material-symbols-outlined">inventory_2</span>
+          สินค้าที่จำหน่ายกับร้านนี้
+        </span>
       </div>
-      
-      
+
+
       <!-- Picker: เลือกสินค้า 1 ชุด -->
       <div class="product-picker">
         <div class="form-grid">
@@ -123,71 +134,66 @@
         <div id="pickerAttributes" class="picker-attributes"></div>
 
         <button type="button" class="btn-add-product" id="addProductBtn">
-          ➕ เพิ่มสินค้า
+          <span class="material-symbols-outlined">add_circle</span>
+          เพิ่มสินค้า
         </button>
-       
-
-       
       </div>
 
-      <!-- รายการสินค้าที่เลือกแล้ว -->
-      <!-- <div class="selected-products-section"> -->
+      <div class="product-status-card">
 
-        <div class="product-status-card">
-  
-  <div class="status-left">
-    <span class="status-title">สินค้า</span>
-    <div class="status-count">
-      <span id="selectedProductCount">0</span>
-      <small>รายการ</small>
-    </div>
-  </div>
-
-  <div class="status-right">
-    <label class="switch">
-      <input type="checkbox" id="noProductFlag">
-      <span class="slider"></span>
-    </label>
-
-    <span class="toggle-label">
-      ร้านนี้ยังไม่มีสินค้า
-    </span>
-  </div>
-
-</div>
-  
-  
-  
-  
-  <div>
-    <div id="selectedProductList" class="selected-product-list">
-      <div class="empty-product-list">ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
-    </div>
-    
-  </div>
-  
-  
-  <div class="form-section-divider">
-    <span>** สินค้าที่ร้านแนะนำ(ต้องการซื้อ) **</span>
-  </div>
-  
-  <div class="form-group full">
-    <label>ร้านค้าแนะนำสินค้า</label>
-    <textarea id="productInterest" rows="1" placeholder="สินค้าที่ร้านค้าแนะนำ / เหตุผล"></textarea>          
+        <div class="status-left">
+          <span class="status-title">สินค้า</span>
+          <div class="status-count">
+            <span id="selectedProductCount">0</span>
+            <small>รายการ</small>
+          </div>
         </div>
+
+        <div class="status-right">
+          <label class="switch">
+            <input type="checkbox" id="noProductFlag">
+            <span class="slider"></span>
+          </label>
+
+          <span class="toggle-label">
+            ร้านนี้ยังไม่มีสินค้า
+          </span>
+        </div>
+
+      </div>
+
+      <div>
+        <div id="selectedProductList" class="selected-product-list">
+          <div class="empty-product-list">ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
+        </div>
+      </div>
+
+
+      <div class="form-section-divider">
+        <span>
+          <span class="material-symbols-outlined">recommend</span>
+          สินค้าที่ร้านแนะนำ (ต้องการซื้อ)
+        </span>
+      </div>
+
+      <div class="form-group full">
+        <label>ร้านค้าแนะนำสินค้า</label>
+        <textarea id="productInterest" rows="1" placeholder="สินค้าที่ร้านค้าแนะนำ / เหตุผล"></textarea>
+      </div>
 
       <!-- ปุ่ม Save Draft -->
       <div class="actions">
         <button class="btn-draft" onclick="saveDraft()">
-          💾 Save Draft
+          <span class="material-symbols-outlined">save</span>
+          Save Draft
           <span class="draft-badge" id="draftCount">0</span>
         </button>
       </div>
 
       <p class="form-hint">
-        💡 <strong>Save Draft</strong> = เก็บในเครื่องนี้ ยังไม่ส่งให้ผู้บริหาร
+        <span class="material-symbols-outlined">lightbulb</span>
+        <strong>Save Draft</strong> = เก็บในเครื่องนี้ ยังไม่ส่งให้ผู้บริหาร
       </p>
-    <!-- </div> -->
 
 
     <!-- ===================================================== -->
@@ -195,10 +201,14 @@
     <!-- ===================================================== -->
     <div class="card draft-section" id="draftSection" style="display:none;">
 
-      <h2>📝 Draft ที่รอส่ง (<span id="draftCount2">0</span> รายการ)</h2>
+      <h2>
+        <span class="material-symbols-outlined">edit_document</span>
+        Draft ที่รอส่ง (<span id="draftCount2">0</span> รายการ)
+      </h2>
 
       <div class="draft-hint">
-        ⚠️ Draft เก็บเฉพาะในเบราว์เซอร์นี้ — หากล้าง cache หรือเปลี่ยนอุปกรณ์ข้อมูลจะหาย
+        <span class="material-symbols-outlined icon-lg icon-red">warning</span>
+        Draft เก็บเฉพาะในเบราว์เซอร์นี้ — หากล้าง cache หรือเปลี่ยนอุปกรณ์ข้อมูลจะหาย
         กรุณาส่งรายงานก่อนสิ้นสัปดาห์
       </div>
 
@@ -220,7 +230,8 @@
 
       <div class="section-header-row" style="margin-top:16px;">
         <button class="btn-submit-all" id="submitAllBtn" onclick="submitAllDrafts()">
-          📤 ส่งรายงานประจำสัปดาห์ทั้งหมด
+          <span class="material-symbols-outlined">send</span>
+          ส่งรายงานประจำสัปดาห์ทั้งหมด
         </button>
       </div>
 
@@ -231,7 +242,10 @@
     <!-- SECTION 3: SUBMITTED REPORTS                           -->
     <!-- ===================================================== -->
     <div class="section">
-      <h2>✅ รายงานที่ส่งแล้ว</h2>
+      <h2>
+        <span class="material-symbols-outlined">task_alt</span>
+        รายงานที่ส่งแล้ว
+      </h2>
 
       <div class="table-wrapper">
         <table>
@@ -261,17 +275,17 @@
   <!-- ===================================================== -->
   <div id="reportModal" class="modal">
     <div class="modal-content">
-      <span class="close-btn" id="closeModalBtn">✕</span>
+      <span class="close-btn" id="closeModalBtn">
+        <span class="material-symbols-outlined">close</span>
+      </span>
       <h3 id="modalTitle">รายละเอียดรายงาน</h3>
 
       <div style="display:grid;gap:10px;font-size:14px;margin-top:4px;">
         <div class="modal-row"><strong>วันที่:</strong>       <span id="m-date">—</span></div>
         <div class="modal-row"><strong>ร้านค้า:</strong>      <span id="m-store">—</span></div>
-        <!-- <div class="modal-row"><strong>แหล่งที่มา:</strong>   <span id="m-source">—</span></div> -->
-        <div class="modal-row"><strong>สถานะรายงาน:</strong>        <span id="m-status">—</span></div>
-        <!-- <div class="modal-row"><strong>สถานะการเยี่ยม:</strong> <span id="m-status-visit">—</span></div> -->
+        <div class="modal-row"><strong>สถานะรายงาน:</strong>  <span id="m-status">—</span></div>
         <div class="modal-row"><strong>สินค้า:</strong>       <span id="m-product">—</span></div>
-        
+
         <div id="m-attributes"></div>
         <div>
           <div class="modal-row"><strong>สินค้าที่ร้านต้องการซื้อ:</strong> <span id="m-product-interest">—</span></div>
@@ -285,7 +299,10 @@
       </div>
 
       <div class="modal-footer">
-        <button id="saveEditBtn" style="display:none;" onclick="saveEdit()">💾 บันทึก</button>
+        <button id="saveEditBtn" style="display:none;" onclick="saveEdit()">
+          <span class="material-symbols-outlined">save</span>
+          บันทึก
+        </button>
       </div>
     </div>
   </div>
@@ -296,6 +313,7 @@
   <footer class="footer">© 2026 EABaseHub | บันทึกการเยี่ยมร้านค้า</footer>
 
   <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/auth.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/services/shopService.js"></script>
