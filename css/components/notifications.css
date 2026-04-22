@@ -9,7 +9,7 @@
       gap: 8px;
     }
     .notif-header h2 { margin: 0; }
-    .notif-actions { display: flex; gap: 8px; }
+    .notif-actions { display: flex; gap: 8px; } 
     .notif-btn {
       padding: 8px 14px;
       border: 1px solid #ddd;
@@ -29,7 +29,7 @@
       margin-left: 6px;
     }
     .notif-item {
-      padding: 12px 14px;
+        padding: 12px 14px;
       margin-bottom: 10px;
       border-radius: 10px;
       background: #f5f5f5;

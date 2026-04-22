@@ -440,7 +440,7 @@ async function renderDraftList() {
             <span class="material-symbols-outlined">delete</span><span>ลบ</span>
           </button>
         </div>
-      </td>`;
+      </td>`;  
     tbody.appendChild(tr);
   }
 }
