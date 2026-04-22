@@ -651,7 +651,7 @@ async function renderSubmittedTable() {
     tr.innerHTML = `
       <td data-label="วันที่ส่ง" class="col-date">${formatDateShort(r.submitted_at || r.report_date)}</td>
       <td data-label="ร้านค้า" class="col-shop" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
-      <td data-label="สถานะ" class="col-status">${ackBadge}</td>
+      <td data-label="สถานะ" class="col-status">${ackBadge || "—"}</td>
       <td data-label="รายละเอียด" class="col-note" title="${escapeHtml(r.note||"")}">${escapeHtml(truncate(r.note||"—", 22))}</td>
       <td data-label="สินค้า" class="col-product" title="${escapeHtml(prodName + (attrText ? ' · ' + attrText : ''))}">
         <div style="font-weight:500;">${escapeHtml(truncate(prodName, 16))}</div>
