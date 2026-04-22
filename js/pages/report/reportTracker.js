@@ -898,7 +898,7 @@ async function openGroupModal(groupKey) {
   set('mShopName', shopData?.name || '—');
   set('mProvince', shopData?.province || '—');
   set('mSource', group.source || '—');
-  set('mProductInterest', group.product_interest || 'ไม่มีข้อมูล');
+  set('mProductInterest', group.product_interest || '—');
   set('mNote', group.note || 'ไม่มีหมายเหตุ');
 
   const productEl = document.getElementById('mProduct');
