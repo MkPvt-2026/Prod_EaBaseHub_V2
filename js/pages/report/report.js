@@ -431,7 +431,7 @@ async function renderDraftList() {
       <td>
         <div class="action-buttons">
           <button onclick="editDraftToForm('${d.id}')" title="แก้ไข" class="btn-action-edit">
-            <span class="material-symbols-outlined">edit</span><span>แก้</span>
+            <span class="material-symbols-outlined icon-orange">edit_document</span><span>แก้</span>
           </button>
           <button onclick="submitOneDraft('${d.id}')" title="ส่งรายการนี้" class="btn-action-submit">
             <span class="material-symbols-outlined">forward_to_inbox</span><span>ส่ง</span>
@@ -639,7 +639,7 @@ async function renderSubmittedTable() {
     const attrShort = truncate(attrText, 36);
 
     const ackBadge = r.manager_acknowledged
-      ? `<span class="badge-ack"><span class="material-symbols-outlined icon-green">check_circle</span> อ่านแล้ว</span>` : "";
+      ? `<span class="badge-ack">✅ อ่านแล้ว</span>` : "";
 
     // Unread comment badge — แสดงเฉพาะที่ยังไม่ได้อ่าน
     const unreadCount = unreadCommentCountsMap[r.id] || 0;
@@ -660,7 +660,7 @@ async function renderSubmittedTable() {
       <td class="col-action">
         <div class="action-buttons">
           <button onclick="handleView('${r.id}')" title="ดูรายละเอียด" class="btn-action-view" data-report-id="${r.id}">
-            <span class="material-symbols-outlined icon-md icon-brown">visibility</span>${commentBadge}
+            <span class="material-symbols-outlined icon-md icon-orange">visibility</span>${commentBadge}
           </button>
         </div>
       </td>`;
@@ -1081,4 +1081,31 @@ function setupLogout() {
     await supabaseClient.auth.signOut();
     window.location.href = "/pages/auth/login.html";
   });
+}
+
+
+// =====================================================
+// ซ่อนกล่อง product picker เมื่อยังไม่มีสินค้าในร้าน
+// =====================================================
+
+function updateProductList(products) {
+  const container = document.getElementById("productContainer");
+  const list = document.getElementById("selectedProductList");
+
+  if (!products || products.length === 0) {
+    container.style.display = "none"; // ซ่อนทั้งหมด
+    list.innerHTML = `
+      <div class="empty-product-list">
+        ยังไม่มีรายการสินค้า
+      </div>
+    `;
+    return;
+  }
+
+  // มีสินค้า → แสดง
+  container.style.display = "block";
+
+  list.innerHTML = products.map(item => `
+    <div class="product-item">${item.name}</div>
+  `).join("");
 }

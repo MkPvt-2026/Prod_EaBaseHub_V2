@@ -65,6 +65,7 @@ REPORT PAGE — Pastel Mint Theme  (v2 cleaned)
 
   --accent:         #e8a020;
   --accent-light:   #f5d98a;
+  --accent-light1:  #fcf6e6;
   --danger:         #d95b5b;
   --danger-dark:    #b83c3c;
   --success:        #3a9e6a;
@@ -200,23 +201,28 @@ z-index: 1;
 LOGOUT BTN
    ===================================================== */
 .logout-btn {
-display: flex;
-align-items: center;
-gap: 6px;
-padding: 8px 15px;
-background: none;
-border: 1px solid var(--gray-200);
-border-radius: var(--radius-sm);
-font-family: 'Kanit', sans-serif;
-font-size: 13px;
-color: var(--text-secondary);
-cursor: pointer;
-transition: all var(--transition);
+  border: none;
+  cursor: pointer;
+  background: var(--mint-light-100);
+  color: var(--mint-light-400);
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 14px;
+  transition: 0.1s;
 }
+
 .logout-btn:hover {
-border-color: #f5c2c2;
-color: #d95858;
-background: #fff8f8;
+  background: var(--mint-dark-700);
+   color: var(--mint-light-50);
+  transform: translateY(-1px);
+}
+
+.logout-btn:active {
+  transform: scale(0.97);
 }
 
 /* =====================================================
@@ -309,6 +315,7 @@ resize: vertical;
 min-height: 100px;
 line-height: 1.6;
 }
+
 
 /* =====================================================
 DYNAMIC ATTRIBUTES
@@ -549,12 +556,12 @@ tbody tr:last-child td { border-bottom: none; }
 COLUMN WIDTHS — SUBMITTED REPORTS (.section)
 ใช้ class-based แทน :nth-child() เพื่อคุมได้แม่นยำ
    ===================================================== */
-.section .col-date    { width: 9%;  }
-.section .col-shop    { width: 12%; }
-.section .col-status  { width: 14%; }
-.section .col-note    { width: 28%; }
-.section .col-product { width: 26%; }
-.section .col-action  { width: 11%; text-align: center; overflow: visible; }
+.section .col-date    { width: 8%;  }
+.section .col-shop    { width: 22%; }
+.section .col-status  { width: 10%; }
+.section .col-note    { width: 25%; }
+.section .col-product { width: 25%; }
+.section .col-action  { width: 10%; text-align: center; overflow: visible; }
 
 /* คอลัมน์สถานะ — ให้ badge แสดงเต็ม ไม่มี ... */
 .section .col-status {
@@ -568,7 +575,7 @@ text-overflow: unset;
 white-space: nowrap;
 overflow: visible;
 text-overflow: unset;
-font-size: 10px;
+font-size: 11px;
 margin-right: 4px;
 margin-bottom: 4px;
 }
@@ -596,17 +603,17 @@ text-overflow: ellipsis;
 COLUMN WIDTHS — DRAFT TABLE
    ===================================================== */
 .draft-section table th:nth-child(1),
-.draft-section table td:nth-child(1) { width: 10%; }
+.draft-section table td:nth-child(1) { width: 13%; }
 .draft-section table th:nth-child(2),
-.draft-section table td:nth-child(2) { width: 14%; }
+.draft-section table td:nth-child(2) { width: 13%; }
 .draft-section table th:nth-child(3),
 .draft-section table td:nth-child(3) { width: 20%; white-space: normal; }
 .draft-section table th:nth-child(4),
-.draft-section table td:nth-child(4) { width: 26%; }
-.draft-section table th:nth-child(5),
-.draft-section table td:nth-child(5) { width: 20%; }
+.draft-section table td:nth-child(4) { width: 29%; }
 .draft-section table th:nth-child(6),
-.draft-section table td:nth-child(6) { width: 10%; text-align: center; overflow: visible; }
+.draft-section table td:nth-child(6) { width: 25%; text-align: center; overflow: visible; }
+/* .draft-section table th:nth-child(5),
+.draft-section table td:nth-child(5) { width: 10%; } */
 
 /* =====================================================
 TABLE CONTENT HELPERS
@@ -898,11 +905,28 @@ min-width: 28px;
 flex: none;
 transition: all var(--transition);
 line-height: 1;
-/* background: transparent; */
+background: transparent;
 }
-.btn-action-edit   { background: var(--bg-subtle); color: var(--mint-700); }
-.btn-action-submit { background: var(--mint-100); color: var(--mint-dark-500); }
-.btn-action-del    { background: #fee2e2; color: var(--danger); }
+.btn-action-edit   { 
+   background: var(--accent-light1); 
+   color: var(--accent); 
+   width: 60px; 
+   height: 32px;
+}
+
+.btn-action-submit { 
+   background: var(--mint-100); 
+   color: var(--mint-dark-500);
+   width: 60px; 
+   height: 32px;
+}
+
+.btn-action-del    { 
+   background: #fee2e2; 
+   color: var(--danger); 
+   width: 60px; 
+   height: 32px;
+}
 
 /* icon ในปุ่ม action เล็ก (edit/submit/del) */
 .action-buttons button .material-symbols-rounded {
@@ -920,7 +944,7 @@ VIEW BUTTON — Material Icon Style
    ===================================================== */
 .btn-action-view {
 position: relative;
-/* background: linear-gradient(135deg, #3b82f6, #2563eb); */
+background: #fcf6e6;
 border: none;
 color: #fff;
 width: 36px;
@@ -1015,9 +1039,10 @@ padding: 20px;
 .modal-content {
 background: var(--bg-card);
 width: 100%;
-max-width: 480px;
+max-width: 580px;
 border-radius: var(--radius-xl);
 padding: 28px 28px 20px;
+margin-top: auto;
 animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
 max-height: 92vh;
 overflow-y: auto;
