@@ -82,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       let emailToUse = identifier;
 
+      // ถ้าไม่มี @ ให้ถือว่าเป็น username → ไปหา email จาก profiles
       if (!identifier.includes("@")) {
         const { data: userData, error } = await supabaseClient
           .from("profiles")
@@ -96,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         emailToUse = userData.email;
       }
 
+      // Login กับ Supabase Auth
       const { data: authData, error: loginError } =
         await supabaseClient.auth.signInWithPassword({
           email: emailToUse,
@@ -104,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (loginError) throw loginError;
 
+      // เช็ค role + status จาก profiles
       const { data: profile, error: roleError } = await supabaseClient
         .from("profiles")
         .select("role, status")
@@ -114,9 +117,22 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("ไม่สามารถตรวจสอบสิทธิ์ได้");
       }
 
+      // ══════════════════════════════════════════════
+      // 🔥 แยก error message ตาม status
+      // - Inactive  = ยังไม่ได้รับการอนุมัติ (สมัครใหม่)
+      // - Suspended = ถูกระงับ
+      // ══════════════════════════════════════════════
       if (profile.status !== "Active") {
         await supabaseClient.auth.signOut();
-        throw new Error("บัญชีของคุณถูกระงับ");
+
+        if (profile.status === "Inactive") {
+          throw new Error(
+            "บัญชีของคุณยังไม่ได้รับการอนุมัติ\n" +
+            "กรุณาแจ้งหัวหน้าของคุณเพื่อขออนุมัติการใช้งาน"
+          );
+        } else {
+          throw new Error("บัญชีของคุณถูกระงับการใช้งาน");
+        }
       }
 
       // 🔥 แสดง overlay ก่อน redirect ตาม Role
@@ -131,18 +147,23 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (profile.role === "executive") {
         showLoginOverlay("/pages/executive/executiveHome.html");
       } else {
+        // role = "user" (default หลังสมัคร แต่ status ต้อง Active ก่อน)
+        // ถ้าเข้ามาถึงจุดนี้แปลว่า admin เปิด Active แต่ยังไม่ได้ตั้ง role
         await supabaseClient.auth.signOut();
-        throw new Error("คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้");
+        throw new Error(
+          "บัญชีของคุณยังไม่ได้กำหนดสิทธิ์การใช้งาน\n" +
+          "กรุณาแจ้งหัวหน้าของคุณ"
+        );
       }
 
     } catch (err) {
       let errorMessage = err.message;
 
       if (err.message.includes("Invalid login credentials")) {
-        errorMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+        errorMessage = "Username/Email หรือรหัสผ่านไม่ถูกต้อง";
       }
 
-      alert("เข้าสู่ระบบไม่สำเร็จ: " + errorMessage);
+      alert("เข้าสู่ระบบไม่สำเร็จ\n\n" + errorMessage);
 
       loginBtn.disabled = false;
       loginBtn.classList.remove("loading");

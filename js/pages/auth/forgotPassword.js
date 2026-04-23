@@ -1,150 +1,99 @@
-// ===============================
+// ============================================================
 // forgot-password.js
-// ===============================
+// ส่งลิงก์ reset password ไปที่อีเมลของ user
+//
+// Flow:
+//  1. User กรอกอีเมล
+//  2. ระบบเรียก resetPasswordForEmail()
+//  3. Supabase ส่งอีเมลพร้อมลิงก์ไปให้
+//  4. User คลิกลิงก์ → ไปหน้า reset-password.html
+// ============================================================
 
-// ---- Detect if this is a password-reset redirect ----
-(async () => {
-  // Supabase ส่ง #access_token หรือ ?type=recovery มาใน URL
-  const hash = window.location.hash;
-  const params = new URLSearchParams(window.location.search);
 
-  const isRecovery =
-    hash.includes("type=recovery") ||
-    params.get("type") === "recovery";
+document.addEventListener("DOMContentLoaded", () => {
 
-  if (isRecovery) {
-    switchView("view-reset");
-  }
-})();
+  const forgotForm = document.getElementById("forgotForm");
+  const emailInput = document.getElementById("email");
+  const forgotBtn  = document.getElementById("forgotBtn");
 
-// ---- Switch view helper ----
-function switchView(viewId) {
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  const target = document.getElementById(viewId);
-  if (target) target.classList.add("active");
-}
+  if (!forgotForm) return;
 
-// ---- STEP 1: Send reset email ----
-async function handleSendReset() {
-  const email = document.getElementById("forgot-email").value.trim();
 
-  if (!email) {
-    showError("กรุณากรอกอีเมลของคุณ");
-    return;
-  }
+  forgotForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showError("รูปแบบอีเมลไม่ถูกต้อง");
-    return;
-  }
+    const email = emailInput.value.trim().toLowerCase();
 
-  const btn = document.getElementById("sendBtn");
-  btn.disabled = true;
-  btn.classList.add("loading");
-
-  try {
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/pages/auth/forgot-password.html`,
-    });
-
-    if (error) throw error;
-
-    // Show sent view
-    document.getElementById("sent-email-display").textContent = email;
-    switchView("view-sent");
-
-    // Start resend cooldown
-    startResendCooldown();
-
-  } catch (err) {
-    showError("ไม่สามารถส่งอีเมลได้: " + err.message);
-    btn.disabled = false;
-    btn.classList.remove("loading");
-  }
-}
-
-// ---- Resend with cooldown ----
-let cooldownTimer = null;
-
-function startResendCooldown(seconds = 60) {
-  const resendBtn = document.getElementById("resendBtn");
-  const countdown = document.getElementById("resend-countdown");
-  let remaining = seconds;
-
-  resendBtn.disabled = true;
-  resendBtn.style.display = "none";
-  countdown.style.display = "inline";
-  countdown.textContent = `(ส่งใหม่ได้ใน ${remaining}s)`;
-
-  cooldownTimer = setInterval(() => {
-    remaining--;
-    countdown.textContent = `(ส่งใหม่ได้ใน ${remaining}s)`;
-    if (remaining <= 0) {
-      clearInterval(cooldownTimer);
-      resendBtn.disabled = false;
-      resendBtn.style.display = "inline";
-      countdown.style.display = "none";
+    if (!email) {
+      alert("กรุณากรอกอีเมล");
+      return;
     }
-  }, 1000);
-}
 
-async function handleResend() {
-  const email = document.getElementById("sent-email-display").textContent;
-  if (!email) return;
+    // disable ปุ่ม
+    forgotBtn.disabled = true;
+    forgotBtn.classList.add("loading");
 
-  const btn = document.getElementById("resendBtn");
-  btn.disabled = true;
+    try {
 
-  try {
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/pages/auth/forgot-password.html`,
-    });
-    if (error) throw error;
-    startResendCooldown();
-  } catch (err) {
-    showError("ส่งอีเมลซ้ำไม่สำเร็จ: " + err.message);
-    btn.disabled = false;
-  }
-}
+      // ══════════════════════════════════════════════
+      // ตรวจสอบก่อนว่ามีอีเมลนี้ในระบบหรือไม่
+      // (เพื่อแสดง error message ชัดเจน)
+      // ══════════════════════════════════════════════
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("id, status")
+        .eq("email", email)
+        .maybeSingle();
 
-// ---- STEP 3: Reset password form ----
-async function handleResetPassword() {
-  const newPass     = document.getElementById("new-password").value;
-  const confirmPass = document.getElementById("confirm-password").value;
+      if (!profile) {
+        throw new Error("ไม่พบอีเมลนี้ในระบบ");
+      }
 
-  if (!newPass || newPass.length < 8) {
-    showError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
-    return;
-  }
+      if (profile.status === "Inactive") {
+        throw new Error(
+          "บัญชีของคุณยังไม่ได้รับการอนุมัติ\n" +
+          "กรุณาแจ้งหัวหน้าของคุณเพื่อขออนุมัติก่อน"
+        );
+      }
 
-  if (newPass !== confirmPass) {
-    showError("รหัสผ่านไม่ตรงกัน");
-    return;
-  }
+      // ══════════════════════════════════════════════
+      // ส่งลิงก์ reset password
+      // redirectTo = หน้าที่ user จะไปหลังคลิกลิงก์
+      // ══════════════════════════════════════════════
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${window.location.origin}/pages/auth/reset-password.html`,
+        }
+      );
 
-  const btn = document.getElementById("resetBtn");
-  btn.disabled = true;
-  btn.classList.add("loading");
+      if (error) throw error;
 
-  try {
-    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
-    if (error) throw error;
+      // ══════════════════════════════════════════════
+      // แสดง overlay สำเร็จ
+      // ══════════════════════════════════════════════
+      const overlay = document.getElementById("forgot-overlay");
+      if (overlay) overlay.classList.add("show");
 
-    switchView("view-success");
+      // redirect กลับหน้า login หลัง 5 วินาที
+      setTimeout(() => {
+        window.location.href = "/pages/auth/login.html";
+      }, 5000);
 
-  } catch (err) {
-    showError("เปลี่ยนรหัสผ่านไม่สำเร็จ: " + err.message);
-    btn.disabled = false;
-    btn.classList.remove("loading");
-  }
-}
+    } catch (err) {
+      console.error("Forgot password error:", err);
 
-// ---- Toast error ----
-function showError(msg) {
-  document.querySelectorAll(".toast-error").forEach(e => e.remove());
-  const toast = document.createElement("div");
-  toast.className = "toast-error";
-  toast.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${msg}`;
-  document.querySelector(".forgot-card").prepend(toast);
-  setTimeout(() => toast.remove(), 3500);
-}
+      let msg = err.message || "เกิดข้อผิดพลาด";
+
+      if (msg.includes("rate limit") || msg.includes("too many")) {
+        msg = "คุณขอลิงก์บ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่";
+      }
+
+      alert("ส่งลิงก์ไม่สำเร็จ\n\n" + msg);
+
+      forgotBtn.disabled = false;
+      forgotBtn.classList.remove("loading");
+    }
+  });
+
+});
