@@ -271,7 +271,7 @@ body {
 /* Toggle btn */
 .toggle-btn {
   margin-top: auto;
-  padding: 10px 10px 24px;
+  padding: 15px 15px 24px;
   background: none;
   border: none;
   border-top: 1px solid rgba(111,201,159,0.20);
@@ -290,7 +290,10 @@ body {
 .toggle-btn:hover { color: var(--mint-800); }
 
 /* Collapsed */
-.sidebar.collapsed { width: 68px; }
+.sidebar.collapsed {
+   width: 78px;
+   height: 90vh; 
+  }
 .sidebar.collapsed .menu-text,
 .sidebar.collapsed .brand { display: none; }
 .sidebar.collapsed .menu-item { justify-content: center; padding: 10px; }
