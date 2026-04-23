@@ -107,6 +107,53 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+
+/* ===================================================
+   MATERIAL ICONS - Base Setup
+=================================================== */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--accent-dark);
+  user-select: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Color variants */
+.icon-primary  { color: var(--primary); }
+.icon-blue     { color: #3b82f6; }
+.icon-blue-dark{ color: #0093ad; }
+.icon-green    { color: var(--success); }
+.icon-red      { color: var(--danger); }
+.icon-orange   { color: #f59e0b; }
+.icon-yellow   { color: #eab308; }
+.icon-purple   { color: #a855f7; }
+.icon-brown    { color: #92400e; }
+.icon-cyan     { color: var(--info); }
+.icon-white    { color: #ffffff; }
+.icon-muted    { color: var(--text-muted); }
+
+/* Size variants */
+.icon-sm { font-size: 16px; }
+.icon-md { font-size: 20px; }
+.icon-lg { font-size: 24px; }
+.icon-xl { font-size: 32px; }
+
+/* Filled variant */
+.icon-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 500;
+}
+ 
+
+
 /* =========================
    LAYOUT
    ========================= */
@@ -206,24 +253,25 @@ body {
   font-size: 19px;
   opacity: 0.85;
   flex-shrink: 0;
-  color: var(--mint-200);
+  color: var(--bg-surface);
 }
 
 /* Hamburger - FIXED: แก้ typo จาก --mint --mint-1000 เป็น --mint-1000 */
 .hamburger {
   display: none;
+  size: 20px;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--mint-1000);
-  padding: 5px;
-  align-self: flex-start;
+  /* padding: 3px; */
+  align-self: center;
 }
 
 /* Toggle btn */
 .toggle-btn {
   margin-top: auto;
-  padding: 10px 14px;
+  padding: 10px 10px 24px;
   background: none;
   border: none;
   border-top: 1px solid rgba(111,201,159,0.20);
