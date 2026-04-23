@@ -1168,6 +1168,35 @@ body {
   gap: 8px;
 }
 
+/* =====================================================
+LOGOUT BTN
+   ===================================================== */
+.logout-btn {
+  border: none;
+  cursor: pointer;
+  background: var(--mint-light-100);
+  color: var(--mint-light-400);
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 14px;
+  transition: 0.1s;
+}
+
+.logout-btn:hover {
+  background: var(--mint-dark-700);
+   color: var(--mint-light-50);
+  transform: translateY(-1px);
+}
+
+.logout-btn:active {
+  transform: scale(0.97);
+}
+
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .container {
