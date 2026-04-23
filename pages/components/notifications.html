@@ -1,54 +1,47 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notification - EABaseHub</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notification - EABaseHub</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-   <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Kanit font -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600" rel="stylesheet"/>
 
-    <!-- Base CSS -->   
-    <link rel="stylesheet" href="/css/base/bassHeader.css"/>
-    <link rel="stylesheet" href="/css/components/notifications.css"/>
-    
+  <!-- Kanit font -->
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="/css/base/layout.css"/>
+  <link rel="stylesheet" href="/css/components/notifications.css"/>
 </head>
 <body>
- <header class="app-header">
-      <!-- LOGO + SYSTEM NAME -->
-      <div class="logo">
-        <!-- โลโก้วงกลม -->
-        <div class="logo-circle">
-          <img src="/assets/icons/icon-192.png" alt="logo" />
-        </div>
 
-        <!-- ชื่อระบบ -->
-        <h2>EABaseHub</h2>
+  <!-- =====================================================
+       HEADER SECTION (ส่วนหัวเว็บไซต์)
+       แสดงโลโก้และชื่อผู้ใช้งาน
+       ===================================================== -->
+     <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
       </div>
+      <h2>EABaseHub</h2>
+    </div>
 
-      <!-- USER INFO + LOGOUT -->
-      <div class="user-box">
-        <!-- avatar ผู้ใช้ -->
-        <div class="user-avatar" id="userAvatar">👤</div>
-
-        <!-- ข้อมูล user -->
-        <div class="user-info">
-          <div class="user-name" id="userName">กำลังโหลด...</div>
-        </div>
-
-        <!-- ปุ่ม logout -->
-        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
-    </header>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
   
-</head>
-
-  <div class="notif-container">
+  <main class="notif-container">
     <div class="notif-header">
       <h2>
         🔔 แจ้งเตือน
@@ -64,19 +57,16 @@
     <div id="notificationList">
       <div class="notif-loading">กำลังโหลด...</div>
     </div>
-  </div>
+  </main>
 
- 
-  
-  
   <!-- EXTERNAL SCRIPTS (โหลดตามลำดับ) -->
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/roleConfig.js"></script>
-  <script src="/js/core/auth.js"></script>   
+  <script src="/js/core/auth.js"></script>
   <script src="/js/services/notifications.js"></script>
   <script src="/js/core/splash.js"></script>
-  <script src="/js/core/loadingSplash.js"></script> 
+  <script src="/js/core/loadingSplash.js"></script>
 
 </body>
 </html>

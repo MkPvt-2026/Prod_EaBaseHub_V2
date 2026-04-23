@@ -605,13 +605,13 @@ COLUMN WIDTHS — DRAFT TABLE
 .draft-section table th:nth-child(1),
 .draft-section table td:nth-child(1) { width: 13%; }
 .draft-section table th:nth-child(2),
-.draft-section table td:nth-child(2) { width: 13%; }
+.draft-section table td:nth-child(2) { width: 17%; }
 .draft-section table th:nth-child(3),
-.draft-section table td:nth-child(3) { width: 20%; white-space: normal; }
+.draft-section table td:nth-child(3) { width: 17%; white-space: normal; }
 .draft-section table th:nth-child(4),
-.draft-section table td:nth-child(4) { width: 29%; }
+.draft-section table td:nth-child(4) { width: 23%; }
 .draft-section table th:nth-child(6),
-.draft-section table td:nth-child(6) { width: 25%; text-align: center; overflow: visible; }
+.draft-section table td:nth-child(6) { width: 30%; text-align: center; overflow: visible; }
 /* .draft-section table th:nth-child(5),
 .draft-section table td:nth-child(5) { width: 10%; } */
 
