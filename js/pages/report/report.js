@@ -292,11 +292,17 @@ function resetPicker() {
 // RENDER SELECTED PRODUCTS LIST
 // =====================================================
 async function renderSelectedProducts() {
-  const container = document.getElementById("selectedProductList");
-  const countEl   = document.getElementById("selectedProductCount");
+  const container    = document.getElementById("selectedProductList");
+  const countEl      = document.getElementById("selectedProductCount");
+  const productBox   = document.getElementById("productContainer"); // กล่องครอบทั้งหมด
   if (!container) return;
 
   if (countEl) countEl.textContent = selectedProducts.length;
+
+  // ซ่อน/แสดงกล่อง productContainer ตามจำนวนสินค้า
+  if (productBox) {
+    productBox.style.display = selectedProducts.length > 0 ? "block" : "none";
+  }
 
   if (!selectedProducts.length) {
     container.innerHTML = `<div class="empty-product-list">ยังไม่มีสินค้าที่เลือก — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>`;
@@ -1084,28 +1090,3 @@ function setupLogout() {
 }
 
 
-// =====================================================
-// ซ่อนกล่อง product picker เมื่อยังไม่มีสินค้าในร้าน
-// =====================================================
-
-function updateProductList(products) {
-  const container = document.getElementById("productContainer");
-  const list = document.getElementById("selectedProductList");
-
-  if (!products || products.length === 0) {
-    container.style.display = "none"; // ซ่อนทั้งหมด
-    list.innerHTML = `
-      <div class="empty-product-list">
-        ยังไม่มีรายการสินค้า
-      </div>
-    `;
-    return;
-  }
-
-  // มีสินค้า → แสดง
-  container.style.display = "block";
-
-  list.innerHTML = products.map(item => `
-    <div class="product-item">${item.name}</div>
-  `).join("");
-}
