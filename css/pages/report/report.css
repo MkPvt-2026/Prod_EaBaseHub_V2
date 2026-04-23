@@ -1028,7 +1028,7 @@ MODAL
 .modal {
 display: none;
 position: fixed;
-z-index: 999;
+z-index: 9999;
 inset: 0;
 background: rgba(47,112,96,0.35);
 backdrop-filter: blur(3px);
