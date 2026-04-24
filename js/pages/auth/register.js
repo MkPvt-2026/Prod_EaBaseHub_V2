@@ -1,24 +1,18 @@
 // ============================================================
 // register.js
-// หน้าสมัครสมาชิก (user สมัครเอง)
+// หน้าสมัครสมาชิก
 //
-// การแก้ไขหลักจากเวอร์ชันเดิม:
-//  1. ตรวจสอบอีเมลซ้ำให้ถูกต้อง (Supabase v2+ ไม่ return error)
-//     → เช็คจาก user.identities.length === 0
-//     → เช็ค profiles table ก่อน signUp ด้วย (เร็วกว่า)
-//  2. ตรวจสอบ username ซ้ำก่อน signUp
-//  3. default role = "user", status = "Inactive"
-//     → admin ต้องเข้ามาเปิดใช้งาน + เปลี่ยน role ทีหลัง
+// ✨ การแก้ไข:
+//   - หลังสมัครเสร็จ → เก็บข้อมูล + password ใน sessionStorage
+//   - Redirect ไปหน้า /pages/auth/pending-approval.html
 // ============================================================
 
 
 // ============================================================
 // handleRegister()
-// ฟังก์ชันหลัก - สมัครสมาชิก
 // ============================================================
 async function handleRegister() {
 
-  // ── เก็บค่าจาก form ──────────────────────────────
   const email    = document.getElementById("reg-email").value.trim().toLowerCase();
   const username = document.getElementById("reg-username").value.trim();
   const password = document.getElementById("reg-password").value;
@@ -29,7 +23,6 @@ async function handleRegister() {
     return;
   }
 
-  // ── disable ปุ่ม ────────────────────────────────
   const btn = document.getElementById("registerBtn");
   btn.disabled = true;
   btn.classList.add("loading");
@@ -37,7 +30,7 @@ async function handleRegister() {
   try {
 
     // ══════════════════════════════════════════════
-    // STEP 1: ตรวจสอบ username ซ้ำในตาราง profiles
+    // STEP 1: เช็ค username ซ้ำ
     // ══════════════════════════════════════════════
     const { data: existingUsername } = await supabaseClient
       .from("profiles")
@@ -50,8 +43,7 @@ async function handleRegister() {
     }
 
     // ══════════════════════════════════════════════
-    // STEP 2: ตรวจสอบอีเมลซ้ำในตาราง profiles ก่อน
-    // (เร็วกว่า + ชัดเจนกว่าการรอผลจาก signUp)
+    // STEP 2: เช็คอีเมลซ้ำใน profiles
     // ══════════════════════════════════════════════
     const { data: existingEmail } = await supabaseClient
       .from("profiles")
@@ -67,7 +59,7 @@ async function handleRegister() {
     }
 
     // ══════════════════════════════════════════════
-    // STEP 3: Sign up กับ Supabase Auth
+    // STEP 3: Sign up
     // ══════════════════════════════════════════════
     const { data: authData, error: signUpError } =
       await supabaseClient.auth.signUp({
@@ -81,41 +73,41 @@ async function handleRegister() {
         },
       });
 
-    if (signUpError) throw signUpError;
-
-    // ══════════════════════════════════════════════
-    // STEP 4: ตรวจสอบ email ซ้ำแบบ "เงียบ"
-    //
-    // 🔑 สำคัญมาก: Supabase v2+ ไม่ return error ถ้า email ซ้ำ
-    //    แต่จะ return user.identities = [] (array ว่าง)
-    //    เพื่อป้องกัน email enumeration attack
-    //
-    // ถ้า identities ว่าง = อีเมลนี้ถูกใช้สมัครไปแล้ว
-    // ══════════════════════════════════════════════
-    const user = authData?.user;
-    const identitiesLength = user?.identities?.length ?? 0;
-
-    if (user && identitiesLength === 0) {
-      throw new Error(
-        "อีเมลนี้มีบัญชีอยู่แล้วในระบบ\n" +
-        "กรุณาเข้าสู่ระบบ หรือกด 'ลืมรหัสผ่าน' หากจำรหัสผ่านไม่ได้"
-      );
+    if (signUpError) {
+      if (
+        signUpError.message.includes("already registered") ||
+        signUpError.message.includes("already been registered") ||
+        signUpError.message.includes("User already registered")
+      ) {
+        throw new Error(
+          "อีเมลนี้มีบัญชีอยู่แล้วในระบบ\n" +
+          "กรุณาเข้าสู่ระบบ หรือกด 'ลืมรหัสผ่าน'"
+        );
+      }
+      throw signUpError;
     }
 
-    // ══════════════════════════════════════════════
-    // STEP 5: ถ้า Supabase เปิด email confirmation
-    // authData.user จะมี id แต่ session จะเป็น null
-    // ══════════════════════════════════════════════
+    const user   = authData?.user;
     const userId = user?.id;
 
     if (!userId) {
       throw new Error("ไม่สามารถสร้างบัญชีได้ กรุณาลองอีกครั้ง");
     }
 
+    // ── ตรวจ email ซ้ำแบบเงียบ (เมื่อมี session) ──
+    const hasSession       = authData?.session != null;
+    const identitiesLength = user?.identities?.length ?? 0;
+
+    if (hasSession && identitiesLength === 0) {
+      await supabaseClient.auth.signOut();
+      throw new Error(
+        "อีเมลนี้มีบัญชีอยู่แล้วในระบบ\n" +
+        "กรุณาเข้าสู่ระบบ หรือกด 'ลืมรหัสผ่าน'"
+      );
+    }
+
     // ══════════════════════════════════════════════
-    // STEP 6: Insert profile
-    // - role: "user" (default, ไม่มีสิทธิ์อะไร)
-    // - status: "Inactive" (รอ admin อนุมัติ)
+    // STEP 4: Insert profile
     // ══════════════════════════════════════════════
     const { error: profileError } = await supabaseClient
       .from("profiles")
@@ -124,46 +116,71 @@ async function handleRegister() {
         email:        email,
         username:     username,
         display_name: fullname,
-        role:         "user",      // ⚠️ default role = user
-        status:       "Inactive",  // ⚠️ รอ admin เปลี่ยนเป็น Active
+        role:         "user",
+        status:       "Inactive",
       });
 
     if (profileError) {
       console.error("Profile error:", profileError);
-      throw new Error("บันทึกข้อมูลไม่สำเร็จ: " + profileError.message);
+      await supabaseClient.auth.signOut().catch(() => {});
+
+      let friendlyMsg = profileError.message;
+      if (profileError.code === "23505") {
+        friendlyMsg = "Username หรืออีเมลนี้ถูกใช้แล้ว";
+      } else if (profileError.code === "42501") {
+        friendlyMsg = "ไม่มีสิทธิ์บันทึกข้อมูล (ตรวจสอบ RLS policy)";
+      }
+      throw new Error("บันทึกข้อมูลไม่สำเร็จ: " + friendlyMsg);
     }
 
     // ══════════════════════════════════════════════
-    // STEP 7: Sign out ทันที
-    // (เผื่อ Supabase auto-login — เราไม่ต้องการ
-    //  เพราะ user ยังไม่ถูกอนุมัติ)
+    // STEP 5: Sign out (ยังไม่ให้ login จนกว่า admin อนุมัติ)
     // ══════════════════════════════════════════════
-    await supabaseClient.auth.signOut();
+    await supabaseClient.auth.signOut().catch(() => {});
 
     // ══════════════════════════════════════════════
-    // STEP 8: แสดง overlay สำเร็จ + redirect
+    // ✨ STEP 6: เก็บข้อมูล user + password ลง sessionStorage
+    // เพื่อให้หน้า pending-approval ตรวจสอบสถานะและ auto-login ได้
+    //
+    // ⚠️ หมายเหตุ: เก็บ password ใน sessionStorage
+    //    - sessionStorage จะถูกลบเมื่อปิดแท็บ
+    //    - ใช้เฉพาะระหว่างหน้า register → pending-approval
+    //    - จะถูกลบทันทีหลัง auto-login หรือกลับหน้า login
     // ══════════════════════════════════════════════
-    showSuccessOverlay();
+    try {
+      sessionStorage.setItem("pending_user_info", JSON.stringify({
+        email:        email,
+        username:     username,
+        display_name: fullname,
+        password:     password,  // เก็บชั่วคราวสำหรับ auto-login
+      }));
+    } catch (e) {
+      console.warn("Cannot use sessionStorage:", e);
+    }
 
-    setTimeout(() => {
-      window.location.href = "/pages/auth/login.html";
-    }, 3500);
+    // ══════════════════════════════════════════════
+    // STEP 7: Redirect ไปหน้า pending-approval
+    // ══════════════════════════════════════════════
+    window.location.href = "/pages/auth/pending-approval.html";
 
   } catch (err) {
     console.error("Register error:", err);
 
     let msg = err.message || "เกิดข้อผิดพลาด";
 
-    // แปล error message จาก Supabase เป็นไทย
-    if (msg.includes("already registered") ||
-        msg.includes("User already registered") ||
-        msg.includes("email address is already")) {
+    if (
+      msg.includes("already registered") ||
+      msg.includes("User already registered") ||
+      msg.includes("email address is already")
+    ) {
       msg = "อีเมลนี้มีบัญชีอยู่แล้วในระบบ\n" +
             "กรุณาเข้าสู่ระบบ หรือกด 'ลืมรหัสผ่าน'";
     } else if (msg.includes("Password should be")) {
-      msg = "รหัสผ่านไม่ปลอดภัยเพียงพอ";
+      msg = "รหัสผ่านไม่ปลอดภัยเพียงพอ (ต้องมีอย่างน้อย 8 ตัว)";
     } else if (msg.includes("Invalid email")) {
       msg = "รูปแบบอีเมลไม่ถูกต้อง";
+    } else if (msg.includes("rate limit")) {
+      msg = "คุณสมัครบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่";
     }
 
     showError(msg);
@@ -175,38 +192,15 @@ async function handleRegister() {
 
 
 // ============================================================
-// showSuccessOverlay()
-// แสดง overlay หลังสมัครสำเร็จ + ข้อความรออนุมัติ
-// ============================================================
-function showSuccessOverlay() {
-
-  const overlay = document.getElementById("register-overlay");
-  if (!overlay) return;
-
-  // เปลี่ยนข้อความใน overlay ให้บอกว่ารออนุมัติ
-  const title = overlay.querySelector("h3");
-  const desc  = overlay.querySelector("p");
-
-  if (title) title.textContent = "สมัครสมาชิกสำเร็จ!";
-  if (desc)  desc.textContent  = "กรุณาแจ้งหัวหน้าของคุณเพื่อขออนุมัติการใช้งาน";
-
-  overlay.classList.add("show");
-}
-
-
-// ============================================================
 // showError()
-// แสดง toast error
 // ============================================================
 function showError(msg) {
 
-  // ลบ toast เก่า
   document.querySelectorAll(".toast-error").forEach(e => e.remove());
 
   const toast = document.createElement("div");
   toast.className = "toast-error";
 
-  // รองรับ multi-line (split ด้วย \n)
   const lines = msg.split("\n").map(l => `<div>${l}</div>`).join("");
   toast.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><div>${lines}</div>`;
 

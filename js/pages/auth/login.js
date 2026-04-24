@@ -1,4 +1,13 @@
 // ===============================
+// login.js
+//
+// ✨ การแก้ไข:
+//   - ถ้า user Inactive พยายาม login
+//     → เก็บข้อมูลลง sessionStorage + redirect ไป pending-approval
+// ===============================
+
+
+// ===============================
 // Helper: แสดง overlay ก่อน redirect
 // ===============================
 function showLoginOverlay(redirectUrl) {
@@ -6,7 +15,6 @@ function showLoginOverlay(redirectUrl) {
   if (overlay) {
     overlay.classList.add("show");
   }
-  // หน่วงเล็กน้อยให้ animation เสร็จก่อน redirect
   setTimeout(() => {
     window.location.href = redirectUrl;
   }, 900);
@@ -35,7 +43,7 @@ async function redirectIfLoggedIn() {
       return;
     }
 
-    // Redirect ตาม Role (ไม่แสดง overlay เพราะ user ไม่ได้กด login)
+    // Redirect ตาม Role
     if (profile.role === "admin") {
       window.location.href = "/pages/dashboard/adminDashboard.html";
     } else if (profile.role === "adminQc") {
@@ -54,22 +62,25 @@ async function redirectIfLoggedIn() {
 
 redirectIfLoggedIn();
 
+
 // ===============================
 // DOM Ready
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
-  const emailInput = document.getElementById("email");
+
+  const loginForm     = document.getElementById("loginForm");
+  const emailInput    = document.getElementById("email");
   const passwordInput = document.getElementById("password");
-  const loginBtn = document.getElementById("loginBtn");
+  const loginBtn      = document.getElementById("loginBtn");
 
   if (!loginForm) return;
+
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const identifier = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    const password   = passwordInput.value.trim();
 
     if (!identifier || !password) {
       alert("กรุณากรอก Username/Email และรหัสผ่าน");
@@ -82,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       let emailToUse = identifier;
 
-      // ถ้าไม่มี @ ให้ถือว่าเป็น username → ไปหา email จาก profiles
+      // ถ้าไม่มี @ → ถือว่าเป็น username
       if (!identifier.includes("@")) {
         const { data: userData, error } = await supabaseClient
           .from("profiles")
@@ -97,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         emailToUse = userData.email;
       }
 
-      // Login กับ Supabase Auth
+      // ── Login กับ Supabase Auth ──
       const { data: authData, error: loginError } =
         await supabaseClient.auth.signInWithPassword({
           email: emailToUse,
@@ -106,10 +117,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (loginError) throw loginError;
 
-      // เช็ค role + status จาก profiles
+      // ── เช็ค role + status จาก profiles ──
       const { data: profile, error: roleError } = await supabaseClient
         .from("profiles")
-        .select("role, status")
+        .select("role, status, username, display_name, email")
         .eq("id", authData.user.id)
         .single();
 
@@ -118,24 +129,60 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // ══════════════════════════════════════════════
-      // 🔥 แยก error message ตาม status
-      // - Inactive  = ยังไม่ได้รับการอนุมัติ (สมัครใหม่)
-      // - Suspended = ถูกระงับ
+      // ✨ ถ้า Inactive → redirect ไปหน้า pending-approval
       // ══════════════════════════════════════════════
       if (profile.status !== "Active") {
+
         await supabaseClient.auth.signOut();
 
         if (profile.status === "Inactive") {
-          throw new Error(
-            "บัญชีของคุณยังไม่ได้รับการอนุมัติ\n" +
-            "กรุณาแจ้งหัวหน้าของคุณเพื่อขออนุมัติการใช้งาน"
-          );
+          // ── เก็บข้อมูลลง sessionStorage ──
+          try {
+            sessionStorage.setItem("pending_user_info", JSON.stringify({
+              email:        profile.email || emailToUse,
+              username:     profile.username,
+              display_name: profile.display_name,
+              password:     password,  // เก็บชั่วคราวสำหรับ auto-login
+            }));
+          } catch (e) {
+            console.warn("Cannot use sessionStorage:", e);
+          }
+
+          // ── redirect ไปหน้ารออนุมัติ ──
+          window.location.href = "/pages/auth/pending-approval.html";
+          return;
+
         } else {
           throw new Error("บัญชีของคุณถูกระงับการใช้งาน");
         }
       }
 
-      // 🔥 แสดง overlay ก่อน redirect ตาม Role
+      // ══════════════════════════════════════════════
+      // ✨ ถ้า Active แต่ role = "user" (admin ยังไม่กำหนด role)
+      //     → ไปหน้า pending-approval เช่นกัน
+      // ══════════════════════════════════════════════
+      if (profile.role === "user") {
+
+        await supabaseClient.auth.signOut();
+
+        try {
+          sessionStorage.setItem("pending_user_info", JSON.stringify({
+            email:        profile.email || emailToUse,
+            username:     profile.username,
+            display_name: profile.display_name,
+            password:     password,
+          }));
+        } catch (e) {
+          console.warn("Cannot use sessionStorage:", e);
+        }
+
+        window.location.href = "/pages/auth/pending-approval.html";
+        return;
+      }
+
+      // ══════════════════════════════════════════════
+      // Active + มี role → redirect ตาม role
+      // ══════════════════════════════════════════════
       if (profile.role === "admin") {
         showLoginOverlay("/pages/dashboard/adminDashboard.html");
       } else if (profile.role === "adminQc") {
@@ -147,13 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (profile.role === "executive") {
         showLoginOverlay("/pages/executive/executiveHome.html");
       } else {
-        // role = "user" (default หลังสมัคร แต่ status ต้อง Active ก่อน)
-        // ถ้าเข้ามาถึงจุดนี้แปลว่า admin เปิด Active แต่ยังไม่ได้ตั้ง role
         await supabaseClient.auth.signOut();
-        throw new Error(
-          "บัญชีของคุณยังไม่ได้กำหนดสิทธิ์การใช้งาน\n" +
-          "กรุณาแจ้งหัวหน้าของคุณ"
-        );
+        throw new Error("คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้");
       }
 
     } catch (err) {
@@ -168,6 +210,5 @@ document.addEventListener("DOMContentLoaded", () => {
       loginBtn.disabled = false;
       loginBtn.classList.remove("loading");
     }
-    // ❌ ไม่มี finally — ถ้า login สำเร็จ ให้ overlay ค้างอยู่จนกว่าจะ redirect
   });
 });
