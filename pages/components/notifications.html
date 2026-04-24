@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notification - EABaseHub</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600" rel="stylesheet"/>
+
+  <!-- Kanit font -->
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="/css/base/layout.css"/>
+  <link rel="stylesheet" href="/css/components/notifications.css"/>
+</head>
+<body>
+
+  <!-- =====================================================
+       HEADER SECTION (ส่วนหัวเว็บไซต์)
+       แสดงโลโก้และชื่อผู้ใช้งาน
+       ===================================================== -->
+     <header class="app-header">
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <h2>EABaseHub</h2>
+    </div>
+
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+      <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  
+  <main class="notif-container">
+    <div class="notif-header">
+      <h2>
+        🔔 แจ้งเตือน
+        <span id="unreadBadge" class="notif-badge" style="display:none;">0</span>
+      </h2>
+      <div class="notif-actions">
+        <button id="markAllBtn" class="notif-btn">อ่านทั้งหมด</button>
+        <button id="refreshBtn" class="notif-btn">รีเฟรช</button>
+        <button id="backBtn" class="notif-btn">กลับ</button>
+      </div>
+    </div>
+
+    <div id="notificationList">
+      <div class="notif-loading">กำลังโหลด...</div>
+    </div>
+  </main>
+
+  <!-- EXTERNAL SCRIPTS (โหลดตามลำดับ) -->
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/services/notifications.js"></script>
+  <script src="/js/core/splash.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+
+</body>
+</html>

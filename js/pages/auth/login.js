@@ -1,4 +1,13 @@
 // ===============================
+// login.js
+//
+// ✨ การแก้ไข:
+//   - ถ้า user Inactive พยายาม login
+//     → เก็บข้อมูลลง sessionStorage + redirect ไป pending-approval
+// ===============================
+
+
+// ===============================
 // Helper: แสดง overlay ก่อน redirect
 // ===============================
 function showLoginOverlay(redirectUrl) {
@@ -6,7 +15,6 @@ function showLoginOverlay(redirectUrl) {
   if (overlay) {
     overlay.classList.add("show");
   }
-  // หน่วงเล็กน้อยให้ animation เสร็จก่อน redirect
   setTimeout(() => {
     window.location.href = redirectUrl;
   }, 900);
@@ -35,9 +43,9 @@ async function redirectIfLoggedIn() {
       return;
     }
 
-    // Redirect ตาม Role (ไม่แสดง overlay เพราะ user ไม่ได้กด login)
+    // Redirect ตาม Role
     if (profile.role === "admin") {
-      window.location.href = "/pages/admin/adminDashboard.html";
+      window.location.href = "/pages/dashboard/adminDashboard.html";
     } else if (profile.role === "adminQc") {
       window.location.href = "/pages/dashboard/QcDashboard.html";
     } else if (profile.role === "sales") {
@@ -45,7 +53,7 @@ async function redirectIfLoggedIn() {
     } else if (profile.role === "manager") {
       window.location.href = "/index.html";
     } else if (profile.role === "executive") {
-      window.location.href = "/pages/dashboard/executiveDashboard.html";
+      window.location.href = "/pages/executive/executiveHome.html";
     }
   } catch (error) {
     console.error("Error checking session:", error);
@@ -54,22 +62,25 @@ async function redirectIfLoggedIn() {
 
 redirectIfLoggedIn();
 
+
 // ===============================
 // DOM Ready
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
-  const emailInput = document.getElementById("email");
+
+  const loginForm     = document.getElementById("loginForm");
+  const emailInput    = document.getElementById("email");
   const passwordInput = document.getElementById("password");
-  const loginBtn = document.getElementById("loginBtn");
+  const loginBtn      = document.getElementById("loginBtn");
 
   if (!loginForm) return;
+
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const identifier = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    const password   = passwordInput.value.trim();
 
     if (!identifier || !password) {
       alert("กรุณากรอก Username/Email และรหัสผ่าน");
@@ -82,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       let emailToUse = identifier;
 
+      // ถ้าไม่มี @ → ถือว่าเป็น username
       if (!identifier.includes("@")) {
         const { data: userData, error } = await supabaseClient
           .from("profiles")
@@ -96,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         emailToUse = userData.email;
       }
 
+      // ── Login กับ Supabase Auth ──
       const { data: authData, error: loginError } =
         await supabaseClient.auth.signInWithPassword({
           email: emailToUse,
@@ -104,9 +117,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (loginError) throw loginError;
 
+      // ── เช็ค role + status จาก profiles ──
       const { data: profile, error: roleError } = await supabaseClient
         .from("profiles")
-        .select("role, status")
+        .select("role, status, username, display_name, email")
         .eq("id", authData.user.id)
         .single();
 
@@ -114,14 +128,63 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("ไม่สามารถตรวจสอบสิทธิ์ได้");
       }
 
+      // ══════════════════════════════════════════════
+      // ✨ ถ้า Inactive → redirect ไปหน้า pending-approval
+      // ══════════════════════════════════════════════
       if (profile.status !== "Active") {
+
         await supabaseClient.auth.signOut();
-        throw new Error("บัญชีของคุณถูกระงับ");
+
+        if (profile.status === "Inactive") {
+          // ── เก็บข้อมูลลง sessionStorage ──
+          try {
+            sessionStorage.setItem("pending_user_info", JSON.stringify({
+              email:        profile.email || emailToUse,
+              username:     profile.username,
+              display_name: profile.display_name,
+              password:     password,  // เก็บชั่วคราวสำหรับ auto-login
+            }));
+          } catch (e) {
+            console.warn("Cannot use sessionStorage:", e);
+          }
+
+          // ── redirect ไปหน้ารออนุมัติ ──
+          window.location.href = "/pages/auth/pending-approval.html";
+          return;
+
+        } else {
+          throw new Error("บัญชีของคุณถูกระงับการใช้งาน");
+        }
       }
 
-      // 🔥 แสดง overlay ก่อน redirect ตาม Role
+      // ══════════════════════════════════════════════
+      // ✨ ถ้า Active แต่ role = "user" (admin ยังไม่กำหนด role)
+      //     → ไปหน้า pending-approval เช่นกัน
+      // ══════════════════════════════════════════════
+      if (profile.role === "user") {
+
+        await supabaseClient.auth.signOut();
+
+        try {
+          sessionStorage.setItem("pending_user_info", JSON.stringify({
+            email:        profile.email || emailToUse,
+            username:     profile.username,
+            display_name: profile.display_name,
+            password:     password,
+          }));
+        } catch (e) {
+          console.warn("Cannot use sessionStorage:", e);
+        }
+
+        window.location.href = "/pages/auth/pending-approval.html";
+        return;
+      }
+
+      // ══════════════════════════════════════════════
+      // Active + มี role → redirect ตาม role
+      // ══════════════════════════════════════════════
       if (profile.role === "admin") {
-        showLoginOverlay("/pages/admin/adminDashboard.html");
+        showLoginOverlay("/pages/dashboard/adminDashboard.html");
       } else if (profile.role === "adminQc") {
         showLoginOverlay("/pages/dashboard/QcDashboard.html");
       } else if (profile.role === "sales") {
@@ -129,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (profile.role === "manager") {
         showLoginOverlay("/index.html");
       } else if (profile.role === "executive") {
-        showLoginOverlay("/pages/dashboard/executiveDashboard.html");
+        showLoginOverlay("/pages/executive/executiveHome.html");
       } else {
         await supabaseClient.auth.signOut();
         throw new Error("คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้");
@@ -139,14 +202,13 @@ document.addEventListener("DOMContentLoaded", () => {
       let errorMessage = err.message;
 
       if (err.message.includes("Invalid login credentials")) {
-        errorMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+        errorMessage = "Username/Email หรือรหัสผ่านไม่ถูกต้อง";
       }
 
-      alert("เข้าสู่ระบบไม่สำเร็จ: " + errorMessage);
+      alert("เข้าสู่ระบบไม่สำเร็จ\n\n" + errorMessage);
 
       loginBtn.disabled = false;
       loginBtn.classList.remove("loading");
     }
-    // ❌ ไม่มี finally — ถ้า login สำเร็จ ให้ overlay ค้างอยู่จนกว่าจะ redirect
   });
 });

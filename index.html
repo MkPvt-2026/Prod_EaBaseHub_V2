@@ -2,7 +2,7 @@
 <html lang="th">
   <head>
     <!-- =========================
-         BASIC META - การตั้งค่าพื้นฐาน
+         BASIC META
          ========================= -->
     <meta charset="UTF-8" />
     <meta
@@ -12,14 +12,9 @@
     <meta name="theme-color" content="#4caf8a" />
     <meta name="description" content="EABaseHub - ระบบจัดการรายงานและร้านค้า" />
     <title>Home - EABaseHub</title>
-    <!-- =========================
-         SUPABASE - โหลดก่อน script อื่นๆ
-         ========================= -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- =========================
-         FONTS - ฟอนต์และไอคอน
-         ========================= -->
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
       rel="stylesheet"
@@ -29,9 +24,6 @@
       rel="stylesheet"
     />
 
-    <!-- =========================
-         PWA CONFIG
-         ========================= -->
     <link rel="manifest" href="/manifest.json" />
     <link
       rel="icon"
@@ -40,23 +32,16 @@
       href="/assets/icons/icon-192.png"
     />
 
-    <!-- =========================
-         CSS STYLES
-         ========================= -->
     <link rel="stylesheet" href="/css/index.css" />
     <link rel="stylesheet" href="/css/components/Announcements.css" />
   </head>
 
   <body>
-    <!-- =========================
-         LAYOUT CONTAINER
-         ========================= -->
     <div class="layout">
       <!-- =========================
-           SIDEBAR - แถบเมนูด้านซ้าย
+           SIDEBAR
            ========================= -->
       <aside class="sidebar" id="sidebar">
-        <!-- Hamburger Button สำหรับมือถือ -->
         <button
           class="hamburger"
           id="hamburgerBtn"
@@ -66,7 +51,6 @@
           <span class="material-symbols-outlined">menu</span>
         </button>
 
-        <!-- โลโก้และชื่อแอป -->
         <div class="logo">
           <div class="logo-circle">
             <img src="/assets/icons/icon-192.png" alt="EABaseHub Logo" />
@@ -74,39 +58,31 @@
           <div class="brand">EABaseHub</div>
         </div>
 
-        <!-- =========================
-             MENU - รายการเมนูนำทาง
-             ========================= -->
         <nav class="menu" id="sidebarMenu">
           <a class="menu-item active" href="/pages/index.html">
             <span class="material-symbols-outlined menu-icon">home</span>
             <span class="menu-text">หน้าแรก</span>
           </a>
-
           <a class="menu-item" href="/pages/reports/report.html">
             <span class="material-symbols-outlined menu-icon"
               >edit_document</span
             >
             <span class="menu-text">เขียนรายงาน</span>
           </a>
-
           <a class="menu-item" href="/pages/forms/formClaim.html">
             <span class="material-symbols-outlined menu-icon"
               >assignment_late</span
             >
             <span class="menu-text">แจ้งเคลมสินค้า</span>
           </a>
-
           <a class="menu-item" href="/pages/forms/formHub.html">
             <span class="material-symbols-outlined menu-icon">description</span>
             <span class="menu-text">แบบฟอร์มต่างๆ</span>
           </a>
-
           <a class="menu-item" href="/pages/forms/shopUser.html">
             <span class="material-symbols-outlined menu-icon">store</span>
             <span class="menu-text">ร้านค้าของฉัน</span>
           </a>
-
           <a class="menu-item" href="/commingSoon.html">
             <span class="material-symbols-outlined menu-icon"
               >linked_services</span
@@ -115,13 +91,12 @@
           </a>
         </nav>
 
-        <!-- ปุ่ม Toggle Sidebar (สำหรับ Desktop) -->
         <button
           class="toggle-btn"
           onclick="toggleSidebar()"
           aria-label="ย่อ/ขยายเมนู"
         >
-          <span class="material-symbols-outlined">menu</span>
+          <span class="material-symbols-outlined icon-white">menu</span>
         </button>
       </aside>
 
@@ -130,13 +105,8 @@
            ========================= -->
       <main class="content">
         <div class="content-layout">
-          <!-- =========================
-               MAIN CONTENT COLUMN
-               ========================= -->
           <div class="main-content">
-            <!-- =========================
-                 HEADER - ส่วนหัว
-                 ========================= -->
+            <!-- HEADER -->
             <header class="header">
               <div class="header-left">
                 <h2>สวัสดี : <span id="userName">กำลังโหลด...</span></h2>
@@ -149,17 +119,13 @@
                     class="material-symbols-outlined"
                     style="font-size: 16px; vertical-align: middle"
                     >logout</span
-                  >
-                  ออกจากระบบ
+                  >ออกจากระบบ
                 </button>
               </div>
             </header>
 
-            <!-- =========================
-                 MINI CARDS - การ์ดสรุปข้อมูลแบบย่อ
-                 ========================= -->
+            <!-- MINI CARDS -->
             <div class="shop-cards">
-              <!-- Card 1: ร้านที่รับผิดชอบ -->
               <a
                 href="/pages/forms/shopUser.html"
                 class="mini-card shop"
@@ -174,7 +140,6 @@
                 </div>
               </a>
 
-              <!-- Card 2: พื้นที่ -->
               <div class="mini-card trip">
                 <div class="icon-box">
                   <span class="material-symbols-outlined">map</span>
@@ -185,8 +150,11 @@
                 </div>
               </div>
 
-              <!-- Card 3: แจ้งเตือน -->
-              <div class="mini-card claim" style="position: relative;">
+              <div
+                class="mini-card claim"
+                onclick="goToNotifications()"
+                style="cursor: pointer"
+              >
                 <div class="icon-box">
                   <span class="material-symbols-outlined">crisis_alert</span>
                 </div>
@@ -194,14 +162,11 @@
                   <h3 id="notificationCount">0</h3>
                   <p>แจ้งเตือน</p>
                 </div>
-                <!-- 🔴 Badge -->
                 <span id="notifyBadge" class="notify-badge">0</span>
               </div>
             </div>
 
-            <!-- =========================
-                 ACTION CARDS - การ์ดปุ่มกระทำหลัก
-                 ========================= -->
+            <!-- ACTION CARDS -->
             <div class="actions">
               <a
                 href="/pages/reports/report.html"
@@ -211,7 +176,6 @@
                 <h3>เขียนรายงาน</h3>
                 <p>บันทึกการเยี่ยมร้านลูกค้า</p>
               </a>
-
               <a
                 href="/pages/forms/formHub.html"
                 class="action-card theme-yellow"
@@ -220,7 +184,6 @@
                 <h3>Forms Hub</h3>
                 <p>แบบฟอร์มเบิกค่าใช้จ่าย</p>
               </a>
-
               <a
                 href="/pages/forms/formClaim.html"
                 class="action-card theme-pink"
@@ -231,9 +194,7 @@
               </a>
             </div>
 
-            <!-- =========================
-                 ประชาสัมพันธ์
-                 ========================= -->
+            <!-- ประชาสัมพันธ์ -->
             <section class="announce-section" id="announceSection">
               <div class="announce-header">
                 <div class="announce-header-left">
@@ -247,7 +208,6 @@
                   >
                 </div>
                 <div class="announce-header-right">
-                  <!-- <a href="/commingSoon.html" class="announce-view-all">ดูทั้งหมด →</a> -->
                   <button
                     class="announce-btn-add"
                     id="announceBtnAdd"
@@ -259,21 +219,15 @@
                   </button>
                 </div>
               </div>
-              <div class="announce-list" id="announceList">
-                <!-- Cards render โดย JS -->
-              </div>
+              <div class="announce-list" id="announceList"></div>
             </section>
           </div>
           <!-- /.main-content -->
 
-          <!-- =========================
-               RIGHT COLUMN - คอลัมน์ด้านขวา
-               ========================= -->
+          <!-- RIGHT COLUMN -->
           <div class="right-column">
             <aside class="right-panel">
-              <!-- =========================
-                   PROFILE CARD
-                   ========================= -->
+              <!-- PROFILE CARD -->
               <div class="user-card">
                 <div class="avatar-wrapper">
                   <img
@@ -281,12 +235,9 @@
                     src="/assets/img/default-avatar.jpg"
                     alt="Profile"
                   />
-
-                  <!-- ไอคอนกล้อง -->
                   <div class="avatar-edit-icon">
                     <span class="material-symbols-outlined">photo_camera</span>
                   </div>
-
                   <input
                     type="file"
                     id="uploadAvatar"
@@ -294,7 +245,6 @@
                     accept="image/*"
                   />
                 </div>
-
                 <div class="user-info">
                   <h4 id="displayName">Loading...</h4>
                   <p id="userEmail">email@example.com</p>
@@ -302,7 +252,6 @@
                 </div>
               </div>
 
-              <!-- ปุ่มสำหรับ Manager - ย้ายมาอยู่ใต้ Profile Card -->
               <button
                 id="managerDashboardBtn"
                 class="btn-ea"
@@ -314,7 +263,6 @@
                 <span class="spinner"></span>
               </button>
 
-              <!-- ปุ่มสำหรับ Admin เท่านั้น -->
               <button
                 id="adminDashboardBtn"
                 class="btn-ea btn-secondary"
@@ -328,9 +276,7 @@
                 <span class="spinner"></span>
               </button>
 
-              <!-- =========================
-                   CALENDAR CARD
-                   ========================= -->
+              <!-- CALENDAR CARD -->
               <div class="calendar-card">
                 <div class="calendar-header">
                   <h4 id="calendarTitle">กำลังโหลด...</h4>
@@ -354,9 +300,7 @@
                 <div class="calendar-grid" id="calendarGrid"></div>
               </div>
 
-              <!-- =========================
-                   OPEN SHOP CARD
-                   ========================= -->
+              <!-- OPEN SHOP CARD -->
               <div class="open-shop-card" onclick="openShopModal()">
                 <div class="open-shop-icon">
                   <span
@@ -376,9 +320,7 @@
       </main>
     </div>
 
-    <!-- =========================
-         LOADING OVERLAY
-         ========================= -->
+    <!-- LOADING OVERLAY -->
     <div
       id="loadingOverlay"
       style="
@@ -423,144 +365,54 @@
 
     <!-- =========================
          JAVASCRIPT
+         ✅ ลบ prevMonth / nextMonth / renderCalendar / toggleMenu / toggleSidebar
+            ออกจาก inline script เพื่อไม่ให้ทับ home.js
          ========================= -->
     <script>
-      // ===========================
-      // SERVICE WORKER REGISTRATION
-      // ===========================
+      // SERVICE WORKER
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
             .register("/sw.js")
-            .then((registration) => {
-              console.log("✅ Service Worker registered:", registration.scope);
-            })
-            .catch((error) => {
-              console.error("❌ SW registration failed:", error);
-            });
+            .then((reg) => console.log("✅ SW registered:", reg.scope))
+            .catch((err) => console.error("❌ SW failed:", err));
         });
       }
 
-      // ===========================
-      // TOGGLE MENU (Mobile)
-      // ===========================
-      function toggleMenu() {
-        const menu = document.getElementById("sidebarMenu");
-        const hamburger = document.getElementById("hamburgerBtn");
+      // SIDEBAR STATE - ย่อเสมอทุกครั้งที่โหลดหน้า
+      window.addEventListener("load", () => {
+        document.getElementById("sidebar")?.classList.add("collapsed");
+      });
 
-        if (menu.classList.contains("show")) {
-          menu.classList.remove("show");
-          hamburger.setAttribute("aria-expanded", "false");
-        } else {
-          menu.classList.add("show");
-          hamburger.setAttribute("aria-expanded", "true");
-        }
-      }
-
+      // CLOSE MENU ON OUTSIDE CLICK (Mobile)
       document.addEventListener("click", (e) => {
         const sidebar = document.getElementById("sidebar");
         const menu = document.getElementById("sidebarMenu");
         const hamburger = document.getElementById("hamburgerBtn");
 
-        if (window.innerWidth <= 767 && menu.classList.contains("show")) {
+        if (window.innerWidth <= 767 && menu?.classList.contains("show")) {
           if (!sidebar.contains(e.target)) {
             menu.classList.remove("show");
-            hamburger.setAttribute("aria-expanded", "false");
+            hamburger?.setAttribute("aria-expanded", "false");
           }
         }
       });
 
-      // ===========================
-      // TOGGLE SIDEBAR (Desktop)
-      // ===========================
-      function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        sidebar.classList.toggle("collapsed");
-        const isCollapsed = sidebar.classList.contains("collapsed");
-        localStorage.setItem("sidebarCollapsed", isCollapsed);
-      }
-
-      window.addEventListener("load", () => {
-        const isCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
-        if (isCollapsed) {
-          document.getElementById("sidebar").classList.add("collapsed");
-        }
-      });
-
-      // ===========================
       // OPEN SHOP MODAL
-      // ===========================
       function openShopModal() {
         alert("🏪 ฟีเจอร์เปิดร้านค้าใหม่กำลังพัฒนา");
       }
 
-      // ===========================
-      // LOGOUT
-      // ===========================
-      async function logout() {
-        if (confirm("ต้องการออกจากระบบหรือไม่?")) {
-          try {
-            if (typeof supabaseClient !== "undefined") {
-              await supabaseClient.auth.signOut();
-            }
-            localStorage.clear();
-            window.location.href = "login.html";
-          } catch (error) {
-            console.error("Logout error:", error);
-            window.location.href = "login.html";
-          }
-        }
-      }
-
-      // ===========================
-      // CALENDAR NAVIGATION
-      // ===========================
-      let currentCalendarMonth = new Date().getMonth();
-      let currentCalendarYear = new Date().getFullYear();
-
-      function prevMonth() {
-        currentCalendarMonth--;
-        if (currentCalendarMonth < 0) {
-          currentCalendarMonth = 11;
-          currentCalendarYear--;
-        }
-        renderCalendar();
-      }
-
-      function nextMonth() {
-        currentCalendarMonth++;
-        if (currentCalendarMonth > 11) {
-          currentCalendarMonth = 0;
-          currentCalendarYear++;
-        }
-        renderCalendar();
-      }
-
-      function renderCalendar() {
-        console.log(
-          "Rendering calendar for:",
-          currentCalendarMonth,
-          currentCalendarYear,
-        );
-      }
-
-      // ===========================
-      // GO TO ADMIN (Admin Only)
-      // ===========================
+      // NAVIGATION (ใช้โดย home.js)
       function goToAdmin() {
-        window.location.href = "/pages/admin/adminDashboard.html";
+        window.location.href = "/pages/dashboard/adminDashboard.html";
       }
 
-      // ===========================
-      // GO TO MANAGER DASHBOARD
-      // ===========================
       function goToManagerDashboard() {
         window.location.href = "/pages/dashboard/managerDashboard.html";
       }
 
-      // ===========================
-      // LOADING OVERLAY HELPER
-      // ===========================
+      // LOADING OVERLAY
       function showLoading() {
         const overlay = document.getElementById("loadingOverlay");
         if (overlay) overlay.style.display = "flex";
@@ -571,30 +423,25 @@
         if (overlay) overlay.style.display = "none";
       }
 
-      // ===========================
       // ERROR HANDLING
-      // ===========================
       window.addEventListener("error", (e) => {
         console.error("Global error:", e.error);
         hideLoading();
       });
 
       window.addEventListener("unhandledrejection", (e) => {
-        console.error("Unhandled promise rejection:", e.reason);
+        console.error("Unhandled rejection:", e.reason);
         hideLoading();
       });
     </script>
 
-    <!-- =========================
-         EXTERNAL SCRIPTS - โหลดตามลำดับ
-         ========================= -->
+    <!-- EXTERNAL SCRIPTS (โหลดตามลำดับ) -->
     <script src="/js/core/supabaseClient.js"></script>
     <script src="/js/core/userService.js"></script>
     <script src="/js/core/roleConfig.js"></script>
     <script src="/js/core/auth.js"></script>
     <script src="/js/pages/admin/Announcements.js"></script>
     <script src="/js/index.js"></script>
-
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
   </body>

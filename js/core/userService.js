@@ -19,7 +19,7 @@ window.currentUser = {
   email: null,
   full_name: null,
   display_name: null,
-  area: null,
+  area: null, 
   position: null,
   department: null,
   phone: null,

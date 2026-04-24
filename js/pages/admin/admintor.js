@@ -2,52 +2,39 @@
 // admintor.js
 // หน้า Admin สำหรับจัดการผู้ใช้งาน
 //
-// หน้าที่หลักของไฟล์นี้
-// - โหลดข้อมูลผู้ใช้จาก Supabase
-// - แสดงตารางผู้ใช้ (ผ่าน renderUsers.js + template)
-// - filter / search
-// - แก้ไขผู้ใช้
-// - เปลี่ยนสถานะ Active / Inactive
-// - ลบผู้ใช้
+// ✨ เพิ่มใหม่จากเวอร์ชันเดิม:
+//  - แสดง badge "รออนุมัติ" ที่ stat-chip Inactive
+//  - ปุ่ม quick approve สำหรับ Inactive users
+//  - Notification banner ด้านบนถ้ามี user ใหม่
 // ============================================================
 
 
 
 // ============================================================
 // GLOBAL VARIABLES
-// ตัวแปรที่ใช้ทั้งไฟล์
 // ============================================================
 
-// เก็บข้อมูล user ทั้งหมดที่โหลดจาก database
 let allUsersData = [];
-
-// เก็บ id ของ user ที่กำลังจะลบ
 let deleteTargetId = null;
 
 
 
 // ============================================================
 // protectAdmin()
-// ตรวจสอบสิทธิ์ว่า user ที่เข้าหน้านี้เป็น admin หรือไม่
 // ============================================================
 
 async function protectAdmin() {
 
-  // เรียก function จาก auth.js
-  // ตรวจสอบ role ของ user
   await protectPage(["admin"]);
 
-  // init service สำหรับ user
   if (typeof initUserService === "function")
     await initUserService();
 
-  // ปุ่ม logout
   const logoutBtn = document.getElementById("logoutBtn");
 
   if (logoutBtn)
     logoutBtn.addEventListener("click", logout);
 
-  // แสดงชื่อ user ใน header
   if (window.currentUser) {
 
     const nameEl = document.getElementById("userName");
@@ -65,28 +52,22 @@ async function protectAdmin() {
 
 // ============================================================
 // goHome()
-// ปุ่มกลับหน้าหลัก
-// ✅ แก้ไข: เปลี่ยนจาก admintor.html → index.html
 // ============================================================
 
 function goHome() {
-
   window.location.href = "/pages/admin/adminDashboard.html";
-
 }
 
 
 
 // ============================================================
 // loadUsers()
-// โหลดข้อมูลผู้ใช้จาก Supabase
 // ============================================================
 
 async function loadUsers() {
 
   const tbody = document.getElementById("userTable");
 
-  // แสดง loading state
   tbody.innerHTML =
   `<tr>
      <td colspan="6" class="state-cell">
@@ -95,7 +76,6 @@ async function loadUsers() {
    </tr>`;
 
 
-  // query ตาราง profiles
   const { data, error } = await supabaseClient
     .from("profiles")
     .select(
@@ -104,7 +84,6 @@ async function loadUsers() {
     .order("created_at", { ascending: false });
 
 
-  // ถ้าเกิด error
   if (error) {
 
     console.error("loadUsers error:", error);
@@ -120,41 +99,134 @@ async function loadUsers() {
   }
 
 
-  // เก็บข้อมูลไว้ใน global
   allUsersData = data || [];
 
-  // อัปเดต stat chips
   updateStats(allUsersData);
 
-  // render ตาราง (ใช้ renderUsers.js + template)
-  renderUsers(allUsersData);
+  // ✨ แสดง notification banner ถ้ามี user ใหม่รออนุมัติ
+  showPendingNotification(allUsersData);
 
+  renderUsers(allUsersData);
+}
+
+
+
+// ============================================================
+// ✨ showPendingNotification()
+// แสดง banner ด้านบนตารางถ้ามี user ใหม่รออนุมัติ
+// ============================================================
+
+function showPendingNotification(data) {
+
+  // นับ user ที่สมัครใหม่ (Inactive + role=user)
+  const pendingUsers = data.filter(u =>
+    u.status === "Inactive" && u.role === "user"
+  );
+
+  // ลบ banner เก่า (ถ้ามี)
+  const oldBanner = document.getElementById("pendingBanner");
+  if (oldBanner) oldBanner.remove();
+
+  // ถ้าไม่มี user รออนุมัติ → ไม่ต้องแสดง
+  if (pendingUsers.length === 0) return;
+
+  // สร้าง banner
+  const banner = document.createElement("div");
+  banner.id = "pendingBanner";
+  banner.style.cssText = `
+    margin: 0 0 16px 0;
+    padding: 14px 18px;
+    background: linear-gradient(90deg, #fff5e6 0%, #fff9ef 100%);
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    color: #78350f;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);
+  `;
+
+  banner.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 22px;">
+        notifications_active
+      </span>
+      <div>
+        <strong>มีผู้ใช้สมัครใหม่ ${pendingUsers.length} คน</strong>
+        รอการอนุมัติและกำหนดสิทธิ์
+      </div>
+    </div>
+    <button
+      onclick="filterPendingOnly()"
+      style="
+        background: #f59e0b;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 500;
+      "
+    >
+      ดูทั้งหมด →
+    </button>
+  `;
+
+  // ใส่ banner ก่อนตาราง
+  const toolbar = document.querySelector(".toolbar-row");
+  if (toolbar && toolbar.parentNode) {
+    toolbar.parentNode.insertBefore(banner, toolbar);
+  }
+}
+
+
+
+// ============================================================
+// ✨ filterPendingOnly()
+// กรองแสดงเฉพาะ user ที่รออนุมัติ (เรียกจากปุ่ม banner)
+// ============================================================
+
+function filterPendingOnly() {
+
+  document.getElementById("searchUser").value = "";
+  document.getElementById("filterRole").value = "user";
+  document.getElementById("filterStatus").value = "Inactive";
+
+  filterUsers();
+
+  // scroll ไปที่ตาราง
+  document.querySelector(".table-wrap")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
 
 
 // ============================================================
 // updateStats()
-// อัปเดตตัวเลขใน stats bar
 // ============================================================
 
 function updateStats(data) {
 
-  document.getElementById("countAll").textContent
-    = data.length;
+  document.getElementById("countAll").textContent = data.length;
 
   document.getElementById("countAdmin").textContent
     = data.filter(u => u.role === "admin").length;
 
-    document.getElementById("countAdminQC").textContent
-  = data.filter(u => u.role === "adminQc").length;
+  document.getElementById("countAdminQC").textContent
+    = data.filter(u => u.role === "adminQc").length;
 
   document.getElementById("countManager").textContent
     = data.filter(u => u.role === "manager").length;
 
-    document.getElementById("countExecutive").textContent
+  document.getElementById("countExecutive").textContent
     = data.filter(u => u.role === "executive").length;
-    
+
   document.getElementById("countSales").textContent
     = data.filter(u => u.role === "sales").length;
 
@@ -165,68 +237,30 @@ function updateStats(data) {
     = data.filter(
         u => (u.status || "").toLowerCase() !== "active"
       ).length;
-
 }
 
 
 
 // ============================================================
 // roleBadge()
-// สร้าง badge สำหรับ role
-// ใช้ใน renderUsers.js ด้วย (global function)
 // ============================================================
 
 function roleBadge(role) {
 
   const map = {
-
-    admin: {
-      cls:   "role-admin",
-      icon:  "shield",
-      label: "Admin"
-    },
-    
-    adminQc: {
-      cls:   "role-adminqc",
-      icon:  "verified_user",
-      label: "AdminQC"
-    },
-    
-    manager: {
-      cls:   "role-manager",
-      icon:  "supervisor_account",
-      label: "Manager"
-    },
-
-    executive: {
-      cls:   "role-executive",
-      icon:  "star",
-      label: "Executive"
-    },
-
-    sales: {
-      cls:   "role-sales",
-      icon:  "badge",
-      label: "Sales"
-    },
-
-    user: {
-      cls:   "role-user",
-      icon:  "person",
-      label: "User"
-    }, 
+    admin:     { cls: "role-admin",     icon: "shield",             label: "Admin" },
+    adminQc:   { cls: "role-adminqc",   icon: "verified_user",      label: "AdminQC" },
+    manager:   { cls: "role-manager",   icon: "supervisor_account", label: "Manager" },
+    executive: { cls: "role-executive", icon: "star",               label: "Executive" },
+    sales:     { cls: "role-sales",     icon: "badge",              label: "Sales" },
+    user:      { cls: "role-user",      icon: "person",             label: "User" },
   };
 
-  const r =
-    map[role] ||
-    { cls: "role-user", icon: "person", label: role || "?" };
-
+  const r = map[role] || { cls: "role-user", icon: "person", label: role || "?" };
 
   return `
     <span class="role-badge ${r.cls}">
-      <span class="material-symbols-outlined">
-        ${r.icon}
-      </span>
+      <span class="material-symbols-outlined">${r.icon}</span>
       ${r.label}
     </span>
   `;
@@ -236,52 +270,35 @@ function roleBadge(role) {
 
 // ============================================================
 // filterUsers()
-// ค้นหา + filter role + filter status
 // ============================================================
 
 function filterUsers() {
 
-  const keyword =
-    document.getElementById("searchUser")
-      .value.trim().toLowerCase();
-
-  const roleFilter =
-    document.getElementById("filterRole").value;
-
-  const stFilter =
-    document.getElementById("filterStatus").value;
-
+  const keyword = document.getElementById("searchUser").value.trim().toLowerCase();
+  const roleFilter = document.getElementById("filterRole").value;
+  const stFilter = document.getElementById("filterStatus").value;
 
   const filtered = allUsersData.filter(u => {
 
-    // search
     const matchText =
       !keyword ||
       (u.email        || "").toLowerCase().includes(keyword) ||
       (u.username     || "").toLowerCase().includes(keyword) ||
       (u.display_name || "").toLowerCase().includes(keyword);
 
-    // role
-    const matchRole =
-      !roleFilter || u.role === roleFilter;
-
-    // status
-    const matchStatus =
-      !stFilter || (u.status || "") === stFilter;
+    const matchRole = !roleFilter || u.role === roleFilter;
+    const matchStatus = !stFilter || (u.status || "") === stFilter;
 
     return matchText && matchRole && matchStatus;
-
   });
 
   renderUsers(filtered);
-
 }
 
 
 
 // ============================================================
 // toggleStatus()
-// เปลี่ยนสถานะ Active / Inactive
 // ============================================================
 
 async function toggleStatus(userId, newStatus) {
@@ -292,24 +309,17 @@ async function toggleStatus(userId, newStatus) {
     .eq("id", userId);
 
   if (error) {
-
     alert("เปลี่ยนสถานะไม่สำเร็จ");
     console.error(error);
-
     return;
   }
 
-
-  // อัปเดต local data
   const user = allUsersData.find(u => u.id === userId);
-
-  if (user)
-    user.status = newStatus;
+  if (user) user.status = newStatus;
 
   updateStats(allUsersData);
-
+  showPendingNotification(allUsersData);
   filterUsers();
-
 }
 
 
@@ -318,67 +328,40 @@ async function toggleStatus(userId, newStatus) {
 // ── EDIT MODAL ──────────────────────────────────────────────
 // ============================================================
 
-// ============================================================
-// openEditModal()
-// เปิด modal แก้ไข user และโหลดข้อมูลเข้า form
-// ============================================================
-
 function openEditModal(userId) {
 
   const user = allUsersData.find(u => u.id === userId);
-
   if (!user) return;
 
-  // เก็บ id ใน hidden input
   document.getElementById("editUserId").value = userId;
 
-  // แสดงอีเมลใน header modal
   document.getElementById("modalUserInfo").innerHTML = `
     <span class="material-symbols-outlined">person</span>
     ${escapeHtml(user.email || "-")}
   `;
 
-  // กรอกข้อมูลเดิมเข้า form
   document.getElementById("editUsername").value    = user.username     || "";
   document.getElementById("editDisplayName").value = user.display_name || "";
   document.getElementById("editRole").value        = user.role         || "user";
   document.getElementById("editStatus").value      = user.status       || "Active";
   document.getElementById("editArea").value        = user.area         || "";
 
-  // เปิด modal
   document.getElementById("editModal").style.display = "flex";
-
 }
 
-
-
-// ============================================================
-// closeEditModal()
-// ปิด modal แก้ไข
-// ============================================================
 
 function closeEditModal() {
 
   document.getElementById("editModal").style.display = "none";
 
-  // reset ปุ่ม save กลับเป็นปกติ
   const btn = document.getElementById("saveBtn");
-
   btn.disabled = false;
-
   btn.innerHTML = `
     <span class="material-symbols-outlined">save</span>
     บันทึก
   `;
-
 }
 
-
-
-// ============================================================
-// saveUser()
-// บันทึกการแก้ไข user ลง Supabase
-// ============================================================
 
 async function saveUser() {
 
@@ -389,22 +372,17 @@ async function saveUser() {
   const status      = document.getElementById("editStatus").value;
   const area        = document.getElementById("editArea").value.trim();
 
-  // validation เบื้องต้น
   if (!role || !status) {
     alert("กรุณาเลือก Role และ สถานะ");
     return;
   }
 
-  // disable ปุ่มกันกด 2 ครั้ง
   const btn = document.getElementById("saveBtn");
-
   btn.disabled = true;
-
   btn.innerHTML = `
     <span class="material-symbols-outlined">hourglass_top</span>
     กำลังบันทึก...
   `;
-
 
   const { error } = await supabaseClient
     .from("profiles")
@@ -417,23 +395,18 @@ async function saveUser() {
     })
     .eq("id", userId);
 
-
   if (error) {
-
     alert("บันทึกไม่สำเร็จ: " + error.message);
     console.error("saveUser error:", error);
 
     btn.disabled = false;
-
     btn.innerHTML = `
       <span class="material-symbols-outlined">save</span>
       บันทึก
     `;
-
     return;
   }
 
-  // อัปเดต local cache
   const user = allUsersData.find(u => u.id === userId);
 
   if (user) {
@@ -445,11 +418,9 @@ async function saveUser() {
   }
 
   updateStats(allUsersData);
-
+  showPendingNotification(allUsersData);
   filterUsers();
-
   closeEditModal();
-
 }
 
 
@@ -458,44 +429,18 @@ async function saveUser() {
 // ── DELETE MODAL ─────────────────────────────────────────────
 // ============================================================
 
-// ============================================================
-// openDeleteModal()
-// เปิด modal ยืนยันการลบ user
-// ============================================================
-
 function openDeleteModal(userId, label) {
-
   deleteTargetId = userId;
-
-  document.getElementById("deleteUserLabel").textContent =
-    label || userId;
-
+  document.getElementById("deleteUserLabel").textContent = label || userId;
   document.getElementById("deleteModal").style.display = "flex";
-
 }
 
-
-
-// ============================================================
-// closeDeleteModal()
-// ปิด modal ยืนยันลบ และ reset state
-// ============================================================
 
 function closeDeleteModal() {
-
   deleteTargetId = null;
-
   document.getElementById("deleteModal").style.display = "none";
-
 }
 
-
-
-// ============================================================
-// confirmDelete()
-// ลบ profile user ออกจาก Supabase
-// หมายเหตุ: ลบเฉพาะ profile ไม่ได้ลบ Auth account
-// ============================================================
 
 async function confirmDelete() {
 
@@ -507,38 +452,28 @@ async function confirmDelete() {
     .eq("id", deleteTargetId);
 
   if (error) {
-
     alert("ลบไม่สำเร็จ: " + error.message);
     console.error("confirmDelete error:", error);
-
     return;
   }
 
-  // ลบออกจาก local cache
-  allUsersData =
-    allUsersData.filter(u => u.id !== deleteTargetId);
+  allUsersData = allUsersData.filter(u => u.id !== deleteTargetId);
 
   updateStats(allUsersData);
-
+  showPendingNotification(allUsersData);
   filterUsers();
-
   closeDeleteModal();
-
 }
 
 
 
 // ============================================================
 // INIT PAGE
-// เริ่มทำงานเมื่อหน้าเว็บโหลดเสร็จ
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
-
   await protectAdmin();
-
   await loadUsers();
-
 });
 
 
@@ -547,15 +482,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ── UTILITIES ───────────────────────────────────────────────
 // ============================================================
 
-// ============================================================
-// escapeHtml()
-// ป้องกัน XSS ก่อนแสดงผลใน HTML
-// ============================================================
-
 function escapeHtml(text) {
-
   if (!text) return "";
-
   return text
     .replace(/&/g,  "&amp;")
     .replace(/</g,  "&lt;")
@@ -565,16 +493,8 @@ function escapeHtml(text) {
 }
 
 
-
-// ============================================================
-// escapeAttr()
-// ป้องกันปัญหาใน HTML attribute
-// ============================================================
-
 function escapeAttr(text) {
-
   if (!text) return "";
-
   return text
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");

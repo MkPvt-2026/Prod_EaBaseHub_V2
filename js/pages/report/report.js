@@ -1,10 +1,14 @@
 // =====================================================
-// report.js  v6.0  — Product Picker + List Pattern
+// report.js  v6.4  — Product Picker + List Pattern
+// +  Comment Notification Badge + Read Tracking
+// +  Role Badge 4 tier: admin / executive / manager / user
+// (สอดคล้องกับ reportTracker.js)
 // Draft  → localStorage  (ไม่ขึ้น Supabase)
 // Submit → Supabase (status = 'submitted')
 // =====================================================
 
 const DRAFT_KEY = "ea_report_drafts";
+const COMMENT_READ_KEY = "ea_comment_reads"; // เก็บ { reportId: last_read_at }
 
 let submittedReports = [];
 let shopsMap         = {};
@@ -15,11 +19,67 @@ let currentViewReportId = null;
 // รายการสินค้าที่เลือกแล้ว (in-memory)
 let selectedProducts = [];
 
+// Unread comment counts per report
+let unreadCommentCountsMap = {};
+
 // =====================================================
-// 🚀 INIT
+// COMMENT READ HELPERS (localStorage)
+// =====================================================
+function getCommentReads() {
+  try { return JSON.parse(localStorage.getItem(COMMENT_READ_KEY) || "{}"); }
+  catch(e) { return {}; }
+}
+
+function saveCommentReads(reads) {
+  localStorage.setItem(COMMENT_READ_KEY, JSON.stringify(reads));
+}
+
+function markCommentsAsRead(reportId) {
+  const reads = getCommentReads();
+  reads[reportId] = new Date().toISOString();
+  saveCommentReads(reads);
+
+  // อัปเดต badge ทันที — ลบ badge ออกจาก DOM
+  unreadCommentCountsMap[reportId] = 0;
+  const btn = document.querySelector(`button[data-report-id="${reportId}"]`);
+  if (btn) {
+    const badge = btn.querySelector(".comment-notify-badge");
+    if (badge) badge.remove();
+  }
+}
+
+// =====================================================
+// LOAD UNREAD COMMENT COUNTS
+// =====================================================
+async function loadUnreadCommentCounts(reportIds) {
+  unreadCommentCountsMap = {};
+  if (!reportIds || !reportIds.length) return;
+
+  const reads = getCommentReads();
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("report_comments")
+      .select("report_id, created_at")
+      .in("report_id", reportIds);
+
+    if (error) throw error;
+
+    (data || []).forEach(c => {
+      const lastRead = reads[c.report_id];
+      // นับเฉพาะ comment ที่มาหลังจากอ่านล่าสุด
+      if (!lastRead || new Date(c.created_at) > new Date(lastRead)) {
+        unreadCommentCountsMap[c.report_id] = (unreadCommentCountsMap[c.report_id] || 0) + 1;
+      }
+    });
+  } catch(e) { console.error("loadUnreadCommentCounts", e); }
+}
+
+// =====================================================
+// INIT
 // =====================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  try { await protectPage(["admin","sales","manager","user"]); }
+  try { await protectPage(["admin","executive","sales","manager","user"]); }
   catch(e) { return; }
 
   await loadUserHeader();
@@ -32,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // =====================================================
-// 👤 HEADER
+// HEADER
 // =====================================================
 async function loadUserHeader() {
   try {
@@ -49,7 +109,7 @@ async function loadUserHeader() {
 }
 
 // =====================================================
-// 🗄️ LOCALSTORAGE DRAFT HELPERS
+// LOCALSTORAGE DRAFT HELPERS
 // =====================================================
 function getDrafts() {
   try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "[]"); }
@@ -63,7 +123,7 @@ function genDraftId() {
 }
 
 // =====================================================
-// 🏪 RESOLVE SHOP NAMES
+// RESOLVE SHOP NAMES
 // =====================================================
 async function resolveShopNames(ids) {
   const missing = [...new Set(ids.filter(id => id && !shopsMap[id]))];
@@ -76,7 +136,7 @@ async function resolveShopNames(ids) {
 }
 
 // =====================================================
-// 🏷️ RESOLVE ATTRIBUTE NAMES
+// RESOLVE ATTRIBUTE NAMES
 // =====================================================
 async function resolveAttrNames(attrIds) {
   const missing = [...new Set(attrIds.filter(id => id))];
@@ -89,7 +149,7 @@ async function resolveAttrNames(attrIds) {
 }
 
 // =====================================================
-// 🏷️ FORMAT ATTRIBUTES → "ชื่อ: ค่า, ..."
+// FORMAT ATTRIBUTES → "ชื่อ: ค่า, ..."
 // =====================================================
 async function formatAttrInline(attributes) {
   if (!attributes || !Object.keys(attributes).length) return "";
@@ -100,7 +160,7 @@ async function formatAttrInline(attributes) {
 }
 
 // =====================================================
-// 📦 PRODUCT PICKER — โหลด Categories / Products / Attributes
+// PRODUCT PICKER — โหลด Categories / Products / Attributes
 // =====================================================
 async function loadPickerCategories() {
   try {
@@ -188,16 +248,15 @@ async function onPickerProductChange(productId) {
 }
 
 // =====================================================
-// ➕ ADD PRODUCT — เก็บลง selectedProducts[] แล้ว render
+// ADD PRODUCT — เก็บลง selectedProducts[] แล้ว render
 // =====================================================
 function addSelectedProduct() {
   const productId = document.getElementById("pickerProduct")?.value;
   if (!productId) {
-    showToast("⚠️ กรุณาเลือกสินค้าก่อน");
+    showToast("กรุณาเลือกสินค้าก่อน");
     return;
   }
 
-  // เก็บ attributes
   const attrs = {};
   document.querySelectorAll(".picker-attr-field").forEach(f => {
     if (f.value) attrs[f.dataset.attributeId] = f.value;
@@ -205,7 +264,6 @@ function addSelectedProduct() {
 
   const productName = productsMap[productId] || productId;
 
-  // เพิ่มลง list (อนุญาตสินค้าซ้ำได้ เพราะอาจเลือก attribute ต่างกัน)
   selectedProducts.push({
     _uid: Date.now() + "_" + Math.random().toString(36).slice(2,5),
     product_id: productId,
@@ -215,7 +273,7 @@ function addSelectedProduct() {
 
   renderSelectedProducts();
   resetPicker();
-  showToast(`✅ เพิ่ม "${truncate(productName, 20)}" แล้ว`);
+  showToast(`เพิ่ม "${truncate(productName, 20)}" แล้ว`);
 }
 
 function removeSelectedProduct(uid) {
@@ -224,26 +282,27 @@ function removeSelectedProduct(uid) {
 }
 
 function resetPicker() {
-  const catSel  = document.getElementById("pickerCategory");
   const prodSel = document.getElementById("pickerProduct");
   const attrBox = document.getElementById("pickerAttributes");
-  // รีเซ็ตเฉพาะ product + attributes — ไม่ reset category เผื่อเลือกหลายตัวในหมวดเดียว
-  if (prodSel) {
-    prodSel.value = "";
-    // ไม่ clear options — ยังอยู่ในหมวดเดิม
-  }
+  if (prodSel) prodSel.value = "";
   if (attrBox) attrBox.innerHTML = "";
 }
 
 // =====================================================
-// 🎨 RENDER SELECTED PRODUCTS LIST
+// RENDER SELECTED PRODUCTS LIST
 // =====================================================
 async function renderSelectedProducts() {
-  const container = document.getElementById("selectedProductList");
-  const countEl   = document.getElementById("selectedProductCount");
+  const container    = document.getElementById("selectedProductList");
+  const countEl      = document.getElementById("selectedProductCount");
+  const productBox   = document.getElementById("productContainer"); // กล่องครอบทั้งหมด
   if (!container) return;
 
   if (countEl) countEl.textContent = selectedProducts.length;
+
+  // ซ่อน/แสดงกล่อง productContainer ตามจำนวนสินค้า
+  if (productBox) {
+    productBox.style.display = selectedProducts.length > 0 ? "block" : "none";
+  }
 
   if (!selectedProducts.length) {
     container.innerHTML = `<div class="empty-product-list">ยังไม่มีสินค้าที่เลือก — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>`;
@@ -259,30 +318,30 @@ async function renderSelectedProducts() {
           <span class="product-item-name">${escapeHtml(item.product_name)}</span>
           ${attrText ? `<span class="product-item-attr">${escapeHtml(attrText)}</span>` : ""}
         </div>
-        <button class="btn-remove-product" onclick="removeSelectedProduct('${item._uid}')" title="ลบ">✕</button>
+        <button class="btn-remove-product" onclick="removeSelectedProduct('${item._uid}')" title="ลบ"><span class="material-symbols-outlined">close</span></button>
       </div>`;
   }
   container.innerHTML = html;
 }
 
 // =====================================================
-// 💾 SAVE DRAFT → localStorage
+// SAVE DRAFT → localStorage
 // =====================================================
 function saveDraft() {
   const data = collectFormData();
-  if (!data.report_date) { alert("❌ กรุณาเลือกวันที่ก่อน"); return; }
+  if (!data.report_date) { alert("กรุณาเลือกวันที่ก่อน"); return; }
 
   const drafts = getDrafts();
   drafts.push({ ...data, id: genDraftId(), saved_at: new Date().toISOString(), is_draft: true });
   saveDraftsToStorage(drafts);
 
-  showToast("💾 บันทึก Draft ลงเครื่องแล้ว");
+  showToast("บันทึก Draft ลงเครื่องแล้ว");
   clearForm();
   renderDraftList();
 }
 
 // =====================================================
-// ✏️ EDIT DRAFT
+// EDIT DRAFT
 // =====================================================
 async function editDraftToForm(draftId) {
   const drafts = getDrafts();
@@ -296,7 +355,6 @@ async function editDraftToForm(draftId) {
   if (d.note) document.getElementById("note").value = d.note;
   if (d.product_interest) document.getElementById("productInterest").value = d.product_interest;
 
-
   if (d.province) {
     const provSel = document.getElementById("provinceSelect");
     if (provSel) provSel.value = d.province;
@@ -304,9 +362,7 @@ async function editDraftToForm(draftId) {
     if (d.shop_id) document.getElementById("shopSelect").value = d.shop_id;
   }
 
-  // โหลด products list กลับมา
   if (d.products && d.products.length) {
-    // resolve ชื่อสินค้าที่ยังไม่มี
     const missingIds = d.products.map(p => p.product_id).filter(id => !productsMap[id]);
     if (missingIds.length) {
       const { data: prods } = await supabaseClient
@@ -326,21 +382,21 @@ async function editDraftToForm(draftId) {
   renderSelectedProducts();
   renderDraftList();
   window.scrollTo({ top: 0, behavior: "smooth" });
-  showToast("✏️ โหลด Draft ขึ้น form แล้ว");
+  showToast("โหลด Draft ขึ้น form แล้ว");
 }
 
 // =====================================================
-// 🗑️ DELETE DRAFT
+// DELETE DRAFT
 // =====================================================
 function deleteDraft(draftId) {
   if (!confirm("ลบ Draft นี้?")) return;
   saveDraftsToStorage(getDrafts().filter(x => x.id !== draftId));
-  showToast("🗑️ ลบ Draft แล้ว");
+  showToast("ลบ Draft แล้ว");
   renderDraftList();
 }
 
 // =====================================================
-// 🎨 RENDER DRAFT LIST
+// RENDER DRAFT LIST
 // =====================================================
 async function renderDraftList() {
   const drafts       = getDrafts();
@@ -363,7 +419,6 @@ async function renderDraftList() {
 
   for (const d of drafts) {
     const shopName = shopsMap[d.shop_id] || "—";
-    // สรุปสินค้า
     const prodSummary = (d.products || []).map(p => productsMap[p.product_id] || "—").join(", ") || "—";
     const savedAt = new Date(d.saved_at).toLocaleString("th-TH", {
       day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"
@@ -381,41 +436,44 @@ async function renderDraftList() {
       <td data-label="บันทึกเมื่อ" style="color:#888;font-size:11px;">${savedAt}</td>
       <td>
         <div class="action-buttons">
-          <button onclick="editDraftToForm('${d.id}')" title="แก้ไข" class="btn-action-edit">✏️</button>
-          <button onclick="submitOneDraft('${d.id}')" title="ส่งรายการนี้" class="btn-action-submit">📤</button>
-          <button onclick="deleteDraft('${d.id}')" title="ลบ" class="btn-action-del">🗑️</button>
+          <button onclick="editDraftToForm('${d.id}')" title="แก้ไข" class="btn-action-edit">
+            <span class="material-symbols-outlined icon-orange">edit_document</span><span>แก้</span>
+          </button>
+          <button onclick="submitOneDraft('${d.id}')" title="ส่งรายการนี้" class="btn-action-submit">
+            <span class="material-symbols-outlined">forward_to_inbox</span><span>ส่ง</span>
+          </button>
+          <button onclick="deleteDraft('${d.id}')" title="ลบ" class="btn-action-del">
+            <span class="material-symbols-outlined">delete</span><span>ลบ</span>
+          </button>
         </div>
-      </td>`;
+      </td>`;  
     tbody.appendChild(tr);
   }
 }
 
 // =====================================================
-// 📤 SUBMIT ONE DRAFT
+// SUBMIT ONE DRAFT
 // =====================================================
 async function submitOneDraft(draftId) {
   const drafts = getDrafts();
   const d = drafts.find(x => x.id === draftId);
   if (!d) return;
 
-  // ❗ เหลือแค่เช็ค shop ก็พอ
   if (!d.shop_id) {
-    alert("❌ ต้องเลือกร้านค้า");
+    alert("ต้องเลือกร้านค้า");
     return;
   }
 
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
-      alert("❌ Session หมดอายุ กรุณาล็อกอินใหม่");
+      alert("Session หมดอายุ กรุณาล็อกอินใหม่");
       return;
     }
 
     const now = new Date().toISOString();
-
     let rows = [];
 
-    // ✅ มีสินค้า
     if (d.products && d.products.length > 0) {
       rows = d.products.map(p => ({
         report_date:  d.report_date,
@@ -432,11 +490,10 @@ async function submitOneDraft(draftId) {
         created_at:   d.saved_at || now
       }));
     } else {
-      // ✅ ไม่มีสินค้า → insert 1 แถว
       rows = [{
         report_date:  d.report_date,
         shop_id:      d.shop_id,
-        product_id:   null, // สำคัญ!
+        product_id:   null,
         source:       d.source || null,
         status:       "submitted",
         status_visit: d.status_visit || null,
@@ -449,39 +506,37 @@ async function submitOneDraft(draftId) {
       }];
     }
 
-    const { error } = await supabaseClient
-      .from("reports")
-      .insert(rows);
-
+    const { error } = await supabaseClient.from("reports").insert(rows);
     if (error) throw error;
 
     saveDraftsToStorage(drafts.filter(x => x.id !== draftId));
-    showToast("✅ ส่งรายงานสำเร็จ");
+    showToast("ส่งรายงานสำเร็จ");
     await renderDraftList();
     await loadSubmittedReports();
 
   } catch (e) {
     console.error("submitOneDraft", e);
-    alert("❌ ส่งไม่สำเร็จ: " + e.message);
+    alert("ส่งไม่สำเร็จ: " + e.message);
   }
 }
+
 // =====================================================
-// 📤 SUBMIT ALL DRAFTS
+// SUBMIT ALL DRAFTS
 // =====================================================
 async function submitAllDrafts() {
   const drafts = getDrafts();
-  if (!drafts.length) { alert("ℹ️ ไม่มี Draft ที่รอส่ง"); return; }
+  if (!drafts.length) { alert("ไม่มี Draft ที่รอส่ง"); return; }
 
   const incomplete = drafts.filter(d => !d.shop_id || !d.products?.length);
   if (incomplete.length) {
-    alert(`❌ มี ${incomplete.length} รายการที่ข้อมูลยังไม่ครบ\nกรุณาแก้ไขก่อน`);
+    alert(`มี ${incomplete.length} รายการที่ข้อมูลยังไม่ครบ\nกรุณาแก้ไขก่อน`);
     return;
   }
   if (!confirm(`ยืนยันส่งรายงาน ${drafts.length} รายการ?\nรายงานที่ส่งแล้วจะไม่สามารถแก้ไขได้`)) return;
 
   try {
     const { data:{ session } } = await supabaseClient.auth.getSession();
-    if (!session) { alert("❌ Session หมดอายุ"); return; }
+    if (!session) { alert("Session หมดอายุ"); return; }
 
     const now = new Date().toISOString();
     const rows = [];
@@ -508,17 +563,17 @@ async function submitAllDrafts() {
     if (error) throw error;
 
     saveDraftsToStorage([]);
-    showToast(`📤 ส่งรายงาน ${rows.length} รายการสำเร็จ!`);
+    showToast(`ส่งรายงาน ${rows.length} รายการสำเร็จ!`);
     await renderDraftList();
     await loadSubmittedReports();
   } catch(e) {
     console.error("submitAllDrafts", e);
-    alert("❌ เกิดข้อผิดพลาด: " + e.message);
+    alert("เกิดข้อผิดพลาด: " + e.message);
   }
 }
 
 // =====================================================
-// 📋 LOAD SUBMITTED
+// LOAD SUBMITTED
 // =====================================================
 async function loadSubmittedReports() {
   const tbody = document.getElementById("reportBody");
@@ -548,6 +603,10 @@ async function loadSubmittedReports() {
     }
 
     await resolveShopNames(submittedReports.map(r => r.shop_id));
+
+    // ดึงจำนวน unread comment (เทียบกับ last_read_at ใน localStorage)
+    await loadUnreadCommentCounts(submittedReports.map(r => r.id));
+
     await renderSubmittedTable();
   } catch(e) {
     console.error("loadSubmittedReports", e);
@@ -556,7 +615,7 @@ async function loadSubmittedReports() {
 }
 
 // =====================================================
-// 🎨 RENDER SUBMITTED TABLE
+// RENDER SUBMITTED TABLE
 // =====================================================
 function truncate(str, maxLen) {
   if (!str || str === "—") return str || "—";
@@ -569,38 +628,115 @@ function formatDateShort(s) {
   catch(e) { return "—"; }
 }
 
+
+// =====================================================
+// GROUP SUBMITTED REPORTS — รวม shop + date + sale เดียวกัน
+// =====================================================
+function groupSubmittedReports(reports) {
+  const groups = {};
+
+  for (const r of reports) {
+    // key = ร้าน + วันที่รายงาน + เซลล์
+    const key = `${r.shop_id || 'no-shop'}__${r.report_date || 'no-date'}__${r.sale_id || 'no-sale'}`;
+
+    if (!groups[key]) {
+      groups[key] = {
+        // ใช้ id ของ row แรกเป็นตัวแทน (สำหรับ handleView)
+        id: r.id,
+        ids: [r.id],                            // เก็บ id ทั้งหมดใน group
+        shop_id: r.shop_id,
+        sale_id: r.sale_id,
+        report_date: r.report_date,
+        submitted_at: r.submitted_at,
+        source: r.source,
+        status_visit: r.status_visit,
+        product_interest: r.product_interest,
+        note: r.note,
+        manager_acknowledged: r.manager_acknowledged,
+        products: []                            // รวมสินค้าทุกตัว
+      };
+    } else {
+      groups[key].ids.push(r.id);
+      // ใช้ submitted_at ล่าสุด
+      if (r.submitted_at && (!groups[key].submitted_at || new Date(r.submitted_at) > new Date(groups[key].submitted_at))) {
+        groups[key].submitted_at = r.submitted_at;
+      }
+      // ถ้ามีตัวไหน ack แล้ว → group นี้ถือว่า ack
+      if (r.manager_acknowledged) groups[key].manager_acknowledged = true;
+    }
+
+    // เพิ่มสินค้า (ถ้า row นี้มี product_id)
+    if (r.product_id) {
+      groups[key].products.push({
+        row_id: r.id,
+        product_id: r.product_id,
+        attributes: r.attributes || {}
+      });
+    }
+  }
+
+  // เรียงตาม submitted_at ใหม่สุดก่อน
+  return Object.values(groups).sort((a, b) =>
+    new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0)
+  );
+}
+
+
+
 async function renderSubmittedTable() {
   const tbody = document.getElementById("reportBody");
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  if (!submittedReports.length) {
+  // รวม rows ก่อน render
+  const grouped = groupSubmittedReports(submittedReports);
+
+  if (!grouped.length) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#888;padding:24px;">ยังไม่มีรายงานที่ส่ง</td></tr>`;
     return;
   }
 
-  for (const r of submittedReports) {
-    const shopName = shopsMap[r.shop_id] || "—";
-    const prodName = productsMap[r.product_id] || "—";
-    const attrText = await formatAttrInline(r.attributes);
+  for (const g of grouped) {
+    const shopName = shopsMap[g.shop_id] || "—";
+
+    // รวมชื่อสินค้าทุกตัวใน group
+    const prodNames = g.products.map(p => productsMap[p.product_id] || "—");
+    const prodDisplay = prodNames.length
+      ? (prodNames.length === 1 ? prodNames[0] : `${prodNames[0]} +${prodNames.length - 1}`)
+      : "—";
+    const prodFull = prodNames.join(", ") || "—";
+
+    // แสดง attribute ของสินค้าตัวแรกเป็นตัวอย่าง (ถ้ามี)
+    const firstAttr = g.products[0]?.attributes;
+    const attrText = firstAttr ? await formatAttrInline(firstAttr) : "";
     const attrShort = truncate(attrText, 36);
 
-    const ackBadge = r.manager_acknowledged
-      ? `<span class="badge-ack">👁️ อ่านแล้ว</span>` : "";
+    const ackBadge = g.manager_acknowledged
+      ? `<span class="badge-ack">✅ อ่านแล้ว</span>` : "";
+
+    // นับ unread comment รวมทุก id ใน group
+    const unreadCount = g.ids.reduce((sum, id) => sum + (unreadCommentCountsMap[id] || 0), 0);
+    const commentBadge = unreadCount > 0
+      ? `<span class="comment-notify-badge" title="${unreadCount} ความคิดเห็นใหม่">${unreadCount}</span>`
+      : '';
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td data-label="วันที่ส่ง">${formatDateShort(r.submitted_at || r.report_date)}</td>
-      <td data-label="ร้านค้า" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
-      <td data-label="สถานะ"><span class="badge-submitted">✅ ส่งแล้ว</span>${ackBadge}</td>
-      <td data-label="รายละเอียด" title="${escapeHtml(r.note||"")}">${escapeHtml(truncate(r.note||"—", 22))}</td>
-      <td data-label="สินค้า" title="${escapeHtml(prodName + (attrText ? ' · ' + attrText : ''))}">
-        <div style="font-weight:500;">${escapeHtml(truncate(prodName, 16))}</div>
-        ${attrShort && attrShort !== "—" ? `<div class="attr-sub">${escapeHtml(attrShort)}</div>` : ""}
+      <td data-label="วันที่ส่ง" class="col-date">${formatDateShort(g.submitted_at || g.report_date)}</td>
+      <td data-label="ร้านค้า" class="col-shop" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
+      <td data-label="สถานะ" class="col-status">${ackBadge || "—"}</td>
+      <td data-label="รายละเอียด" class="col-note" title="${escapeHtml(g.note||"")}">${escapeHtml(truncate(g.note||"—", 22))}</td>
+      <td data-label="สินค้า" class="col-product" title="${escapeHtml(prodFull)}">
+        <div style="font-weight:500;">${escapeHtml(truncate(prodDisplay, 16))}</div>
+        ${prodNames.length > 1
+          ? `<div class="attr-sub">${prodNames.length} รายการ</div>`
+          : (attrShort && attrShort !== "—" ? `<div class="attr-sub">${escapeHtml(attrShort)}</div>` : "")}
       </td>
-      <td>
+      <td class="col-action">
         <div class="action-buttons">
-          <button onclick="handleView('${r.id}')" title="ดูรายละเอียด" class="btn-action-view">👁️</button>
+          <button onclick="handleView('${g.id}')" title="ดูรายละเอียด" class="btn-action-view" data-report-id="${g.id}">
+            <span class="material-symbols-outlined icon-md icon-orange">visibility</span>${commentBadge}
+          </button>
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -608,58 +744,296 @@ async function renderSubmittedTable() {
 }
 
 // =====================================================
-// 👁️ VIEW SUBMITTED
+// VIEW SUBMITTED — + mark as read
 // =====================================================
 async function handleView(id) {
-  const r = submittedReports.find(x => x.id === id);
-  if (!r) return;
+  // หา row ที่กด แล้วหา group ที่มัน belong อยู่
+  const clicked = submittedReports.find(x => x.id === id);
+  if (!clicked) return;
+
+  // หาทุก row ใน group เดียวกัน
+  const groupRows = submittedReports.filter(r =>
+    r.shop_id === clicked.shop_id &&
+    r.report_date === clicked.report_date &&
+    r.sale_id === clicked.sale_id
+  );
+
+  const r = clicked; // ใช้ clicked เป็นตัวแทนสำหรับ field ที่ shared
+  const ackAny = groupRows.some(x => x.manager_acknowledged);
 
   document.getElementById("modalTitle").innerText = "รายละเอียดรายงาน";
-  const set = (eid, v) => { const el=document.getElementById(eid); if(el) el.innerText=v||"—"; };
-  set("m-date",    formatDate(r.submitted_at||r.report_date));
-  set("m-store",   shopsMap[r.shop_id]||"—");
-  set("m-product", productsMap[r.product_id] || "—");
-  set("m-source",  r.source||"—");
-  set("m-status",  "✅ ส่งแล้ว" + (r.manager_acknowledged ? " • 👁️ ผู้บริหารอ่านแล้ว" : ""));
+  const set = (eid, v) => { const el = document.getElementById(eid); if (el) el.innerText = v || "—"; };
+  set("m-date",    formatDate(r.submitted_at || r.report_date));
+  set("m-store",   shopsMap[r.shop_id] || "—");
+  set("m-source",  r.source || "—");
+  set("m-status",  ackAny ? "ส่งแล้ว • ผู้บริหารอ่านแล้ว" : "ส่งแล้ว");
+  set("m-product-interest", r.product_interest || "—");
 
+  // แสดงสินค้าทุกตัวใน group
+  const prodEl = document.getElementById("m-product");
   const attrEl = document.getElementById("m-attributes");
-  if (attrEl) attrEl.innerHTML = await formatAttributesBlock(r.attributes);
+  const productsWithId = groupRows.filter(x => x.product_id);
+
+  if (productsWithId.length === 0) {
+    if (prodEl) prodEl.innerText = "—";
+    if (attrEl) attrEl.innerHTML = "";
+  } else if (productsWithId.length === 1) {
+    // สินค้าเดียว — แสดงแบบเดิม
+    if (prodEl) prodEl.innerText = productsMap[productsWithId[0].product_id] || "—";
+    if (attrEl) attrEl.innerHTML = await formatAttributesBlock(productsWithId[0].attributes);
+  } else {
+    // หลายสินค้า — แสดงเป็นลิสต์
+    if (prodEl) prodEl.innerText = `${productsWithId.length} รายการ`;
+    if (attrEl) {
+      let html = '';
+      for (const row of productsWithId) {
+        const name = productsMap[row.product_id] || "—";
+        const attrBlock = await formatAttributesBlock(row.attributes);
+        html += `
+          <div style="background:#f8fafc;border-radius:6px;padding:8px 10px;margin-bottom:6px;border-left:3px solid #f0ad4e;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${escapeHtml(name)}</div>
+            ${attrBlock || '<div style="color:#aaa;font-size:12px;">ไม่มี attribute</div>'}
+          </div>`;
+      }
+      attrEl.innerHTML = html;
+    }
+  }
 
   const noteEl = document.getElementById("m-note");
-  if (noteEl) { noteEl.value = r.note||""; noteEl.disabled = true; }
+  if (noteEl) { noteEl.value = r.note || ""; noteEl.disabled = true; }
 
   const saveBtn = document.getElementById("saveEditBtn");
   if (saveBtn) saveBtn.style.display = "none";
 
-  await loadManagerComments(id);
+  // โหลด comment ของทุก id ใน group
+  await loadManagerCommentsForGroup(groupRows.map(x => x.id));
+
+  // Mark ทุก id ใน group ว่าอ่านแล้ว
+  groupRows.forEach(x => markCommentsAsRead(x.id));
+
   openModal();
 }
 
+// =====================================================
+// ROLE BADGE HELPER — แสดง role ของผู้ comment
+// รองรับ 4 roles: admin / executive / manager / user
+// (สอดคล้องกับ reportTracker.js)
+// =====================================================
+function getCommentRoleStyle(role) {
+  // ถ้ามี roleConfig.js โหลดมาแล้ว ให้ใช้จากที่นั่น
+  if (typeof getRoleMeta === 'function') {
+    const meta = getRoleMeta(role);
+    // Map cssClass จาก reportTracker → inline style สำหรับใช้ใน modal
+    const stylePresets = {
+      'comment-admin':     { bgColor: '#fde8e8', borderColor: '#dc2626', badgeGrad: 'linear-gradient(135deg,#dc2626,#991b1b)', icon: 'shield' },
+      'comment-executive': { bgColor: '#fff9e6', borderColor: '#f0ad4e', badgeGrad: 'linear-gradient(135deg,#f0ad4e,#ec971f)', icon: 'admin_panel_settings' },
+      'comment-manager':   { bgColor: '#e8f4fd', borderColor: '#17a2b8', badgeGrad: 'linear-gradient(135deg,#17a2b8,#138496)', icon: 'work' },
+      'comment-user':      { bgColor: '#f5f5f5', borderColor: '#6c757d', badgeGrad: '#7d7d6c', icon: 'person' }
+    };
+    const preset = stylePresets[meta.cssClass] || stylePresets['comment-user'];
+    // ลบ emoji ออกจาก label เผื่อ roleConfig ส่ง emoji มา
+    const cleanLabel = (meta.labelShort || meta.label || '').replace(/[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F680}-\u{1F6FF}]/gu, '').trim();
+    return {
+      label: cleanLabel || getDefaultLabel(role),
+      ...preset
+    };
+  }
+
+  // Fallback ถ้าไม่ได้โหลด roleConfig.js
+  switch (role) {
+    case 'admin':
+      return {
+        label: 'Admin',
+        icon: 'shield',
+        bgColor: '#fde8e8',
+        borderColor: '#dc2626',
+        badgeGrad: 'linear-gradient(135deg,#dc2626,#991b1b)'
+      };
+    case 'executive':
+      return {
+        label: 'Executive',
+        icon: 'verified',
+        bgColor: '#fff9e6',
+        borderColor: '#f0ad4e',
+        badgeGrad: 'linear-gradient(135deg,#f0ad4e,#ec971f)'
+      };
+    case 'manager':
+      return {
+        label: 'Manager',
+        icon: 'star_half',
+        bgColor: '#e8f4fd',
+        borderColor: '#17a2b8',
+        badgeGrad: 'linear-gradient(135deg,#17a2b8,#138496)'
+      };
+    default:
+      return {
+        label: 'User',
+        icon: 'person',
+        bgColor: '#f5f5f5',
+        borderColor: '#6c757d',
+        badgeGrad: '#7d7d6c'
+      };
+  }
+}
+
+// Helper สำหรับ label default
+function getDefaultLabel(role) {
+  const labels = {
+    'admin':     'แอดมิน',
+    'executive': 'ผู้บริหาร',
+    'manager':   'ผู้จัดการ',
+    'sales':     'เซลล์',
+    'user':      'ผู้ใช้'
+  };
+  return labels[role] || 'ผู้ใช้';
+}
+
+// =====================================================
+// LOAD MANAGER COMMENTS — highlight ข้อความใหม่
+// รองรับ 4 roles (admin / executive / manager / user)
+// =====================================================
 async function loadManagerComments(reportId) {
   const container = document.getElementById("m-manager-comments");
   if (!container) return;
+
   try {
     const { data } = await supabaseClient
       .from("report_comments")
-      .select("comment, created_at, profiles(display_name)")
-      .eq("report_id", reportId).order("created_at", { ascending: true });
+      .select("comment, created_at, profiles(display_name, role)")
+      .eq("report_id", reportId)
+      .order("created_at", { ascending: true });
 
     if (!data?.length) {
-      container.innerHTML = `<div style="color:#aaa;font-size:12px;padding:4px 0;">ยังไม่มี comment จากผู้บริหาร</div>`;
+      container.innerHTML = `<div style="color:#aaa;font-size:12px;padding:4px 0;">ยังไม่มี comment</div>`;
       return;
     }
-    container.innerHTML = data.map(c => `
-      <div style="background:#f0fdf4;border-left:3px solid #10b981;border-radius:6px;padding:8px 10px;margin-bottom:6px;">
-        <div style="font-size:11px;color:#888;margin-bottom:3px;">
-          <strong>${escapeHtml(c.profiles?.display_name||"ผู้บริหาร")}</strong> · ${formatDate(c.created_at)}
+
+    // หา last_read_at เพื่อ highlight comment ใหม่
+    const reads = getCommentReads();
+    const lastRead = reads[reportId] ? new Date(reads[reportId]) : null;
+
+    container.innerHTML = data.map(c => {
+      const role = c.profiles?.role || 'user';
+      const displayName = c.profiles?.display_name || 'ผู้ใช้';
+      const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
+
+      // ดึง style ตาม role (4 tier)
+      const style = getCommentRoleStyle(role);
+
+      const roleBadge = `
+        <span style="
+          display:inline-flex;
+          align-items:center;
+          gap:3px;
+          background:${style.badgeGrad};
+          color:#fff;
+          font-size:10px;
+          padding:2px 8px;
+          border-radius:10px;
+          margin-left:6px;
+          font-weight:500;
+          white-space:nowrap;
+        ">
+          <span class="material-symbols-outlined" style="font-size:12px;">${style.icon}</span>
+          ${style.label}
+        </span>`;
+
+      // Badge "ใหม่" สำหรับ comment ที่ยังไม่เคยอ่าน
+      const newBadge = isNew
+        ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;margin-left:6px;font-weight:600;">ใหม่</span>'
+        : '';
+
+      return `
+        <div style="
+          background:${style.bgColor};
+          border-left:3px solid ${style.borderColor};
+          border-radius:6px;
+          padding:8px 10px;
+          margin-bottom:6px;
+          ${isNew ? 'box-shadow:0 0 0 2px rgba(239,68,68,0.15);' : ''}
+        ">
+          <div style="font-size:11px;color:#555;margin-bottom:3px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+            <strong>${escapeHtml(displayName)}</strong>
+            ${roleBadge}
+            ${newBadge}
+            <span style="color:#999;margin-left:auto;">${formatDateTime(c.created_at)}</span>
+          </div>
+          <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${escapeHtml(c.comment)}</div>
         </div>
-        <div style="font-size:13px;">${escapeHtml(c.comment)}</div>
-      </div>`).join("");
-  } catch(e) { container.innerHTML = ""; }
+      `;
+    }).join("");
+  } catch(e) {
+    console.error("loadManagerComments error:", e);
+    container.innerHTML = "";
+  }
 }
+
 
 function openModal()  { const m=document.getElementById("reportModal"); if(m){ m.style.display="flex"; document.body.style.overflow="hidden"; } }
 function closeModal() { const m=document.getElementById("reportModal"); if(m){ m.style.display="none";  document.body.style.overflow=""; } }
+
+
+
+async function loadManagerCommentsForGroup(reportIds) {
+  const container = document.getElementById("m-manager-comments");
+  if (!container) return;
+
+  try {
+    const { data } = await supabaseClient
+      .from("report_comments")
+      .select("report_id, comment, created_at, profiles(display_name, role)")
+      .in("report_id", reportIds)
+      .order("created_at", { ascending: true });
+
+    if (!data?.length) {
+      container.innerHTML = `<div style="color:#aaa;font-size:12px;padding:4px 0;">ยังไม่มี comment</div>`;
+      return;
+    }
+
+    const reads = getCommentReads();
+
+    container.innerHTML = data.map(c => {
+      const role = c.profiles?.role || 'user';
+      const displayName = c.profiles?.display_name || 'ผู้ใช้';
+      const lastRead = reads[c.report_id] ? new Date(reads[c.report_id]) : null;
+      const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
+
+      const style = getCommentRoleStyle(role);
+
+      const roleBadge = `
+        <span style="display:inline-flex;align-items:center;gap:3px;background:${style.badgeGrad};
+          color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;
+          font-weight:500;white-space:nowrap;">
+          <span class="material-symbols-outlined" style="font-size:12px;">${style.icon}</span>
+          ${style.label}
+        </span>`;
+
+      const newBadge = isNew
+        ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;margin-left:6px;font-weight:600;">ใหม่</span>'
+        : '';
+
+      return `
+        <div style="background:${style.bgColor};border-left:3px solid ${style.borderColor};
+          border-radius:6px;padding:8px 10px;margin-bottom:6px;
+          ${isNew ? 'box-shadow:0 0 0 2px rgba(239,68,68,0.15);' : ''}">
+          <div style="font-size:11px;color:#555;margin-bottom:3px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+            <strong>${escapeHtml(displayName)}</strong>
+            ${roleBadge}
+            ${newBadge}
+            <span style="color:#999;margin-left:auto;">${formatDateTime(c.created_at)}</span>
+          </div>
+          <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${escapeHtml(c.comment)}</div>
+        </div>`;
+    }).join("");
+  } catch(e) {
+    console.error("loadManagerCommentsForGroup error:", e);
+    container.innerHTML = "";
+  }
+}
+
+
+
+
 
 // =====================================================
 // FORM HELPERS
@@ -700,7 +1074,6 @@ function clearForm() {
   document.getElementById("note").value = "";
   document.getElementById("productInterest").value = "";
 
-  // reset picker
   const catSel  = document.getElementById("pickerCategory");
   const prodSel = document.getElementById("pickerProduct");
   const attrBox = document.getElementById("pickerAttributes");
@@ -708,7 +1081,6 @@ function clearForm() {
   if (prodSel) prodSel.innerHTML = `<option value="">-- เลือกสินค้า --</option>`;
   if (attrBox) attrBox.innerHTML = "";
 
-  // clear selected list
   selectedProducts = [];
   renderSelectedProducts();
 }
@@ -763,7 +1135,6 @@ function setupEventListeners() {
   const prov = document.getElementById("provinceSelect");
   if (prov) prov.addEventListener("change", e => loadShopsByProvince(e.target.value));
 
-  // Picker events
   const pickerCat = document.getElementById("pickerCategory");
   if (pickerCat) pickerCat.addEventListener("change", e => onPickerCategoryChange(e.target.value));
 
@@ -778,51 +1149,46 @@ function setupEventListeners() {
   const modal = document.getElementById("reportModal");
   if (modal) modal.addEventListener("click", e => { if(e.target===modal) closeModal(); });
 
-const noProduct = document.getElementById("noProductFlag");
-const label = document.querySelector(".toggle-label");
+  const noProduct = document.getElementById("noProductFlag");
+  const label = document.querySelector(".toggle-label");
 
-if (noProduct) {
-  noProduct.addEventListener("change", (e) => {
-    const isChecked = e.target.checked;
+  if (noProduct) {
+    noProduct.addEventListener("change", (e) => {
+      const isChecked = e.target.checked;
 
-    // 👉 ล้างสินค้า
-    if (isChecked) {
-      selectedProducts = [];
-      renderSelectedProducts();
+      if (isChecked) {
+        selectedProducts = [];
+        renderSelectedProducts();
+        document.getElementById("pickerCategory").value = "";
+        document.getElementById("pickerProduct").innerHTML =
+          `<option value="">-- เลือกสินค้า --</option>`;
+        document.getElementById("pickerAttributes").innerHTML = "";
+      }
 
-      document.getElementById("pickerCategory").value = "";
-      document.getElementById("pickerProduct").innerHTML =
-        `<option value="">-- เลือกสินค้า --</option>`;
-      document.getElementById("pickerAttributes").innerHTML = "";
+      document.querySelector(".product-picker")
+        .classList.toggle("disabled", isChecked);
+
+      if (label) {
+        label.textContent = isChecked
+          ? "ร้านนี้ยังไม่มีสินค้า (บันทึกได้เลย)"
+          : "ยังไม่มีสินค้าที่จำหน่ายกับร้านนี้";
+      }
+    });
+
+    const card = document.querySelector(".product-status-card");
+    if (card) {
+      noProduct.addEventListener("change", (e) => {
+        card.classList.toggle("active", e.target.checked);
+      });
     }
-
-    // 👉 disable UI
-    document.querySelector(".product-picker")
-      .classList.toggle("disabled", isChecked);
-
-    // 👉 เปลี่ยนข้อความ
-    if (label) {
-      label.textContent = isChecked
-        ? "ร้านนี้ยังไม่มีสินค้า (บันทึกได้เลย)"
-        : "ยังไม่มีสินค้าที่จำหน่ายกับร้านนี้";
-    }
-  });
-}
-const card = document.querySelector(".product-status-card");
-
-noProduct.addEventListener("change", (e) => {
-  const isChecked = e.target.checked;
-
-  // highlight card
-  card.classList.toggle("active", isChecked);
-});
+  }
 }
 
 // =====================================================
 // EXPORT CSV
 // =====================================================
 function exportData(type) {
-  if (type !== "csv") { alert("🚧 ฟีเจอร์นี้กำลังพัฒนา"); return; }
+  if (type !== "csv") { alert("ฟีเจอร์นี้กำลังพัฒนา"); return; }
   if (!submittedReports.length) { alert("ไม่มีข้อมูล"); return; }
   const headers = ["วันที่ส่ง","ร้านค้า","สินค้า","รายละเอียด","ผู้บริหารอ่านแล้ว"];
   const rows = submittedReports.map(r => [
@@ -846,6 +1212,19 @@ function exportData(type) {
 function formatDate(s) {
   if (!s) return "—";
   try { return new Date(s).toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"}); }
+  catch(e) { return "—"; }
+}
+
+function formatDateTime(s) {
+  if (!s) return "—";
+  try {
+    return new Date(s).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
   catch(e) { return "—"; }
 }
 
@@ -880,3 +1259,5 @@ function setupLogout() {
     window.location.href = "/pages/auth/login.html";
   });
 }
+
+

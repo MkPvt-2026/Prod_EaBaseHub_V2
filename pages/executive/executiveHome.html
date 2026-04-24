@@ -9,8 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/base/bassHeader.css">
-  <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
+  <!-- <link rel="stylesheet" href="/css/base/baseHeader.css"> -->
+  <link rel="stylesheet" href="/css/base/baseExecutive.css">
+  <link rel="stylesheet" href="/css/pages/executive/executiveHome.css">
 </head>
 <body>
 
@@ -34,16 +35,16 @@
       </div>
 
 
-       <div class="group">
-          <button id="logoutBtn" class="badge badge--message-sent logout-btn">
+     <div class="group">
+          <button id="logoutBtn" class="logout-btn">
             <span class="badge-icon">
               <span class="material-symbols-outlined" style="font-size: 17px"
-                >logout</span
-              >
+                >logout</span>
             </span>
             ออกจากระบบ
           </button>
         </div>
+
 
 
     </div>
@@ -300,14 +301,6 @@
             <span id="mQty" class="info-value">—</span>
           </div>
 
-          <div class="info-item">
-            <span class="info-label">
-              <span class="material-symbols-outlined icon-blue-dark">recommend</span>
-              สินค้าที่ร้านแนะนำ (ต้องการซื้อ)
-            </span>
-            <span id="mProductInterest" class="info-value">—</span>
-          </div>
-
           <!-- ซ่อน mManagerName/mSource แต่คง element ไว้เผื่อ JS เรียก -->
           <span id="mManagerName" style="display:none">—</span>
           <span id="mSource" style="display:none">—</span>
@@ -349,6 +342,7 @@
       </div>
     </div>
   </div>
+
   <!-- ══════════════════════════════════════════════════
        TOAST
   ══════════════════════════════════════════════════ -->

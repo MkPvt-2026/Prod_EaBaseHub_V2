@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EABaseHub - รอการอนุมัติ</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- ใช้ CSS เดียวกับ login -->
+  <link rel="stylesheet" href="/css/pages/auth/login.css">
+
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <style>
+    /* ================================
+       PENDING APPROVAL SPECIFIC
+    ================================= */
+
+    .pending-card {
+      width: 100%;
+      max-width: 460px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      padding: 40px 32px;
+      text-align: center;
+    }
+
+    .pending-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #fff5e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .pending-icon i {
+      font-size: 36px;
+      color: #f59e0b;
+    }
+
+    .pending-icon::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid #f59e0b;
+      opacity: 0.3;
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50%      { transform: scale(1.12); opacity: 0; }
+    }
+
+    .pending-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px;
+    }
+
+    .pending-sub {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin: 0 0 24px;
+    }
+
+    /* User info box */
+    .user-info-box {
+      background: #f0f9f4;
+      border-left: 3px solid #4caf8a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .user-info-title {
+      font-size: 12px;
+      color: #4caf8a;
+      font-weight: 600;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .user-info-row {
+      font-size: 13px;
+      color: #2d6b52;
+      line-height: 1.8;
+    }
+
+    .user-info-row strong {
+      display: inline-block;
+      min-width: 80px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    /* Next steps */
+    .next-steps {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .next-steps-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #78350f;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .next-steps-list {
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.8;
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .next-steps-list li {
+      margin-bottom: 2px;
+    }
+
+    /* Buttons */
+    .btn-check {
+      width: 100%;
+      background: #4caf8a;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .btn-check:hover:not(:disabled) {
+      background: #3d9b78;
+      transform: translateY(-1px);
+    }
+
+    .btn-check:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-check.loading i {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-logout {
+      width: 100%;
+      background: transparent;
+      color: #6b7280;
+      border: 1.5px solid #e5e7eb;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #1f2937;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 90%;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.toast-warning { background: #f59e0b; }
+    .toast.toast-success { background: #4caf8a; }
+    .toast.toast-error   { background: #ef4444; }
+  </style>
+</head>
+
+<body>
+
+<!-- CARD -->
+<div class="login-wrapper">
+  <div class="pending-card">
+
+    <!-- Animated Icon -->
+    <div class="pending-icon">
+      <i class="fa-regular fa-clock"></i>
+    </div>
+
+    <!-- Title -->
+    <h2 class="pending-title">รอการอนุมัติ</h2>
+    <p class="pending-sub">
+      สมัครสมาชิกเรียบร้อยแล้ว<br>
+      กรุณารอแอดมินอนุมัติสิทธิ์การใช้งาน<br>
+    </p>
+
+    <!-- User Info Box -->
+    <div class="user-info-box" id="userInfoBox">
+      <div class="user-info-title">
+        <i class="fa-regular fa-circle-user"></i> ข้อมูลของคุณ
+      </div>
+      <div class="user-info-row">
+        <strong>อีเมล:</strong> <span id="infoEmail">-</span>
+      </div>
+      <div class="user-info-row">
+        <strong>Username:</strong> <span id="infoUsername">-</span>
+      </div>
+      <div class="user-info-row">
+        <strong>ชื่อ:</strong> <span id="infoName">-</span>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="next-steps">
+      <div class="next-steps-title">
+        <i class="fa-solid fa-list-check"></i>
+        ขั้นตอนต่อไป
+      </div>
+      <ol class="next-steps-list">
+        <li>รอ admin อนุมัติและกำหนดสิทธิ์</li>
+        <li>หลังจากได้รับการอนุมัติแล้ว จะสามารถเข้าสู่ระบบได้ทันที</li>
+        <li>ปุ่ม "ตรวจสอบสถานะ" เช็คว่าได้รับอนุมัติแล้วหรือยัง</li>
+      </ol>
+    </div>
+
+    <!-- Check Status Button -->
+    <button id="checkBtn" class="btn-check" onclick="checkStatus()">
+      <i class="fa-solid fa-arrows-rotate"></i>
+      <span>ตรวจสอบสถานะอีกครั้ง</span>
+    </button>
+
+    <!-- Logout / Back to login -->
+    <button class="btn-logout" onclick="backToLogin()">
+      <i class="fa-solid fa-arrow-left"></i>
+      กลับไปหน้าเข้าสู่ระบบ
+    </button>
+
+    <p class="footer-note">
+      หากมีคำถามเพิ่มเติม โปรดติดต่อแอดมิน
+    </p>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast" class="toast">
+  <i class="fa-solid fa-circle-info"></i>
+  <span id="toastMessage"></span>
+</div>
+
+<!-- Scripts -->
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/pages/auth/pending-approval.js"></script>
+
+</body>
+</html>
