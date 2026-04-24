@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Active + มี role → redirect ตาม role
       // ══════════════════════════════════════════════
       if (profile.role === "admin") {
-        showLoginOverlay("/pages/dashboard/adminDashboard.html");
+        showLoginOverlay("/index.html");
       } else if (profile.role === "adminQc") {
         showLoginOverlay("/pages/dashboard/QcDashboard.html");
       } else if (profile.role === "sales") {

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Import ข้อมูลเข้า Supabase</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', sans-serif;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #f7f7f5;
+    color: #2c2c2a;
+  }
+  h1 { font-size: 22px; font-weight: 500; margin: 0 0 8px; }
+  .subtitle { color: #5f5e5a; font-size: 14px; margin-bottom: 24px; }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #444441; }
+  input[type="text"], input[type="password"], input[type="file"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d3d1c7;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  button {
+    background: #1D9E75;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button:hover { background: #0F6E56; }
+  button:disabled { background: #b4b2a9; cursor: not-allowed; }
+  .log {
+    background: #f1efe8;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 16px;
+    white-space: pre-wrap;
+  }
+  .progress {
+    width: 100%;
+    height: 8px;
+    background: #e5e5e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: #1D9E75;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .hint { font-size: 12px; color: #888780; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Import ข้อมูลการขายเข้า Supabase</h1>
+<p class="subtitle">อัปโหลดไฟล์ Excel รูปแบบเดียวกับ <code>Date_for_teir_customer.xlsx</code></p>
+
+<div class="card">
+  <div class="field">
+    <label>Supabase URL</label>
+    <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
+    <div class="hint">ดูที่ Supabase → Project Settings → API → Project URL</div>
+  </div>
+  <div class="field">
+    <label>Supabase Anon Key</label>
+    <input type="password" id="supabaseKey" placeholder="eyJhbGc...">
+    <div class="hint">ดูที่ Supabase → Project Settings → API → anon/public key</div>
+  </div>
+  <div class="field">
+    <label>ไฟล์ Excel</label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+  </div>
+  <div class="field">
+    <label>
+      <input type="checkbox" id="clearFirst"> ลบข้อมูลเก่าก่อน import (ระวัง!)
+    </label>
+  </div>
+  <button id="importBtn">เริ่ม Import</button>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+</div>
+
+<div class="card">
+  <label>Log</label>
+  <div class="log" id="log">รอ import...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const logEl = document.getElementById('log');
+const progressBar = document.getElementById('progressBar');
+
+function log(msg, type = 'info') {
+  const time = new Date().toLocaleTimeString('th-TH');
+  const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '•';
+  logEl.textContent += `\n[${time}] ${prefix} ${msg}`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// Map columns จากไฟล์ Excel → column name ใน Supabase
+function mapRow(row) {
+  return {
+    year: parseInt(row['Year']) || null,
+    month: parseInt(row['Month']) || null,
+    employee_name: row['Employee_Name'] || null,
+    client_id: row['Client_ID'] || null,
+    client_name: row['Client_Name'] || null,
+    province: row['Province'] || null,
+    product_code: row['รายการสินค้า/รหัส'] || null,
+    sales_unit: parseFloat(row['ขายสุทธิ_SalesUnit']) || 0,
+    unit_name: row['หน่วยนับ'] || null,
+    sales_value: parseFloat(row['ขายสุทธิ_SalesValue']) || 0,
+    regular_price: parseFloat(row['Regularprice']) || null,
+    category: row['หมวด'] || null,
+    mesh_density: row['ตาข่าย_ความเข้ม'] != null ? String(row['ตาข่าย_ความเข้ม']) : null,
+    color: row['Color'] || null,
+    size: row['Size'] || null,
+    brand: row['Brand'] || null,
+    segment: row['Segment'] || null,
+    sub_segment_a: row['Sub_SegmentA'] != null ? String(row['Sub_SegmentA']) : null,
+    sub_segment_b: row['Sub_SegmentB'] || null,
+  };
+}
+
+document.getElementById('importBtn').addEventListener('click', async () => {
+  const url = document.getElementById('supabaseUrl').value.trim();
+  const key = document.getElementById('supabaseKey').value.trim();
+  const file = document.getElementById('fileInput').files[0];
+  const clearFirst = document.getElementById('clearFirst').checked;
+
+  if (!url || !key) { log('กรุณากรอก Supabase URL และ Key', 'error'); return; }
+  if (!file) { log('กรุณาเลือกไฟล์ Excel', 'error'); return; }
+
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true;
+  logEl.textContent = '';
+
+  try {
+    log('เริ่มอ่านไฟล์ Excel...');
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+    log(`อ่านข้อมูลได้ ${rows.length} แถว`);
+
+    const supabase = window.supabase.createClient(url, key);
+
+    if (clearFirst) {
+      log('กำลังลบข้อมูลเก่า...');
+      const { error } = await supabase.from('sales_transactions').delete().neq('id', 0);
+      if (error) throw error;
+      log('ลบข้อมูลเก่าเรียบร้อย', 'success');
+    }
+
+    // แปลงและ insert เป็น batch (Supabase รับสูงสุด ~1000 แถว/batch)
+    const BATCH_SIZE = 500;
+    const mapped = rows.map(mapRow).filter(r => r.client_id && r.year && r.month);
+    log(`ข้อมูลที่ valid: ${mapped.length} แถว`);
+
+    let imported = 0;
+    for (let i = 0; i < mapped.length; i += BATCH_SIZE) {
+      const batch = mapped.slice(i, i + BATCH_SIZE);
+      const { error } = await supabase.from('sales_transactions').insert(batch);
+      if (error) {
+        log(`Error batch ${i}: ${error.message}`, 'error');
+        throw error;
+      }
+      imported += batch.length;
+      const pct = Math.round((imported / mapped.length) * 100);
+      progressBar.style.width = pct + '%';
+      log(`Imported ${imported}/${mapped.length} (${pct}%)`);
+    }
+
+    log(`เสร็จสิ้น! Import ทั้งหมด ${imported} แถว`, 'success');
+    log('ลองเปิด Supabase → Table Editor → customer_rfm เพื่อดูผล RFM');
+  } catch (err) {
+    log('เกิดข้อผิดพลาด: ' + (err.message || err), 'error');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
