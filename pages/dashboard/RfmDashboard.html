@@ -2,306 +2,109 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>RFM Dashboard - ผู้บริหาร</title>
+<title>Customer Dashboard | ผู้บริหาร</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', 'Noto Sans Thai', sans-serif;
-    margin: 0;
-    padding: 24px;
-    background: #f7f7f5;
-    color: #2c2c2a;
-  }
-  .container { max-width: 1400px; margin: 0 auto; }
-
-  header { margin-bottom: 24px; }
-  h1 { font-size: 26px; font-weight: 500; margin: 0 0 4px; }
-  .subtitle { color: #5f5e5a; font-size: 14px; margin: 0; }
-
-  /* Config panel (ซ่อนหลังตั้งค่าแล้ว) */
-  .config {
-    background: white;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .config-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
-  .config-field { flex: 1; min-width: 200px; }
-  label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 4px; color: #5f5e5a; }
-  input, select {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d3d1c7;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    background: white;
-  }
-  button {
-    background: #1D9E75;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  button:hover { background: #0F6E56; }
-  button.secondary { background: white; color: #2c2c2a; border: 1px solid #d3d1c7; }
-  button.secondary:hover { background: #f1efe8; }
-
-  /* KPI */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .kpi {
-    background: white;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 16px;
-  }
-  .kpi-label { font-size: 12px; color: #5f5e5a; margin-bottom: 6px; }
-  .kpi-value { font-size: 24px; font-weight: 500; color: #2c2c2a; }
-  .kpi-value.positive { color: #1D9E75; }
-  .kpi-value.negative { color: #A32D2D; }
-
-  /* Charts */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-  .chart-card {
-    background: white;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 20px;
-  }
-  .chart-card h3 { font-size: 15px; font-weight: 500; margin: 0 0 16px; }
-  .chart-wrap { position: relative; height: 280px; }
-
-  /* Segment explanation */
-  .segments-info {
-    background: white;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  .segments-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
-    margin-top: 12px;
-  }
-  .seg-card {
-    padding: 12px;
-    border-radius: 8px;
-    border-left: 3px solid;
-  }
-  .seg-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
-  .seg-count { font-size: 12px; color: #5f5e5a; margin-bottom: 6px; }
-  .seg-action { font-size: 12px; color: #444441; line-height: 1.5; }
-
-  /* Filters */
-  .filters {
-    background: white;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: flex-end;
-  }
-  .filters .field { flex: 1; min-width: 150px; }
-
-  /* Table */
-  .table-card {
-    background: white;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .table-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #e5e5e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .table-title { font-size: 15px; font-weight: 500; }
-  .table-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th {
-    background: #f7f7f5;
-    padding: 10px 12px;
-    text-align: left;
-    font-weight: 500;
-    font-size: 12px;
-    color: #5f5e5a;
-    border-bottom: 1px solid #e5e5e0;
-    position: sticky;
-    top: 0;
-    cursor: pointer;
-    user-select: none;
-  }
-  th:hover { background: #efedea; }
-  td { padding: 10px 12px; border-bottom: 1px solid #f1efe8; }
-  tr:hover td { background: #fafaf7; }
-  .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  /* Heatmap */
-  .heatmap-grid {
-    display: grid;
-    grid-template-columns: 40px repeat(5, 1fr);
-    gap: 2px;
-    margin-top: 8px;
-  }
-  .heat-label { font-size: 11px; color: #5f5e5a; text-align: center; display: flex; align-items: center; justify-content: center; }
-  .heat-cell {
-    aspect-ratio: 1.5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .axis-label { font-size: 11px; color: #5f5e5a; margin-top: 8px; text-align: center; }
-
-  .hidden { display: none; }
-  .loading { text-align: center; padding: 40px; color: #888780; }
-  .empty { text-align: center; padding: 40px; color: #888780; }
-  .pill {
-    display: inline-block;
-    padding: 2px 8px;
-    background: #f1efe8;
-    border-radius: 4px;
-    font-size: 11px;
-    color: #5f5e5a;
-  }
-
-  /* Segment colors */
-  .seg-champions { background: #E1F5EE; color: #085041; border-color: #1D9E75; }
-  .seg-loyal { background: #EEEDFE; color: #3C3489; border-color: #7F77DD; }
-  .seg-potential { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
-  .seg-new { background: #EAF3DE; color: #27500A; border-color: #639922; }
-  .seg-promising { background: #F1EFE8; color: #444441; border-color: #888780; }
-  .seg-attention { background: #FAEEDA; color: #633806; border-color: #BA7517; }
-  .seg-risk { background: #FCEBEB; color: #791F1F; border-color: #E24B4A; }
-  .seg-cant-lose { background: #FBEAF0; color: #72243E; border-color: #D4537E; }
-  .seg-hibernating { background: #F1EFE8; color: #2C2C2A; border-color: #5F5E5A; }
-  .seg-sleep { background: #FAECE7; color: #712B13; border-color: #D85A30; }
-  .seg-lost { background: #F1EFE8; color: #888780; border-color: #B4B2A9; }
-</style>
+<link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
 </head>
 <body>
 
-<div class="container">
-
-  <header>
-    <h1>RFM Dashboard</h1>
-    <p class="subtitle">วิเคราะห์ลูกค้าตามพฤติกรรมการซื้อ · สำหรับผู้บริหาร</p>
-  </header>
-
-  <!-- Config (ใส่ Supabase credentials ตรงนี้ หรือ hardcode ก็ได้) -->
-  <div class="config" id="configPanel">
-    <div class="config-row">
-      <div class="config-field">
-        <label>Supabase URL</label>
-        <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
-      </div>
-      <div class="config-field">
-        <label>Anon Key</label>
-        <input type="password" id="supabaseKey" placeholder="eyJhbGc...">
-      </div>
-      <button onclick="saveConfig()">โหลดข้อมูล</button>
+<header class="rfm-header">
+  <div class="rfm-header-inner">
+    <div>
+      <h1>Customer & Product Dashboard</h1>
+      <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับผู้บริหาร</p>
     </div>
-    <p style="font-size: 12px; color: #888780; margin: 8px 0 0;">
-      💡 Config จะจำไว้ใน browser (localStorage) รันบนเซิร์ฟเวอร์ของคุณก็ hardcode ได้
-    </p>
+    <div class="user-box">
+      <div class="user-info">
+        <div class="user-name" data-user="display_name">-</div>
+        <div class="user-role" data-user="role">-</div>
+      </div>
+      <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" data-tab="rfm">🎯 RFM Customer Analysis</button>
+    <button class="tab-btn" data-tab="product">📦 Product Analytics</button>
+  </div>
+</nav>
+
+<main class="rfm-main">
+
+  <div id="loadingBox" class="loading-box">
+    <div class="spinner"></div>
+    <p>กำลังโหลดข้อมูล...</p>
   </div>
 
-  <!-- Main dashboard (ซ่อนก่อน จนกว่าจะโหลดข้อมูลได้) -->
-  <div id="dashboard" class="hidden">
+  <div id="errorBox" class="error-box hidden"></div>
 
-    <!-- KPI -->
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">ลูกค้าทั้งหมด</div><div class="kpi-value" id="kpiCustomers">-</div></div>
-      <div class="kpi"><div class="kpi-label">รายได้รวม</div><div class="kpi-value" id="kpiRevenue">-</div></div>
-      <div class="kpi"><div class="kpi-label">AOV (ต่อลูกค้า)</div><div class="kpi-value" id="kpiAov">-</div></div>
-      <div class="kpi"><div class="kpi-label">Champions</div><div class="kpi-value positive" id="kpiChampions">-</div></div>
-      <div class="kpi"><div class="kpi-label">At Risk</div><div class="kpi-value negative" id="kpiAtRisk">-</div></div>
-      <div class="kpi"><div class="kpi-label">ซื้อล่าสุดเฉลี่ย</div><div class="kpi-value" id="kpiRecency">-</div></div>
+  <!-- ===================== TAB 1: RFM ===================== -->
+  <div id="tab-rfm" class="tab-content hidden">
+
+    <div class="meta-bar">
+      <span>อัปเดตล่าสุด: <strong id="lastUpdated">-</strong></span>
+      <span>ข้อมูลทั้งหมด: <strong id="totalRowsInfo">-</strong></span>
+      <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
     </div>
 
-    <!-- Charts -->
-    <div class="charts-grid">
+    <section class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">ลูกค้าทั้งหมด</div><div class="kpi-value" id="kpiCustomers">-</div></div>
+      <div class="kpi"><div class="kpi-label">รายได้รวม</div><div class="kpi-value" id="kpiRevenue">-</div></div>
+      <div class="kpi"><div class="kpi-label">รายได้เฉลี่ย/ลูกค้า</div><div class="kpi-value" id="kpiAov">-</div></div>
+      <div class="kpi"><div class="kpi-label">Champions</div><div class="kpi-value positive" id="kpiChampions">-</div></div>
+      <div class="kpi"><div class="kpi-label">ต้องการการดูแล</div><div class="kpi-value negative" id="kpiAtRisk">-</div></div>
+      <div class="kpi"><div class="kpi-label">ซื้อล่าสุดเฉลี่ย</div><div class="kpi-value" id="kpiRecency">-</div></div>
+    </section>
+
+    <section class="charts-grid">
       <div class="chart-card">
         <h3>จำนวนลูกค้าตาม Segment</h3>
-        <div class="chart-wrap"><canvas id="chartSegments"></canvas></div>
+        <div class="chart-wrap"><canvas id="chartSegments" role="img" aria-label="สัดส่วนลูกค้าแต่ละ segment"></canvas></div>
       </div>
       <div class="chart-card">
         <h3>รายได้ตาม Segment</h3>
-        <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
+        <div class="chart-wrap"><canvas id="chartRevenue" role="img" aria-label="รายได้จากแต่ละ segment"></canvas></div>
       </div>
-    </div>
+    </section>
 
-    <div class="charts-grid">
+    <section class="charts-grid">
       <div class="chart-card">
         <h3>RFM Heatmap (Recency × Frequency)</h3>
         <div id="heatmap"></div>
-        <div class="axis-label">← Recency (1 = ซื้อนานมาแล้ว, 5 = ซื้อล่าสุด)</div>
+        <div class="axis-hint">Recency: 1 = ซื้อนานมาแล้ว · 5 = ซื้อล่าสุด</div>
       </div>
       <div class="chart-card">
         <h3>คำแนะนำ Action ต่อ Segment</h3>
-        <div id="actionList" style="max-height: 280px; overflow-y: auto; font-size: 13px;"></div>
+        <div id="actionList" class="action-list"></div>
       </div>
-    </div>
+    </section>
 
-    <!-- Filters -->
-    <div class="filters">
-      <div class="field">
+    <section class="filters">
+      <div class="filter-field">
         <label>ค้นหาลูกค้า</label>
         <input type="text" id="searchInput" placeholder="ชื่อ หรือ รหัสลูกค้า">
       </div>
-      <div class="field">
+      <div class="filter-field">
         <label>Segment</label>
         <select id="segmentFilter"><option value="">ทั้งหมด</option></select>
       </div>
-      <div class="field">
+      <div class="filter-field">
         <label>พนักงานขาย</label>
         <select id="employeeFilter"><option value="">ทั้งหมด</option></select>
       </div>
-      <div class="field">
+      <div class="filter-field">
         <label>จังหวัด</label>
         <select id="provinceFilter"><option value="">ทั้งหมด</option></select>
       </div>
-      <button class="secondary" onclick="exportCSV()">Export CSV</button>
-      <button class="secondary" onclick="exportXLSX()">Export Excel</button>
-    </div>
+      <div class="filter-actions">
+        <button class="btn-secondary" onclick="RFM.exportCSV()">📥 CSV</button>
+        <button class="btn-secondary" onclick="RFM.exportXLSX()">📥 Excel</button>
+      </div>
+    </section>
 
-    <!-- Table -->
-    <div class="table-card">
+    <section class="table-card">
       <div class="table-header">
         <div class="table-title">ตารางลูกค้า <span class="pill" id="rowCount">0 รายการ</span></div>
       </div>
@@ -309,369 +112,244 @@
         <table>
           <thead>
             <tr>
-              <th onclick="sortBy('client_id')">รหัส</th>
-              <th onclick="sortBy('client_name')">ชื่อลูกค้า</th>
-              <th onclick="sortBy('province')">จังหวัด</th>
-              <th onclick="sortBy('employee_name')">พนักงาน</th>
-              <th class="num" onclick="sortBy('recency_days')">R (วัน)</th>
-              <th class="num" onclick="sortBy('frequency_months')">F (เดือน)</th>
-              <th class="num" onclick="sortBy('monetary_value')">M (บาท)</th>
-              <th onclick="sortBy('rfm_score')">RFM</th>
-              <th onclick="sortBy('segment')">Segment</th>
+              <th data-sort="client_id">รหัส</th>
+              <th data-sort="client_name">ชื่อลูกค้า</th>
+              <th data-sort="province">จังหวัด</th>
+              <th data-sort="employee_name">พนักงาน</th>
+              <th class="num" data-sort="recency_days">R (วัน)</th>
+              <th class="num" data-sort="frequency_months">F (เดือน)</th>
+              <th class="num" data-sort="monetary_value">M (บาท)</th>
+              <th data-sort="rfm_score">RFM</th>
+              <th data-sort="segment">Segment</th>
+              <th style="text-align: center;">ดูสินค้า</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
-    </div>
+      <div class="table-footer">
+        <span id="pageInfo">แสดง 0 จาก 0</span>
+        <div class="pagination">
+          <button class="btn-secondary" onclick="RFM.prevPage()">← ก่อนหน้า</button>
+          <button class="btn-secondary" onclick="RFM.nextPage()">ถัดไป →</button>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <div id="loadingBox" class="loading hidden">กำลังโหลดข้อมูล...</div>
+  <!-- ===================== TAB 2: PRODUCT ===================== -->
+  <div id="tab-product" class="tab-content hidden">
+
+    <section class="insight-card">
+      <div class="insight-icon">💡</div>
+      <div class="insight-body">
+        <div class="insight-title">ภาพรวมตลาด</div>
+        <div class="insight-text" id="productInsight">กำลังวิเคราะห์...</div>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">SKU ทั้งหมด</div><div class="kpi-value" id="pKpiSkus">-</div></div>
+      <div class="kpi"><div class="kpi-label">หมวดสินค้า</div><div class="kpi-value" id="pKpiCategories">-</div></div>
+      <div class="kpi"><div class="kpi-label">หมวดขายดีสุด</div><div class="kpi-value" id="pKpiTopCategory" style="font-size: 15px;">-</div></div>
+      <div class="kpi"><div class="kpi-label">เติบโต YoY</div><div class="kpi-value" id="pKpiYoY">-</div></div>
+      <div class="kpi"><div class="kpi-label">เดือนขายดีสุด</div><div class="kpi-value" id="pKpiPeakMonth" style="font-size: 15px;">-</div></div>
+      <div class="kpi"><div class="kpi-label">Top SKU (รายได้)</div><div class="kpi-value" id="pKpiTopSku" style="font-size: 13px;">-</div></div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>เทรนด์ยอดขายรายเดือน (2024 vs 2025)</h3>
+      <div class="chart-wrap" style="height: 320px;"><canvas id="chartTrend" role="img" aria-label="เทรนด์ยอดขายรายเดือน"></canvas></div>
+      <div class="insight-text" id="trendInsight" style="margin-top: 12px; font-size: 13px; color: #5f5e5a;"></div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="chart-card">
+        <h3>🏆 Top 10 สินค้าขายดี (ตามรายได้)</h3>
+        <div class="chart-wrap" style="height: 380px;"><canvas id="chartTop10" role="img" aria-label="Top 10 สินค้าขายดี"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📉 Bottom 10 สินค้าขายน้อย</h3>
+        <div class="chart-wrap" style="height: 380px;"><canvas id="chartBottom10" role="img" aria-label="Bottom 10 สินค้าขายน้อย"></canvas></div>
+      </div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>Pareto Analysis — กฎ 80/20</h3>
+      <div class="chart-wrap" style="height: 280px;"><canvas id="chartPareto" role="img" aria-label="Pareto 80/20"></canvas></div>
+      <div class="insight-text" id="paretoInsight" style="margin-top: 12px; font-size: 13px; color: #5f5e5a;"></div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>Seasonality — หมวดสินค้าใดขายดีช่วงไหน</h3>
+      <div id="seasonalityHeatmap"></div>
+      <div class="axis-hint">สีเข้ม = ยอดขายสูง · ตัวเลขในช่อง = ยอดรวมล้านบาท</div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>🔍 Drill-Down วิเคราะห์ตามมิติ</h3>
+
+      <div id="drillBreadcrumb" class="breadcrumb"></div>
+
+      <div class="drill-controls">
+        <div class="filter-field">
+          <label>ดูตามมิติ</label>
+          <select id="drillDimension">
+            <option value="category">หมวดสินค้า</option>
+            <option value="brand">Brand</option>
+            <option value="size">ขนาด (Size)</option>
+            <option value="product_code">รหัสสินค้า (SKU)</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>เรียงตาม</label>
+          <select id="drillSortBy">
+            <option value="revenue">รายได้ (มาก→น้อย)</option>
+            <option value="revenue_asc">รายได้ (น้อย→มาก)</option>
+            <option value="units">จำนวนขาย</option>
+            <option value="clients">จำนวนลูกค้า</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>แสดง Top</label>
+          <select id="drillTopN">
+            <option value="10">10 อันดับ</option>
+            <option value="20" selected>20 อันดับ</option>
+            <option value="50">50 อันดับ</option>
+            <option value="999">ทั้งหมด</option>
+          </select>
+        </div>
+        <button class="btn-secondary" onclick="Product.drillReset()">🏠 กลับมุมมองแรก</button>
+      </div>
+
+      <div class="chart-wrap" id="drillChartWrap" style="height: 400px; margin-top: 16px;">
+        <canvas id="chartDrill" role="img"></canvas>
+      </div>
+    </section>
+
+    <section class="filters">
+      <div class="filter-field">
+        <label>ค้นหาสินค้า</label>
+        <input type="text" id="productSearchInput" placeholder="รหัส / ชื่อสินค้า">
+      </div>
+      <div class="filter-field">
+        <label>หมวด</label>
+        <select id="productCategoryFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-field">
+        <label>Brand</label>
+        <select id="productBrandFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-secondary" onclick="Product.exportXLSX()">📥 Excel</button>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-header">
+        <div class="table-title">ตารางสินค้า <span class="pill" id="productRowCount">0 รายการ</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num" data-psort="revenue_rank">#</th>
+              <th data-psort="product_code">รหัสสินค้า</th>
+              <th data-psort="category">หมวด</th>
+              <th data-psort="brand">Brand</th>
+              <th data-psort="size">ขนาด</th>
+              <th class="num" data-psort="revenue">รายได้</th>
+              <th class="num" data-psort="total_units">จำนวน</th>
+              <th class="num" data-psort="unique_clients">ลูกค้า</th>
+              <th class="num" data-psort="avg_price">ราคาเฉลี่ย</th>
+            </tr>
+          </thead>
+          <tbody id="productTableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span id="productPageInfo">แสดง 0 จาก 0</span>
+        <div class="pagination">
+          <button class="btn-secondary" onclick="Product.prevPage()">← ก่อนหน้า</button>
+          <button class="btn-secondary" onclick="Product.nextPage()">ถัดไป →</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<!-- Modal: ดูสินค้าของลูกค้า -->
+<div id="clientProductsModal" class="modal hidden">
+  <div class="modal-overlay" onclick="Product.closeModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalTitle">สินค้าที่ลูกค้านี้ซื้อ</h3>
+      <button class="modal-close" onclick="Product.closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalSummary" class="modal-summary"></div>
+      <div class="table-wrap" style="max-height: 400px;">
+        <table>
+          <thead>
+            <tr>
+              <th>รหัสสินค้า</th>
+              <th>หมวด</th>
+              <th>Brand</th>
+              <th>ขนาด</th>
+              <th class="num">ครั้งที่ซื้อ</th>
+              <th class="num">จำนวน</th>
+              <th class="num">ยอดรวม</th>
+              <th>ซื้อล่าสุด</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="Product.exportClientProductsXLSX()">📥 Export Excel</button>
+      <button class="btn-secondary" onclick="Product.closeModal()">ปิด</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/userService.js"></script>
+<script src="/js/core/roleConfig.js"></script>
+<script src="/js/core/auth.js"></script>
+
+<script src="/js/pages/dashboard/rfmDashboard.js"></script>
+<script src="/js/pages/dashboard/productAnalytics.js"></script>
+
 <script>
-// ============================================================================
-// Configuration
-// ============================================================================
-const SEGMENT_META = {
-  'Champions':          { class: 'seg-champions',   color: '#1D9E75', action: 'ให้รางวัล VIP, เชิญเป็น brand advocate, ส่ง early access สินค้าใหม่' },
-  'Loyal Customers':    { class: 'seg-loyal',       color: '#7F77DD', action: 'เสนอ upsell/cross-sell, โปรแกรม referral, ขอ testimonial' },
-  'Potential Loyalist': { class: 'seg-potential',   color: '#378ADD', action: 'สร้าง engagement, ให้สิทธิพิเศษสมาชิก, แนะนำสินค้าเพิ่มเติม' },
-  'New Customers':      { class: 'seg-new',         color: '#639922', action: 'ต้อนรับด้วย onboarding, ให้ส่วนลดการซื้อครั้งที่ 2 เพื่อสร้างนิสัย' },
-  'Promising':          { class: 'seg-promising',   color: '#888780', action: 'สร้าง brand awareness, แคมเปญสร้างความสัมพันธ์' },
-  'Need Attention':     { class: 'seg-attention',   color: '#BA7517', action: 'ส่งข้อเสนอพิเศษจำกัดเวลา, สำรวจความพึงพอใจ' },
-  'At Risk':            { class: 'seg-risk',        color: '#E24B4A', action: 'แคมเปญ win-back ด่วน, ติดต่อส่วนตัว, เสนอโปรโมชั่นแรง' },
-  'Cant Lose Them':     { class: 'seg-cant-lose',   color: '#D4537E', action: 'ติดต่อโดยตรงจากผู้บริหาร, ข้อเสนอพิเศษเฉพาะบุคคล' },
-  'Hibernating':        { class: 'seg-hibernating', color: '#5F5E5A', action: 'Reactivation campaign, ส่งเนื้อหามีคุณค่า, กระตุ้นด้วยสินค้าใหม่' },
-  'About to Sleep':     { class: 'seg-sleep',       color: '#D85A30', action: 'แคมเปญฟื้นสัมพันธ์, ส่วนลดพิเศษ, เตือนถึงสินค้าที่เคยซื้อ' },
-  'Lost':               { class: 'seg-lost',        color: '#B4B2A9', action: 'พิจารณาประหยัด cost การตลาด หรือทำ final win-back' },
-};
+  document.addEventListener('DOMContentLoaded', async () => {
+    await protectPage(['executive', 'admin']);
 
-let supabase = null;
-let allData = [];       // ข้อมูล RFM ทั้งหมด
-let filteredData = [];  // หลังกรอง
-let charts = {};
-let sortKey = 'monetary_value';
-let sortDir = 'desc';
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.getElementById('tab-' + tab).classList.remove('hidden');
 
-// ============================================================================
-// Init
-// ============================================================================
-window.addEventListener('DOMContentLoaded', () => {
-  const savedUrl = localStorage.getItem('sb_url');
-  const savedKey = localStorage.getItem('sb_key');
-  if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
-  if (savedKey) document.getElementById('supabaseKey').value = savedKey;
-  if (savedUrl && savedKey) saveConfig();
+        // Lazy-load product tab ครั้งแรก
+        if (tab === 'product' && typeof Product !== 'undefined' && !Product.isLoaded()) {
+          Product.init();
+        }
+      });
+    });
 
-  document.getElementById('searchInput').addEventListener('input', applyFilters);
-  document.getElementById('segmentFilter').addEventListener('change', applyFilters);
-  document.getElementById('employeeFilter').addEventListener('change', applyFilters);
-  document.getElementById('provinceFilter').addEventListener('change', applyFilters);
-});
-
-function saveConfig() {
-  const url = document.getElementById('supabaseUrl').value.trim();
-  const key = document.getElementById('supabaseKey').value.trim();
-  if (!url || !key) { alert('กรุณากรอก URL และ Key'); return; }
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  supabase = window.supabase.createClient(url, key);
-  loadData();
-}
-
-// ============================================================================
-// Load data from Supabase
-// ============================================================================
-async function loadData() {
-  document.getElementById('loadingBox').classList.remove('hidden');
-  document.getElementById('dashboard').classList.add('hidden');
-
-  try {
-    // ดึง customer_rfm ทั้งหมด (Supabase default limit = 1000, ต้อง paginate ถ้าเยอะ)
-    const all = [];
-    const PAGE = 1000;
-    let from = 0;
-    while (true) {
-      const { data, error } = await supabase
-        .from('customer_rfm')
-        .select('*')
-        .range(from, from + PAGE - 1);
-      if (error) throw error;
-      all.push(...data);
-      if (data.length < PAGE) break;
-      from += PAGE;
-    }
-    allData = all;
-
-    // ซ่อน config
-    document.getElementById('configPanel').classList.add('hidden');
-    document.getElementById('loadingBox').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-
-    populateFilters();
-    applyFilters();
-    renderActionList();
-  } catch (err) {
-    document.getElementById('loadingBox').classList.add('hidden');
-    alert('โหลดข้อมูลไม่ได้: ' + (err.message || err));
-    document.getElementById('configPanel').classList.remove('hidden');
-    console.error(err);
-  }
-}
-
-// ============================================================================
-// Filters
-// ============================================================================
-function populateFilters() {
-  const segSet = [...new Set(allData.map(r => r.segment))].sort();
-  const empSet = [...new Set(allData.map(r => r.employee_name).filter(Boolean))].sort();
-  const provSet = [...new Set(allData.map(r => r.province).filter(Boolean))].sort();
-
-  fillSelect('segmentFilter', segSet);
-  fillSelect('employeeFilter', empSet);
-  fillSelect('provinceFilter', provSet);
-}
-function fillSelect(id, values) {
-  const el = document.getElementById(id);
-  const current = el.value;
-  el.innerHTML = '<option value="">ทั้งหมด</option>' +
-    values.map(v => `<option value="${v}">${v}</option>`).join('');
-  el.value = current;
-}
-
-function applyFilters() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const seg = document.getElementById('segmentFilter').value;
-  const emp = document.getElementById('employeeFilter').value;
-  const prov = document.getElementById('provinceFilter').value;
-
-  filteredData = allData.filter(r => {
-    if (seg && r.segment !== seg) return false;
-    if (emp && r.employee_name !== emp) return false;
-    if (prov && r.province !== prov) return false;
-    if (q) {
-      const hay = `${r.client_id} ${r.client_name}`.toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
-
-  sortData();
-  renderKPIs();
-  renderCharts();
-  renderHeatmap();
-  renderTable();
-}
-
-function sortBy(key) {
-  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-  else { sortKey = key; sortDir = 'desc'; }
-  sortData();
-  renderTable();
-}
-function sortData() {
-  filteredData.sort((a, b) => {
-    let av = a[sortKey], bv = b[sortKey];
-    if (av == null) av = '';
-    if (bv == null) bv = '';
-    if (typeof av === 'number') return sortDir === 'asc' ? av - bv : bv - av;
-    return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-  });
-}
-
-// ============================================================================
-// Renders
-// ============================================================================
-function fmt(n) { return Math.round(n).toLocaleString('th-TH'); }
-function fmtCurrency(n) { return '฿' + fmt(n); }
-function fmtMillion(n) { return '฿' + (n / 1e6).toFixed(1) + 'M'; }
-
-function renderKPIs() {
-  const totalCustomers = filteredData.length;
-  const totalRevenue = filteredData.reduce((s, r) => s + Number(r.monetary_value || 0), 0);
-  const aov = totalCustomers ? totalRevenue / totalCustomers : 0;
-  const champs = filteredData.filter(r => r.segment === 'Champions').length;
-  const atRisk = filteredData.filter(r => r.segment === 'At Risk' || r.segment === 'Cant Lose Them').length;
-  const avgRecency = totalCustomers
-    ? filteredData.reduce((s, r) => s + Number(r.recency_days || 0), 0) / totalCustomers
-    : 0;
-
-  document.getElementById('kpiCustomers').textContent = fmt(totalCustomers);
-  document.getElementById('kpiRevenue').textContent = totalRevenue >= 1e6 ? fmtMillion(totalRevenue) : fmtCurrency(totalRevenue);
-  document.getElementById('kpiAov').textContent = fmtCurrency(aov);
-  document.getElementById('kpiChampions').textContent = totalCustomers ? ((champs / totalCustomers) * 100).toFixed(1) + '%' : '0%';
-  document.getElementById('kpiAtRisk').textContent = totalCustomers ? ((atRisk / totalCustomers) * 100).toFixed(1) + '%' : '0%';
-  document.getElementById('kpiRecency').textContent = fmt(avgRecency) + ' วัน';
-}
-
-function renderCharts() {
-  // Group by segment
-  const bySeg = {};
-  filteredData.forEach(r => {
-    if (!bySeg[r.segment]) bySeg[r.segment] = { count: 0, revenue: 0 };
-    bySeg[r.segment].count++;
-    bySeg[r.segment].revenue += Number(r.monetary_value || 0);
-  });
-
-  const segs = Object.keys(bySeg).sort((a, b) => bySeg[b].revenue - bySeg[a].revenue);
-  const counts = segs.map(s => bySeg[s].count);
-  const revenues = segs.map(s => bySeg[s].revenue);
-  const colors = segs.map(s => SEGMENT_META[s]?.color || '#888780');
-
-  // Donut: count
-  if (charts.segments) charts.segments.destroy();
-  charts.segments = new Chart(document.getElementById('chartSegments'), {
-    type: 'doughnut',
-    data: { labels: segs, datasets: [{ data: counts, backgroundColor: colors, borderWidth: 0 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.parsed)} คน` } }
-      }
+    if (typeof RFM !== 'undefined') {
+      RFM.init();
+      document.getElementById('tab-rfm').classList.remove('hidden');
     }
   });
-
-  // Bar: revenue
-  if (charts.revenue) charts.revenue.destroy();
-  charts.revenue = new Chart(document.getElementById('chartRevenue'), {
-    type: 'bar',
-    data: {
-      labels: segs,
-      datasets: [{ data: revenues, backgroundColor: colors, borderWidth: 0 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => fmtCurrency(ctx.parsed.y) } }
-      },
-      scales: {
-        y: { beginAtZero: true, ticks: { callback: v => (v / 1e6).toFixed(1) + 'M', font: { size: 11 } } },
-        x: { ticks: { font: { size: 10 }, maxRotation: 45 } }
-      }
-    }
-  });
-}
-
-function renderHeatmap() {
-  // สร้าง matrix 5x5: R (แนวนอน) x F (แนวตั้ง)
-  const matrix = Array(5).fill(0).map(() => Array(5).fill(0));
-  filteredData.forEach(r => {
-    const ri = (r.r_score || 1) - 1;
-    const fi = (r.f_score || 1) - 1;
-    matrix[fi][ri]++;
-  });
-  const max = Math.max(...matrix.flat(), 1);
-
-  let html = '';
-  // Header row
-  html += '<div class="heatmap-grid">';
-  html += '<div class="heat-label">F\\R</div>';
-  for (let r = 1; r <= 5; r++) html += `<div class="heat-label">R=${r}</div>`;
-  // Data rows (F=5 ลงมา)
-  for (let f = 5; f >= 1; f--) {
-    html += `<div class="heat-label">F=${f}</div>`;
-    for (let r = 1; r <= 5; r++) {
-      const count = matrix[f - 1][r - 1];
-      const intensity = count / max;
-      const bg = `rgba(29, 158, 117, ${0.1 + intensity * 0.8})`;
-      const color = intensity > 0.5 ? 'white' : '#2c2c2a';
-      html += `<div class="heat-cell" style="background:${bg}; color:${color}" title="R=${r}, F=${f}: ${count} ลูกค้า">${count || ''}</div>`;
-    }
-  }
-  html += '</div>';
-  document.getElementById('heatmap').innerHTML = html;
-}
-
-function renderActionList() {
-  const segCounts = {};
-  allData.forEach(r => { segCounts[r.segment] = (segCounts[r.segment] || 0) + 1; });
-
-  const html = Object.entries(SEGMENT_META)
-    .filter(([seg]) => segCounts[seg])
-    .sort((a, b) => (segCounts[b[0]] || 0) - (segCounts[a[0]] || 0))
-    .map(([seg, meta]) => `
-      <div class="seg-card ${meta.class}" style="margin-bottom: 8px;">
-        <div class="seg-title">${seg}</div>
-        <div class="seg-count">${segCounts[seg] || 0} ลูกค้า</div>
-        <div class="seg-action">${meta.action}</div>
-      </div>
-    `).join('');
-  document.getElementById('actionList').innerHTML = html;
-}
-
-function renderTable() {
-  document.getElementById('rowCount').textContent = `${fmt(filteredData.length)} รายการ`;
-  // แสดง 500 แถวแรกใน DOM (กัน browser ช้า)
-  const rows = filteredData.slice(0, 500);
-  const html = rows.map(r => {
-    const meta = SEGMENT_META[r.segment] || { class: 'seg-lost' };
-    return `
-      <tr>
-        <td>${r.client_id || ''}</td>
-        <td>${r.client_name || ''}</td>
-        <td>${r.province || ''}</td>
-        <td>${r.employee_name || ''}</td>
-        <td class="num">${fmt(r.recency_days || 0)}</td>
-        <td class="num">${r.frequency_months || 0}</td>
-        <td class="num">${fmtCurrency(r.monetary_value || 0)}</td>
-        <td><code style="font-size: 11px;">${r.rfm_score || ''}</code></td>
-        <td><span class="badge ${meta.class}">${r.segment || ''}</span></td>
-      </tr>`;
-  }).join('');
-  document.getElementById('tableBody').innerHTML = html ||
-    '<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>';
-}
-
-// ============================================================================
-// Export
-// ============================================================================
-function exportCSV() {
-  if (!filteredData.length) { alert('ไม่มีข้อมูล'); return; }
-  const headers = ['รหัสลูกค้า', 'ชื่อลูกค้า', 'จังหวัด', 'พนักงาน', 'ซื้อล่าสุด', 'Recency_วัน', 'Frequency_เดือน', 'Monetary', 'R', 'F', 'M', 'RFM', 'Segment'];
-  const rows = filteredData.map(r => [
-    r.client_id, r.client_name, r.province, r.employee_name,
-    r.last_purchase_date, r.recency_days, r.frequency_months, r.monetary_value,
-    r.r_score, r.f_score, r.m_score, r.rfm_score, r.segment
-  ]);
-  const csv = [headers, ...rows].map(row => row.map(v => `"${(v ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
-  downloadBlob(blob, `rfm_export_${new Date().toISOString().slice(0, 10)}.csv`);
-}
-
-function exportXLSX() {
-  if (!filteredData.length) { alert('ไม่มีข้อมูล'); return; }
-  const rows = filteredData.map(r => ({
-    'รหัสลูกค้า': r.client_id,
-    'ชื่อลูกค้า': r.client_name,
-    'จังหวัด': r.province,
-    'พนักงาน': r.employee_name,
-    'ซื้อล่าสุด': r.last_purchase_date,
-    'Recency (วัน)': r.recency_days,
-    'Frequency (เดือน)': r.frequency_months,
-    'Monetary': r.monetary_value,
-    'R': r.r_score, 'F': r.f_score, 'M': r.m_score,
-    'RFM Score': r.rfm_score,
-    'Segment': r.segment,
-  }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'RFM');
-  XLSX.writeFile(wb, `rfm_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-}
 </script>
 
 </body>

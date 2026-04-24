@@ -29,6 +29,8 @@ const ROLE_CONFIG = {
       '/pages/executive/executiveDashboard.html',
       '/pages/sales/salesDashboard.html',
       '/pages/sales/salesReport.html',
+      '/pages/executive/rfmDashboard.html',   // ← เพิ่มบรรทัดนี้
+      '/pages/admin/rfmImport.html',           // ← เพิ่มบรรทัดนี้
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -68,6 +70,7 @@ const ROLE_CONFIG = {
     allowedPages: [
       '/pages/executive/executiveHome.html',
       '/pages/executive/executiveDashboard.html',
+      '/pages/executive/rfmDashboard.html', 
       '/pages/manager/reportManager.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
