@@ -1,5 +1,5 @@
 // ======================================================
-// rfmDashboard.js
+// rfm-dashboard.js
 // RFM Analysis Dashboard for Executive/Admin
 // ต้องโหลด supabaseClient.js + Chart.js + xlsx.js ก่อนไฟล์นี้
 // ======================================================
@@ -347,14 +347,44 @@ const RFM = (function () {
       .filter(([seg]) => segCounts[seg])
       .sort((a, b) => (segCounts[b[0]] || 0) - (segCounts[a[0]] || 0))
       .map(([seg, meta]) => `
-        <div class="seg-card ${meta.class}">
-          <div class="seg-title">${meta.icon || ''} ${escapeHtml(seg)}</div>
+        <div class="seg-card ${meta.class} clickable"
+             onclick="RFM.filterBySegment('${escapeHtml(seg).replace(/'/g, "\\'")}')"
+             title="คลิกเพื่อดูรายชื่อลูกค้าในกลุ่มนี้">
+          <div class="seg-title">${meta.icon || ''} ${escapeHtml(seg)} <span class="seg-arrow">→</span></div>
           <div class="seg-count">${segCounts[seg]} ลูกค้า · ${escapeHtml(meta.desc || '')}</div>
           <div class="seg-action">${escapeHtml(meta.action)}</div>
         </div>
       `).join('');
 
     $('actionList').innerHTML = html || '<div class="empty">ยังไม่มีข้อมูล</div>';
+  }
+
+  // -----------------------------
+  // FILTER BY SEGMENT (เรียกจาก action card)
+  // -----------------------------
+  function filterBySegment(segment) {
+    // เซ็ตค่า dropdown ให้เป็น segment ที่คลิก
+    const segFilter = $('segmentFilter');
+    if (segFilter) {
+      segFilter.value = segment;
+    }
+
+    // เคลียร์ filter อื่นๆ เพื่อให้เห็นเฉพาะ segment นี้
+    $('searchInput').value = '';
+    $('employeeFilter').value = '';
+    $('provinceFilter').value = '';
+
+    applyFilters();
+
+    // Scroll ลงไปที่ตาราง
+    const tableCard = document.querySelector('#tab-rfm .table-card');
+    if (tableCard) {
+      tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Highlight ตารางสั้นๆ
+      tableCard.classList.add('highlight-pulse');
+      setTimeout(() => tableCard.classList.remove('highlight-pulse'), 1500);
+    }
   }
 
   function renderTable() {
@@ -501,7 +531,8 @@ const RFM = (function () {
     exportCSV,
     exportXLSX,
     nextPage,
-    prevPage
+    prevPage,
+    filterBySegment
   };
 
 })();

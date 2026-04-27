@@ -76,11 +76,23 @@
   <!-- ===================== TAB 1: RFM ===================== -->
   <div id="tab-rfm" class="tab-content hidden">
 
-    <div class="meta-bar">
-      <span>อัปเดตล่าสุด: <strong id="lastUpdated">-</strong></span>
-      <span>ข้อมูลทั้งหมด: <strong id="totalRowsInfo">-</strong></span>
-      <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
-    </div>
+  
+
+
+<div class="meta-bar">
+  <span>อัปเดตล่าสุด: <strong id="lastUpdated">-</strong></span>
+  <span>ข้อมูลทั้งหมด: <strong id="totalRowsInfo">-</strong></span>
+
+  <!-- 🔥 แสดง filter ที่ active อยู่ -->
+  <span id="activeFilterLabel"
+        style="display:none; background:#FAEEDA; color:#633806; padding:3px 10px; border-radius:6px; font-size:12px; font-weight:500;">
+  </span>
+
+  <!-- 🔥 ปุ่มล้างการเลือก -->
+  <button class="btn-secondary" onclick="RFM.resetInteraction()" style="font-size:12px;">🔄 ล้างการเลือก</button>
+
+  <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
+</div>
 
     <section class="kpi-grid">
       <div class="kpi"><div class="kpi-label">ลูกค้าทั้งหมด</div><div class="kpi-value" id="kpiCustomers">-</div></div>

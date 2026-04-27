@@ -160,16 +160,11 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 20px;
-   align-items: stretch; /* 👈 ทำให้การ์ดสูงเท่ากัน */
 }
 @media (max-width: 900px) {
   .charts-grid { grid-template-columns: 1fr; }
 }
 .chart-card {
-  display: flex;
-  flex-direction: column;
-
-
   background: white;
   border: 1px solid #e5e5e0;
   border-radius: 12px;
@@ -219,16 +214,39 @@ body {
 
 /* =================== Action list =================== */
 .action-list {
-  flex: 1;          /* 👈 ให้ยืดเต็มการ์ด */
-  overflow: visible;  /* ไม่ให้ scroll */
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .seg-card {
   padding: 10px 12px;
   border-radius: 8px;
   border-left: 3px solid;
-  margin-bottom: 8px;
+  transition: all 0.2s;
+  position: relative;
 }
-.seg-card:last-child { margin-bottom: 0; }
+.seg-card.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+.seg-card.clickable:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.seg-card.clickable:active {
+  transform: translateX(0);
+  box-shadow: none;
+}
+.seg-arrow {
+  float: right;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-weight: 400;
+}
+.seg-card.clickable:hover .seg-arrow {
+  opacity: 0.6;
+}
 .seg-title {
   font-weight: 500;
   font-size: 14px;
@@ -243,6 +261,16 @@ body {
   font-size: 12px;
   color: #444441;
   line-height: 1.5;
+}
+
+/* Highlight pulse animation - ใช้เมื่อ scroll ไปที่ตาราง */
+.highlight-pulse {
+  animation: pulseHighlight 1.5s ease-out;
+}
+@keyframes pulseHighlight {
+  0% { box-shadow: 0 0 0 0 rgba(29, 158, 117, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(29, 158, 117, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(29, 158, 117, 0); }
 }
 
 /* =================== Filters =================== */
