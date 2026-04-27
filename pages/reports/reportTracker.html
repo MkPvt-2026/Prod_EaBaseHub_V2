@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/base/bassHeader.css">
+  <!-- <link rel="stylesheet" href="/css/base/baseHeader.css"> -->
+  <link rel="stylesheet" href="/css/base/baseExecutive.css">
   <link rel="stylesheet" href="/css/pages/report/reportTracker.css">
 </head>
 <body>
@@ -34,16 +35,16 @@
       </div>
 
 
-       <div class="group">
-          <button id="logoutBtn" class="badge badge--message-sent logout-btn">
+     <div class="group">
+          <button id="logoutBtn" class="logout-btn">
             <span class="badge-icon">
               <span class="material-symbols-outlined" style="font-size: 17px"
-                >logout</span
-              >
+                >logout</span>
             </span>
             ออกจากระบบ
           </button>
         </div>
+
 
 
     </div>
@@ -158,7 +159,7 @@
             <span class="material-symbols-outlined">groups</span>
             ภาพรวมทีมเซลล์
           </h2>
-          <span class="card-hint">คลิกเพื่อกรองรายงาน</span>
+          <span class="card-hint">คลิกการ์ดเพื่อดูรายงานทั้งหมดของเซลล์ในตารางเดียว</span>
         </div>
         <div class="sales-grid" id="salesGrid">
           <div class="loading">กำลังโหลด...</div>
@@ -213,7 +214,7 @@
       </div>
 
       <!-- ══════════════════════════════════════════════════
-           REPORTS LIST
+           REPORTS LIST + VIEW TOGGLE
       ══════════════════════════════════════════════════ -->
       <div class="card">
         <div class="card-header">
@@ -221,19 +222,50 @@
             <span class="material-symbols-outlined">list_alt</span>
             รายการรายงาน
           </h2>
-          <span id="reportCount" class="card-hint"></span>
+
+          <div class="header-actions">
+            <!-- 🆕 View Toggle -->
+            <div class="view-toggle" role="tablist" aria-label="โหมดแสดงผล">
+              <button class="view-toggle-btn active" data-view="list" onclick="switchView('list')">
+                <span class="material-symbols-outlined icon-sm">view_list</span>
+                List
+              </button>
+              <button class="view-toggle-btn" data-view="table" onclick="switchView('table')">
+                <span class="material-symbols-outlined icon-sm">table_rows</span>
+                Table by Sales
+              </button>
+            </div>
+
+            <span id="reportCount" class="card-hint"></span>
+          </div>
         </div>
-        <div class="reports-container" id="reportsContainer">
-          <div class="loading">กำลังโหลด...</div>
+
+        <!-- LIST VIEW (เดิม) -->
+        <div id="listView" class="view-panel active">
+          <div class="reports-container" id="reportsContainer">
+            <div class="loading">กำลังโหลด...</div>
+          </div>
+          <div class="pagination" id="pagination"></div>
         </div>
-        <div class="pagination" id="pagination"></div>
+
+        <!-- 🆕 TABLE BY SALES VIEW -->
+        <div id="tableView" class="view-panel">
+          <div class="table-by-sales-hint">
+            <span class="material-symbols-outlined icon-blue">info</span>
+            คลิกการ์ดเซลล์ด้านบนเพื่อดูรายงานทั้งหมดในตารางเดียว — หรือเลือกจากด้านล่างนี้
+          </div>
+          <div class="sales-quick-pick" id="salesQuickPick">
+            <div class="loading">กำลังโหลด...</div>
+          </div>
+        </div>
+
       </div>
 
     </div>
   </main>
 
   <!-- ══════════════════════════════════════════════════
-       MODAL: REPORT DETAIL
+       MODAL: REPORT DETAIL (เดิม)
   ══════════════════════════════════════════════════ -->
   <div id="reportModal" class="modal">
     <div class="modal-content">
@@ -300,14 +332,6 @@
             <span id="mQty" class="info-value">—</span>
           </div>
 
-          <div class="info-item">
-            <span class="info-label">
-              <span class="material-symbols-outlined icon-blue-dark">recommend</span>
-              สินค้าที่ร้านแนะนำ (ต้องการซื้อ)
-            </span>
-            <span id="mProductInterest" class="info-value">—</span>
-          </div>
-
           <!-- ซ่อน mManagerName/mSource แต่คง element ไว้เผื่อ JS เรียก -->
           <span id="mManagerName" style="display:none">—</span>
           <span id="mSource" style="display:none">—</span>
@@ -349,6 +373,137 @@
       </div>
     </div>
   </div>
+
+  <!-- ══════════════════════════════════════════════════
+       🆕 MODAL: SALES TABLE (ตารางรายงานของเซลล์ทั้งสัปดาห์)
+  ══════════════════════════════════════════════════ -->
+  <div id="salesTableModal" class="modal modal-xl">
+    <div class="modal-content modal-content-xl">
+      <button class="close-btn" onclick="closeSalesTableModal()" title="ปิด">
+        <span class="material-symbols-outlined icon-sm">close</span>
+      </button>
+
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="sales-modal-avatar" id="salesModalAvatar">A</div>
+          <div>
+            <h3 id="salesModalTitle">รายงานของเซลล์</h3>
+            <div class="sales-modal-subtitle" id="salesModalSubtitle">—</div>
+          </div>
+        </div>
+        <div class="modal-badges">
+          <span class="badge badge-info" id="salesModalCount">— ร้าน</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Mini Summary -->
+        <div class="mini-summary">
+          <div class="mini-stat">
+            <span class="mini-label">ร้านที่เข้า</span>
+            <span class="mini-value" id="stShops">—</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-label">จังหวัด</span>
+            <span class="mini-value" id="stProvinces">—</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-label">ยังไม่อ่าน</span>
+            <span class="mini-value" style="color:#f59e0b" id="stUnread">—</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-label">มี Comment</span>
+            <span class="mini-value" style="color:#0093ad" id="stCommented">—</span>
+          </div>
+        </div>
+
+        <!-- ตารางรายงาน -->
+        <div class="sales-table-wrapper">
+          <table class="sales-table" id="salesReportTable">
+            <thead>
+              <tr>
+                <th style="width: 88px;">วันที่</th>
+                <th style="width: 150px;">ร้านค้า</th>
+                <th style="width: 95px;">จังหวัด</th>
+                <th style="width: 150px;">สินค้าที่จำหน่าย</th>
+                <th style="width: 110px;">สินค้าที่ลูกค้าแนะนำ</th>
+                <th>รายละเอียดการเข้าเยี่ยม</th>
+                <th style="width: 70px;" class="col-status">สถานะ</th>
+                <th style="width: 80px;" class="col-action">Comment</th>
+              </tr>
+            </thead>
+            <tbody id="salesTableBody">
+              <tr><td colspan="8" class="loading">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       🆕 MODAL: COMMENT POPUP (เล็ก) — ซ้อนบน sales table modal
+  ══════════════════════════════════════════════════ -->
+  <div id="commentPopupModal" class="modal modal-sm">
+    <div class="modal-content modal-content-sm">
+      <button class="close-btn" onclick="closeCommentPopup()" title="ปิด">
+        <span class="material-symbols-outlined icon-sm">close</span>
+      </button>
+
+      <div class="modal-header">
+        <h3>
+          <span class="material-symbols-outlined icon-blue-dark">forum</span>
+          Comment
+        </h3>
+        <div class="modal-badges">
+          <span id="popupStatus" class="badge">—</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- ข้อมูลร้านสั้น ๆ -->
+        <div class="popup-shop-info">
+          <div class="popup-shop-row">
+            <span class="material-symbols-outlined icon-sm icon-blue">storefront</span>
+            <span id="pShopName" class="popup-shop-name">—</span>
+            <span id="pProvince" class="popup-province">—</span>
+          </div>
+          <div class="popup-shop-row popup-shop-date">
+            <span class="material-symbols-outlined icon-sm icon-blue-dark">calendar_month</span>
+            <span id="pReportDate">—</span>
+          </div>
+        </div>
+
+        <!-- Comments list -->
+        <div class="comment-section" style="margin-top:12px; padding-top:12px;">
+          <div class="comment-header">
+            <span class="material-symbols-outlined icon-blue-dark">chat</span>
+            ความคิดเห็น
+          </div>
+
+          <div id="popupCommentsHistory" class="comments-list"></div>
+
+          <textarea id="popupCommentInput"
+                    placeholder="พิมพ์ความคิดเห็น..."
+                    rows="3"></textarea>
+
+          <div class="modal-actions">
+            <button onclick="savePopupComment()" class="btn btn-primary">
+              <span class="material-symbols-outlined icon-white">add_comment</span>
+              บันทึก
+            </button>
+            <button onclick="markPopupAsRead()" class="btn btn-success">
+              <span class="material-symbols-outlined icon-white">check_circle</span>
+              ทำเครื่องหมายว่าอ่านแล้ว
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════════════════════════════════════════════
        TOAST
   ══════════════════════════════════════════════════ -->
@@ -367,7 +522,6 @@
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
   <script src="/js/pages/report/reportTracker.js"></script>
-  <!-- <script src="/js/pages/report/reportTracker.js"></script> -->
 
   <!-- Load Nav -->
   <script>

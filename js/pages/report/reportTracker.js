@@ -1,16 +1,18 @@
 // =====================================================
-// reportTracker.js v5 — Group by Shop Visit + Role Hierarchy
+// reportTracker.js v6 — Sales Table Modal + Comment Popup + View Toggle
 // 1 รายการ = 1 ร้านค้า (รวมสินค้าทั้งหมด)
-// รองรับ role: admin > executive > manager > sales/user
+// 🆕 คลิก sales card → เปิด modal ตารางทั้งสัปดาห์ของเซลล์คนนั้น
+// 🆕 ปุ่ม comment ในแต่ละแถว → popup เล็กซ้อน
+// 🆕 Toggle: List view / Table by Sales view
 // =====================================================
 
-'use strict';
+"use strict";
 
 let localUser = null;
 
-let allReports = [];        // raw rows from DB
-let groupedReports = [];    // grouped by shop visit
-let filteredGroups = [];    // after filter
+let allReports = []; // raw rows from DB
+let groupedReports = []; // grouped by shop visit
+let filteredGroups = []; // after filter
 let profilesMap = {};
 let shopsMap = {};
 let productsMap = {};
@@ -23,9 +25,21 @@ let currentPage = 1;
 const PAGE_SIZE = 20;
 
 let activeSalesFilter = null;
+
+// Modal: report detail (เดิม)
 let currentReportId = null;
-let currentGroupKey = null;   // key ของกลุ่มที่เปิด modal อยู่
-let currentGroupRows = [];    // report rows ของกลุ่มที่เปิด modal
+let currentGroupKey = null;
+let currentGroupRows = [];
+
+// 🆕 Modal: sales table
+let currentSalesModalId = null;
+
+// 🆕 Modal: comment popup
+let currentPopupGroupKey = null;
+let currentPopupReportId = null;
+
+// 🆕 View mode
+let currentView = "list"; // 'list' | 'table'
 
 // =====================================================
 // 🔧 HELPER: รอ Supabase Client พร้อม
@@ -35,12 +49,12 @@ function waitForSupabase(maxAttempts = 50) {
     let attempts = 0;
     const check = () => {
       attempts++;
-      if (typeof supabaseClient !== 'undefined' && supabaseClient?.auth) {
+      if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
         resolve(supabaseClient);
       } else if (attempts < maxAttempts) {
         setTimeout(check, 100);
       } else {
-        reject(new Error('supabaseClient ไม่พร้อมหลังจากรอนานเกินไป'));
+        reject(new Error("supabaseClient ไม่พร้อมหลังจากรอนานเกินไป"));
       }
     };
     check();
@@ -50,8 +64,8 @@ function waitForSupabase(maxAttempts = 50) {
 // =====================================================
 // 🚀 INIT
 // =====================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 Report Manager initializing...');
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("🚀 Report Manager initializing...");
 
   try {
     await waitForSupabase();
@@ -62,10 +76,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // ✅ protectPage รวม admin + executive + manager (admin ผ่านอัตโนมัติ)
-    if (typeof protectPage === 'function') {
-      try { await protectPage(['admin', 'executive', 'manager']); }
-      catch (e) { console.warn('⚠️ protectPage failed:', e.message); }
+    if (typeof protectPage === "function") {
+      try {
+        await protectPage(["admin", "executive", "manager"]);
+      } catch (e) {
+        console.warn("⚠️ protectPage failed:", e.message);
+      }
     }
 
     localUser = await loadCurrentUser(session);
@@ -84,9 +100,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     setupLogout();
 
-    console.log('✅ Report Manager ready');
+    console.log("✅ Report Manager ready");
   } catch (e) {
-    console.error('❌ Init error:', e);
+    console.error("❌ Init error:", e);
     showErrorState(e.message);
   }
 });
@@ -96,17 +112,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 // =====================================================
 async function getSessionSafely() {
   try {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabaseClient.auth.getSession();
     if (error) {
       try {
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        const {
+          data: { user },
+          error: userError,
+        } = await supabaseClient.auth.getUser();
         if (user && !userError) return { user };
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
       return null;
     }
     return session;
   } catch (e) {
-    console.error('❌ getSessionSafely error:', e);
+    console.error("❌ getSessionSafely error:", e);
     return null;
   }
 }
@@ -121,7 +145,11 @@ async function loadCurrentUser(session) {
         id: window.currentUser.id,
         role: window.currentUser.role,
         area: window.currentUser.area,
-        name: window.currentUser.display_name || window.currentUser.username || window.currentUser.email || 'User'
+        name:
+          window.currentUser.display_name ||
+          window.currentUser.username ||
+          window.currentUser.email ||
+          "User",
       };
     }
 
@@ -129,23 +157,28 @@ async function loadCurrentUser(session) {
     if (!userId) return null;
 
     const { data: profile, error } = await supabaseClient
-      .from('profiles')
-      .select('id, display_name, role, area')
-      .eq('id', userId)
+      .from("profiles")
+      .select("id, display_name, role, area")
+      .eq("id", userId)
       .single();
 
     if (error) {
-      return { id: userId, role: 'user', area: null, name: session.user.email || 'User' };
+      return {
+        id: userId,
+        role: "user",
+        area: null,
+        name: session.user.email || "User",
+      };
     }
 
     return {
       id: profile.id,
       role: profile.role,
       area: profile.area,
-      name: profile.display_name || session.user.email || 'User'
+      name: profile.display_name || session.user.email || "User",
     };
   } catch (e) {
-    console.error('❌ loadCurrentUser error:', e);
+    console.error("❌ loadCurrentUser error:", e);
     return null;
   }
 }
@@ -154,18 +187,19 @@ async function loadCurrentUser(session) {
 // 🎨 UPDATE HEADER UI
 // =====================================================
 function updateHeaderUI() {
-  const nameEl = document.getElementById('userName');
+  const nameEl = document.getElementById("userName");
   if (nameEl && localUser?.name) nameEl.textContent = localUser.name;
 
-  const avatarEl = document.getElementById('userAvatar');
-  if (avatarEl && localUser?.name) avatarEl.textContent = localUser.name.charAt(0).toUpperCase();
+  const avatarEl = document.getElementById("userAvatar");
+  if (avatarEl && localUser?.name)
+    avatarEl.textContent = localUser.name.charAt(0).toUpperCase();
 }
 
 // =====================================================
 // ⚠️ UI STATES
 // =====================================================
 function showLoginRequired() {
-  const container = document.getElementById('reportsContainer');
+  const container = document.getElementById("reportsContainer");
   if (container) {
     container.innerHTML = `
       <div class="empty-state">
@@ -175,16 +209,18 @@ function showLoginRequired() {
         <a href="/pages/auth/login.html" class="btn btn-primary" style="margin-top:1rem;">เข้าสู่ระบบ</a>
       </div>`;
   }
-  const salesGrid = document.getElementById('salesGrid');
-  if (salesGrid) salesGrid.innerHTML = '';
-  ['totalReports', 'unreadReports', 'readReports', 'activeSales'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '—';
-  });
+  const salesGrid = document.getElementById("salesGrid");
+  if (salesGrid) salesGrid.innerHTML = "";
+  ["totalReports", "unreadReports", "readReports", "activeSales"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = "—";
+    },
+  );
 }
 
 function showErrorState(message) {
-  const container = document.getElementById('reportsContainer');
+  const container = document.getElementById("reportsContainer");
   if (container) {
     container.innerHTML = `
       <div class="empty-state">
@@ -215,8 +251,8 @@ function initDateRange() {
   dateStart = monday;
   dateEnd = sunday;
 
-  const startInput = document.getElementById('dateStart');
-  const endInput = document.getElementById('dateEnd');
+  const startInput = document.getElementById("dateStart");
+  const endInput = document.getElementById("dateEnd");
   if (startInput) startInput.value = formatDateForInput(dateStart);
   if (endInput) endInput.value = formatDateForInput(dateEnd);
 
@@ -224,11 +260,11 @@ function initDateRange() {
 }
 
 function setupDateControls() {
-  const startInput = document.getElementById('dateStart');
-  const endInput = document.getElementById('dateEnd');
+  const startInput = document.getElementById("dateStart");
+  const endInput = document.getElementById("dateEnd");
 
   if (startInput) {
-    startInput.addEventListener('change', () => {
+    startInput.addEventListener("change", () => {
       dateStart = new Date(startInput.value);
       dateStart.setHours(0, 0, 0, 0);
       updateDateRangeLabel();
@@ -238,7 +274,7 @@ function setupDateControls() {
   }
 
   if (endInput) {
-    endInput.addEventListener('change', () => {
+    endInput.addEventListener("change", () => {
       dateEnd = new Date(endInput.value);
       dateEnd.setHours(23, 59, 59, 999);
       updateDateRangeLabel();
@@ -247,17 +283,21 @@ function setupDateControls() {
     });
   }
 
-  document.querySelectorAll('.quick-range-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+  document.querySelectorAll(".quick-range-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
       setQuickRange(btn.dataset.range);
-      document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      document
+        .querySelectorAll(".quick-range-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
     });
   });
 }
 
 function clearQuickRangeActive() {
-  document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
+  document
+    .querySelectorAll(".quick-range-btn")
+    .forEach((b) => b.classList.remove("active"));
 }
 
 function setQuickRange(range) {
@@ -269,15 +309,20 @@ function setQuickRange(range) {
   let end = new Date(today);
 
   switch (range) {
-    case 'today': break;
-    case '7days': start.setDate(start.getDate() - 6); break;
-    case '30days': start.setDate(start.getDate() - 29); break;
-    case 'thisWeek': {
+    case "today":
+      break;
+    case "7days":
+      start.setDate(start.getDate() - 6);
+      break;
+    case "30days":
+      start.setDate(start.getDate() - 29);
+      break;
+    case "thisWeek": {
       const d = start.getDay();
       start.setDate(start.getDate() + (d === 0 ? -6 : 1 - d));
       break;
     }
-    case 'lastWeek': {
+    case "lastWeek": {
       const d = start.getDay();
       start.setDate(start.getDate() + (d === 0 ? -6 : 1 - d) - 7);
       end = new Date(start);
@@ -285,10 +330,10 @@ function setQuickRange(range) {
       end.setHours(23, 59, 59, 999);
       break;
     }
-    case 'thisMonth':
+    case "thisMonth":
       start = new Date(today.getFullYear(), today.getMonth(), 1);
       break;
-    case 'lastMonth':
+    case "lastMonth":
       start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       end = new Date(today.getFullYear(), today.getMonth(), 0);
       end.setHours(23, 59, 59, 999);
@@ -302,8 +347,8 @@ function setQuickRange(range) {
   dateStart = start;
   dateEnd = end;
 
-  const startInput = document.getElementById('dateStart');
-  const endInput = document.getElementById('dateEnd');
+  const startInput = document.getElementById("dateStart");
+  const endInput = document.getElementById("dateEnd");
   if (startInput) startInput.value = formatDateForInput(dateStart);
   if (endInput) endInput.value = formatDateForInput(dateEnd);
 
@@ -312,74 +357,72 @@ function setQuickRange(range) {
 }
 
 function updateDateRangeLabel() {
-  const label = document.getElementById('dateRangeLabel');
+  const label = document.getElementById("dateRangeLabel");
   if (!label) return;
   const days = Math.ceil((dateEnd - dateStart) / (1000 * 60 * 60 * 24)) + 1;
-  const fmt = d => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+  const fmt = (d) =>
+    d.toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+    });
   label.textContent = `${fmt(dateStart)} – ${fmt(dateEnd)} (${days} วัน)`;
 }
 
 function formatDateForInput(date) {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 // =====================================================
 // 👥 LOAD PROFILES
-// ✅ โหลดทุก role ที่อาจ comment ได้ (admin, executive, manager, sales, user)
 // =====================================================
 async function loadProfiles() {
   try {
-    // Sales / User (สำหรับ dropdown และ sales grid)
     const { data: salesData } = await supabaseClient
-      .from('profiles')
-      .select('id, display_name, role, area')
-      .in('role', ['sales', 'user']);
+      .from("profiles")
+      .select("id, display_name, role, area")
+      .in("role", ["sales", "user"]);
 
-    // Manager (สำหรับ dropdown และ manager grid)
     const { data: mgrData } = await supabaseClient
-      .from('profiles')
-      .select('id, display_name, role, area')
-      .in('role', ['manager']);
+      .from("profiles")
+      .select("id, display_name, role, area")
+      .in("role", ["manager"]);
 
-    // ✅ Admin + Executive (สำหรับ lookup comment เท่านั้น)
     const { data: execData } = await supabaseClient
-      .from('profiles')
-      .select('id, display_name, role, area')
-      .in('role', ['admin', 'executive']);
+      .from("profiles")
+      .select("id, display_name, role, area")
+      .in("role", ["admin", "executive"]);
 
-    // รวม profiles ทั้งหมดเพื่อ lookup
     const allProfiles = [
       ...(salesData || []),
       ...(mgrData || []),
-      ...(execData || [])
+      ...(execData || []),
     ];
-    profilesMap = Object.fromEntries(allProfiles.map(p => [p.id, p]));
+    profilesMap = Object.fromEntries(allProfiles.map((p) => [p.id, p]));
 
-    // Sales dropdown
-    const selectSales = document.getElementById('filterSales');
+    const selectSales = document.getElementById("filterSales");
     if (selectSales) {
       selectSales.innerHTML = '<option value="">— ทั้งหมด —</option>';
-      (salesData || []).forEach(p => {
-        const opt = document.createElement('option');
+      (salesData || []).forEach((p) => {
+        const opt = document.createElement("option");
         opt.value = p.id;
         opt.textContent = p.display_name || p.id;
         selectSales.appendChild(opt);
       });
     }
 
-    // Manager dropdown
-    const selectMgr = document.getElementById('filterManager');
+    const selectMgr = document.getElementById("filterManager");
     if (selectMgr) {
       selectMgr.innerHTML = '<option value="">— ทั้งหมด —</option>';
-      (mgrData || []).forEach(p => {
-        const opt = document.createElement('option');
+      (mgrData || []).forEach((p) => {
+        const opt = document.createElement("option");
         opt.value = p.id;
         opt.textContent = p.display_name || p.id;
         selectMgr.appendChild(opt);
       });
     }
   } catch (e) {
-    console.error('❌ loadProfiles error:', e);
+    console.error("❌ loadProfiles error:", e);
   }
 }
 
@@ -389,16 +432,21 @@ async function loadProfiles() {
 async function loadShops() {
   try {
     const { data, error } = await supabaseClient
-      .from('shops')
-      .select('id, shop_name, province')
-      .order('shop_name');
+      .from("shops")
+      .select("id, shop_name, province")
+      .order("shop_name");
     if (error) throw error;
-    shopsMap = Object.fromEntries((data || []).map(s => [s.id, {
-      name: s.shop_name,
-      province: s.province || '—'
-    }]));
+    shopsMap = Object.fromEntries(
+      (data || []).map((s) => [
+        s.id,
+        {
+          name: s.shop_name,
+          province: s.province || "—",
+        },
+      ]),
+    );
   } catch (e) {
-    console.error('❌ loadShops error:', e);
+    console.error("❌ loadShops error:", e);
   }
 }
 
@@ -408,12 +456,15 @@ async function loadShops() {
 async function loadProducts() {
   try {
     const { data, error } = await supabaseClient
-      .from('products')
-      .select('id, name');
+      .from("products")
+      .select("id, name");
     if (error) throw error;
-    if (data) data.forEach(p => { productsMap[p.id] = p.name; });
+    if (data)
+      data.forEach((p) => {
+        productsMap[p.id] = p.name;
+      });
   } catch (e) {
-    console.error('❌ loadProducts error:', e);
+    console.error("❌ loadProducts error:", e);
   }
 }
 
@@ -425,23 +476,25 @@ async function loadCommentCounts(reportIds) {
   if (!reportIds || !reportIds.length) return;
   try {
     const { data, error } = await supabaseClient
-      .from('report_comments')
-      .select('report_id')
-      .in('report_id', reportIds);
+      .from("report_comments")
+      .select("report_id")
+      .in("report_id", reportIds);
     if (error) throw error;
-    (data || []).forEach(c => {
+    (data || []).forEach((c) => {
       commentCountsMap[c.report_id] = (commentCountsMap[c.report_id] || 0) + 1;
     });
   } catch (e) {
-    console.error('❌ loadCommentCounts error:', e);
+    console.error("❌ loadCommentCounts error:", e);
   }
 }
 
 // =====================================================
-// 🔗 GROUP REPORTS — รวมร้านเดียวกัน/วันเดียวกัน/เซลล์เดียวกัน
+// 🔗 GROUP REPORTS
 // =====================================================
 function makeGroupKey(r) {
-  const dateKey = r.report_date || (r.submitted_at ? r.submitted_at.split('T')[0] : 'no-date');
+  const dateKey =
+    r.report_date ||
+    (r.submitted_at ? r.submitted_at.split("T")[0] : "no-date");
   return `${r.sale_id}__${r.shop_id}__${dateKey}`;
 }
 
@@ -465,7 +518,7 @@ function groupReportRows(reports) {
         source: r.source,
         manager_acknowledged: r.manager_acknowledged,
         products: [],
-        reportIds: []
+        reportIds: [],
       });
     }
 
@@ -476,13 +529,15 @@ function groupReportRows(reports) {
       group.products.push({
         product_id: r.product_id,
         attributes: r.attributes || {},
-        quantity: r.quantity
+        quantity: r.quantity,
       });
     }
 
     if (!group.note && r.note) group.note = r.note;
-    if (!group.product_interest && r.product_interest) group.product_interest = r.product_interest;
-    if (!group.status_visit && r.status_visit) group.status_visit = r.status_visit;
+    if (!group.product_interest && r.product_interest)
+      group.product_interest = r.product_interest;
+    if (!group.status_visit && r.status_visit)
+      group.status_visit = r.status_visit;
 
     if (!r.manager_acknowledged) {
       group.manager_acknowledged = false;
@@ -502,7 +557,7 @@ function groupReportRows(reports) {
 function getGroupCommentCount(group) {
   let total = 0;
   for (const rid of group.reportIds) {
-    total += (commentCountsMap[rid] || 0);
+    total += commentCountsMap[rid] || 0;
   }
   return total;
 }
@@ -511,15 +566,16 @@ function getGroupCommentCount(group) {
 // 📊 LOAD REPORTS
 // =====================================================
 async function loadReports() {
-  const container = document.getElementById('reportsContainer');
-  if (container) container.innerHTML = '<div class="loading">กำลังโหลดรายงาน...</div>';
+  const container = document.getElementById("reportsContainer");
+  if (container)
+    container.innerHTML = '<div class="loading">กำลังโหลดรายงาน...</div>';
 
   try {
     let query = supabaseClient
-      .from('reports')
-      .select('*')
-      .order('submitted_at', { ascending: false, nullsLast: true })
-      .order('report_date', { ascending: false, nullsLast: true });
+      .from("reports")
+      .select("*")
+      .order("submitted_at", { ascending: false, nullsLast: true })
+      .order("report_date", { ascending: false, nullsLast: true });
 
     const { data, error } = await query;
     if (error) throw error;
@@ -527,14 +583,14 @@ async function loadReports() {
     const startTime = dateStart.getTime();
     const endTime = dateEnd.getTime();
 
-    allReports = (data || []).filter(r => {
+    allReports = (data || []).filter((r) => {
       const date = r.submitted_at || r.report_date || r.created_at;
       if (!date) return false;
       const t = new Date(date).getTime();
       return t >= startTime && t <= endTime;
     });
 
-    await loadCommentCounts(allReports.map(r => r.id));
+    await loadCommentCounts(allReports.map((r) => r.id));
 
     groupedReports = groupReportRows(allReports);
     filteredGroups = [...groupedReports];
@@ -543,12 +599,15 @@ async function loadReports() {
     updateSummaryCards();
     updateManagerGrid();
     updateSalesGrid();
+    updateSalesQuickPick(); // 🆕
     currentPage = 1;
     renderReports();
 
-    console.log(`✅ Loaded ${allReports.length} rows → ${groupedReports.length} shop visits`);
+    console.log(
+      `✅ Loaded ${allReports.length} rows → ${groupedReports.length} shop visits`,
+    );
   } catch (e) {
-    console.error('❌ loadReports error:', e);
+    console.error("❌ loadReports error:", e);
     if (container) {
       container.innerHTML = `
         <div class="empty-state">
@@ -566,34 +625,40 @@ async function loadReports() {
 // =====================================================
 function updateSummaryCards() {
   const total = groupedReports.length;
-  const unread = groupedReports.filter(g => !g.manager_acknowledged).length;
-  const read = groupedReports.filter(g => g.manager_acknowledged).length;
-  const commented = groupedReports.filter(g => getGroupCommentCount(g) > 0).length;
+  const unread = groupedReports.filter((g) => !g.manager_acknowledged).length;
+  const read = groupedReports.filter((g) => g.manager_acknowledged).length;
+  const commented = groupedReports.filter(
+    (g) => getGroupCommentCount(g) > 0,
+  ).length;
 
-  const el = id => document.getElementById(id);
-  if (el('totalReports'))     el('totalReports').textContent = total;
-  if (el('unreadReports'))    el('unreadReports').textContent = unread;
-  if (el('readReports'))      el('readReports').textContent = read;
-  if (el('commentedReports')) el('commentedReports').textContent = commented;
+  const el = (id) => document.getElementById(id);
+  if (el("totalReports")) el("totalReports").textContent = total;
+  if (el("unreadReports")) el("unreadReports").textContent = unread;
+  if (el("readReports")) el("readReports").textContent = read;
+  if (el("commentedReports")) el("commentedReports").textContent = commented;
 }
 
 // =====================================================
 // 👔 UPDATE MANAGER GRID
 // =====================================================
 function updateManagerGrid() {
-  const grid = document.getElementById('managerGrid');
+  const grid = document.getElementById("managerGrid");
   if (!grid) return;
 
-  const managers = Object.entries(profilesMap).filter(([, p]) => p.role === 'manager');
+  const managers = Object.entries(profilesMap).filter(
+    ([, p]) => p.role === "manager",
+  );
 
   if (!managers.length) {
-    grid.innerHTML = '<div class="empty-state"><p>ไม่มีข้อมูลผู้จัดการ</p></div>';
+    grid.innerHTML =
+      '<div class="empty-state"><p>ไม่มีข้อมูลผู้จัดการ</p></div>';
     return;
   }
 
-  grid.innerHTML = managers.map(([id, profile]) => {
-    const displayName = profile.display_name || '—';
-    return `
+  grid.innerHTML = managers
+    .map(([id, profile]) => {
+      const displayName = profile.display_name || "—";
+      return `
       <div class="sales-card" onclick="filterByManager('${id}')">
         <div class="sales-avatar">${displayName.charAt(0).toUpperCase()}</div>
         <div class="sales-name">${escapeHtml(displayName)}</div>
@@ -603,34 +668,47 @@ function updateManagerGrid() {
           </div>
         </div>
       </div>`;
-  }).join('');
+    })
+    .join("");
 }
 
 // =====================================================
 // 👥 UPDATE SALES GRID
+// 🆕 คลิกการ์ด → เปิด Sales Table Modal
 // =====================================================
 function updateSalesGrid() {
-  const grid = document.getElementById('salesGrid');
+  const grid = document.getElementById("salesGrid");
   if (!grid) return;
 
-  const salesEntries = Object.entries(profilesMap).filter(([, p]) => p.role === 'sales' || p.role === 'user');
+  const salesEntries = Object.entries(profilesMap).filter(
+    ([, p]) => p.role === "sales" || p.role === "user",
+  );
 
   if (!salesEntries.length) {
     grid.innerHTML = '<div class="empty-state"><p>ไม่มีข้อมูลเซลล์</p></div>';
     return;
   }
 
-  grid.innerHTML = salesEntries.map(([id, profile]) => {
-    const groups = groupedReports.filter(g => g.sale_id === id);
-    const total = groups.length;
-    const unread = groups.filter(g => !g.manager_acknowledged).length;
-    const isActive = activeSalesFilter === id;
-    const displayName = profile.display_name || '—';
+  grid.innerHTML = salesEntries
+    .map(([id, profile]) => {
+      const groups = groupedReports.filter((g) => g.sale_id === id);
+      const total = groups.length;
+      const unread = groups.filter((g) => !g.manager_acknowledged).length;
+      const isActive = activeSalesFilter === id;
+      const displayName = profile.display_name || "—";
 
-    return `
-      <div class="sales-card ${isActive ? 'active' : ''} ${unread > 0 ? 'has-unread' : ''}"
-           onclick="filterBySale('${id}')">
-        <div class="sales-avatar">${displayName.charAt(0).toUpperCase()}</div>
+      return `
+      <div class="sales-card ${isActive ? "active" : ""} ${unread > 0 ? "has-unread" : ""}"
+           onclick="openSalesTableModal('${id}')"
+           title="คลิกเพื่อดูรายงานทั้งหมดของ ${escapeHtml(displayName)}">
+        <div class="sales-card-header">
+          <div class="sales-avatar">${displayName.charAt(0).toUpperCase()}</div>
+          <button class="sales-filter-btn"
+                  onclick="event.stopPropagation(); filterBySale('${id}')"
+                  title="กรองในรายการด้านล่าง">
+            <span class="material-symbols-outlined icon-sm">filter_alt</span>
+          </button>
+        </div>
         <div class="sales-name">${escapeHtml(displayName)}</div>
         <div class="sales-stats">
           <div class="stat-item">
@@ -638,14 +716,78 @@ function updateSalesGrid() {
             <span class="stat-label">ร้านค้า</span>
           </div>
           <div class="stat-item">
-            <span class="stat-value" style="color:${unread > 0 ? 'var(--danger)' : 'var(--info)'}">
+            <span class="stat-value" style="color:${unread > 0 ? "var(--danger, #ef4444)" : "var(--info, #0093ad)"}">
               ${unread}
             </span>
             <span class="stat-label">ยังไม่อ่าน</span>
           </div>
         </div>
       </div>`;
-  }).join('');
+    })
+    .join("");
+}
+
+// =====================================================
+// 🆕 UPDATE SALES QUICK PICK (สำหรับ Table view)
+// =====================================================
+function updateSalesQuickPick() {
+  const container = document.getElementById("salesQuickPick");
+  if (!container) return;
+
+  const salesEntries = Object.entries(profilesMap).filter(
+    ([, p]) => p.role === "sales" || p.role === "user",
+  );
+
+  if (!salesEntries.length) {
+    container.innerHTML =
+      '<div class="empty-state"><p>ไม่มีข้อมูลเซลล์</p></div>';
+    return;
+  }
+
+  // เรียงตามจำนวนรายงาน (มาก→น้อย)
+  const enriched = salesEntries
+    .map(([id, profile]) => {
+      const groups = groupedReports.filter((g) => g.sale_id === id);
+      const total = groups.length;
+      const unread = groups.filter((g) => !g.manager_acknowledged).length;
+      return { id, profile, total, unread };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  container.innerHTML = enriched
+    .map(({ id, profile, total, unread }) => {
+      const displayName = profile.display_name || "—";
+      const disabled = total === 0 ? "disabled" : "";
+      return `
+      <button class="quick-pick-card ${disabled} ${unread > 0 ? "has-unread" : ""}"
+              ${total === 0 ? "" : `onclick="openSalesTableModal('${id}')"`}
+              title="${total === 0 ? "ไม่มีรายงานในช่วงเวลานี้" : "ดูตารางรายงาน"}">
+        <div class="qp-avatar">${displayName.charAt(0).toUpperCase()}</div>
+        <div class="qp-info">
+          <div class="qp-name">${escapeHtml(displayName)}</div>
+          <div class="qp-meta">
+            <span>${total} ร้าน</span>
+            ${unread > 0 ? `<span class="qp-unread">${unread} ยังไม่อ่าน</span>` : ""}
+          </div>
+        </div>
+        <span class="material-symbols-outlined qp-arrow">arrow_forward</span>
+      </button>`;
+    })
+    .join("");
+}
+
+// =====================================================
+// 🆕 SWITCH VIEW
+// =====================================================
+function switchView(view) {
+  currentView = view;
+
+  document.querySelectorAll(".view-toggle-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.view === view);
+  });
+
+  document.getElementById("listView").classList.toggle("active", view === "list");
+  document.getElementById("tableView").classList.toggle("active", view === "table");
 }
 
 // =====================================================
@@ -654,44 +796,63 @@ function updateSalesGrid() {
 function filterBySale(saleId) {
   if (activeSalesFilter === saleId) {
     activeSalesFilter = null;
-    document.getElementById('filterSales').value = '';
+    document.getElementById("filterSales").value = "";
   } else {
     activeSalesFilter = saleId;
-    document.getElementById('filterSales').value = saleId;
+    document.getElementById("filterSales").value = saleId;
   }
+  // ให้ filter ทำงานในมุมมอง list
+  switchView("list");
   updateSalesGrid();
   applyFilter();
+
+  // scroll ไปยัง list
+  const listEl = document.getElementById("listView");
+  if (listEl) listEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function filterByManager(mgrId) {
-  const select = document.getElementById('filterManager');
+  const select = document.getElementById("filterManager");
   if (select) select.value = mgrId;
   applyFilter();
 }
 
 function applyFilter() {
-  const salesId = document.getElementById('filterSales')?.value || '';
-  const mgrId = document.getElementById('filterManager')?.value || '';
-  const status = document.getElementById('filterStatus')?.value || '';
-  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const salesId = document.getElementById("filterSales")?.value || "";
+  const mgrId = document.getElementById("filterManager")?.value || "";
+  const status = document.getElementById("filterStatus")?.value || "";
+  const search = (
+    document.getElementById("searchInput")?.value || ""
+  ).toLowerCase();
 
-  filteredGroups = groupedReports.filter(g => {
+  filteredGroups = groupedReports.filter((g) => {
     if (salesId && g.sale_id !== salesId) return false;
 
-    if (status === 'unread' && g.manager_acknowledged) return false;
-    if (status === 'read' && !g.manager_acknowledged) return false;
-    if (status === 'commented' && getGroupCommentCount(g) === 0) return false;
+    if (status === "unread" && g.manager_acknowledged) return false;
+    if (status === "read" && !g.manager_acknowledged) return false;
+    if (status === "commented" && getGroupCommentCount(g) === 0) return false;
 
     if (search) {
       const shopData = shopsMap[g.shop_id];
-      const shopName = shopData?.name || '';
-      const province = shopData?.province || '';
-      const salesName = profilesMap[g.sale_id]?.display_name || '';
-      const note = g.note || '';
-      const productNames = g.products.map(p => productsMap[p.product_id] || '').join(' ');
-      const productInterest = g.product_interest || '';
+      const shopName = shopData?.name || "";
+      const province = shopData?.province || "";
+      const salesName = profilesMap[g.sale_id]?.display_name || "";
+      const note = g.note || "";
+      const productNames = g.products
+        .map((p) => productsMap[p.product_id] || "")
+        .join(" ");
+      const productInterest = g.product_interest || "";
 
-      const searchText = [shopName, province, salesName, note, productNames, productInterest].join(' ').toLowerCase();
+      const searchText = [
+        shopName,
+        province,
+        salesName,
+        note,
+        productNames,
+        productInterest,
+      ]
+        .join(" ")
+        .toLowerCase();
       if (!searchText.includes(search)) return false;
     }
 
@@ -703,12 +864,12 @@ function applyFilter() {
 }
 
 function resetFilter() {
-  ['filterSales', 'filterManager', 'filterStatus'].forEach(id => {
+  ["filterSales", "filterManager", "filterStatus"].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.value = '';
+    if (el) el.value = "";
   });
-  const searchInput = document.getElementById('searchInput');
-  if (searchInput) searchInput.value = '';
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) searchInput.value = "";
 
   activeSalesFilter = null;
   filteredGroups = [...groupedReports];
@@ -719,20 +880,21 @@ function resetFilter() {
 }
 
 // =====================================================
-// 🎨 RENDER REPORTS — grouped
+// 🎨 RENDER REPORTS — list view (เดิม)
 // =====================================================
 function renderReports() {
-  const container = document.getElementById('reportsContainer');
+  const container = document.getElementById("reportsContainer");
   if (!container) return;
 
   const start = (currentPage - 1) * PAGE_SIZE;
   const pageGroups = filteredGroups.slice(start, start + PAGE_SIZE);
 
-  const countEl = document.getElementById('reportCount');
+  const countEl = document.getElementById("reportCount");
   if (countEl) {
-    countEl.textContent = filteredGroups.length !== groupedReports.length
-      ? `(${filteredGroups.length} / ${groupedReports.length} ร้านค้า)`
-      : `(${groupedReports.length} ร้านค้า)`;
+    countEl.textContent =
+      filteredGroups.length !== groupedReports.length
+        ? `(${filteredGroups.length} / ${groupedReports.length} ร้านค้า)`
+        : `(${groupedReports.length} ร้านค้า)`;
   }
 
   if (!pageGroups.length) {
@@ -746,46 +908,48 @@ function renderReports() {
     return;
   }
 
-  container.innerHTML = pageGroups.map(g => {
-    const profile = profilesMap[g.sale_id];
-    const salesName = profile?.display_name || '—';
-    const shopData = shopsMap[g.shop_id];
-    const shopName = shopData?.name || '—';
-    const province = shopData?.province || '';
-    const isUnread = !g.manager_acknowledged;
+  container.innerHTML = pageGroups
+    .map((g) => {
+      const profile = profilesMap[g.sale_id];
+      const salesName = profile?.display_name || "—";
+      const shopData = shopsMap[g.shop_id];
+      const shopName = shopData?.name || "—";
+      const province = shopData?.province || "";
+      const isUnread = !g.manager_acknowledged;
 
-    const productCount = g.products.length;
-    let productSummary = '—';
-    if (productCount === 1) {
-      productSummary = productsMap[g.products[0].product_id] || '—';
-    } else if (productCount > 1) {
-      const firstName = productsMap[g.products[0].product_id] || '—';
-      productSummary = `${firstName} +${productCount - 1} รายการ`;
-    } else if (productCount === 0) {
-      productSummary = 'ไม่มีสินค้า';
-    }
+      const productCount = g.products.length;
+      let productSummary = "—";
+      if (productCount === 1) {
+        productSummary = productsMap[g.products[0].product_id] || "—";
+      } else if (productCount > 1) {
+        const firstName = productsMap[g.products[0].product_id] || "—";
+        productSummary = `${firstName} +${productCount - 1} รายการ`;
+      } else if (productCount === 0) {
+        productSummary = "ไม่มีสินค้า";
+      }
 
-    const commentCount = getGroupCommentCount(g);
-    const commentBadge = commentCount > 0
-      ? `
+      const commentCount = getGroupCommentCount(g);
+      const commentBadge =
+        commentCount > 0
+          ? `
         <span class="badge-comment" title="${commentCount} ความคิดเห็น">
           <span class="material-symbols-outlined icon-sm icon-blue">chat_bubble</span>
           ${commentCount}
         </span>
       `
-      : '';
+          : "";
 
-    const provinceHtml = province
-      ? `
+      const provinceHtml = province
+        ? `
         <span class="report-province">
           <span class="material-symbols-outlined icon-sm icon-red">location_on</span>
           ${escapeHtml(province)}
         </span>
       `
-      : '';
+        : "";
 
-    return `
-      <div class="report-item ${isUnread ? 'unread' : ''}"
+      return `
+      <div class="report-item ${isUnread ? "unread" : ""}"
            onclick="openGroupModal('${g.key}')">
 
         <div class="report-icon">${salesName.charAt(0).toUpperCase()}</div>
@@ -815,17 +979,18 @@ function renderReports() {
         </div>
 
         <div class="report-status">
-          ${commentBadge}
-          <span class="badge ${isUnread ? 'badge-unread' : 'badge-read'}">
-            <span class="material-symbols-outlined icon-sm">
-              ${isUnread ? 'schedule' : 'check_circle'}
-            </span>
-            ${isUnread ? 'ยังไม่อ่าน' : 'อ่านแล้ว'}
-          </span>
-        </div>
+  ${commentBadge}
+  <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
+    <span class="emoji-status">
+      ${isUnread ? "⏰" : "✅"}
+    </span>
+    ${isUnread ? "ยังไม่อ่าน" : "อ่านแล้ว"}
+  </span>
+</div>
 
       </div>`;
-  }).join('');
+    })
+    .join("");
 
   renderPagination();
 }
@@ -834,170 +999,584 @@ function renderReports() {
 // 📄 PAGINATION
 // =====================================================
 function renderPagination() {
-  const el = document.getElementById('pagination');
+  const el = document.getElementById("pagination");
   if (!el) return;
 
   const totalPages = Math.ceil(filteredGroups.length / PAGE_SIZE);
-  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  if (totalPages <= 1) {
+    el.innerHTML = "";
+    return;
+  }
 
-  let html = '';
-  if (currentPage > 1) html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
+  let html = "";
+  if (currentPage > 1)
+    html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
 
   for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - 2 && i <= currentPage + 2)
+    ) {
+      html += `<button class="page-btn ${i === currentPage ? "active" : ""}" onclick="goToPage(${i})">${i}</button>`;
     } else if (i === currentPage - 3 || i === currentPage + 3) {
       html += '<span class="page-dots">...</span>';
     }
   }
 
-  if (currentPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
+  if (currentPage < totalPages)
+    html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
   el.innerHTML = html;
 }
 
 function goToPage(page) {
   currentPage = page;
   renderReports();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // =====================================================
-// 📋 OPEN GROUP MODAL
+// 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
+// =====================================================
+function openSalesTableModal(saleId) {
+  const profile = profilesMap[saleId];
+  if (!profile) {
+    showToast("❌ ไม่พบข้อมูลเซลล์");
+    return;
+  }
+
+  currentSalesModalId = saleId;
+  const displayName = profile.display_name || "—";
+
+  // Header
+  const titleEl = document.getElementById("salesModalTitle");
+  if (titleEl) titleEl.textContent = `รายงานของ ${displayName}`;
+
+  const avatarEl = document.getElementById("salesModalAvatar");
+  if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
+
+  const subtitleEl = document.getElementById("salesModalSubtitle");
+  if (subtitleEl) {
+    const fmt = (d) =>
+      d.toLocaleDateString("th-TH", {
+        day: "numeric",
+        month: "short",
+        year: "2-digit",
+      });
+    subtitleEl.textContent = `ช่วงเวลา ${fmt(dateStart)} – ${fmt(dateEnd)}`;
+  }
+
+  // Render table
+  renderSalesTable(saleId);
+
+  // Show modal
+  const modal = document.getElementById("salesTableModal");
+  if (modal) {
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+// =====================================================
+// 🆕 RENDER SALES TABLE
+// =====================================================
+function renderSalesTable(saleId) {
+  const tbody = document.getElementById("salesTableBody");
+  if (!tbody) return;
+
+  // ดึงเฉพาะของเซลล์คนนี้ + เรียงตามวันที่ (เก่า→ใหม่ เพื่ออ่านลำดับเวลา)
+  const groups = groupedReports
+    .filter((g) => g.sale_id === saleId)
+    .sort((a, b) => {
+      const da = new Date(a.report_date || a.submitted_at || a.created_at || 0);
+      const db = new Date(b.report_date || b.submitted_at || b.created_at || 0);
+      return da - db;
+    });
+
+  // อัปเดต mini summary
+  const totalShops = groups.length;
+  const provinces = new Set(
+    groups.map((g) => shopsMap[g.shop_id]?.province).filter(Boolean),
+  ).size;
+  const unread = groups.filter((g) => !g.manager_acknowledged).length;
+  const commented = groups.filter(
+    (g) => getGroupCommentCount(g) > 0,
+  ).length;
+
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  setText("stShops", totalShops);
+  setText("stProvinces", provinces);
+  setText("stUnread", unread);
+  setText("stCommented", commented);
+  setText("salesModalCount", `${totalShops} ร้าน`);
+
+  if (!groups.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8">
+          <div class="empty-state" style="padding:32px 20px;">
+            <span class="material-symbols-outlined empty-icon-mat">inbox</span>
+            <h3>ไม่มีรายงาน</h3>
+            <p>เซลล์คนนี้ไม่มีรายงานในช่วงเวลาที่เลือก</p>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = groups
+    .map((g) => {
+      const shopData = shopsMap[g.shop_id];
+      const shopName = shopData?.name || "—";
+      const province = shopData?.province || "—";
+      const isUnread = !g.manager_acknowledged;
+
+      // สินค้าที่จำหน่าย (chips) — ห่อใน wrapper เพื่อไม่ให้ td flex กระทบ row height
+      let productHtml = '<span class="muted-text">—</span>';
+      if (g.products.length > 0) {
+        const chipsInner = g.products
+          .slice(0, 3)
+          .map(
+            (p) =>
+              `<span class="product-chip">${escapeHtml(productsMap[p.product_id] || "—")}</span>`,
+          )
+          .join("");
+        const moreChip =
+          g.products.length > 3
+            ? `<span class="product-chip more-chip">+${g.products.length - 3}</span>`
+            : "";
+        productHtml = `<div class="product-chips">${chipsInner}${moreChip}</div>`;
+      }
+
+      // รายละเอียดการเข้าเยี่ยม — ขยายได้เมื่อยาว
+      let noteHtml;
+      if (!g.note) {
+        noteHtml = `<div class="note-cell"><span class="muted-text">—</span></div>`;
+      } else {
+        const noteText = String(g.note);
+        // ถ้ายาวพอควร (>140 ตัวอักษร) หรือมีหลายบรรทัด → ใส่ปุ่มขยาย
+        const isLong =
+          noteText.length > 140 || (noteText.match(/\n/g) || []).length >= 2;
+        if (isLong) {
+          noteHtml = `
+            <div class="note-cell collapsed" data-note-cell>${escapeHtml(noteText)}</div>
+            <button type="button" class="note-toggle-btn" onclick="toggleNote(this)">
+              <span>ดูเพิ่ม</span>
+              <span class="material-symbols-outlined">expand_more</span>
+            </button>`;
+        } else {
+          noteHtml = `<div class="note-cell">${escapeHtml(noteText)}</div>`;
+        }
+      }
+
+      const commentCount = getGroupCommentCount(g);
+      const commentBtnContent =
+        commentCount > 0
+          ? `<span class="material-symbols-outlined icon-sm">chat_bubble</span>
+             <span class="cmt-count">${commentCount}</span>`
+          : `<span class="material-symbols-outlined icon-sm">add_comment</span>`;
+
+      return `
+      <tr class="${isUnread ? "row-unread" : ""}" data-key="${g.key}">
+        <td class="td-date">
+          <div class="td-date-main">${formatDateShort(g.report_date || g.submitted_at)}</div>
+          <div class="td-date-sub">${formatWeekday(g.report_date || g.submitted_at)}</div>
+        </td>
+        <td class="td-shop">
+          <div class="shop-name">${escapeHtml(shopName)}</div>
+        </td>
+        <td class="td-province">
+          <span class="material-symbols-outlined icon-sm icon-red">location_on</span>
+          ${escapeHtml(province)}
+        </td>
+        <td class="td-products">${productHtml}</td>
+        <td class="td-interest">
+          ${g.product_interest ? escapeHtml(g.product_interest) : '<span class="muted-text">—</span>'}
+        </td>
+        <td class="td-note">
+          ${noteHtml}
+        </td>
+        <td class="col-status">
+          <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
+            <span class="emoji-status">${isUnread ? "⏰" : "✅"}</span>
+          </span>
+        </td>
+        <td class="col-action">
+          <button class="row-comment-btn ${commentCount > 0 ? "has-comments" : ""}"
+                  onclick="openCommentPopup('${g.key}')"
+                  title="${commentCount > 0 ? `${commentCount} ความคิดเห็น` : "เพิ่ม Comment"}">
+            ${commentBtnContent}
+          </button>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+// 🆕 Toggle expand/collapse note cell
+function toggleNote(btn) {
+  if (!btn) return;
+  const tr = btn.closest("tr");
+  if (!tr) return;
+  const cell = tr.querySelector("[data-note-cell]");
+  if (!cell) return;
+
+  const isCollapsed = cell.classList.contains("collapsed");
+  if (isCollapsed) {
+    cell.classList.remove("collapsed");
+    btn.classList.add("expanded");
+    const labelEl = btn.querySelector("span:not(.material-symbols-outlined)");
+    if (labelEl) labelEl.textContent = "ย่อ";
+  } else {
+    cell.classList.add("collapsed");
+    btn.classList.remove("expanded");
+    const labelEl = btn.querySelector("span:not(.material-symbols-outlined)");
+    if (labelEl) labelEl.textContent = "ดูเพิ่ม";
+  }
+}
+
+function closeSalesTableModal() {
+  const modal = document.getElementById("salesTableModal");
+  if (modal) {
+    modal.classList.remove("show");
+    // ถ้า popup ก็ไม่เปิด → ปลดล็อก scroll
+    const popup = document.getElementById("commentPopupModal");
+    if (!popup || !popup.classList.contains("show")) {
+      document.body.style.overflow = "";
+    }
+  }
+  currentSalesModalId = null;
+}
+
+// =====================================================
+// 🆕 OPEN COMMENT POPUP (เล็ก ซ้อนบน sales table modal)
+// =====================================================
+async function openCommentPopup(groupKey) {
+  const group = groupedReports.find((g) => g.key === groupKey);
+  if (!group) {
+    showToast("❌ ไม่พบรายงาน");
+    return;
+  }
+
+  currentPopupGroupKey = groupKey;
+  currentPopupReportId = group.reportIds[0];
+
+  const shopData = shopsMap[group.shop_id];
+
+  // Fill info
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || "—";
+  };
+  setText("pShopName", shopData?.name || "—");
+  setText("pProvince", shopData?.province || "—");
+  setText("pReportDate", formatDate(group.report_date || group.submitted_at));
+
+  // Status badge
+  const statusBadge = document.getElementById("popupStatus");
+  if (statusBadge) {
+    statusBadge.className = `badge ${group.manager_acknowledged ? "badge-read" : "badge-unread"}`;
+    statusBadge.textContent = group.manager_acknowledged
+      ? "✅ อ่านแล้ว"
+      : "🕐 ยังไม่อ่าน";
+  }
+
+  // Load comments into popup
+  await loadCommentsIntoElement(
+    group.reportIds,
+    document.getElementById("popupCommentsHistory"),
+  );
+
+  const input = document.getElementById("popupCommentInput");
+  if (input) input.value = "";
+
+  const popup = document.getElementById("commentPopupModal");
+  if (popup) {
+    popup.classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+function closeCommentPopup() {
+  const popup = document.getElementById("commentPopupModal");
+  if (popup) popup.classList.remove("show");
+
+  // ถ้า sales modal ยังเปิด → คง scroll lock
+  const salesModal = document.getElementById("salesTableModal");
+  if (!salesModal || !salesModal.classList.contains("show")) {
+    document.body.style.overflow = "";
+  }
+
+  currentPopupGroupKey = null;
+  currentPopupReportId = null;
+}
+
+// =====================================================
+// 🆕 SAVE COMMENT (popup version)
+// =====================================================
+async function savePopupComment() {
+  if (!currentPopupReportId) return;
+
+  const input = document.getElementById("popupCommentInput");
+  const text = input?.value?.trim();
+  if (!text) {
+    showToast("⚠️ กรุณาพิมพ์ความคิดเห็น");
+    return;
+  }
+
+  try {
+    const session = await getSessionSafely();
+    if (!session?.user?.id) {
+      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
+      return;
+    }
+
+    const { error } = await supabaseClient.from("report_comments").insert([
+      {
+        report_id: currentPopupReportId,
+        manager_id: session.user.id,
+        comment: text,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (error) throw error;
+
+    showToast("💬 บันทึกความคิดเห็นแล้ว");
+    input.value = "";
+
+    // อัปเดต comment count ใน map
+    commentCountsMap[currentPopupReportId] =
+      (commentCountsMap[currentPopupReportId] || 0) + 1;
+
+    // โหลด comments ใหม่
+    const group = groupedReports.find((g) => g.key === currentPopupGroupKey);
+    if (group) {
+      await loadCommentsIntoElement(
+        group.reportIds,
+        document.getElementById("popupCommentsHistory"),
+      );
+    }
+
+    // refresh table & summary
+    if (currentSalesModalId) renderSalesTable(currentSalesModalId);
+    updateSummaryCards();
+    renderReports();
+  } catch (e) {
+    console.error("❌ savePopupComment error:", e);
+    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
+  }
+}
+
+// =====================================================
+// 🆕 MARK AS READ (popup version)
+// =====================================================
+async function markPopupAsRead() {
+  if (!currentPopupGroupKey) return;
+
+  const group = groupedReports.find((g) => g.key === currentPopupGroupKey);
+  if (!group) return;
+
+  try {
+    const session = await getSessionSafely();
+    if (!session?.user?.id) {
+      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
+      return;
+    }
+
+    const commentInput = document.getElementById("popupCommentInput");
+    const text = commentInput?.value?.trim();
+    if (text) await savePopupComment();
+
+    const { error } = await supabaseClient
+      .from("reports")
+      .update({
+        manager_acknowledged: true,
+        acknowledged_by: session.user.id,
+        acknowledged_at: new Date().toISOString(),
+      })
+      .in("id", group.reportIds);
+
+    if (error) throw error;
+
+    group.manager_acknowledged = true;
+    for (const rid of group.reportIds) {
+      const r = allReports.find((x) => x.id === rid);
+      if (r) r.manager_acknowledged = true;
+    }
+
+    const fg = filteredGroups.find((g) => g.key === currentPopupGroupKey);
+    if (fg) fg.manager_acknowledged = true;
+
+    showToast("✅ ทำเครื่องหมายว่าอ่านแล้ว");
+
+    updateSummaryCards();
+    updateSalesGrid();
+    updateSalesQuickPick();
+    renderReports();
+
+    // refresh sales table
+    if (currentSalesModalId) renderSalesTable(currentSalesModalId);
+
+    closeCommentPopup();
+  } catch (e) {
+    console.error("❌ markPopupAsRead error:", e);
+    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
+  }
+}
+
+// =====================================================
+// 📋 OPEN GROUP MODAL (เดิม - ใช้กับ list view)
 // =====================================================
 async function openGroupModal(groupKey) {
-  const group = groupedReports.find(g => g.key === groupKey);
+  const group = groupedReports.find((g) => g.key === groupKey);
   if (!group) {
-    showToast('❌ ไม่พบรายงาน');
+    showToast("❌ ไม่พบรายงาน");
     return;
   }
 
   currentGroupKey = groupKey;
-  currentGroupRows = allReports.filter(r => group.reportIds.includes(r.id));
+  currentGroupRows = allReports.filter((r) => group.reportIds.includes(r.id));
   currentReportId = group.reportIds[0];
 
   const profile = profilesMap[group.sale_id];
-  const salesName = profile?.display_name || '—';
+  const salesName = profile?.display_name || "—";
   const shopData = shopsMap[group.shop_id];
 
-  const modalTitle = document.getElementById('modalTitle');
+  const modalTitle = document.getElementById("modalTitle");
   if (modalTitle) modalTitle.textContent = `รายงานของ ${salesName}`;
 
-  const statusBadge = document.getElementById('modalStatus');
+  const statusBadge = document.getElementById("modalStatus");
   if (statusBadge) {
-    statusBadge.className = `badge ${group.manager_acknowledged ? 'badge-read' : 'badge-unread'}`;
-    statusBadge.textContent = group.manager_acknowledged ? '✅ อ่านแล้ว' : '🕐 ยังไม่อ่าน';
+    statusBadge.className = `badge ${group.manager_acknowledged ? "badge-read" : "badge-unread"}`;
+    statusBadge.textContent = group.manager_acknowledged
+      ? "✅ อ่านแล้ว"
+      : "🕐 ยังไม่อ่าน";
   }
 
   const set = (id, val) => {
     const el = document.getElementById(id);
-    if (el) el.textContent = val || '—';
+    if (el) el.textContent = val || "—";
   };
 
-  set('mReportDate', formatDate(group.report_date || group.submitted_at));
-  set('mSalesName', salesName);
-  set('mShopName', shopData?.name || '—');
-  set('mProvince', shopData?.province || '—');
-  set('mSource', group.source || '—');
-  set('mProductInterest', group.product_interest || '—');
-  set('mNote', group.note || 'ไม่มีหมายเหตุ');
+  set("mReportDate", formatDate(group.report_date || group.submitted_at));
+  set("mSalesName", salesName);
+  set("mShopName", shopData?.name || "—");
+  set("mProvince", shopData?.province || "—");
+  set("mSource", group.source || "—");
+  set("mProductInterest", group.product_interest || "—");
+  set("mNote", group.note || "ไม่มีหมายเหตุ");
 
-  const productEl = document.getElementById('mProduct');
+  const productEl = document.getElementById("mProduct");
   if (productEl) {
     if (group.products.length === 0) {
       productEl.innerHTML = '<span style="color:#999;">ไม่มีสินค้า</span>';
     } else {
-      productEl.innerHTML = group.products.map(p => {
-        const name = productsMap[p.product_id] || '—';
-        const attrParts = [];
-        if (p.attributes && Object.keys(p.attributes).length) {
-          Object.values(p.attributes).forEach(v => { if (v) attrParts.push(v); });
-        }
-        const attrText = attrParts.length ? ` <span style="color:#888;font-size:12px;">(${escapeHtml(attrParts.join(', '))})</span>` : '';
-        return `<div style="padding:2px 0;">• ${escapeHtml(name)}${attrText}</div>`;
-      }).join('');
+      productEl.innerHTML = group.products
+        .map((p) => {
+          const name = productsMap[p.product_id] || "—";
+          const attrParts = [];
+          if (p.attributes && Object.keys(p.attributes).length) {
+            Object.values(p.attributes).forEach((v) => {
+              if (v) attrParts.push(v);
+            });
+          }
+          const attrText = attrParts.length
+            ? ` <span style="color:#888;font-size:12px;">(${escapeHtml(attrParts.join(", "))})</span>`
+            : "";
+          return `<div style="padding:2px 0;">• ${escapeHtml(name)}${attrText}</div>`;
+        })
+        .join("");
     }
   }
 
-  const qtyEl = document.getElementById('mQty');
+  const qtyEl = document.getElementById("mQty");
   if (qtyEl) {
-    const totalQty = group.products.reduce((sum, p) => sum + (p.quantity || 0), 0);
+    const totalQty = group.products.reduce(
+      (sum, p) => sum + (p.quantity || 0),
+      0,
+    );
     if (totalQty > 0) {
-      qtyEl.textContent = totalQty.toLocaleString('th-TH') + ' ชิ้น';
-      const row = qtyEl.closest('.info-item');
-      if (row) row.style.display = '';
+      qtyEl.textContent = totalQty.toLocaleString("th-TH") + " ชิ้น";
+      const row = qtyEl.closest(".info-item");
+      if (row) row.style.display = "";
     } else {
-      const row = qtyEl.closest('.info-item');
-      if (row) row.style.display = 'none';
+      const row = qtyEl.closest(".info-item");
+      if (row) row.style.display = "none";
     }
   }
 
   await loadCommentsForGroup(group.reportIds);
 
-  const commentInput = document.getElementById('commentInput');
-  if (commentInput) commentInput.value = '';
+  const commentInput = document.getElementById("commentInput");
+  if (commentInput) commentInput.value = "";
 
-  const modal = document.getElementById('reportModal');
+  const modal = document.getElementById("reportModal");
   if (modal) {
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden";
   }
 }
 
 // =====================================================
-// 💬 LOAD COMMENTS FOR GROUP
-// ✅ แยก badge 4 roles: admin / executive / manager / user
+// 💬 LOAD COMMENTS — generic (เพิ่ม element target)
 // =====================================================
-async function loadCommentsForGroup(reportIds) {
-  const container = document.getElementById('commentsHistory');
+async function loadCommentsIntoElement(reportIds, container) {
   if (!container) return;
 
   try {
     const { data, error } = await supabaseClient
-      .from('report_comments')
-      .select('comment, created_at, report_id, profiles(display_name, role)')
-      .in('report_id', reportIds)
-      .order('created_at', { ascending: true });
+      .from("report_comments")
+      .select("comment, created_at, report_id, profiles(display_name, role)")
+      .in("report_id", reportIds)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<div class="no-comments">ยังไม่มีความคิดเห็น</div>';
+      container.innerHTML =
+        '<div class="no-comments">ยังไม่มีความคิดเห็น</div>';
       return;
     }
 
-    // Deduplicate
     const seen = new Set();
-    const unique = data.filter(c => {
+    const unique = data.filter((c) => {
       const key = `${c.created_at}__${c.comment}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
 
-    container.innerHTML = unique.map(c => {
-      const role = c.profiles?.role || 'manager';
-      const displayName = c.profiles?.display_name || 'ผู้ใช้';
+    container.innerHTML = unique
+      .map((c) => {
+        const role = c.profiles?.role || "manager";
+        const displayName = c.profiles?.display_name || "ผู้ใช้";
 
-      // ✅ ใช้ getRoleMeta ถ้ามี (จาก roleConfig.js) ไม่มีก็ fallback
-      let roleBadge, roleClass;
-      if (typeof getRoleMeta === 'function') {
-        const meta = getRoleMeta(role);
-        roleBadge = meta.label;
-        roleClass = meta.cssClass;
-      } else {
-        // Fallback กรณีไม่ได้โหลด roleConfig.js
-        if (role === 'admin') {
-          roleBadge = 'Admin';   roleClass = 'comment-admin';
-        } else if (role === 'executive') {
-          roleBadge = 'Executive';   roleClass = 'comment-executive';
-        } else if (role === 'manager') {
-          roleBadge = 'Manager';     roleClass = 'comment-manager';
+        let roleBadge, roleClass;
+        if (typeof getRoleMeta === "function") {
+          const meta = getRoleMeta(role);
+          roleBadge = meta.label;
+          roleClass = meta.cssClass;
         } else {
-          roleBadge = '👤 ' + role;  roleClass = 'comment-user';
+          if (role === "admin") {
+            roleBadge = "Admin";
+            roleClass = "comment-admin";
+          } else if (role === "executive") {
+            roleBadge = "Executive";
+            roleClass = "comment-executive";
+          } else if (role === "manager") {
+            roleBadge = "Manager";
+            roleClass = "comment-manager";
+          } else {
+            roleBadge = "👤 " + role;
+            roleClass = "comment-user";
+          }
         }
-      }
 
-      return `
+        return `
         <div class="comment-item ${roleClass}">
           <div class="comment-meta">
             <span class="comment-author">${escapeHtml(displayName)}</span>
@@ -1006,117 +1585,134 @@ async function loadCommentsForGroup(reportIds) {
           </div>
           <div class="comment-text">${escapeHtml(c.comment)}</div>
         </div>`;
-    }).join('');
+      })
+      .join("");
   } catch (e) {
-    console.error('❌ loadCommentsForGroup error:', e);
-    container.innerHTML = '<div class="error-text">เกิดข้อผิดพลาดในการโหลดความคิดเห็น</div>';
+    console.error("❌ loadCommentsIntoElement error:", e);
+    container.innerHTML =
+      '<div class="error-text">เกิดข้อผิดพลาดในการโหลดความคิดเห็น</div>';
   }
 }
 
+// เก็บเดิมไว้สำหรับ list view modal
+async function loadCommentsForGroup(reportIds) {
+  await loadCommentsIntoElement(
+    reportIds,
+    document.getElementById("commentsHistory"),
+  );
+}
+
 // =====================================================
-// 💬 SAVE COMMENT
+// 💬 SAVE COMMENT (เดิม - list view modal)
 // =====================================================
 async function saveComment() {
   if (!currentReportId) return;
 
-  const input = document.getElementById('commentInput');
+  const input = document.getElementById("commentInput");
   const text = input?.value?.trim();
   if (!text) {
-    showToast('⚠️ กรุณาพิมพ์ความคิดเห็น');
+    showToast("⚠️ กรุณาพิมพ์ความคิดเห็น");
     return;
   }
 
   try {
     const session = await getSessionSafely();
     if (!session?.user?.id) {
-      showToast('❌ กรุณาเข้าสู่ระบบใหม่');
+      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
       return;
     }
 
-    const { error } = await supabaseClient
-      .from('report_comments')
-      .insert([{
+    const { error } = await supabaseClient.from("report_comments").insert([
+      {
         report_id: currentReportId,
         manager_id: session.user.id,
         comment: text,
-        created_at: new Date().toISOString()
-      }]);
+        created_at: new Date().toISOString(),
+      },
+    ]);
 
     if (error) throw error;
 
-    showToast('💬 บันทึกความคิดเห็นแล้ว');
-    input.value = '';
+    commentCountsMap[currentReportId] =
+      (commentCountsMap[currentReportId] || 0) + 1;
 
-    const group = groupedReports.find(g => g.key === currentGroupKey);
+    showToast("💬 บันทึกความคิดเห็นแล้ว");
+    input.value = "";
+
+    const group = groupedReports.find((g) => g.key === currentGroupKey);
     if (group) {
       await loadCommentsForGroup(group.reportIds);
     }
+
+    updateSummaryCards();
+    renderReports();
   } catch (e) {
-    console.error('❌ saveComment error:', e);
-    showToast('❌ เกิดข้อผิดพลาด: ' + e.message);
+    console.error("❌ saveComment error:", e);
+    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
   }
 }
 
 // =====================================================
-// ✅ MARK AS READ
+// ✅ MARK AS READ (เดิม)
 // =====================================================
 async function markAsRead() {
   if (!currentGroupKey) return;
 
-  const group = groupedReports.find(g => g.key === currentGroupKey);
+  const group = groupedReports.find((g) => g.key === currentGroupKey);
   if (!group) return;
 
   try {
     const session = await getSessionSafely();
     if (!session?.user?.id) {
-      showToast('❌ กรุณาเข้าสู่ระบบใหม่');
+      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
       return;
     }
 
-    const commentInput = document.getElementById('commentInput');
+    const commentInput = document.getElementById("commentInput");
     const text = commentInput?.value?.trim();
     if (text) await saveComment();
 
     const { error } = await supabaseClient
-      .from('reports')
+      .from("reports")
       .update({
         manager_acknowledged: true,
         acknowledged_by: session.user.id,
-        acknowledged_at: new Date().toISOString()
+        acknowledged_at: new Date().toISOString(),
       })
-      .in('id', group.reportIds);
+      .in("id", group.reportIds);
 
     if (error) throw error;
 
     group.manager_acknowledged = true;
     for (const rid of group.reportIds) {
-      const r = allReports.find(x => x.id === rid);
+      const r = allReports.find((x) => x.id === rid);
       if (r) r.manager_acknowledged = true;
     }
 
-    const fg = filteredGroups.find(g => g.key === currentGroupKey);
+    const fg = filteredGroups.find((g) => g.key === currentGroupKey);
     if (fg) fg.manager_acknowledged = true;
 
-    showToast('✅ ทำเครื่องหมายว่าอ่านแล้ว');
+    showToast("✅ ทำเครื่องหมายว่าอ่านแล้ว");
 
     updateSummaryCards();
     updateSalesGrid();
+    updateSalesQuickPick();
     renderReports();
     closeModal();
   } catch (e) {
-    console.error('❌ markAsRead error:', e);
-    showToast('❌ เกิดข้อผิดพลาด: ' + e.message);
+    console.error("❌ markAsRead error:", e);
+    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
   }
 }
 
 // =====================================================
-// ✕ CLOSE MODAL
+// ✕ CLOSE MODAL (เดิม)
 // =====================================================
 function closeModal() {
-  const modal = document.getElementById('reportModal');
+  const modal = document.getElementById("reportModal");
   if (modal) {
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
+    modal.classList.remove("show");
+    document.body.style.overflow = "";
   }
   currentGroupKey = null;
   currentGroupRows = [];
@@ -1128,65 +1724,109 @@ function closeModal() {
 // =====================================================
 function exportCSV() {
   if (!filteredGroups.length) {
-    showToast('⚠️ ไม่มีข้อมูลสำหรับ export');
+    showToast("⚠️ ไม่มีข้อมูลสำหรับ export");
     return;
   }
 
-  const headers = ['วันที่', 'เซลล์', 'ร้านค้า', 'จังหวัด', 'สินค้า', 'จำนวนสินค้า', 'หมายเหตุ', 'สินค้าที่ร้านแนะนำ', 'สถานะ'];
+  const headers = [
+    "วันที่",
+    "เซลล์",
+    "ร้านค้า",
+    "จังหวัด",
+    "สินค้า",
+    "จำนวนสินค้า",
+    "หมายเหตุ",
+    "สินค้าที่ร้านแนะนำ",
+    "สถานะ",
+  ];
 
-  const rows = filteredGroups.map(g => {
+  const rows = filteredGroups.map((g) => {
     const shopData = shopsMap[g.shop_id];
-    const productNames = g.products.map(p => productsMap[p.product_id] || '—').join(', ') || 'ไม่มีสินค้า';
+    const productNames =
+      g.products.map((p) => productsMap[p.product_id] || "—").join(", ") ||
+      "ไม่มีสินค้า";
 
     return [
       formatDate(g.report_date || g.submitted_at),
-      profilesMap[g.sale_id]?.display_name || '—',
-      shopData?.name || '—',
-      shopData?.province || '—',
+      profilesMap[g.sale_id]?.display_name || "—",
+      shopData?.name || "—",
+      shopData?.province || "—",
       productNames,
       g.products.length,
-      (g.note || '—').replace(/[\r\n]+/g, ' ').replace(/"/g, '""'),
-      (g.product_interest || '—').replace(/[\r\n]+/g, ' ').replace(/"/g, '""'),
-      g.manager_acknowledged ? 'อ่านแล้ว' : 'ยังไม่อ่าน'
+      (g.note || "—").replace(/[\r\n]+/g, " ").replace(/"/g, '""'),
+      (g.product_interest || "—").replace(/[\r\n]+/g, " ").replace(/"/g, '""'),
+      g.manager_acknowledged ? "อ่านแล้ว" : "ยังไม่อ่าน",
     ];
   });
 
-  const csv = '\uFEFF' + [
-    headers.join(','),
-    ...rows.map(r => r.map(v => `"${v}"`).join(','))
-  ].join('\n');
+  const csv =
+    "\uFEFF" +
+    [
+      headers.join(","),
+      ...rows.map((r) => r.map((v) => `"${v}"`).join(",")),
+    ].join("\n");
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = `reports_${formatDateForInput(dateStart)}_${formatDateForInput(dateEnd)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 
-  showToast('📥 Export สำเร็จ');
+  showToast("📥 Export สำเร็จ");
 }
 
 // =====================================================
 // 🔧 SETUP EVENT LISTENERS
 // =====================================================
 function setupEventListeners() {
-  const searchInput = document.getElementById('searchInput');
+  const searchInput = document.getElementById("searchInput");
   if (searchInput) {
-    searchInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') applyFilter();
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") applyFilter();
     });
   }
 
-  const modal = document.getElementById('reportModal');
+  const modal = document.getElementById("reportModal");
   if (modal) {
-    modal.addEventListener('click', e => {
+    modal.addEventListener("click", (e) => {
       if (e.target === modal) closeModal();
     });
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
+  // 🆕 sales table modal — click outside to close
+  const salesModal = document.getElementById("salesTableModal");
+  if (salesModal) {
+    salesModal.addEventListener("click", (e) => {
+      if (e.target === salesModal) closeSalesTableModal();
+    });
+  }
+
+  // 🆕 comment popup — click outside to close
+  const popup = document.getElementById("commentPopupModal");
+  if (popup) {
+    popup.addEventListener("click", (e) => {
+      if (e.target === popup) closeCommentPopup();
+    });
+  }
+
+  // ESC key — close topmost modal first
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const popupOpen = document
+      .getElementById("commentPopupModal")
+      ?.classList.contains("show");
+    const salesOpen = document
+      .getElementById("salesTableModal")
+      ?.classList.contains("show");
+    const detailOpen = document
+      .getElementById("reportModal")
+      ?.classList.contains("show");
+
+    if (popupOpen) closeCommentPopup();
+    else if (salesOpen) closeSalesTableModal();
+    else if (detailOpen) closeModal();
   });
 }
 
@@ -1194,11 +1834,11 @@ function setupEventListeners() {
 // 🚪 SETUP LOGOUT
 // =====================================================
 function setupLogout() {
-  const logoutBtn = document.getElementById('logoutBtn');
+  const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
+    logoutBtn.addEventListener("click", async () => {
       await supabaseClient.auth.signOut();
-      window.location.href = '/pages/auth/login.html';
+      window.location.href = "/pages/auth/login.html";
     });
   }
 }
@@ -1207,45 +1847,75 @@ function setupLogout() {
 // 🔧 HELPERS
 // =====================================================
 function formatDate(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
-      year: 'numeric', month: 'long', day: 'numeric'
+    return new Date(dateStr).toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
-  } catch (e) { return '—'; }
+  } catch (e) {
+    return "—";
+  }
+}
+
+function formatDateShort(dateStr) {
+  if (!dateStr) return "—";
+  try {
+    return new Date(dateStr).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch (e) {
+    return "—";
+  }
+}
+
+function formatWeekday(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("th-TH", { weekday: "short" });
+  } catch (e) {
+    return "";
+  }
 }
 
 function formatDateTime(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+    return new Date(dateStr).toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
-  } catch (e) { return '—'; }
+  } catch (e) {
+    return "—";
+  }
 }
 
 function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
+  if (text === null || text === undefined) return "";
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 
 function showToast(message) {
-  const toast = document.getElementById('toast');
+  const toast = document.getElementById("toast");
   if (!toast) return;
   toast.textContent = message;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3000);
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
 async function logout() {
   try {
     await supabaseClient.auth.signOut();
-    window.location.href = '/pages/auth/login.html';
+    window.location.href = "/pages/auth/login.html";
   } catch (e) {
-    window.location.href = '/pages/auth/login.html';
+    window.location.href = "/pages/auth/login.html";
   }
 }
 
@@ -1264,3 +1934,13 @@ window.closeModal = closeModal;
 window.exportCSV = exportCSV;
 window.loadReports = loadReports;
 window.logout = logout;
+
+// 🆕
+window.openSalesTableModal = openSalesTableModal;
+window.closeSalesTableModal = closeSalesTableModal;
+window.openCommentPopup = openCommentPopup;
+window.closeCommentPopup = closeCommentPopup;
+window.savePopupComment = savePopupComment;
+window.markPopupAsRead = markPopupAsRead;
+window.switchView = switchView;
+window.toggleNote = toggleNote;

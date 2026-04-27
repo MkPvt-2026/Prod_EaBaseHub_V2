@@ -2,82 +2,90 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Import ข้อมูล RFM | Admin</title>
+<title>Import ข้อมูล | Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="/css/rfm-dashboard.css">
+<link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
 <style>
   .import-card {
     background: white;
     border: 1px solid #e5e5e0;
     border-radius: 12px;
     padding: 24px;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto 16px;
   }
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #444441; }
-  .field input[type="file"], .field input[type="text"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d3d1c7;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
+  .field input[type="file"], .field input[type="text"], .field input[type="date"], .field select {
+    width: 100%; padding: 10px 12px; border: 1px solid #d3d1c7;
+    border-radius: 8px; font-size: 14px; font-family: inherit;
   }
   .warning-box {
-    background: #FAEEDA;
-    border: 1px solid #BA7517;
-    color: #633806;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 13px;
+    background: #FAEEDA; border: 1px solid #BA7517; color: #633806;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;
   }
+  .info-box {
+    background: #E6F1FB; border: 1px solid #378ADD; color: #0C447C;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;
+  }
+  .preview-box {
+    background: #f1efe8; border-radius: 8px; padding: 12px 16px;
+    margin: 12px 0; font-size: 13px; display: none;
+  }
+  .preview-box.active { display: block; }
+  .preview-row { display: flex; justify-content: space-between; padding: 3px 0; }
+  .preview-row strong { color: #2c2c2a; }
   .btn-primary {
-    background: #1D9E75;
-    color: white;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
+    background: #1D9E75; color: white; border: none; padding: 10px 24px;
+    border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
   }
   .btn-primary:hover { background: #0F6E56; }
   .btn-primary:disabled { background: #b4b2a9; cursor: not-allowed; }
   .log {
-    background: #f1efe8;
-    border-radius: 8px;
-    padding: 16px;
-    font-family: 'SF Mono', Monaco, monospace;
-    font-size: 12px;
-    max-height: 320px;
-    overflow-y: auto;
-    margin-top: 16px;
-    white-space: pre-wrap;
-    line-height: 1.6;
+    background: #2c2c2a; color: #d3d1c7; border-radius: 8px; padding: 16px;
+    font-family: 'SF Mono', Monaco, monospace; font-size: 12px;
+    max-height: 320px; overflow-y: auto; margin-top: 16px; white-space: pre-wrap; line-height: 1.6;
   }
   .progress {
-    width: 100%;
-    height: 8px;
-    background: #e5e5e0;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 12px;
+    width: 100%; height: 8px; background: #e5e5e0;
+    border-radius: 4px; overflow: hidden; margin-top: 12px;
   }
   .progress-bar { height: 100%; background: #1D9E75; width: 0%; transition: width 0.3s; }
   .hint { font-size: 12px; color: #888780; margin-top: 4px; }
+
+  .mode-options {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;
+  }
+  @media (max-width: 600px) { .mode-options { grid-template-columns: 1fr; } }
+  .mode-card {
+    border: 2px solid #e5e5e0; border-radius: 8px; padding: 12px;
+    cursor: pointer; transition: all 0.15s; background: white;
+  }
+  .mode-card:hover { border-color: #1D9E75; background: #E1F5EE; }
+  .mode-card.selected {
+    border-color: #1D9E75; background: #E1F5EE;
+  }
+  .mode-card input { margin-right: 6px; }
+  .mode-card .mode-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+  .mode-card .mode-desc { font-size: 12px; color: #5f5e5a; }
+
+  .history-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .history-table th, .history-table td {
+    padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e5e0;
+  }
+  .history-table th { font-weight: 500; color: #5f5e5a; font-size: 12px; background: #f7f7f5; }
+  .history-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 
-<!-- Header เหมือน dashboard -->
 <header class="rfm-header">
   <div class="rfm-header-inner">
     <div>
-      <h1>Import ข้อมูล RFM</h1>
-      <p class="subtitle">อัปเดตข้อมูลการขายจากไฟล์ Excel</p>
+      <h1>Import ข้อมูล Sales</h1>
+      <p class="subtitle">นำเข้าไฟล์ Excel รายเดือน / สัปดาห์ / วัน</p>
     </div>
     <div class="user-box">
       <div class="user-info">
@@ -91,73 +99,255 @@
 
 <main class="rfm-main">
 
+  <!-- ขั้นตอนที่ 1: เลือกรูปแบบไฟล์ -->
   <div class="import-card">
     <div class="warning-box">
-      ⚠️ <strong>เฉพาะ Admin เท่านั้น</strong> — การ import จะมีผลกระทบต่อข้อมูลที่ผู้บริหารใช้งาน กรุณาตรวจสอบไฟล์ก่อนทุกครั้ง
+      ⚠️ <strong>เฉพาะ Admin</strong> — การ import จะมีผลต่อข้อมูลที่ผู้บริหารใช้งาน กรุณาตรวจสอบไฟล์ก่อนทุกครั้ง
     </div>
 
-    <div class="field">
-      <label>ไฟล์ Excel</label>
-      <input type="file" id="fileInput" accept=".xlsx,.xls">
-      <div class="hint">รองรับไฟล์รูปแบบ Date_for_teir_customer.xlsx (คอลัมน์: Year, Month, Client_ID, ...)</div>
-    </div>
-
-    <div class="field">
-      <label>
-        <input type="checkbox" id="clearFirst"> 
-        ลบข้อมูลเก่าทั้งหมดก่อน import (ใช้เมื่อไฟล์รวมทุกเดือนอยู่แล้ว)
+    <h3 style="font-size: 16px; font-weight: 500; margin: 0 0 12px;">1. รูปแบบไฟล์</h3>
+    <div class="mode-options">
+      <label class="mode-card selected" data-mode="monthly">
+        <div class="mode-title"><input type="radio" name="mode" value="monthly" checked> รายเดือน</div>
+        <div class="mode-desc">ไฟล์มีคอลัมน์ Year, Month (ไม่มี Day)<br>ระบบใช้วันสุดท้ายของเดือนแทน</div>
       </label>
+      <label class="mode-card" data-mode="daily">
+        <div class="mode-title"><input type="radio" name="mode" value="daily"> รายวัน / สัปดาห์</div>
+        <div class="mode-desc">ไฟล์มีคอลัมน์ Date (YYYY-MM-DD) หรือ Year, Month, Day<br>แม่นยำระดับวัน</div>
+      </label>
+    </div>
+
+    <h3 style="font-size: 16px; font-weight: 500; margin: 20px 0 12px;">2. เลือกไฟล์</h3>
+    <div class="field">
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="hint">รองรับ Excel (.xlsx, .xls)</div>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-box" id="previewBox">
+      <div style="font-weight: 500; margin-bottom: 8px;">📋 ข้อมูลในไฟล์:</div>
+      <div class="preview-row">จำนวนแถว: <strong id="previewRows">-</strong></div>
+      <div class="preview-row">ช่วงวันที่: <strong id="previewDateRange">-</strong></div>
+      <div class="preview-row">คอลัมน์ที่พบ: <strong id="previewColumns">-</strong></div>
+    </div>
+
+    <!-- ขั้นตอนที่ 3: วิธีจัดการข้อมูลซ้ำ -->
+    <h3 style="font-size: 16px; font-weight: 500; margin: 20px 0 12px;">3. จัดการข้อมูลซ้ำ</h3>
+    <div class="info-box">
+      💡 <strong>วิธีกันข้อมูลซ้ำ:</strong> ระบบจะ <strong>ลบข้อมูลในช่วงวันที่ของไฟล์ก่อน</strong> แล้วค่อย insert ใหม่
+      วิธีนี้ปลอดภัยที่สุด แม้คุณจะ import ไฟล์เดิมซ้ำกี่รอบ ข้อมูลก็จะไม่ซ้ำ
+    </div>
+    <div class="field">
+      <label>โหมดการ Import</label>
+      <select id="importStrategy">
+        <option value="replace_range" selected>🛡️ Replace by date range (แนะนำ) — ลบช่วงเวลาของไฟล์แล้ว insert ใหม่</option>
+        <option value="append">➕ Append only — เพิ่มทับ (เสี่ยงซ้ำถ้า import ซ้ำ)</option>
+        <option value="replace_all">💥 Replace all — ลบข้อมูลทั้งหมดก่อน (ใช้เมื่อไฟล์รวมทุกช่วง)</option>
+      </select>
+      <div class="hint">
+        <strong>Replace by range</strong>: ปลอดภัยสุด เหมาะกับ import รายเดือน/สัปดาห์/วัน<br>
+        <strong>Append</strong>: เร็วกว่า แต่ต้องมั่นใจว่าไฟล์ไม่ซ้ำ<br>
+        <strong>Replace all</strong>: ใช้เมื่อได้ไฟล์ใหญ่ครอบคลุมทุกช่วง
+      </div>
     </div>
 
     <button id="importBtn" class="btn-primary" onclick="startImport()">เริ่ม Import</button>
     <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
   </div>
 
+  <!-- Log -->
   <div class="import-card">
-    <label style="font-weight: 500; display: block; margin-bottom: 8px;">Log</label>
+    <label style="font-weight: 500; display: block; margin-bottom: 8px;">Log การทำงาน</label>
     <div class="log" id="log">รอการ import...</div>
+  </div>
+
+  <!-- Import History -->
+  <div class="import-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3 style="font-size: 16px; font-weight: 500; margin: 0;">📜 ประวัติการ Import</h3>
+      <button class="btn-secondary" onclick="loadHistory()">🔄 รีเฟรช</button>
+    </div>
+    <div id="historyTableWrap">
+      <p style="color: #888780; font-size: 13px;">กำลังโหลด...</p>
+    </div>
   </div>
 
 </main>
 
-<!-- Scripts -->
+<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+<!-- Core -->
 <script src="/js/core/supabaseClient.js"></script>
 <script src="/js/core/userService.js"></script>
 <script src="/js/core/roleConfig.js"></script>
 <script src="/js/core/auth.js"></script>
 
 <script>
-// ป้องกันหน้า: เฉพาะ admin เท่านั้น
+// ป้องกันหน้า: admin only
 document.addEventListener('DOMContentLoaded', async () => {
-  await protectPage(['admin']);
+  await protectPage(['admin' ,'manager']);
+  loadHistory();
 });
 
+// UI: toggle mode card
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input').checked = true;
+  });
+});
+
+// Preview file เมื่อเลือกไฟล์
+document.getElementById('fileInput').addEventListener('change', previewFile);
+
 // ======================================================
-// Import logic
+// STATE
 // ======================================================
 const logEl = document.getElementById('log');
 const progressBar = document.getElementById('progressBar');
+let previewData = null;
 
 function log(msg, type = 'info') {
   const time = new Date().toLocaleTimeString('th-TH');
-  const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '•';
+  const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warn' ? '⚠️' : '•';
   logEl.textContent += `\n[${time}] ${prefix} ${msg}`;
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-// Map คอลัมน์จาก Excel → column ใน Supabase
-function mapRow(row) {
+// ======================================================
+// PREVIEW (อ่านไฟล์ + แสดงสรุป)
+// ======================================================
+async function previewFile() {
+  const file = document.getElementById('fileInput').files[0];
+  const previewBox = document.getElementById('previewBox');
+
+  if (!file) {
+    previewBox.classList.remove('active');
+    return;
+  }
+
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    if (!rows.length) {
+      alert('ไฟล์ไม่มีข้อมูล');
+      return;
+    }
+
+    // ตรวจคอลัมน์
+    const firstRow = rows[0];
+    const cols = Object.keys(firstRow);
+
+    // หา date range
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    const dates = rows.map(r => extractDate(r, mode)).filter(Boolean);
+    const minDate = dates.length ? dates.reduce((a, b) => a < b ? a : b) : null;
+    const maxDate = dates.length ? dates.reduce((a, b) => a > b ? a : b) : null;
+
+    document.getElementById('previewRows').textContent = rows.length.toLocaleString();
+    document.getElementById('previewDateRange').textContent = minDate && maxDate
+      ? `${fmtDate(minDate)} ถึง ${fmtDate(maxDate)}`
+      : '⚠️ หาไม่พบวันที่';
+    document.getElementById('previewColumns').textContent = cols.slice(0, 5).join(', ') + (cols.length > 5 ? '...' : '');
+
+    previewData = { rows, minDate, maxDate, file };
+    previewBox.classList.add('active');
+
+    log(`อ่านไฟล์เรียบร้อย: ${rows.length.toLocaleString()} แถว`);
+    if (minDate && maxDate) {
+      log(`ช่วงวันที่: ${fmtDate(minDate)} ถึง ${fmtDate(maxDate)}`);
+    }
+  } catch (err) {
+    alert('อ่านไฟล์ไม่ได้: ' + (err.message || err));
+    console.error(err);
+  }
+}
+
+// ======================================================
+// HELPERS
+// ======================================================
+function fmtDate(d) {
+  if (!d) return '-';
+  if (typeof d === 'string') return d;
+  return d.toISOString().slice(0, 10);
+}
+
+function toDateString(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Extract วันที่จาก row ตามโหมด
+function extractDate(row, mode) {
+  if (mode === 'monthly') {
+    const y = parseInt(row['Year']);
+    const m = parseInt(row['Month']);
+    if (!y || !m) return null;
+    // วันสุดท้ายของเดือน
+    return new Date(y, m, 0);  // day=0 = last day of previous month → m ของ constructor เริ่มที่ 0 แต่ใส่ m ก็จะได้ last day of m
+  }
+  // daily mode
+  // รองรับ Date column หลากหลายรูปแบบ
+  const dateVal = row['Date'] || row['date'] || row['วันที่'];
+  if (dateVal) {
+    if (dateVal instanceof Date) return dateVal;
+    const parsed = new Date(dateVal);
+    if (!isNaN(parsed)) return parsed;
+  }
+  // หรือใช้ Year + Month + Day
+  const y = parseInt(row['Year']);
+  const m = parseInt(row['Month']);
+  const d = parseInt(row['Day'] || row['day']);
+  if (y && m && d) return new Date(y, m - 1, d);
+  if (y && m) return new Date(y, m, 0);  // fallback = last day of month
+  return null;
+}
+
+// Helper: แยกชื่อสินค้ากับรหัส
+// "ดำเงิน(ชาวสวน)0.80x400y.-45รูเดี่ยว /3-3-03250831"
+//   → name = "ดำเงิน(ชาวสวน)0.80x400y.-45รูเดี่ยว"
+//   → code = "3-3-03250831"
+function splitProductName(fullText) {
+  if (!fullText) return { name: null, code: null };
+  const trimmed = String(fullText).trim();
+  const lastSlash = trimmed.lastIndexOf('/');
+  if (lastSlash === -1) {
+    // ไม่มี / → ทั้งหมดเป็นชื่อ
+    return { name: trimmed, code: null };
+  }
+  const name = trimmed.substring(0, lastSlash).trim();
+  const code = trimmed.substring(lastSlash + 1).trim().replace(/['"]/g, '');
+  return { name, code };
+}
+
+// Map row → DB
+function mapRow(row, mode, filename) {
+  const date = extractDate(row, mode);
+  if (!date) return null;
+
+  const productFull = row['รายการสินค้า/รหัส'] || null;
+  const split = splitProductName(productFull);
+
   return {
-    year: parseInt(row['Year']) || null,
-    month: parseInt(row['Month']) || null,
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: mode === 'daily' ? date.getDate() : null,
+    transaction_date: toDateString(date),
     employee_name: row['Employee_Name'] || null,
     client_id: row['Client_ID'] || null,
     client_name: row['Client_Name'] || null,
     province: row['Province'] || null,
-    product_code: row['รายการสินค้า/รหัส'] || null,
+    product_code: productFull,
+    product_name: split.name,        // 🆕 ชื่อสินค้า (ตัด / ออก)
+    product_code_only: split.code,   // 🆕 รหัสสินค้าอย่างเดียว
     sales_unit: parseFloat(row['ขายสุทธิ_SalesUnit']) || 0,
     unit_name: row['หน่วยนับ'] || null,
     sales_value: parseFloat(row['ขายสุทธิ_SalesValue']) || 0,
@@ -170,17 +360,31 @@ function mapRow(row) {
     segment: row['Segment'] || null,
     sub_segment_a: row['Sub_SegmentA'] != null ? String(row['Sub_SegmentA']) : null,
     sub_segment_b: row['Sub_SegmentB'] || null,
+    source_file: filename
   };
 }
 
+// ======================================================
+// IMPORT
+// ======================================================
 async function startImport() {
-  const file = document.getElementById('fileInput').files[0];
-  const clearFirst = document.getElementById('clearFirst').checked;
+  if (!previewData) {
+    alert('กรุณาเลือกไฟล์ก่อน');
+    return;
+  }
 
-  if (!file) { log('กรุณาเลือกไฟล์ Excel', 'error'); return; }
+  const { rows, minDate, maxDate, file } = previewData;
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  const strategy = document.getElementById('importStrategy').value;
 
-  if (clearFirst) {
-    if (!confirm('ยืนยันการลบข้อมูลเก่าทั้งหมด? (ไม่สามารถย้อนกลับได้)')) {
+  // Confirm ก่อนทำงานที่อันตราย
+  if (strategy === 'replace_all') {
+    if (!confirm('⚠️ ยืนยันการลบข้อมูลทั้งหมด? (ไม่สามารถย้อนกลับได้)')) {
+      log('ยกเลิกการ import');
+      return;
+    }
+  } else if (strategy === 'replace_range') {
+    if (!confirm(`จะลบข้อมูลในช่วง ${fmtDate(minDate)} ถึง ${fmtDate(maxDate)} แล้ว insert ใหม่ ยืนยันหรือไม่?`)) {
       log('ยกเลิกการ import');
       return;
     }
@@ -192,24 +396,34 @@ async function startImport() {
   progressBar.style.width = '0%';
 
   try {
-    log('เริ่มอ่านไฟล์ Excel...');
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: 'array' });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet);
-    log(`อ่านข้อมูลได้ ${rows.length.toLocaleString()} แถว`);
+    log(`เริ่ม import โหมด: ${mode}, strategy: ${strategy}`);
 
-    if (clearFirst) {
-      log('กำลังลบข้อมูลเก่า...');
+    // Map rows
+    const mapped = rows.map(r => mapRow(r, mode, file.name)).filter(r => r && r.client_id);
+    log(`ข้อมูลที่ถูกต้อง: ${mapped.length.toLocaleString()}/${rows.length.toLocaleString()} แถว`);
+
+    if (mapped.length < rows.length) {
+      log(`ข้าม ${rows.length - mapped.length} แถว (ไม่มี client_id หรือ วันที่)`, 'warn');
+    }
+
+    // ขั้นตอนก่อน insert
+    if (strategy === 'replace_all') {
+      log('กำลังลบข้อมูลทั้งหมด...');
       const { error } = await supabaseClient.from('sales_transactions').delete().neq('id', 0);
       if (error) throw error;
       log('ลบข้อมูลเก่าเรียบร้อย', 'success');
+    } else if (strategy === 'replace_range') {
+      log(`กำลังลบข้อมูลในช่วง ${fmtDate(minDate)} ถึง ${fmtDate(maxDate)}...`);
+      const { data, error } = await supabaseClient.rpc('delete_sales_in_range', {
+        p_start_date: toDateString(minDate),
+        p_end_date: toDateString(maxDate)
+      });
+      if (error) throw error;
+      log(`ลบข้อมูลในช่วงนี้: ${(data || 0).toLocaleString()} แถว`, 'success');
     }
 
+    // Insert เป็น batch
     const BATCH_SIZE = 500;
-    const mapped = rows.map(mapRow).filter(r => r.client_id && r.year && r.month);
-    log(`ข้อมูลที่ถูกต้อง: ${mapped.length.toLocaleString()} แถว (ข้าม ${rows.length - mapped.length} แถว)`);
-
     let imported = 0;
     for (let i = 0; i < mapped.length; i += BATCH_SIZE) {
       const batch = mapped.slice(i, i + BATCH_SIZE);
@@ -226,14 +440,65 @@ async function startImport() {
       }
     }
 
-    log(`เสร็จสิ้น! Import ทั้งหมด ${imported.toLocaleString()} แถว`, 'success');
-    log('ไปที่ Dashboard เพื่อดูผล RFM ที่อัปเดตใหม่');
+    log(`เสร็จสิ้น! Import ${imported.toLocaleString()} แถว`, 'success');
+    log('Views RFM และ Product จะอัปเดตอัตโนมัติ ไปที่ Dashboard เพื่อดูผล');
+
+    loadHistory();
 
   } catch (err) {
     log('เกิดข้อผิดพลาด: ' + (err.message || err), 'error');
     console.error(err);
   } finally {
     btn.disabled = false;
+  }
+}
+
+// ======================================================
+// LOAD HISTORY
+// ======================================================
+async function loadHistory() {
+  const wrap = document.getElementById('historyTableWrap');
+  wrap.innerHTML = '<p style="color: #888780; font-size: 13px;">กำลังโหลด...</p>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('import_history')
+      .select('*')
+      .limit(20);
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      wrap.innerHTML = '<p style="color: #888780; font-size: 13px;">ยังไม่มีประวัติการ import</p>';
+      return;
+    }
+
+    const rowsHtml = data.map(r => `
+      <tr>
+        <td>${new Date(r.last_imported_at).toLocaleString('th-TH')}</td>
+        <td>${r.source_file || '-'}</td>
+        <td>${r.data_from ? fmtDate(new Date(r.data_from)) : '-'} - ${r.data_to ? fmtDate(new Date(r.data_to)) : '-'}</td>
+        <td class="num">${Number(r.row_count).toLocaleString()}</td>
+        <td class="num">฿${Number(r.total_revenue).toLocaleString()}</td>
+      </tr>
+    `).join('');
+
+    wrap.innerHTML = `
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>วันเวลา Import</th>
+            <th>ชื่อไฟล์</th>
+            <th>ช่วงข้อมูล</th>
+            <th class="num">จำนวนแถว</th>
+            <th class="num">ยอดรวม</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+  } catch (err) {
+    wrap.innerHTML = `<p style="color: #A32D2D; font-size: 13px;">โหลดประวัติไม่ได้: ${err.message}</p>`;
+    console.error(err);
   }
 }
 </script>
