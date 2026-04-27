@@ -55,6 +55,8 @@ const ROLE_CONFIG = {
     defaultPage: '/pages/dashboard/managerDashboard.html',
     allowedPages: [
       '/pages/dashboard/managerDashboard.html',
+      '/pages/dashboard/RfmDashboard.html',
+      '/pages/components/rfmImport.html',
       '/pages/reports/reportTracker.html',
       '/pages/reports/reportManager.html',
       '/index',
