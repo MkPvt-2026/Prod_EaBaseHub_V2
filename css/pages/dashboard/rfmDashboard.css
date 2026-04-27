@@ -370,11 +370,16 @@ tr:hover td { background: #fafaf7; }
   white-space: nowrap;
 }
 
-/* Segment colors */
+/* Segment colors (v7: 4 segments) */
+.seg-regular     { background: #E1F5EE; color: #085041; border-color: #1D9E75; }
+.seg-new         { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
+.seg-lost-back   { background: #FCEBEB; color: #791F1F; border-color: #E24B4A; }
+.seg-inactive    { background: #F1EFE8; color: #444441; border-color: #888780; }
+
+/* Legacy support (เก็บไว้กันไฟล์อื่นใช้) */
 .seg-champions   { background: #E1F5EE; color: #085041; border-color: #1D9E75; }
 .seg-loyal       { background: #EEEDFE; color: #3C3489; border-color: #7F77DD; }
 .seg-potential   { background: #E6F1FB; color: #0C447C; border-color: #378ADD; }
-.seg-new         { background: #EAF3DE; color: #27500A; border-color: #639922; }
 .seg-promising   { background: #F1EFE8; color: #444441; border-color: #888780; }
 .seg-attention   { background: #FAEEDA; color: #633806; border-color: #BA7517; }
 .seg-risk        { background: #FCEBEB; color: #791F1F; border-color: #E24B4A; }

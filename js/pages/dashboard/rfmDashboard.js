@@ -1,5 +1,5 @@
 // ======================================================
-// rfmDashboard.js
+// rfm-dashboard.js
 // RFM Analysis Dashboard for Executive/Admin
 // ต้องโหลด supabaseClient.js + Chart.js + xlsx.js ก่อนไฟล์นี้
 // ======================================================
@@ -13,21 +13,37 @@ if (typeof Chart === 'undefined') {
 }
 
 // ======================================================
-// 🎨 SEGMENT CONFIG
-// ข้อมูล metadata ของแต่ละ segment (สี + action แนะนำ)
+// 🎨 SEGMENT CONFIG (v7: 4 segments)
 // ======================================================
 const SEGMENT_META = {
-  'Champions':          { class: 'seg-champions',   color: '#1D9E75', action: 'ให้รางวัล VIP, เชิญเป็น brand advocate, ส่ง early access สินค้าใหม่' },
-  'Loyal Customers':    { class: 'seg-loyal',       color: '#7F77DD', action: 'เสนอ upsell/cross-sell, โปรแกรม referral, ขอ testimonial' },
-  'Potential Loyalist': { class: 'seg-potential',   color: '#378ADD', action: 'สร้าง engagement, ให้สิทธิพิเศษสมาชิก, แนะนำสินค้าเพิ่มเติม' },
-  'New Customers':      { class: 'seg-new',         color: '#639922', action: 'ต้อนรับด้วย onboarding, ให้ส่วนลดการซื้อครั้งที่ 2 เพื่อสร้างนิสัย' },
-  'Promising':          { class: 'seg-promising',   color: '#888780', action: 'สร้าง brand awareness, แคมเปญสร้างความสัมพันธ์' },
-  'Need Attention':     { class: 'seg-attention',   color: '#BA7517', action: 'ส่งข้อเสนอพิเศษจำกัดเวลา, สำรวจความพึงพอใจ' },
-  'At Risk':            { class: 'seg-risk',        color: '#E24B4A', action: 'แคมเปญ win-back ด่วน, ติดต่อส่วนตัว, เสนอโปรโมชั่นแรง' },
-  'Cant Lose Them':     { class: 'seg-cant-lose',   color: '#D4537E', action: 'ติดต่อโดยตรงจากผู้บริหาร, ข้อเสนอพิเศษเฉพาะบุคคล' },
-  'Hibernating':        { class: 'seg-hibernating', color: '#5F5E5A', action: 'Reactivation campaign, ส่งเนื้อหามีคุณค่า, กระตุ้นด้วยสินค้าใหม่' },
-  'About to Sleep':     { class: 'seg-sleep',       color: '#D85A30', action: 'แคมเปญฟื้นสัมพันธ์, ส่วนลดพิเศษ, เตือนถึงสินค้าที่เคยซื้อ' },
-  'Lost':               { class: 'seg-lost',        color: '#B4B2A9', action: 'พิจารณาประหยัด cost การตลาด หรือทำ final win-back' }
+  'ลูกค้าประจำ': {
+    class: 'seg-regular',
+    color: '#1D9E75',
+    icon: '🟢',
+    desc: 'ซื้อล่าสุด · บ่อย · ใช้เงินสูง',
+    action: 'รักษาเป็น VIP, ให้สิทธิพิเศษ, early access สินค้าใหม่, ขอ testimonial เพื่อ marketing'
+  },
+  'ลูกค้าใหม่/เริ่มซื้อ': {
+    class: 'seg-new',
+    color: '#378ADD',
+    icon: '🔵',
+    desc: 'ซื้อล่าสุด · ยอดยังไม่สูง',
+    action: 'กระตุ้นให้ซื้อต่อ, แนะนำสินค้าเพิ่ม, สร้าง engagement, ให้ส่วนลดการซื้อครั้งถัดไป'
+  },
+  'ลูกค้าเก่าหายไป': {
+    class: 'seg-lost-back',
+    color: '#E24B4A',
+    icon: '🟠',
+    desc: 'เคยซื้อดี · แต่หายไปนาน',
+    action: 'Win-back ด่วน, โทรสอบถามจากพนักงานขาย, เสนอโปรโมชั่นแรง, ติดต่อส่วนตัวจากผู้บริหาร'
+  },
+  'ลูกค้าทิ้งห่าง': {
+    class: 'seg-inactive',
+    color: '#888780',
+    icon: '⚪',
+    desc: 'ห่างหายนาน · ยอดน้อย',
+    action: 'พิจารณาลด cost การตลาด, ทำ final win-back campaign, หรือยอมรับว่าลูกค้าเปลี่ยนไป'
+  }
 };
 
 // ======================================================
@@ -86,29 +102,40 @@ const RFM = (function () {
   // -----------------------------
   async function loadData() {
     try {
-      console.log('📥 Loading customer_rfm from Supabase...');
+      console.log('📥 Loading customer_rfm...');
 
-      // Paginate เพราะ Supabase default limit = 1000
+      const range = (typeof DateFilter !== 'undefined') ? DateFilter.getRange() : { start: null, end: null };
+      const hasFilter = range.start || range.end;
+
       const all = [];
-      const PAGE = 1000;
-      let from = 0;
 
-      while (true) {
-        const { data, error } = await supabaseClient
-          .from('customer_rfm')
-          .select('*')
-          .range(from, from + PAGE - 1);
-
+      if (hasFilter) {
+        // ใช้ RPC เมื่อมี filter
+        const { data, error } = await supabaseClient.rpc('get_customer_rfm_by_range', {
+          p_start_date: range.start,
+          p_end_date: range.end
+        });
         if (error) throw error;
-        all.push(...data);
-        if (data.length < PAGE) break;
-        from += PAGE;
+        all.push(...(data || []));
+      } else {
+        // ไม่มี filter ใช้ view ตรงๆ (paginate)
+        const PAGE = 1000;
+        let from = 0;
+        while (true) {
+          const { data, error } = await supabaseClient
+            .from('customer_rfm')
+            .select('*')
+            .range(from, from + PAGE - 1);
+          if (error) throw error;
+          all.push(...data);
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
       }
 
       allData = all;
       console.log(`✅ Loaded ${allData.length} customer records`);
 
-      // แสดงวันที่อัปเดตล่าสุด (ใช้ last_purchase_date ล่าสุด)
       const latest = allData
         .map(r => r.last_purchase_date)
         .filter(Boolean)
@@ -117,7 +144,7 @@ const RFM = (function () {
       $('lastUpdated').textContent = latest
         ? new Date(latest).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
         : '-';
-      $('totalRowsInfo').textContent = `${fmt(allData.length)} ลูกค้า`;
+      $('totalRowsInfo').textContent = `${fmt(allData.length)} ลูกค้า` + (hasFilter ? ' (ในช่วงที่กรอง)' : '');
 
       hideEl('loadingBox');
       showEl('dashboard');
@@ -130,7 +157,7 @@ const RFM = (function () {
       console.error('❌ loadData error:', err);
       hideEl('loadingBox');
       showError('โหลดข้อมูลไม่สำเร็จ: ' + (err.message || err) +
-                ' (ตรวจสอบว่าสร้าง view customer_rfm ใน Supabase แล้ว)');
+                ' (ตรวจสอบว่าสร้าง view customer_rfm และ function get_customer_rfm_by_range ใน Supabase แล้ว)');
     }
   }
 
@@ -212,8 +239,8 @@ const RFM = (function () {
     const totalCustomers = filteredData.length;
     const totalRevenue = filteredData.reduce((s, r) => s + Number(r.monetary_value || 0), 0);
     const aov = totalCustomers ? totalRevenue / totalCustomers : 0;
-    const champs = filteredData.filter(r => r.segment === 'Champions').length;
-    const atRisk = filteredData.filter(r => ['At Risk', 'Cant Lose Them', 'About to Sleep'].includes(r.segment)).length;
+    const champs = filteredData.filter(r => r.segment === 'ลูกค้าประจำ').length;
+    const atRisk = filteredData.filter(r => r.segment === 'ลูกค้าเก่าหายไป' || r.segment === 'ลูกค้าทิ้งห่าง').length;
     const avgRecency = totalCustomers
       ? filteredData.reduce((s, r) => s + Number(r.recency_days || 0), 0) / totalCustomers
       : 0;
@@ -321,8 +348,8 @@ const RFM = (function () {
       .sort((a, b) => (segCounts[b[0]] || 0) - (segCounts[a[0]] || 0))
       .map(([seg, meta]) => `
         <div class="seg-card ${meta.class}">
-          <div class="seg-title">${escapeHtml(seg)}</div>
-          <div class="seg-count">${segCounts[seg]} ลูกค้า</div>
+          <div class="seg-title">${meta.icon || ''} ${escapeHtml(seg)}</div>
+          <div class="seg-count">${segCounts[seg]} ลูกค้า · ${escapeHtml(meta.desc || '')}</div>
           <div class="seg-action">${escapeHtml(meta.action)}</div>
         </div>
       `).join('');
@@ -341,7 +368,7 @@ const RFM = (function () {
     const rows = filteredData.slice(start, end);
 
     const html = rows.map(r => {
-      const meta = SEGMENT_META[r.segment] || { class: 'seg-lost' };
+      const meta = SEGMENT_META[r.segment] || { class: 'seg-inactive' };
       return `
         <tr>
           <td>${escapeHtml(r.client_id || '')}</td>
@@ -483,100 +510,3 @@ const RFM = (function () {
 window.RFM = RFM;
 
 console.log('✅ rfm-dashboard.js loaded');
-
-
-
-// -----------------------------
-// date logic
-// -----------------------------
-
-
-document.addEventListener('DOMContentLoaded', async () => {
-  await protectPage(['executive', 'manager', 'admin']);
-
-  // ── Generate month options ──────────────────────────
-  const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
-                     'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  function buildMonthOptions(selectId, defaultVal) {
-    const el = document.getElementById(selectId);
-    el.innerHTML = '';
-    for (let y = 2024; y <= 2025; y++) {
-      for (let m = 1; m <= 12; m++) {
-        const opt = document.createElement('option');
-        opt.value = `${y}-${m}`;
-        opt.textContent = `${MONTHS_TH[m-1]} ${y + 543}`;  // พ.ศ.
-        el.appendChild(opt);
-      }
-    }
-    el.value = defaultVal;
-  }
-  buildMonthOptions('dateFrom', '2024-1');
-  buildMonthOptions('dateTo',   '2025-12');
-
-  // ── Parse date range ────────────────────────────────
-  function getDateRange() {
-    const [yf, mf] = document.getElementById('dateFrom').value.split('-').map(Number);
-    const [yt, mt] = document.getElementById('dateTo').value.split('-').map(Number);
-    return { yf, mf, yt, mt };
-  }
-
-  // ── Quick range presets ─────────────────────────────
-  function setRange(range) {
-    const now = new Date();
-    const cm = now.getMonth() + 1;
-    const cy = now.getFullYear();
-
-    const presets = {
-      'ytd':    { from: `${cy}-1`,  to: `${cy}-${cm}` },
-      'last3m': { from: `${cy}-${Math.max(1, cm-2)}`, to: `${cy}-${cm}` },
-      '2024':   { from: '2024-1',   to: '2024-12' },
-      '2025':   { from: '2025-1',   to: '2025-12' },
-      'all':    { from: '2024-1',   to: '2025-12' },
-    };
-    const p = presets[range];
-    if (!p) return;
-    document.getElementById('dateFrom').value = p.from;
-    document.getElementById('dateTo').value   = p.to;
-    applyDateFilter();
-  }
-
-  // ── Apply filter to both tabs ───────────────────────
-  function applyDateFilter() {
-    const { yf, mf, yt, mt } = getDateRange();
-    if (typeof RFM !== 'undefined') RFM.setDateRange(yf, mf, yt, mt);
-    // Product tab: reload ถ้าโหลดไปแล้ว
-    if (typeof Product !== 'undefined' && Product.isLoaded()) {
-      Product.setDateRange(yf, mf, yt, mt);
-    }
-  }
-
-  // ── Button events ───────────────────────────────────
-  document.getElementById('btnApplyDate')
-    .addEventListener('click', applyDateFilter);
-
-  document.querySelectorAll('.btn-range').forEach(btn => {
-    btn.addEventListener('click', () => setRange(btn.dataset.range));
-  });
-
-  // ── Tab switching ───────────────────────────────────
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-      document.getElementById('tab-' + tab).classList.remove('hidden');
-
-      if (tab === 'product' && typeof Product !== 'undefined' && !Product.isLoaded()) {
-        const { yf, mf, yt, mt } = getDateRange();
-        Product.init(yf, mf, yt, mt);  // ← ส่ง date range ตั้งแต่แรก
-      }
-    });
-  });
-
-  // ── Init RFM with default range ─────────────────────
-  if (typeof RFM !== 'undefined') {
-    const { yf, mf, yt, mt } = getDateRange();
-    RFM.init(yf, mf, yt, mt);
-    document.getElementById('tab-rfm').classList.remove('hidden');
-  }
-});
