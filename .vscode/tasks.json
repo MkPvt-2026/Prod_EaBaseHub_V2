@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 Deploy Dev",
+  "type": "shell",
+  "command": "git add .; git commit -m \"update dev\"; git push origin dev",
+  "problemMatcher": []
+    },
+    {
+      "label": "🔥 Deploy Prod",
+  "type": "shell",
+  "command": "git checkout main; git pull origin main; git merge dev; git push origin main",
+  "problemMatcher": []
+    }
+  ]
+}

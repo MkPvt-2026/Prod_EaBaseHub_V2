@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Customer Dashboard | ผู้บริหาร</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
+</head>
+<body>
+
+<header class="rfm-header">
+  <div class="rfm-header-inner">
+    <div>
+      <h1>Customer & Product Dashboard</h1>
+      <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับผู้บริหาร</p>
+    </div>
+    <div class="user-box">
+      <div class="user-info">
+        <div class="user-name" data-user="display_name">-</div>
+        <div class="user-role" data-user="role">-</div>
+      </div>
+      <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" data-tab="rfm">🎯 RFM Customer Analysis</button>
+    <button class="tab-btn" data-tab="product">📦 Product Analytics</button>
+  </div>
+</nav>
+
+<main class="rfm-main">
+
+  <div id="loadingBox" class="loading-box">
+    <div class="spinner"></div>
+    <p>กำลังโหลดข้อมูล...</p>
+  </div>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <!-- ===================== TAB 1: RFM ===================== -->
+  <div id="tab-rfm" class="tab-content hidden">
+
+    <div class="meta-bar">
+      <span>อัปเดตล่าสุด: <strong id="lastUpdated">-</strong></span>
+      <span>ข้อมูลทั้งหมด: <strong id="totalRowsInfo">-</strong></span>
+      <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
+    </div>
+
+    <section class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">ลูกค้าทั้งหมด</div><div class="kpi-value" id="kpiCustomers">-</div></div>
+      <div class="kpi"><div class="kpi-label">รายได้รวม</div><div class="kpi-value" id="kpiRevenue">-</div></div>
+      <div class="kpi"><div class="kpi-label">รายได้เฉลี่ย/ลูกค้า</div><div class="kpi-value" id="kpiAov">-</div></div>
+      <div class="kpi"><div class="kpi-label">Champions</div><div class="kpi-value positive" id="kpiChampions">-</div></div>
+      <div class="kpi"><div class="kpi-label">ต้องการการดูแล</div><div class="kpi-value negative" id="kpiAtRisk">-</div></div>
+      <div class="kpi"><div class="kpi-label">ซื้อล่าสุดเฉลี่ย</div><div class="kpi-value" id="kpiRecency">-</div></div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="chart-card">
+        <h3>จำนวนลูกค้าตาม Segment</h3>
+        <div class="chart-wrap"><canvas id="chartSegments" role="img" aria-label="สัดส่วนลูกค้าแต่ละ segment"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>รายได้ตาม Segment</h3>
+        <div class="chart-wrap"><canvas id="chartRevenue" role="img" aria-label="รายได้จากแต่ละ segment"></canvas></div>
+      </div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="chart-card">
+        <h3>RFM Heatmap (Recency × Frequency)</h3>
+        <div id="heatmap"></div>
+        <div class="axis-hint">Recency: 1 = ซื้อนานมาแล้ว · 5 = ซื้อล่าสุด</div>
+      </div>
+      <div class="chart-card">
+        <h3>คำแนะนำ Action ต่อ Segment</h3>
+        <div id="actionList" class="action-list"></div>
+      </div>
+    </section>
+
+    <section class="filters">
+      <div class="filter-field">
+        <label>ค้นหาลูกค้า</label>
+        <input type="text" id="searchInput" placeholder="ชื่อ หรือ รหัสลูกค้า">
+      </div>
+      <div class="filter-field">
+        <label>Segment</label>
+        <select id="segmentFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-field">
+        <label>พนักงานขาย</label>
+        <select id="employeeFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-field">
+        <label>จังหวัด</label>
+        <select id="provinceFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-secondary" onclick="RFM.exportCSV()">📥 CSV</button>
+        <button class="btn-secondary" onclick="RFM.exportXLSX()">📥 Excel</button>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-header">
+        <div class="table-title">ตารางลูกค้า <span class="pill" id="rowCount">0 รายการ</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="client_id">รหัส</th>
+              <th data-sort="client_name">ชื่อลูกค้า</th>
+              <th data-sort="province">จังหวัด</th>
+              <th data-sort="employee_name">พนักงาน</th>
+              <th class="num" data-sort="recency_days">R (วัน)</th>
+              <th class="num" data-sort="frequency_months">F (เดือน)</th>
+              <th class="num" data-sort="monetary_value">M (บาท)</th>
+              <th data-sort="rfm_score">RFM</th>
+              <th data-sort="segment">Segment</th>
+              <th style="text-align: center;">ดูสินค้า</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span id="pageInfo">แสดง 0 จาก 0</span>
+        <div class="pagination">
+          <button class="btn-secondary" onclick="RFM.prevPage()">← ก่อนหน้า</button>
+          <button class="btn-secondary" onclick="RFM.nextPage()">ถัดไป →</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== TAB 2: PRODUCT ===================== -->
+  <div id="tab-product" class="tab-content hidden">
+
+    <section class="insight-card">
+      <div class="insight-icon">💡</div>
+      <div class="insight-body">
+        <div class="insight-title">ภาพรวมตลาด</div>
+        <div class="insight-text" id="productInsight">กำลังวิเคราะห์...</div>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">SKU ทั้งหมด</div><div class="kpi-value" id="pKpiSkus">-</div></div>
+      <div class="kpi"><div class="kpi-label">หมวดสินค้า</div><div class="kpi-value" id="pKpiCategories">-</div></div>
+      <div class="kpi"><div class="kpi-label">หมวดขายดีสุด</div><div class="kpi-value" id="pKpiTopCategory" style="font-size: 15px;">-</div></div>
+      <div class="kpi"><div class="kpi-label">เติบโต YoY</div><div class="kpi-value" id="pKpiYoY">-</div></div>
+      <div class="kpi"><div class="kpi-label">เดือนขายดีสุด</div><div class="kpi-value" id="pKpiPeakMonth" style="font-size: 15px;">-</div></div>
+      <div class="kpi"><div class="kpi-label">Top SKU (รายได้)</div><div class="kpi-value" id="pKpiTopSku" style="font-size: 13px;">-</div></div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>เทรนด์ยอดขายรายเดือน (2024 vs 2025)</h3>
+      <div class="chart-wrap" style="height: 320px;"><canvas id="chartTrend" role="img" aria-label="เทรนด์ยอดขายรายเดือน"></canvas></div>
+      <div class="insight-text" id="trendInsight" style="margin-top: 12px; font-size: 13px; color: #5f5e5a;"></div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="chart-card">
+        <h3>🏆 Top 10 สินค้าขายดี (ตามรายได้)</h3>
+        <div class="chart-wrap" style="height: 380px;"><canvas id="chartTop10" role="img" aria-label="Top 10 สินค้าขายดี"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📉 Bottom 10 สินค้าขายน้อย</h3>
+        <div class="chart-wrap" style="height: 380px;"><canvas id="chartBottom10" role="img" aria-label="Bottom 10 สินค้าขายน้อย"></canvas></div>
+      </div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>Pareto Analysis — กฎ 80/20</h3>
+      <div class="chart-wrap" style="height: 280px;"><canvas id="chartPareto" role="img" aria-label="Pareto 80/20"></canvas></div>
+      <div class="insight-text" id="paretoInsight" style="margin-top: 12px; font-size: 13px; color: #5f5e5a;"></div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>Seasonality — หมวดสินค้าใดขายดีช่วงไหน</h3>
+      <div id="seasonalityHeatmap"></div>
+      <div class="axis-hint">สีเข้ม = ยอดขายสูง · ตัวเลขในช่อง = ยอดรวมล้านบาท</div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom: 20px;">
+      <h3>🔍 Drill-Down วิเคราะห์ตามมิติ</h3>
+
+      <div id="drillBreadcrumb" class="breadcrumb"></div>
+
+      <div class="drill-controls">
+        <div class="filter-field">
+          <label>ดูตามมิติ</label>
+          <select id="drillDimension">
+            <option value="category">หมวดสินค้า</option>
+            <option value="brand">Brand</option>
+            <option value="size">ขนาด (Size)</option>
+            <option value="product_code">รหัสสินค้า (SKU)</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>เรียงตาม</label>
+          <select id="drillSortBy">
+            <option value="revenue">รายได้ (มาก→น้อย)</option>
+            <option value="revenue_asc">รายได้ (น้อย→มาก)</option>
+            <option value="units">จำนวนขาย</option>
+            <option value="clients">จำนวนลูกค้า</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>แสดง Top</label>
+          <select id="drillTopN">
+            <option value="10">10 อันดับ</option>
+            <option value="20" selected>20 อันดับ</option>
+            <option value="50">50 อันดับ</option>
+            <option value="999">ทั้งหมด</option>
+          </select>
+        </div>
+        <button class="btn-secondary" onclick="Product.drillReset()">🏠 กลับมุมมองแรก</button>
+      </div>
+
+      <div class="chart-wrap" id="drillChartWrap" style="height: 400px; margin-top: 16px;">
+        <canvas id="chartDrill" role="img"></canvas>
+      </div>
+    </section>
+
+    <section class="filters">
+      <div class="filter-field">
+        <label>ค้นหาสินค้า</label>
+        <input type="text" id="productSearchInput" placeholder="รหัส / ชื่อสินค้า">
+      </div>
+      <div class="filter-field">
+        <label>หมวด</label>
+        <select id="productCategoryFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-field">
+        <label>Brand</label>
+        <select id="productBrandFilter"><option value="">ทั้งหมด</option></select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-secondary" onclick="Product.exportXLSX()">📥 Excel</button>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-header">
+        <div class="table-title">ตารางสินค้า <span class="pill" id="productRowCount">0 รายการ</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num" data-psort="revenue_rank">#</th>
+              <th data-psort="product_code">รหัสสินค้า</th>
+              <th data-psort="category">หมวด</th>
+              <th data-psort="brand">Brand</th>
+              <th data-psort="size">ขนาด</th>
+              <th class="num" data-psort="revenue">รายได้</th>
+              <th class="num" data-psort="total_units">จำนวน</th>
+              <th class="num" data-psort="unique_clients">ลูกค้า</th>
+              <th class="num" data-psort="avg_price">ราคาเฉลี่ย</th>
+            </tr>
+          </thead>
+          <tbody id="productTableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span id="productPageInfo">แสดง 0 จาก 0</span>
+        <div class="pagination">
+          <button class="btn-secondary" onclick="Product.prevPage()">← ก่อนหน้า</button>
+          <button class="btn-secondary" onclick="Product.nextPage()">ถัดไป →</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<!-- Modal: ดูสินค้าของลูกค้า -->
+<div id="clientProductsModal" class="modal hidden">
+  <div class="modal-overlay" onclick="Product.closeModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalTitle">สินค้าที่ลูกค้านี้ซื้อ</h3>
+      <button class="modal-close" onclick="Product.closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalSummary" class="modal-summary"></div>
+      <div class="table-wrap" style="max-height: 400px;">
+        <table>
+          <thead>
+            <tr>
+              <th>รหัสสินค้า</th>
+              <th>หมวด</th>
+              <th>Brand</th>
+              <th>ขนาด</th>
+              <th class="num">ครั้งที่ซื้อ</th>
+              <th class="num">จำนวน</th>
+              <th class="num">ยอดรวม</th>
+              <th>ซื้อล่าสุด</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="Product.exportClientProductsXLSX()">📥 Export Excel</button>
+      <button class="btn-secondary" onclick="Product.closeModal()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/userService.js"></script>
+<script src="/js/core/roleConfig.js"></script>
+<script src="/js/core/auth.js"></script>
+
+<script src="/js/pages/dashboard/rfmDashboard.js"></script>
+<script src="/js/pages/dashboard/productAnalytics.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    await protectPage(['executive', 'manager', 'admin']);
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.getElementById('tab-' + tab).classList.remove('hidden');
+
+        // Lazy-load product tab ครั้งแรก
+        if (tab === 'product' && typeof Product !== 'undefined' && !Product.isLoaded()) {
+          Product.init();
+        }
+      });
+    });
+
+    if (typeof RFM !== 'undefined') {
+      RFM.init();
+      document.getElementById('tab-rfm').classList.remove('hidden');
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Import ข้อมูล RFM | Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/css/rfm-dashboard.css">
+<style>
+  .import-card {
+    background: white;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto 16px;
+  }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #444441; }
+  .field input[type="file"], .field input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d3d1c7;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .warning-box {
+    background: #FAEEDA;
+    border: 1px solid #BA7517;
+    color: #633806;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .btn-primary {
+    background: #1D9E75;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary:hover { background: #0F6E56; }
+  .btn-primary:disabled { background: #b4b2a9; cursor: not-allowed; }
+  .log {
+    background: #f1efe8;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin-top: 16px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+  .progress {
+    width: 100%;
+    height: 8px;
+    background: #e5e5e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .progress-bar { height: 100%; background: #1D9E75; width: 0%; transition: width 0.3s; }
+  .hint { font-size: 12px; color: #888780; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Header เหมือน dashboard -->
+<header class="rfm-header">
+  <div class="rfm-header-inner">
+    <div>
+      <h1>Import ข้อมูล RFM</h1>
+      <p class="subtitle">อัปเดตข้อมูลการขายจากไฟล์ Excel</p>
+    </div>
+    <div class="user-box">
+      <div class="user-info">
+        <div class="user-name" data-user="display_name">-</div>
+        <div class="user-role" data-user="role">-</div>
+      </div>
+      <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </div>
+</header>
+
+<main class="rfm-main">
+
+  <div class="import-card">
+    <div class="warning-box">
+      ⚠️ <strong>เฉพาะ Admin เท่านั้น</strong> — การ import จะมีผลกระทบต่อข้อมูลที่ผู้บริหารใช้งาน กรุณาตรวจสอบไฟล์ก่อนทุกครั้ง
+    </div>
+
+    <div class="field">
+      <label>ไฟล์ Excel</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="hint">รองรับไฟล์รูปแบบ Date_for_teir_customer.xlsx (คอลัมน์: Year, Month, Client_ID, ...)</div>
+    </div>
+
+    <div class="field">
+      <label>
+        <input type="checkbox" id="clearFirst"> 
+        ลบข้อมูลเก่าทั้งหมดก่อน import (ใช้เมื่อไฟล์รวมทุกเดือนอยู่แล้ว)
+      </label>
+    </div>
+
+    <button id="importBtn" class="btn-primary" onclick="startImport()">เริ่ม Import</button>
+    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+
+  <div class="import-card">
+    <label style="font-weight: 500; display: block; margin-bottom: 8px;">Log</label>
+    <div class="log" id="log">รอการ import...</div>
+  </div>
+
+</main>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/userService.js"></script>
+<script src="/js/core/roleConfig.js"></script>
+<script src="/js/core/auth.js"></script>
+
+<script>
+// ป้องกันหน้า: เฉพาะ admin เท่านั้น
+document.addEventListener('DOMContentLoaded', async () => {
+  await protectPage(['admin']);
+});
+
+// ======================================================
+// Import logic
+// ======================================================
+const logEl = document.getElementById('log');
+const progressBar = document.getElementById('progressBar');
+
+function log(msg, type = 'info') {
+  const time = new Date().toLocaleTimeString('th-TH');
+  const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '•';
+  logEl.textContent += `\n[${time}] ${prefix} ${msg}`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// Map คอลัมน์จาก Excel → column ใน Supabase
+function mapRow(row) {
+  return {
+    year: parseInt(row['Year']) || null,
+    month: parseInt(row['Month']) || null,
+    employee_name: row['Employee_Name'] || null,
+    client_id: row['Client_ID'] || null,
+    client_name: row['Client_Name'] || null,
+    province: row['Province'] || null,
+    product_code: row['รายการสินค้า/รหัส'] || null,
+    sales_unit: parseFloat(row['ขายสุทธิ_SalesUnit']) || 0,
+    unit_name: row['หน่วยนับ'] || null,
+    sales_value: parseFloat(row['ขายสุทธิ_SalesValue']) || 0,
+    regular_price: parseFloat(row['Regularprice']) || null,
+    category: row['หมวด'] || null,
+    mesh_density: row['ตาข่าย_ความเข้ม'] != null ? String(row['ตาข่าย_ความเข้ม']) : null,
+    color: row['Color'] || null,
+    size: row['Size'] || null,
+    brand: row['Brand'] || null,
+    segment: row['Segment'] || null,
+    sub_segment_a: row['Sub_SegmentA'] != null ? String(row['Sub_SegmentA']) : null,
+    sub_segment_b: row['Sub_SegmentB'] || null,
+  };
+}
+
+async function startImport() {
+  const file = document.getElementById('fileInput').files[0];
+  const clearFirst = document.getElementById('clearFirst').checked;
+
+  if (!file) { log('กรุณาเลือกไฟล์ Excel', 'error'); return; }
+
+  if (clearFirst) {
+    if (!confirm('ยืนยันการลบข้อมูลเก่าทั้งหมด? (ไม่สามารถย้อนกลับได้)')) {
+      log('ยกเลิกการ import');
+      return;
+    }
+  }
+
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true;
+  logEl.textContent = '';
+  progressBar.style.width = '0%';
+
+  try {
+    log('เริ่มอ่านไฟล์ Excel...');
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+    log(`อ่านข้อมูลได้ ${rows.length.toLocaleString()} แถว`);
+
+    if (clearFirst) {
+      log('กำลังลบข้อมูลเก่า...');
+      const { error } = await supabaseClient.from('sales_transactions').delete().neq('id', 0);
+      if (error) throw error;
+      log('ลบข้อมูลเก่าเรียบร้อย', 'success');
+    }
+
+    const BATCH_SIZE = 500;
+    const mapped = rows.map(mapRow).filter(r => r.client_id && r.year && r.month);
+    log(`ข้อมูลที่ถูกต้อง: ${mapped.length.toLocaleString()} แถว (ข้าม ${rows.length - mapped.length} แถว)`);
+
+    let imported = 0;
+    for (let i = 0; i < mapped.length; i += BATCH_SIZE) {
+      const batch = mapped.slice(i, i + BATCH_SIZE);
+      const { error } = await supabaseClient.from('sales_transactions').insert(batch);
+      if (error) {
+        log(`Error batch ${i}: ${error.message}`, 'error');
+        throw error;
+      }
+      imported += batch.length;
+      const pct = Math.round((imported / mapped.length) * 100);
+      progressBar.style.width = pct + '%';
+      if (imported % 2000 === 0 || imported === mapped.length) {
+        log(`Import แล้ว ${imported.toLocaleString()}/${mapped.length.toLocaleString()} (${pct}%)`);
+      }
+    }
+
+    log(`เสร็จสิ้น! Import ทั้งหมด ${imported.toLocaleString()} แถว`, 'success');
+    log('ไปที่ Dashboard เพื่อดูผล RFM ที่อัปเดตใหม่');
+
+  } catch (err) {
+    log('เกิดข้อผิดพลาด: ' + (err.message || err), 'error');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+
+</body>
+</html>
