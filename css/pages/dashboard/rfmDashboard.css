@@ -160,11 +160,16 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 20px;
+   align-items: stretch; /* 👈 ทำให้การ์ดสูงเท่ากัน */
 }
 @media (max-width: 900px) {
   .charts-grid { grid-template-columns: 1fr; }
 }
 .chart-card {
+  display: flex;
+  flex-direction: column;
+
+
   background: white;
   border: 1px solid #e5e5e0;
   border-radius: 12px;
@@ -214,9 +219,8 @@ body {
 
 /* =================== Action list =================== */
 .action-list {
-  max-height: 280px;
-  overflow-y: auto;
-  font-size: 13px;
+  flex: 1;          /* 👈 ให้ยืดเต็มการ์ด */
+  overflow: visible;  /* ไม่ให้ scroll */
 }
 .seg-card {
   padding: 10px 12px;

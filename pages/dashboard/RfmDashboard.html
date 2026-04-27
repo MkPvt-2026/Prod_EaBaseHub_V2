@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Customer Dashboard | ฝ่ายบริหาร</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<link rel="stylesheet" href="/css/base/bassManager.css">
 <link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
 </head>
 <body>
@@ -12,7 +15,7 @@
   <div class="rfm-header-inner">
     <div>
       <h1>Customer & Product Dashboard</h1>
-      <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับผู้บริหาร</p>
+      <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
     </div>
     <div class="user-box">
       <div class="user-info">
@@ -23,6 +26,9 @@
     </div>
   </div>
 </header>
+
+<!-- NAV Container (โหลดตาม role) -->
+  <div id="navContainer"></div>
 
 <nav class="tab-nav">
   <div class="tab-nav-inner">
@@ -364,7 +370,78 @@
       document.getElementById('tab-rfm').classList.remove('hidden');
     }
   });
-</script>
+
+    // ═══════════════════════════════════════════════════════════
+    // NAV LOADER
+    // ═══════════════════════════════════════════════════════════
+    async function loadNav(role) {
+      const navFiles = {
+        admin: "/pages/components/nav-admin.html",
+        executive: "/pages/components/nav-executive.html",
+        manager: "/pages/components/nav-manager.html"
+      };
+
+      const file = navFiles[role];
+      if (!file) return;
+
+      try {
+        const res = await fetch(file);
+        if (!res.ok) return;
+        const html = await res.text();
+        document.getElementById("navContainer").innerHTML = html;
+        setActiveMenu();
+      } catch (err) {
+        console.error("Error loading nav:", err);
+      }
+    }
+
+    function setActiveMenu() {
+      const links = document.querySelectorAll(".app-nav a");
+      const current = window.location.pathname;
+      links.forEach(link => {
+        if (link.getAttribute("href") === current) {
+          link.classList.add("active");
+        }
+      });
+    }
+
+    async function getUserRole(userId) {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+      return data?.role || null;
+    }
+
+    function waitForSupabaseAndLoadNav(maxAttempts = 50) {
+      let attempts = 0;
+
+      const check = async () => {
+        attempts++;
+
+        if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.user) {
+              const role = await getUserRole(session.user.id);
+              if (role) loadNav(role);
+            }
+          } catch (err) {
+            console.error("Error loading nav:", err);
+          }
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 100);
+        }
+      };
+
+      check();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      waitForSupabaseAndLoadNav();
+    });
+  </script>
 
 </body>
 </html>

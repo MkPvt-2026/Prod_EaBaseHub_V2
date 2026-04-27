@@ -1,5 +1,5 @@
 // ======================================================
-// rfm-dashboard.js
+// rfmDashboard.js
 // RFM Analysis Dashboard for Executive/Admin
 // ต้องโหลด supabaseClient.js + Chart.js + xlsx.js ก่อนไฟล์นี้
 // ======================================================
