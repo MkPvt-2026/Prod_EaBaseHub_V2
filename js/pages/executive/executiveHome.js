@@ -1,5 +1,5 @@
 // =====================================================
-// reportTracker.js v6 — Sales Table Modal + Comment Popup + View Toggle
+// executiveHome.js v6 — Sales Table Modal + Comment Popup + View Toggle
 // 1 รายการ = 1 ร้านค้า (รวมสินค้าทั้งหมด)
 // 🆕 คลิก sales card → เปิด modal ตารางทั้งสัปดาห์ของเซลล์คนนั้น
 // 🆕 ปุ่ม comment ในแต่ละแถว → popup เล็กซ้อน
@@ -1134,18 +1134,41 @@ function renderSalesTable(saleId) {
       const province = shopData?.province || "—";
       const isUnread = !g.manager_acknowledged;
 
-      // สินค้าที่จำหน่าย (chips)
+      // สินค้าที่จำหน่าย (chips) — ห่อใน wrapper เพื่อไม่ให้ td flex กระทบ row height
       let productHtml = '<span class="muted-text">—</span>';
       if (g.products.length > 0) {
-        productHtml = g.products
+        const chipsInner = g.products
           .slice(0, 3)
           .map(
             (p) =>
               `<span class="product-chip">${escapeHtml(productsMap[p.product_id] || "—")}</span>`,
           )
           .join("");
-        if (g.products.length > 3) {
-          productHtml += `<span class="product-chip more-chip">+${g.products.length - 3}</span>`;
+        const moreChip =
+          g.products.length > 3
+            ? `<span class="product-chip more-chip">+${g.products.length - 3}</span>`
+            : "";
+        productHtml = `<div class="product-chips">${chipsInner}${moreChip}</div>`;
+      }
+
+      // รายละเอียดการเข้าเยี่ยม — ขยายได้เมื่อยาว
+      let noteHtml;
+      if (!g.note) {
+        noteHtml = `<div class="note-cell"><span class="muted-text">—</span></div>`;
+      } else {
+        const noteText = String(g.note);
+        // ถ้ายาวพอควร (>140 ตัวอักษร) หรือมีหลายบรรทัด → ใส่ปุ่มขยาย
+        const isLong =
+          noteText.length > 140 || (noteText.match(/\n/g) || []).length >= 2;
+        if (isLong) {
+          noteHtml = `
+            <div class="note-cell collapsed" data-note-cell>${escapeHtml(noteText)}</div>
+            <button type="button" class="note-toggle-btn" onclick="toggleNote(this)">
+              <span>ดูเพิ่ม</span>
+              <span class="material-symbols-outlined">expand_more</span>
+            </button>`;
+        } else {
+          noteHtml = `<div class="note-cell">${escapeHtml(noteText)}</div>`;
         }
       }
 
@@ -1174,9 +1197,7 @@ function renderSalesTable(saleId) {
           ${g.product_interest ? escapeHtml(g.product_interest) : '<span class="muted-text">—</span>'}
         </td>
         <td class="td-note">
-          <div class="note-cell" title="${escapeHtml(g.note || "")}">
-            ${g.note ? escapeHtml(g.note) : '<span class="muted-text">—</span>'}
-          </div>
+          ${noteHtml}
         </td>
         <td class="col-status">
           <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
@@ -1193,6 +1214,28 @@ function renderSalesTable(saleId) {
       </tr>`;
     })
     .join("");
+}
+
+// 🆕 Toggle expand/collapse note cell
+function toggleNote(btn) {
+  if (!btn) return;
+  const tr = btn.closest("tr");
+  if (!tr) return;
+  const cell = tr.querySelector("[data-note-cell]");
+  if (!cell) return;
+
+  const isCollapsed = cell.classList.contains("collapsed");
+  if (isCollapsed) {
+    cell.classList.remove("collapsed");
+    btn.classList.add("expanded");
+    const labelEl = btn.querySelector("span:not(.material-symbols-outlined)");
+    if (labelEl) labelEl.textContent = "ย่อ";
+  } else {
+    cell.classList.add("collapsed");
+    btn.classList.remove("expanded");
+    const labelEl = btn.querySelector("span:not(.material-symbols-outlined)");
+    if (labelEl) labelEl.textContent = "ดูเพิ่ม";
+  }
 }
 
 function closeSalesTableModal() {
@@ -1900,3 +1943,4 @@ window.closeCommentPopup = closeCommentPopup;
 window.savePopupComment = savePopupComment;
 window.markPopupAsRead = markPopupAsRead;
 window.switchView = switchView;
+window.toggleNote = toggleNote;

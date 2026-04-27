@@ -1149,11 +1149,15 @@ body {
   margin-right: 2px;
 }
 
+/* products cell — ใช้ wrapper flex แทนการให้ td เป็น flex (กันเส้นกระโดด) */
 .td-products {
+  max-width: 220px;
+}
+
+.product-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  max-width: 200px;
 }
 
 .product-chip {
@@ -1185,18 +1189,54 @@ body {
 }
 
 .td-note {
-  max-width: 320px;
+  max-width: 360px;
+  min-width: 240px;
 }
 
+/* รายละเอียดการเข้าเยี่ยม — แสดงเต็ม / ย่อได้ */
 .note-cell {
   font-size: 12px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.note-cell.collapsed {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  word-break: break-word;
+}
+
+.note-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--blue-dark);
+  font-family: 'Kanit', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 0 0;
+  margin: 2px 0 0;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.note-toggle-btn:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+.note-toggle-btn .material-symbols-outlined {
+  font-size: 14px;
+  transition: transform var(--transition);
+}
+
+.note-toggle-btn.expanded .material-symbols-outlined {
+  transform: rotate(180deg);
 }
 
 .muted-text {
