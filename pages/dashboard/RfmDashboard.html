@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Customer Dashboard | ผู้บริหาร</title>
+<title>Customer Dashboard | ฝ่ายบริหาร</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
 </head>
@@ -30,6 +30,33 @@
     <button class="tab-btn" data-tab="product">📦 Product Analytics</button>
   </div>
 </nav>
+
+<!-- Global Date Range Filter -->
+<div class="date-filter-bar">
+  <div class="date-filter-inner">
+    <span class="date-filter-label">📅 ช่วงเวลาวิเคราะห์:</span>
+    <div class="date-presets">
+      <button class="preset-btn" data-preset="all">ทั้งหมด</button>
+      <button class="preset-btn" data-preset="ytd">ปีนี้ (YTD)</button>
+      <button class="preset-btn" data-preset="ly">ปีที่แล้ว</button>
+      <button class="preset-btn" data-preset="last12">12 เดือนล่าสุด</button>
+      <button class="preset-btn" data-preset="last6">6 เดือนล่าสุด</button>
+      <button class="preset-btn" data-preset="last3">3 เดือนล่าสุด</button>
+      <button class="preset-btn" data-preset="q1-25">Q1/2025</button>
+      <button class="preset-btn" data-preset="q2-25">Q2/2025</button>
+      <button class="preset-btn" data-preset="q3-25">Q3/2025</button>
+      <button class="preset-btn" data-preset="q4-25">Q4/2025</button>
+    </div>
+    <div class="date-custom">
+      <input type="date" id="dateStart" class="date-input">
+      <span>ถึง</span>
+      <input type="date" id="dateEnd" class="date-input">
+      <button class="btn-primary-sm" onclick="DateFilter.apply()">ปรับใช้</button>
+      <button class="btn-secondary-sm" onclick="DateFilter.reset()">ล้าง</button>
+    </div>
+    <div class="date-info" id="dateInfo"></div>
+  </div>
+</div>
 
 <main class="rfm-main">
 
@@ -198,7 +225,7 @@
             <option value="category">หมวดสินค้า</option>
             <option value="brand">Brand</option>
             <option value="size">ขนาด (Size)</option>
-            <option value="product_code">รหัสสินค้า (SKU)</option>
+            <option value="product_code">ชื่อสินค้า</option>
           </select>
         </div>
         <div class="filter-field">
@@ -230,7 +257,7 @@
     <section class="filters">
       <div class="filter-field">
         <label>ค้นหาสินค้า</label>
-        <input type="text" id="productSearchInput" placeholder="รหัส / ชื่อสินค้า">
+        <input type="text" id="productSearchInput" placeholder="พิมพ์ชื่อ หรือ รหัสสินค้า">
       </div>
       <div class="filter-field">
         <label>หมวด</label>
@@ -254,7 +281,7 @@
           <thead>
             <tr>
               <th class="num" data-psort="revenue_rank">#</th>
-              <th data-psort="product_code">รหัสสินค้า</th>
+              <th data-psort="product_name">ชื่อสินค้า</th>
               <th data-psort="category">หมวด</th>
               <th data-psort="brand">Brand</th>
               <th data-psort="size">ขนาด</th>
@@ -279,34 +306,15 @@
 
 </main>
 
-<!-- Modal: ดูสินค้าของลูกค้า -->
+<!-- Modal: ดูสินค้าของลูกค้า v6 - มี date filter + drill-down -->
 <div id="clientProductsModal" class="modal hidden">
   <div class="modal-overlay" onclick="Product.closeModal()"></div>
-  <div class="modal-content">
+  <div class="modal-content modal-content-large">
     <div class="modal-header">
       <h3 id="modalTitle">สินค้าที่ลูกค้านี้ซื้อ</h3>
       <button class="modal-close" onclick="Product.closeModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <div id="modalSummary" class="modal-summary"></div>
-      <div class="table-wrap" style="max-height: 400px;">
-        <table>
-          <thead>
-            <tr>
-              <th>รหัสสินค้า</th>
-              <th>หมวด</th>
-              <th>Brand</th>
-              <th>ขนาด</th>
-              <th class="num">ครั้งที่ซื้อ</th>
-              <th class="num">จำนวน</th>
-              <th class="num">ยอดรวม</th>
-              <th>ซื้อล่าสุด</th>
-            </tr>
-          </thead>
-          <tbody id="modalTableBody"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="Product.exportClientProductsXLSX()">📥 Export Excel</button>
       <button class="btn-secondary" onclick="Product.closeModal()">ปิด</button>
@@ -323,12 +331,13 @@
 <script src="/js/core/roleConfig.js"></script>
 <script src="/js/core/auth.js"></script>
 
+<!-- <script src="/js/pages/date-filter.js"></script> -->
 <script src="/js/pages/dashboard/rfmDashboard.js"></script>
 <script src="/js/pages/dashboard/productAnalytics.js"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', async () => {
-    await protectPage(['executive', 'manager', 'admin']);
+    await protectPage(['manager', 'admin']);
 
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -344,6 +353,11 @@
         }
       });
     });
+
+    // Initialize Date Filter (ใช้ร่วมกับทั้ง 2 tabs)
+    if (typeof DateFilter !== 'undefined') {
+      await DateFilter.init();
+    }
 
     if (typeof RFM !== 'undefined') {
       RFM.init();

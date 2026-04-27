@@ -1,5 +1,5 @@
 // ======================================================
-// rfm-dashboard.js
+// rfmDashboard.js
 // RFM Analysis Dashboard for Executive/Admin
 // ต้องโหลด supabaseClient.js + Chart.js + xlsx.js ก่อนไฟล์นี้
 // ======================================================
@@ -483,3 +483,100 @@ const RFM = (function () {
 window.RFM = RFM;
 
 console.log('✅ rfm-dashboard.js loaded');
+
+
+
+// -----------------------------
+// date logic
+// -----------------------------
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await protectPage(['executive', 'manager', 'admin']);
+
+  // ── Generate month options ──────────────────────────
+  const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
+                     'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  function buildMonthOptions(selectId, defaultVal) {
+    const el = document.getElementById(selectId);
+    el.innerHTML = '';
+    for (let y = 2024; y <= 2025; y++) {
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = `${y}-${m}`;
+        opt.textContent = `${MONTHS_TH[m-1]} ${y + 543}`;  // พ.ศ.
+        el.appendChild(opt);
+      }
+    }
+    el.value = defaultVal;
+  }
+  buildMonthOptions('dateFrom', '2024-1');
+  buildMonthOptions('dateTo',   '2025-12');
+
+  // ── Parse date range ────────────────────────────────
+  function getDateRange() {
+    const [yf, mf] = document.getElementById('dateFrom').value.split('-').map(Number);
+    const [yt, mt] = document.getElementById('dateTo').value.split('-').map(Number);
+    return { yf, mf, yt, mt };
+  }
+
+  // ── Quick range presets ─────────────────────────────
+  function setRange(range) {
+    const now = new Date();
+    const cm = now.getMonth() + 1;
+    const cy = now.getFullYear();
+
+    const presets = {
+      'ytd':    { from: `${cy}-1`,  to: `${cy}-${cm}` },
+      'last3m': { from: `${cy}-${Math.max(1, cm-2)}`, to: `${cy}-${cm}` },
+      '2024':   { from: '2024-1',   to: '2024-12' },
+      '2025':   { from: '2025-1',   to: '2025-12' },
+      'all':    { from: '2024-1',   to: '2025-12' },
+    };
+    const p = presets[range];
+    if (!p) return;
+    document.getElementById('dateFrom').value = p.from;
+    document.getElementById('dateTo').value   = p.to;
+    applyDateFilter();
+  }
+
+  // ── Apply filter to both tabs ───────────────────────
+  function applyDateFilter() {
+    const { yf, mf, yt, mt } = getDateRange();
+    if (typeof RFM !== 'undefined') RFM.setDateRange(yf, mf, yt, mt);
+    // Product tab: reload ถ้าโหลดไปแล้ว
+    if (typeof Product !== 'undefined' && Product.isLoaded()) {
+      Product.setDateRange(yf, mf, yt, mt);
+    }
+  }
+
+  // ── Button events ───────────────────────────────────
+  document.getElementById('btnApplyDate')
+    .addEventListener('click', applyDateFilter);
+
+  document.querySelectorAll('.btn-range').forEach(btn => {
+    btn.addEventListener('click', () => setRange(btn.dataset.range));
+  });
+
+  // ── Tab switching ───────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+
+      if (tab === 'product' && typeof Product !== 'undefined' && !Product.isLoaded()) {
+        const { yf, mf, yt, mt } = getDateRange();
+        Product.init(yf, mf, yt, mt);  // ← ส่ง date range ตั้งแต่แรก
+      }
+    });
+  });
+
+  // ── Init RFM with default range ─────────────────────
+  if (typeof RFM !== 'undefined') {
+    const { yf, mf, yt, mt } = getDateRange();
+    RFM.init(yf, mf, yt, mt);
+    document.getElementById('tab-rfm').classList.remove('hidden');
+  }
+});
