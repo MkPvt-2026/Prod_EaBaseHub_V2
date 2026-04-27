@@ -1065,7 +1065,8 @@ body {
   border-collapse: separate;
   border-spacing: 0;
   font-size: 13px;
-  min-width: 1100px;
+  min-width: 860px;
+  table-layout: fixed;
 }
 
 .sales-table thead {
@@ -1092,6 +1093,8 @@ body {
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   color: var(--text);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .sales-table tbody tr {
@@ -1151,7 +1154,7 @@ body {
 
 /* products cell — ใช้ wrapper flex แทนการให้ td เป็น flex (กันเส้นกระโดด) */
 .td-products {
-  max-width: 220px;
+  max-width: 200px;
 }
 
 .product-chips {
@@ -1172,7 +1175,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 160px;
 }
 
 .product-chip.more-chip {
@@ -1184,13 +1187,11 @@ body {
 .td-interest {
   font-size: 12px;
   color: var(--text);
-  max-width: 180px;
   word-break: break-word;
 }
 
 .td-note {
-  max-width: 360px;
-  min-width: 240px;
+  min-width: 220px;
 }
 
 /* รายละเอียดการเข้าเยี่ยม — แสดงเต็ม / ย่อได้ */
@@ -1692,12 +1693,14 @@ body {
   .modal-actions { flex-direction: column; }
   .modal-actions .btn { width: 100%; justify-content: center; }
 
-  /* 🆕 Sales table responsive — keep as scrollable table */
+  /* 🆕 Sales table responsive — บนแท็บเล็ตยังพอดี ไม่ต้องเลื่อนซ้ายขวา */
   .sales-table { font-size: 12px; }
   .sales-table thead th,
   .sales-table tbody td {
-    padding: 10px 10px;
+    padding: 10px 8px;
   }
+
+  .product-chip { font-size: 10px; padding: 2px 6px; max-width: 130px; }
 
   .header-actions {
     width: 100%;
