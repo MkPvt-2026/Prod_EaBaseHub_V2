@@ -624,9 +624,9 @@ body {
   40% { transform: rotate(6deg); }
 }
 
-/* Badge แดง pulse + เด้งเข้าครั้งแรก */
+/* Badge แดง — ซ่อนเป็นค่า default, JS เป็นคนสั่งให้แสดง */
 .notify-badge {
-  display: inline-flex !important;
+  display: none;                   /* ✅ ซ่อนตั้งต้น (ไม่ใช้ !important) */
   align-items: center;
   justify-content: center;
   position: absolute;
@@ -642,7 +642,14 @@ body {
   border-radius: 11px;
   border: 2px solid #fff;
   z-index: 2;
-  animation: badge-bounce 0.5s ease-out, badge-pulse 1.8s ease-in-out infinite 0.5s;
+  /* ❌ ตัด animation ออกจากที่นี่ */
+}
+
+/* ✅ Animation จะเล่นเฉพาะตอนการ์ดมีของค้าง (has-unread) เท่านั้น */
+.mini-card.claim.has-unread .notify-badge {
+  display: inline-flex;
+  animation: badge-bounce 0.5s ease-out,
+             badge-pulse 1.8s ease-in-out infinite 0.5s;
 }
 
 @keyframes badge-bounce {
