@@ -178,7 +178,7 @@ const AnnouncementsModule = (() => {
         const item = announcements.find(a => a.id === id);
         if (!item) return;
 
-        // Mark as read
+        // Mark as read (async แต่ไม่ต้องรอ)
         markAsRead(id);
 
         const modal = document.querySelector(SELECTORS.modal);
@@ -310,7 +310,44 @@ const AnnouncementsModule = (() => {
         }
     }
 
-    markAsRead
+    // ---- Mark as Read (บันทึกลง DB) ----
+    async function markAsRead(announcementId) {
+        try {
+            if (!currentUser?.id) {
+                console.warn('[Announcements] markAsRead: ไม่พบ currentUser');
+                return;
+            }
+            // ถ้าอ่านแล้ว ไม่ต้องทำอะไร
+            if (!unreadIds.has(announcementId)) return;
+
+            const sb = await getSupabase();
+            const { data, error } = await sb
+                .from('announcement_reads')
+                .upsert({
+                    announcement_id: announcementId,
+                    user_id: currentUser.id,
+                    read_at: new Date().toISOString()
+                }, { onConflict: 'announcement_id,user_id' })
+                .select();
+
+            if (error) {
+                console.error('[Announcements] markAsRead upsert error:', error);
+                return; // ไม่ลบจาก unreadIds ถ้า save ไม่สำเร็จ → user จะเห็น badge อยู่
+            }
+
+            console.log('[Announcements] mark read OK:', announcementId);
+
+            unreadIds.delete(announcementId);
+            updateBadge();
+
+            // Remove unread visual
+            const card = document.querySelector(`.announce-card[data-id="${announcementId}"]`);
+            if (card) card.classList.remove('is-unread');
+        } catch (err) {
+            console.error('[Announcements] markAsRead exception:', err);
+        }
+    }
+
     // ---- Realtime Subscription ----
     async function subscribeRealtime() {
         try {
@@ -364,6 +401,7 @@ const AnnouncementsModule = (() => {
         init,
         openDetail,
         closeDetail,
+        markAsRead,           // export ไว้เผื่ออยาก mark read ผ่าน console / external trigger
         refresh: async () => {
             await fetchAnnouncements();
             await fetchUnreadIds();
