@@ -1,0 +1,84 @@
+* {
+}
+
+.sticky-card {
+  position: sticky;
+  top: 20px;
+}
+
+.candidate-group {
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.group-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.customer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.customer-row:last-child {
+  border-bottom: none;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-id {
+  font-weight: 700;
+}
+
+.customer-name {
+  color: #666;
+  font-size: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.form-group input {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.btn-primary {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  padding: 14px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sticky-card {
+    position: relative;
+    top: 0;
+  }
+}

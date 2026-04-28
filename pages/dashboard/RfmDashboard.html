@@ -157,8 +157,8 @@
         <table>
           <thead>
             <tr>
-              <th data-sort="client_id">รหัส</th>
-              <th data-sort="client_name">ชื่อลูกค้า</th>
+              <!-- <th data-sort="client_id">รหัส</th> -->
+              <th data-sort="client_name">ชื่อร้าน</th>
               <th data-sort="province">จังหวัด</th>
               <th data-sort="employee_name">พนักงาน</th>
               <th class="num" data-sort="recency_days">R (วัน)</th>
@@ -307,6 +307,7 @@
               <th class="num" data-psort="total_units">จำนวน</th>
               <th class="num" data-psort="unique_clients">ลูกค้า</th>
               <th class="num" data-psort="avg_price">ราคาเฉลี่ย</th>
+              <th style="text-align:center;">ดูร้านค้า</th>
             </tr>
           </thead>
           <tbody id="productTableBody"></tbody>
@@ -350,8 +351,11 @@
 <script src="/js/core/auth.js"></script>
 
 <script src="/js/services/date-filter.js"></script>
+<script src="/js/services/selectionManager.js"></script>
+
 <script src="/js/pages/dashboard/rfmDashboard.js"></script>
 <script src="/js/pages/dashboard/productAnalytics.js"></script>
+<script src="/js/pages/dashboard/rfmDashboard-selection-patch.js"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', async () => {

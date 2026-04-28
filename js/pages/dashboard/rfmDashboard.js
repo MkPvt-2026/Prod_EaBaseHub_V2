@@ -1,5 +1,5 @@
 // ======================================================
-// rfm-dashboard.js
+// rfmDashboard.js
 // RFM Analysis Dashboard for Executive/Admin
 // ต้องโหลด supabaseClient.js + Chart.js + xlsx.js ก่อนไฟล์นี้
 // ======================================================
@@ -62,6 +62,20 @@ const RFM = (function () {
   let currentPage = 1;
   const PAGE_SIZE = 50;
 
+  // 🔥 Interaction filter (ใช้ sync ทั้ง dashboard)
+  let interactionFilter = {
+    segment: null,
+    r: null,
+    f: null
+  };
+
+  // 🆕 Drill-down state (3 ชั้น: segment → province → customer)
+  let drillState = {
+    level: 'segment',   // 'segment' | 'province' | 'customer'
+    segment: null,
+    province: null
+  };
+
   // -----------------------------
   // Utilities
   // -----------------------------
@@ -80,6 +94,14 @@ const RFM = (function () {
     const box = $('errorBox');
     box.textContent = '⚠️ ' + msg;
     box.classList.remove('hidden');
+  }
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   // -----------------------------
@@ -149,9 +171,14 @@ const RFM = (function () {
       hideEl('loadingBox');
       showEl('dashboard');
 
+      // reset interaction filter และ drill state เมื่อ reload ข้อมูลใหม่
+      interactionFilter = { segment: null, r: null, f: null };
+      drillState = { level: 'segment', segment: null, province: null };
+
       populateFilters();
       applyFilters();
       renderActionList();
+      renderDrillBreadcrumb();
 
     } catch (err) {
       console.error('❌ loadData error:', err);
@@ -189,19 +216,32 @@ const RFM = (function () {
     const prov = $('provinceFilter').value;
 
     filteredData = allData.filter(r => {
+      // 🔹 filter ปกติ
       if (seg && r.segment !== seg) return false;
       if (emp && r.employee_name !== emp) return false;
       if (prov && r.province !== prov) return false;
+
       if (q) {
         const hay = `${r.client_id || ''} ${r.client_name || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
+
+      // 🔥 filter จากการคลิก (interactionFilter เดิม)
+      if (interactionFilter.segment && r.segment !== interactionFilter.segment) return false;
+      if (interactionFilter.r && r.r_score != interactionFilter.r) return false;
+      if (interactionFilter.f && r.f_score != interactionFilter.f) return false;
+
+      // 🆕 drill filter
+      if (drillState.segment && r.segment !== drillState.segment) return false;
+      if (drillState.province && r.province !== drillState.province) return false;
+
       return true;
     });
 
     currentPage = 1;
     sortData();
-    renderAll();
+    updateActiveLabel();
+    renderAll(); // 🔥 ทำให้ทุกอย่าง sync
   }
 
   function sortBy(key) {
@@ -223,6 +263,173 @@ const RFM = (function () {
         ? String(av).localeCompare(String(bv), 'th')
         : String(bv).localeCompare(String(av), 'th');
     });
+  }
+
+  // -----------------------------
+  // ACTIVE LABEL
+  // -----------------------------
+  function updateActiveLabel() {
+    const el = $('activeFilterLabel');
+    if (!el) return;
+
+    let text = '';
+    // แสดง drill state ก่อน ถ้ามี
+    if (drillState.province) {
+      text = `กำลังดูจังหวัด: ${drillState.province} (ใน ${drillState.segment})`;
+    } else if (drillState.segment) {
+      text = `กำลังดู Segment: ${drillState.segment} → แบ่งตามจังหวัด`;
+    } else if (interactionFilter.segment) {
+      text = `กำลังดู Segment: ${interactionFilter.segment}`;
+    } else if (interactionFilter.r) {
+      text = `กำลังดู R=${interactionFilter.r}, F=${interactionFilter.f}`;
+    }
+    el.textContent = text;
+    el.style.display = text ? 'inline-block' : 'none';
+  }
+
+  // -----------------------------
+  // RESET INTERACTION
+  // -----------------------------
+  function resetInteraction() {
+
+  // =========================
+  // RESET INTERACTION STATE
+  // =========================
+  interactionFilter = {
+    segment: null,
+    r: null,
+    f: null
+  };
+
+  drillState = {
+    level: 'segment',
+    segment: null,
+    province: null
+  };
+
+  // =========================
+  // RESET SEARCH / FILTER
+  // =========================
+  document.getElementById('searchInput').value = '';
+  document.getElementById('segmentFilter').value = '';
+  document.getElementById('employeeFilter').value = '';
+  document.getElementById('provinceFilter').value = '';
+
+  // =========================
+  // RESET ACTIVE LABEL
+  // =========================
+  const label = document.getElementById('activeFilterLabel');
+
+  if (label) {
+    label.style.display = 'none';
+    label.innerHTML = '';
+  }
+
+  // =========================
+  // RESET DATE FILTER
+  // =========================
+  if (typeof DateFilter !== 'undefined') {
+    DateFilter.reset();
+  }
+
+  // =========================
+  // RESET PRODUCT FILTERS
+  // =========================
+  const productSearch = document.getElementById('productSearchInput');
+  const productCategory = document.getElementById('productCategoryFilter');
+  const productBrand = document.getElementById('productBrandFilter');
+
+  if (productSearch) productSearch.value = '';
+  if (productCategory) productCategory.value = '';
+  if (productBrand) productBrand.value = '';
+
+  // =========================
+  // RESET PRODUCT DRILLDOWN
+  // =========================
+  if (typeof Product !== 'undefined') {
+
+    Product.drillPath = [];
+
+    const dimension = document.getElementById('drillDimension');
+    const sortBy = document.getElementById('drillSortBy');
+    const topN = document.getElementById('drillTopN');
+
+    if (dimension) dimension.value = 'category';
+    if (sortBy) sortBy.value = 'revenue';
+    if (topN) topN.value = '20';
+
+    if (typeof Product.drillReset === 'function') {
+      Product.drillReset();
+    }
+
+    if (typeof Product.applyFilters === 'function') {
+      Product.applyFilters();
+    }
+  }
+
+  // =========================
+  // RENDER + RELOAD
+  // =========================
+  renderDrillBreadcrumb();
+  applyFilters();
+}
+
+  // -----------------------------
+  // 🆕 DRILL-DOWN FUNCTIONS
+  // -----------------------------
+
+  /**
+   * แสดง breadcrumb ตาม drillState ปัจจุบัน
+   */
+  function renderDrillBreadcrumb() {
+    const el = $('drillBreadcrumb');
+    if (!el) return;
+
+    let html = `<span class="breadcrumb-item" onclick="RFM.drillReset()">🏠 ทั้งหมด</span>`;
+
+    if (drillState.segment) {
+      html += ` <span class="breadcrumb-sep">›</span>
+                <span class="breadcrumb-item" onclick="RFM.drillToSegment('${escapeHtml(drillState.segment)}')">
+                  ${escapeHtml(drillState.segment)}
+                </span>`;
+    }
+
+    if (drillState.province) {
+      html += ` <span class="breadcrumb-sep">›</span>
+                <span class="breadcrumb-current">${escapeHtml(drillState.province)}</span>`;
+    }
+
+    el.innerHTML = html;
+  }
+
+  /**
+   * รีเซ็ต drill กลับมาระดับ segment
+   */
+  function drillReset() {
+    drillState = { level: 'segment', segment: null, province: null };
+    renderDrillBreadcrumb();
+    applyFilters();
+  }
+
+  /**
+   * ไป level จังหวัดของ segment ที่เลือก
+   */
+  function drillToSegment(seg) {
+    drillState.level = 'province';
+    drillState.segment = seg;
+    drillState.province = null;
+    renderDrillBreadcrumb();
+    applyFilters();
+  }
+
+  /**
+   * ไป level ลูกค้าของจังหวัดที่เลือก
+   */
+  function drillToProvince(province) {
+    drillState.level = 'customer';
+    drillState.province = province;
+    renderDrillBreadcrumb();
+    applyFilters();
   }
 
   // -----------------------------
@@ -258,24 +465,47 @@ const RFM = (function () {
   }
 
   function renderCharts() {
-    const bySeg = {};
+    // 🆕 เลือก groupKey ตาม drill level
+    const groupKey = drillState.level === 'province' || drillState.level === 'customer'
+      ? 'province'
+      : 'segment';
+
+    const byGroup = {};
     filteredData.forEach(r => {
-      if (!r.segment) return;
-      if (!bySeg[r.segment]) bySeg[r.segment] = { count: 0, revenue: 0 };
-      bySeg[r.segment].count++;
-      bySeg[r.segment].revenue += Number(r.monetary_value || 0);
+      const key = r[groupKey] || 'ไม่ระบุ';
+      if (!byGroup[key]) byGroup[key] = { count: 0, revenue: 0 };
+      byGroup[key].count++;
+      byGroup[key].revenue += Number(r.monetary_value || 0);
     });
 
-    const segs = Object.keys(bySeg).sort((a, b) => bySeg[b].revenue - bySeg[a].revenue);
-    const counts = segs.map(s => bySeg[s].count);
-    const revenues = segs.map(s => bySeg[s].revenue);
-    const colors = segs.map(s => SEGMENT_META[s]?.color || '#888780');
+    const labels = Object.keys(byGroup).sort((a, b) => byGroup[b].revenue - byGroup[a].revenue);
+    const counts = labels.map(l => byGroup[l].count);
+    const revenues = labels.map(l => byGroup[l].revenue);
 
-    // Donut: count
+    // สีตาม groupKey
+    const colors = groupKey === 'segment'
+      ? labels.map(s => SEGMENT_META[s]?.color || '#888780')
+      : labels.map((_, i) => `hsl(${(i * 37) % 360}, 55%, 50%)`);
+
+    // 🆕 chart title ตาม level
+    const segTitle = drillState.level === 'province' || drillState.level === 'customer'
+      ? 'จำนวนลูกค้าตามจังหวัด'
+      : 'จำนวนลูกค้าตาม Segment';
+    const revTitle = drillState.level === 'province' || drillState.level === 'customer'
+      ? 'รายได้ตามจังหวัด'
+      : 'รายได้ตาม Segment';
+
+    // อัปเดต heading ถ้ามี element
+    const segChart = document.querySelector('#chartSegments')?.closest('.chart-card')?.querySelector('h3');
+    const revChart = document.querySelector('#chartRevenue')?.closest('.chart-card')?.querySelector('h3');
+    if (segChart) segChart.textContent = segTitle;
+    if (revChart) revChart.textContent = revTitle;
+
+    // Donut: count — คลิกได้
     if (charts.segments) charts.segments.destroy();
     charts.segments = new Chart($('chartSegments'), {
       type: 'doughnut',
-      data: { labels: segs, datasets: [{ data: counts, backgroundColor: colors, borderWidth: 0 }] },
+      data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderWidth: 0 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
@@ -289,15 +519,20 @@ const RFM = (function () {
               }
             }
           }
+        },
+        onClick: (evt, elements) => {
+          if (!elements.length) return;
+          const clickedLabel = labels[elements[0].index];
+          _handleChartClick(clickedLabel);
         }
       }
     });
 
-    // Bar: revenue
+    // Bar: revenue — คลิกได้
     if (charts.revenue) charts.revenue.destroy();
     charts.revenue = new Chart($('chartRevenue'), {
       type: 'bar',
-      data: { labels: segs, datasets: [{ data: revenues, backgroundColor: colors, borderWidth: 0 }] },
+      data: { labels, datasets: [{ data: revenues, backgroundColor: colors, borderWidth: 0 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
@@ -307,9 +542,40 @@ const RFM = (function () {
         scales: {
           y: { beginAtZero: true, ticks: { callback: v => fmtCompact(v), font: { size: 11 } } },
           x: { ticks: { font: { size: 10 }, maxRotation: 45, autoSkip: false } }
+        },
+        onClick: (evt, elements) => {
+          if (!elements.length) return;
+          const clickedLabel = labels[elements[0].index];
+          _handleChartClick(clickedLabel);
         }
       }
     });
+  }
+
+  /**
+   * 🆕 Handler คลิก chart → drill ตาม level ปัจจุบัน
+   */
+  function _handleChartClick(label) {
+    if (drillState.level === 'segment') {
+      // ระดับ segment → ไปจังหวัด
+      drillState.level = 'province';
+      drillState.segment = label;
+      drillState.province = null;
+      // ล้าง interactionFilter เก่าออก
+      interactionFilter = { segment: null, r: null, f: null };
+
+    } else if (drillState.level === 'province') {
+      // ระดับจังหวัด → ไปลูกค้า
+      drillState.level = 'customer';
+      drillState.province = label;
+
+    } else {
+      // ระดับ customer (ลูกค้า) → ไม่ drill ต่อแล้ว ตารางด้านล่างแสดงอยู่แล้ว
+      return;
+    }
+
+    renderDrillBreadcrumb();
+    applyFilters();
   }
 
   function renderHeatmap() {
@@ -331,10 +597,33 @@ const RFM = (function () {
         const intensity = count / max;
         const bg = `rgba(29, 158, 117, ${0.08 + intensity * 0.72})`;
         const color = intensity > 0.5 ? 'white' : '#2c2c2a';
-        html += `<div class="heat-cell" style="background:${bg}; color:${color}" title="R=${r}, F=${f}: ${count} ลูกค้า">${count || ''}</div>`;
+
+        // 🔥 highlight ช่องที่กำลัง active
+        const isActive = interactionFilter.r == r && interactionFilter.f == f;
+        const border = isActive ? '2px solid #000' : 'none';
+
+        html += `
+          <div class="heat-cell"
+               data-r="${r}"
+               data-f="${f}"
+               style="background:${bg}; color:${color}; border:${border}"
+               title="R=${r}, F=${f}: ${count} ลูกค้า">
+            ${count || ''}
+          </div>`;
       }
     }
     $('heatmap').innerHTML = html;
+
+    // 🔥 ใส่ event คลิก heatmap → filter R/F
+    document.querySelectorAll('.heat-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        interactionFilter.r = cell.dataset.r;
+        interactionFilter.f = cell.dataset.f;
+        interactionFilter.segment = null;
+
+        applyFilters();
+      });
+    });
   }
 
   function renderActionList() {
@@ -360,28 +649,26 @@ const RFM = (function () {
   }
 
   // -----------------------------
-  // FILTER BY SEGMENT (เรียกจาก action card)
+  // 🆕 FILTER BY SEGMENT (เรียกจาก action card)
   // -----------------------------
   function filterBySegment(segment) {
-    // เซ็ตค่า dropdown ให้เป็น segment ที่คลิก
-    const segFilter = $('segmentFilter');
-    if (segFilter) {
-      segFilter.value = segment;
-    }
-
-    // เคลียร์ filter อื่นๆ เพื่อให้เห็นเฉพาะ segment นี้
+    // เซ็ต DOM dropdown ให้ตรงกับที่คลิก
+    $('segmentFilter').value = segment;
     $('searchInput').value = '';
     $('employeeFilter').value = '';
     $('provinceFilter').value = '';
 
+    // เคลียร์ interaction & drill state แล้วเซ็ต segment filter ใหม่
+    interactionFilter = { segment: null, r: null, f: null };
+    drillState = { level: 'segment', segment: null, province: null };
+    renderDrillBreadcrumb();
+
     applyFilters();
 
-    // Scroll ลงไปที่ตาราง
+    // Smooth scroll ไปที่ตาราง + pulse highlight
     const tableCard = document.querySelector('#tab-rfm .table-card');
     if (tableCard) {
       tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      // Highlight ตารางสั้นๆ
       tableCard.classList.add('highlight-pulse');
       setTimeout(() => tableCard.classList.remove('highlight-pulse'), 1500);
     }
@@ -401,8 +688,8 @@ const RFM = (function () {
       const meta = SEGMENT_META[r.segment] || { class: 'seg-inactive' };
       return `
         <tr>
-          <td>${escapeHtml(r.client_id || '')}</td>
-          <td>${escapeHtml(r.client_name || '')}</td>
+          <!-- <td>${escapeHtml(r.client_id || '')}</td> -->
+          <td title="รหัสลูกค้า: ${escapeHtml(r.client_id || '')}">🏪 ${escapeHtml(r.client_name || '')}</td>
           <td>${escapeHtml(r.province || '')}</td>
           <td>${escapeHtml(r.employee_name || '')}</td>
           <td class="num">${fmt(r.recency_days || 0)}</td>
@@ -461,7 +748,7 @@ const RFM = (function () {
   function exportXLSX() {
     if (!filteredData.length) { alert('ไม่มีข้อมูลให้ export'); return; }
     const rows = filteredData.map(r => ({
-      'รหัสลูกค้า': r.client_id,
+      // 'รหัสลูกค้า': r.client_id,
       'ชื่อลูกค้า': r.client_name,
       'จังหวัด': r.province,
       'พนักงาน': r.employee_name,
@@ -494,7 +781,8 @@ const RFM = (function () {
   // EVENT LISTENERS
   // -----------------------------
   function attachEvents() {
-    $('searchInput').addEventListener('input', debounce(applyFilters, 250));
+   document.getElementById('searchInput')
+  .addEventListener('input', debounce(applyFilters, 250));
     $('segmentFilter').addEventListener('change', applyFilters);
     $('employeeFilter').addEventListener('change', applyFilters);
     $('provinceFilter').addEventListener('change', applyFilters);
@@ -513,14 +801,6 @@ const RFM = (function () {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
   }
-  function escapeHtml(str) {
-    return String(str ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
 
   // -----------------------------
   // PUBLIC API
@@ -532,7 +812,11 @@ const RFM = (function () {
     exportXLSX,
     nextPage,
     prevPage,
-    filterBySegment
+    resetInteraction,   // ล้าง interactionFilter + drillState
+    drillReset,         // 🆕 กลับ level แรก
+    drillToSegment,     // 🆕 breadcrumb: กลับไป segment level
+    drillToProvince,    // 🆕 breadcrumb: กลับไป province level (ถ้าต้องการ)
+    filterBySegment     // 🆕 คลิก action card → filter ดูร้านในกลุ่ม
   };
 
 })();
@@ -540,4 +824,4 @@ const RFM = (function () {
 // Export to window
 window.RFM = RFM;
 
-console.log('✅ rfm-dashboard.js loaded');
+console.log('✅ rfm-dashboard.js loaded (drill-down 3 ชั้น)');

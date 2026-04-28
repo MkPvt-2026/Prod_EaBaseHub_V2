@@ -982,3 +982,44 @@ tr:hover td { background: #fafaf7; }
   border-color: #378ADD;
   color: #0C447C;
 }
+
+/* ============================================================
+ * 🆕 เพิ่ม CSS เหล่านี้ใน rfm-dashboard.css
+ * (ถ้ามีอยู่แล้วจาก v8 ก่อนหน้า ข้ามได้)
+ * ============================================================ */
+
+/* Action card - clickable */
+.seg-card.clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+.seg-card.clickable:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.seg-card.clickable:active {
+  transform: translateX(0);
+  box-shadow: none;
+}
+
+/* Arrow ที่โผล่ตอน hover */
+.seg-arrow {
+  float: right;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-weight: 400;
+}
+.seg-card.clickable:hover .seg-arrow {
+  opacity: 0.6;
+}
+
+/* Pulse animation - ใช้เวลา scroll ไปที่ตาราง */
+.highlight-pulse {
+  animation: pulseHighlight 1.5s ease-out;
+}
+@keyframes pulseHighlight {
+  0%   { box-shadow: 0 0 0 0    rgba(29, 158, 117, 0.5); }
+  50%  { box-shadow: 0 0 0 8px  rgba(29, 158, 117, 0.15); }
+  100% { box-shadow: 0 0 0 0    rgba(29, 158, 117, 0); }
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Merge Customers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/pages/admin/merge-customers.css">
+</head>
+<body>
+
+<div class="page">
+
+  <header class="page-header">
+    <div>
+      <h1>Merge Customers</h1>
+      <p>รวมลูกค้าที่มีหลายรหัสให้เป็นลูกค้าเดียวกัน</p>
+    </div>
+  </header>
+
+  <section class="toolbar">
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="ค้นหาชื่อลูกค้า">
+      <button onclick="MergeCustomer.loadCandidates()">ค้นหา</button>
+    </div>
+
+  </section>
+
+  <section class="content-grid">
+
+    <div class="left-panel">
+
+      <div class="card">
+        <div class="card-header">
+          ลูกค้าที่อาจซ้ำกัน
+        </div>
+
+        <div id="candidateList" class="candidate-list"></div>
+      </div>
+
+    </div>
+
+    <div class="right-panel">
+
+      <div class="card sticky-card">
+
+        <div class="card-header">
+          Merge Selected Customers
+        </div>
+
+        <div class="form-group">
+          <label>Master Customer Code</label>
+          <input type="text" id="masterCustomer" placeholder="เช่น CUST001">
+        </div>
+
+        <div class="form-group">
+          <label>Master Customer Name</label>
+          <input type="text" id="masterName" placeholder="ชื่อหลัก">
+        </div>
+
+        <button class="btn-primary" onclick="MergeCustomer.mergeSelected()">
+          Merge Customers
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/pages/admin/merge-customers.js"></script>
+
+</body>
+</html>
