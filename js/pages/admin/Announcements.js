@@ -310,28 +310,7 @@ const AnnouncementsModule = (() => {
         }
     }
 
-    async function markAsRead(announcementId) {
-        try {
-            if (!currentUser?.id) return;
-            if (!unreadIds.has(announcementId)) return;
-
-            const sb = await getSupabase();
-            await sb.from('announcement_reads').upsert({
-                announcement_id: announcementId,
-                user_id: currentUser.id
-            }, { onConflict: 'announcement_id,user_id' });
-
-            unreadIds.delete(announcementId);
-            updateBadge();
-
-            // Remove unread visual
-            const card = document.querySelector(`.announce-card[data-id="${announcementId}"]`);
-            if (card) card.classList.remove('is-unread');
-        } catch (err) {
-            console.error('[Announcements] Mark read error:', err);
-        }
-    }
-
+    markAsRead
     // ---- Realtime Subscription ----
     async function subscribeRealtime() {
         try {

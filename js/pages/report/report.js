@@ -11,9 +11,9 @@ const DRAFT_KEY = "ea_report_drafts";
 const COMMENT_READ_KEY = "ea_comment_reads"; // เก็บ { reportId: last_read_at }
 
 let submittedReports = [];
-let shopsMap         = {};
-let productsMap      = {};
-let categoriesCache  = [];
+let shopsMap = {};
+let productsMap = {};
+let categoriesCache = [];
 let currentViewReportId = null;
 
 // รายการสินค้าที่เลือกแล้ว (in-memory)
@@ -26,8 +26,11 @@ let unreadCommentCountsMap = {};
 // COMMENT READ HELPERS (localStorage)
 // =====================================================
 function getCommentReads() {
-  try { return JSON.parse(localStorage.getItem(COMMENT_READ_KEY) || "{}"); }
-  catch(e) { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(COMMENT_READ_KEY) || "{}");
+  } catch (e) {
+    return {};
+  }
 }
 
 function saveCommentReads(reads) {
@@ -65,25 +68,35 @@ async function loadUnreadCommentCounts(reportIds) {
 
     if (error) throw error;
 
-    (data || []).forEach(c => {
+    (data || []).forEach((c) => {
       const lastRead = reads[c.report_id];
       // นับเฉพาะ comment ที่มาหลังจากอ่านล่าสุด
       if (!lastRead || new Date(c.created_at) > new Date(lastRead)) {
-        unreadCommentCountsMap[c.report_id] = (unreadCommentCountsMap[c.report_id] || 0) + 1;
+        unreadCommentCountsMap[c.report_id] =
+          (unreadCommentCountsMap[c.report_id] || 0) + 1;
       }
     });
-  } catch(e) { console.error("loadUnreadCommentCounts", e); }
+  } catch (e) {
+    console.error("loadUnreadCommentCounts", e);
+  }
 }
 
 // =====================================================
 // INIT
 // =====================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  try { await protectPage(["admin","executive","sales","manager","user"]); }
-  catch(e) { return; }
+  try {
+    await protectPage(["admin", "executive", "sales", "manager", "user"]);
+  } catch (e) {
+    return;
+  }
 
   await loadUserHeader();
-  await Promise.all([loadProvinces(), loadPickerCategories(), loadSubmittedReports()]);
+  await Promise.all([
+    loadProvinces(),
+    loadPickerCategories(),
+    loadSubmittedReports(),
+  ]);
   setDefaultDate();
   setupEventListeners();
   setupLogout();
@@ -96,56 +109,77 @@ document.addEventListener("DOMContentLoaded", async () => {
 // =====================================================
 async function loadUserHeader() {
   try {
-    const { data:{ session } } = await supabaseClient.auth.getSession();
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
     if (!session) return;
-    const { data:p } = await supabaseClient.from("profiles")
-      .select("display_name,role").eq("id", session.user.id).single();
+    const { data: p } = await supabaseClient
+      .from("profiles")
+      .select("display_name,role")
+      .eq("id", session.user.id)
+      .single();
     const name = p?.display_name || session.user.email;
-    const $ = id => document.getElementById(id);
-    if ($("userName"))   $("userName").textContent   = name;
-    if ($("userRole"))   $("userRole").textContent   = p?.role || "";
-    if ($("userAvatar")) $("userAvatar").textContent = name.charAt(0).toUpperCase();
-  } catch(e) { console.error("loadUserHeader", e); }
+    const $ = (id) => document.getElementById(id);
+    if ($("userName")) $("userName").textContent = name;
+    if ($("userRole")) $("userRole").textContent = p?.role || "";
+    if ($("userAvatar"))
+      $("userAvatar").textContent = name.charAt(0).toUpperCase();
+  } catch (e) {
+    console.error("loadUserHeader", e);
+  }
 }
 
 // =====================================================
 // LOCALSTORAGE DRAFT HELPERS
 // =====================================================
 function getDrafts() {
-  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "[]"); }
-  catch(e) { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_KEY) || "[]");
+  } catch (e) {
+    return [];
+  }
 }
 function saveDraftsToStorage(drafts) {
   localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
 }
 function genDraftId() {
-  return "draft_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+  return "draft_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
 }
 
 // =====================================================
 // RESOLVE SHOP NAMES
 // =====================================================
 async function resolveShopNames(ids) {
-  const missing = [...new Set(ids.filter(id => id && !shopsMap[id]))];
+  const missing = [...new Set(ids.filter((id) => id && !shopsMap[id]))];
   if (!missing.length) return;
   try {
-    const { data } = await supabaseClient.from("shops")
-      .select("id,shop_name").in("id", missing);
-    data?.forEach(s => { shopsMap[s.id] = s.shop_name; });
-  } catch(e) { console.error("resolveShopNames", e); }
+    const { data } = await supabaseClient
+      .from("shops")
+      .select("id,shop_name")
+      .in("id", missing);
+    data?.forEach((s) => {
+      shopsMap[s.id] = s.shop_name;
+    });
+  } catch (e) {
+    console.error("resolveShopNames", e);
+  }
 }
 
 // =====================================================
 // RESOLVE ATTRIBUTE NAMES
 // =====================================================
 async function resolveAttrNames(attrIds) {
-  const missing = [...new Set(attrIds.filter(id => id))];
+  const missing = [...new Set(attrIds.filter((id) => id))];
   if (!missing.length) return {};
   try {
-    const { data } = await supabaseClient.from("attributes")
-      .select("id,name").in("id", missing);
-    return Object.fromEntries((data||[]).map(a => [a.id, a.name]));
-  } catch(e) { return {}; }
+    const { data } = await supabaseClient
+      .from("attributes")
+      .select("id,name")
+      .in("id", missing);
+    return Object.fromEntries((data || []).map((a) => [a.id, a.name]));
+  } catch (e) {
+    return {};
+  }
 }
 
 // =====================================================
@@ -164,16 +198,23 @@ async function formatAttrInline(attributes) {
 // =====================================================
 async function loadPickerCategories() {
   try {
-    const { data } = await supabaseClient.from("categories").select("id,name").order("name");
+    const { data } = await supabaseClient
+      .from("categories")
+      .select("id,name")
+      .order("name");
     categoriesCache = data || [];
     const sel = document.getElementById("pickerCategory");
     if (!sel) return;
     sel.innerHTML = `<option value="">-- เลือกหมวดสินค้า --</option>`;
-    categoriesCache.forEach(c => {
+    categoriesCache.forEach((c) => {
       const o = document.createElement("option");
-      o.value = c.id; o.textContent = c.name; sel.appendChild(o);
+      o.value = c.id;
+      o.textContent = c.name;
+      sel.appendChild(o);
     });
-  } catch(e) { console.error("loadPickerCategories", e); }
+  } catch (e) {
+    console.error("loadPickerCategories", e);
+  }
 }
 
 async function onPickerCategoryChange(categoryId) {
@@ -184,14 +225,21 @@ async function onPickerCategoryChange(categoryId) {
   if (!categoryId) return;
 
   try {
-    const { data } = await supabaseClient.from("products")
-      .select("id,name").eq("category_id", categoryId).order("name");
-    data?.forEach(p => {
+    const { data } = await supabaseClient
+      .from("products")
+      .select("id,name")
+      .eq("category_id", categoryId)
+      .order("name");
+    data?.forEach((p) => {
       productsMap[p.id] = p.name;
       const o = document.createElement("option");
-      o.value = p.id; o.textContent = p.name; sel.appendChild(o);
+      o.value = p.id;
+      o.textContent = p.name;
+      sel.appendChild(o);
     });
-  } catch(e) { console.error("onPickerCategoryChange", e); }
+  } catch (e) {
+    console.error("onPickerCategoryChange", e);
+  }
 }
 
 async function onPickerProductChange(productId) {
@@ -214,7 +262,8 @@ async function onPickerProductChange(productId) {
 
       const lbl = document.createElement("label");
       lbl.innerText = attr.name;
-      if (attr.is_required) lbl.innerHTML += ' <span style="color:red">*</span>';
+      if (attr.is_required)
+        lbl.innerHTML += ' <span style="color:red">*</span>';
       wrap.appendChild(lbl);
 
       if (attr.input_type === "select") {
@@ -229,9 +278,11 @@ async function onPickerProductChange(productId) {
           .order("value");
 
         s.innerHTML = `<option value="">-- เลือก --</option>`;
-        opts?.forEach(o => {
+        opts?.forEach((o) => {
           const op = document.createElement("option");
-          op.value = o.value; op.textContent = o.value; s.appendChild(op);
+          op.value = o.value;
+          op.textContent = o.value;
+          s.appendChild(op);
         });
         wrap.appendChild(s);
       } else {
@@ -244,7 +295,9 @@ async function onPickerProductChange(productId) {
 
       attrBox.appendChild(wrap);
     }
-  } catch(e) { console.error("onPickerProductChange", e); }
+  } catch (e) {
+    console.error("onPickerProductChange", e);
+  }
 }
 
 // =====================================================
@@ -258,17 +311,17 @@ function addSelectedProduct() {
   }
 
   const attrs = {};
-  document.querySelectorAll(".picker-attr-field").forEach(f => {
+  document.querySelectorAll(".picker-attr-field").forEach((f) => {
     if (f.value) attrs[f.dataset.attributeId] = f.value;
   });
 
   const productName = productsMap[productId] || productId;
 
   selectedProducts.push({
-    _uid: Date.now() + "_" + Math.random().toString(36).slice(2,5),
+    _uid: Date.now() + "_" + Math.random().toString(36).slice(2, 5),
     product_id: productId,
     product_name: productName,
-    attributes: attrs
+    attributes: attrs,
   });
 
   renderSelectedProducts();
@@ -277,7 +330,7 @@ function addSelectedProduct() {
 }
 
 function removeSelectedProduct(uid) {
-  selectedProducts = selectedProducts.filter(p => p._uid !== uid);
+  selectedProducts = selectedProducts.filter((p) => p._uid !== uid);
   renderSelectedProducts();
 }
 
@@ -292,9 +345,9 @@ function resetPicker() {
 // RENDER SELECTED PRODUCTS LIST
 // =====================================================
 async function renderSelectedProducts() {
-  const container    = document.getElementById("selectedProductList");
-  const countEl      = document.getElementById("selectedProductCount");
-  const productBox   = document.getElementById("productContainer"); // กล่องครอบทั้งหมด
+  const container = document.getElementById("selectedProductList");
+  const countEl = document.getElementById("selectedProductCount");
+  const productBox = document.getElementById("productContainer"); // กล่องครอบทั้งหมด
   if (!container) return;
 
   if (countEl) countEl.textContent = selectedProducts.length;
@@ -329,10 +382,18 @@ async function renderSelectedProducts() {
 // =====================================================
 function saveDraft() {
   const data = collectFormData();
-  if (!data.report_date) { alert("กรุณาเลือกวันที่ก่อน"); return; }
+  if (!data.report_date) {
+    alert("กรุณาเลือกวันที่ก่อน");
+    return;
+  }
 
   const drafts = getDrafts();
-  drafts.push({ ...data, id: genDraftId(), saved_at: new Date().toISOString(), is_draft: true });
+  drafts.push({
+    ...data,
+    id: genDraftId(),
+    saved_at: new Date().toISOString(),
+    is_draft: true,
+  });
   saveDraftsToStorage(drafts);
 
   showToast("บันทึก Draft ลงเครื่องแล้ว");
@@ -345,15 +406,24 @@ function saveDraft() {
 // =====================================================
 async function editDraftToForm(draftId) {
   const drafts = getDrafts();
-  const d = drafts.find(x => x.id === draftId);
+  const d = drafts.find((x) => x.id === draftId);
   if (!d) return;
 
-  saveDraftsToStorage(drafts.filter(x => x.id !== draftId));
+  saveDraftsToStorage(drafts.filter((x) => x.id !== draftId));
 
-  if (d.report_date) document.getElementById("reportDate").value = d.report_date;
+  if (d.report_date)
+    document.getElementById("reportDate").value = d.report_date;
   if (d.status_visit) document.getElementById("status").value = d.status_visit;
   if (d.note) document.getElementById("note").value = d.note;
-  if (d.product_interest) document.getElementById("productInterest").value = d.product_interest;
+  if (d.product_interest)
+    document.getElementById("productInterest").value = d.product_interest;
+
+  // Restore no_product toggle
+  const noProd = document.getElementById("noProductFlag");
+  if (noProd) {
+    noProd.checked = !!d.no_product;
+    noProd.dispatchEvent(new Event("change")); // ให้ UI (picker disabled, label) update ตาม
+  }
 
   if (d.province) {
     const provSel = document.getElementById("provinceSelect");
@@ -363,17 +433,23 @@ async function editDraftToForm(draftId) {
   }
 
   if (d.products && d.products.length) {
-    const missingIds = d.products.map(p => p.product_id).filter(id => !productsMap[id]);
+    const missingIds = d.products
+      .map((p) => p.product_id)
+      .filter((id) => !productsMap[id]);
     if (missingIds.length) {
       const { data: prods } = await supabaseClient
-        .from("products").select("id,name").in("id", missingIds);
-      prods?.forEach(p => { productsMap[p.id] = p.name; });
+        .from("products")
+        .select("id,name")
+        .in("id", missingIds);
+      prods?.forEach((p) => {
+        productsMap[p.id] = p.name;
+      });
     }
-    selectedProducts = d.products.map(p => ({
-      _uid: Date.now() + "_" + Math.random().toString(36).slice(2,5),
+    selectedProducts = d.products.map((p) => ({
+      _uid: Date.now() + "_" + Math.random().toString(36).slice(2, 5),
       product_id: p.product_id,
       product_name: productsMap[p.product_id] || p.product_id,
-      attributes: p.attributes || {}
+      attributes: p.attributes || {},
     }));
   } else {
     selectedProducts = [];
@@ -390,7 +466,7 @@ async function editDraftToForm(draftId) {
 // =====================================================
 function deleteDraft(draftId) {
   if (!confirm("ลบ Draft นี้?")) return;
-  saveDraftsToStorage(getDrafts().filter(x => x.id !== draftId));
+  saveDraftsToStorage(getDrafts().filter((x) => x.id !== draftId));
   showToast("ลบ Draft แล้ว");
   renderDraftList();
 }
@@ -399,29 +475,35 @@ function deleteDraft(draftId) {
 // RENDER DRAFT LIST
 // =====================================================
 async function renderDraftList() {
-  const drafts       = getDrafts();
-  const counter      = document.getElementById("draftCount");
-  const counter2     = document.getElementById("draftCount2");
-  const tbody        = document.getElementById("draftBody");
-  const section      = document.getElementById("draftSection");
+  const drafts = getDrafts();
+  const counter = document.getElementById("draftCount");
+  const counter2 = document.getElementById("draftCount2");
+  const tbody = document.getElementById("draftBody");
+  const section = document.getElementById("draftSection");
   const submitAllBtn = document.getElementById("submitAllBtn");
 
-  if (counter)      counter.textContent  = drafts.length;
-  if (counter2)     counter2.textContent = drafts.length;
+  if (counter) counter.textContent = drafts.length;
+  if (counter2) counter2.textContent = drafts.length;
   if (submitAllBtn) submitAllBtn.disabled = drafts.length === 0;
   if (!tbody || !section) return;
 
   section.style.display = drafts.length > 0 ? "block" : "none";
 
-  await resolveShopNames(drafts.map(d => d.shop_id));
+  await resolveShopNames(drafts.map((d) => d.shop_id));
 
   tbody.innerHTML = "";
 
   for (const d of drafts) {
     const shopName = shopsMap[d.shop_id] || "—";
-    const prodSummary = (d.products || []).map(p => productsMap[p.product_id] || "—").join(", ") || "—";
+    const prodSummary =
+      (d.products || [])
+        .map((p) => productsMap[p.product_id] || "—")
+        .join(", ") || "—";
     const savedAt = new Date(d.saved_at).toLocaleString("th-TH", {
-      day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
     const tr = document.createElement("tr");
@@ -430,9 +512,9 @@ async function renderDraftList() {
       <td data-label="ร้านค้า" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
       <td data-label="สินค้า" title="${escapeHtml(prodSummary)}">
         <div style="font-weight:500;">${escapeHtml(truncate(prodSummary, 24))}</div>
-        <div class="attr-sub">${(d.products||[]).length} รายการ</div>
+        <div class="attr-sub">${(d.products || []).length} รายการ</div>
       </td>
-      <td data-label="รายละเอียด" title="${escapeHtml(d.note||"")}">${escapeHtml(truncate(d.note||"—", 28))}</td>
+      <td data-label="รายละเอียด" title="${escapeHtml(d.note || "")}">${escapeHtml(truncate(d.note || "—", 28))}</td>
       <td data-label="บันทึกเมื่อ" style="color:#888;font-size:11px;">${savedAt}</td>
       <td>
         <div class="action-buttons">
@@ -446,7 +528,7 @@ async function renderDraftList() {
             <span class="material-symbols-outlined">delete</span><span>ลบ</span>
           </button>
         </div>
-      </td>`;  
+      </td>`;
     tbody.appendChild(tr);
   }
 }
@@ -456,7 +538,7 @@ async function renderDraftList() {
 // =====================================================
 async function submitOneDraft(draftId) {
   const drafts = getDrafts();
-  const d = drafts.find(x => x.id === draftId);
+  const d = drafts.find((x) => x.id === draftId);
   if (!d) return;
 
   if (!d.shop_id) {
@@ -465,7 +547,9 @@ async function submitOneDraft(draftId) {
   }
 
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
     if (!session) {
       alert("Session หมดอายุ กรุณาล็อกอินใหม่");
       return;
@@ -475,45 +559,46 @@ async function submitOneDraft(draftId) {
     let rows = [];
 
     if (d.products && d.products.length > 0) {
-      rows = d.products.map(p => ({
-        report_date:  d.report_date,
-        shop_id:      d.shop_id,
-        product_id:   p.product_id,
-        source:       d.source || null,
-        status:       "submitted",
+      rows = d.products.map((p) => ({
+        report_date: d.report_date,
+        shop_id: d.shop_id,
+        product_id: p.product_id,
+        source: d.source || null,
+        status: "submitted",
         status_visit: d.status_visit || null,
         product_interest: d.product_interest || null,
-        note:         d.note,
-        attributes:   p.attributes || {},
-        sale_id:      session.user.id,
+        note: d.note,
+        attributes: p.attributes || {},
+        sale_id: session.user.id,
         submitted_at: now,
-        created_at:   d.saved_at || now
+        created_at: d.saved_at || now,
       }));
     } else {
-      rows = [{
-        report_date:  d.report_date,
-        shop_id:      d.shop_id,
-        product_id:   null,
-        source:       d.source || null,
-        status:       "submitted",
-        status_visit: d.status_visit || null,
-        product_interest: d.product_interest || null,
-        note:         d.note,
-        attributes:   {},
-        sale_id:      session.user.id,
-        submitted_at: now,
-        created_at:   d.saved_at || now
-      }];
+      rows = [
+        {
+          report_date: d.report_date,
+          shop_id: d.shop_id,
+          product_id: null,
+          source: d.source || null,
+          status: "submitted",
+          status_visit: d.status_visit || null,
+          product_interest: d.product_interest || null,
+          note: d.note,
+          attributes: {},
+          sale_id: session.user.id,
+          submitted_at: now,
+          created_at: d.saved_at || now,
+        },
+      ];
     }
 
     const { error } = await supabaseClient.from("reports").insert(rows);
     if (error) throw error;
 
-    saveDraftsToStorage(drafts.filter(x => x.id !== draftId));
+    saveDraftsToStorage(drafts.filter((x) => x.id !== draftId));
     showToast("ส่งรายงานสำเร็จ");
     await renderDraftList();
     await loadSubmittedReports();
-
   } catch (e) {
     console.error("submitOneDraft", e);
     alert("ส่งไม่สำเร็จ: " + e.message);
@@ -525,37 +610,73 @@ async function submitOneDraft(draftId) {
 // =====================================================
 async function submitAllDrafts() {
   const drafts = getDrafts();
-  if (!drafts.length) { alert("ไม่มี Draft ที่รอส่ง"); return; }
-
-  const incomplete = drafts.filter(d => !d.shop_id || !d.products?.length);
-  if (incomplete.length) {
-    alert(`มี ${incomplete.length} รายการที่ข้อมูลยังไม่ครบ\nกรุณาแก้ไขก่อน`);
+  if (!drafts.length) {
+    alert("ไม่มี Draft ที่รอส่ง");
     return;
   }
-  if (!confirm(`ยืนยันส่งรายงาน ${drafts.length} รายการ?\nรายงานที่ส่งแล้วจะไม่สามารถแก้ไขได้`)) return;
+
+  // เช็คเฉพาะ shop_id — ส่วน products ไม่จำเป็นถ้าติ๊ก "ร้านนี้ยังไม่มีสินค้า"
+  const incomplete = drafts.filter(
+    (d) => !d.shop_id || (!d.no_product && !d.products?.length),
+  );
+  if (incomplete.length) {
+    alert(
+      `มี ${incomplete.length} รายการที่ข้อมูลยังไม่ครบ\nกรุณาเลือกร้านค้า และเลือกสินค้า (หรือติ๊ก "ร้านนี้ยังไม่มีสินค้า")`,
+    );
+    return;
+  }
+  if (
+    !confirm(
+      `ยืนยันส่งรายงาน ${drafts.length} รายการ?\nรายงานที่ส่งแล้วจะไม่สามารถแก้ไขได้`,
+    )
+  )
+    return;
 
   try {
-    const { data:{ session } } = await supabaseClient.auth.getSession();
-    if (!session) { alert("Session หมดอายุ"); return; }
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+    if (!session) {
+      alert("Session หมดอายุ");
+      return;
+    }
 
     const now = new Date().toISOString();
     const rows = [];
     for (const d of drafts) {
-      for (const p of (d.products || [])) {
+      // ถ้าไม่มีสินค้า (no_product = true หรือ products ว่าง) → insert 1 row โดยไม่มี product
+      if (!d.products || d.products.length === 0) {
         rows.push({
-          report_date:  d.report_date,
-          shop_id:      d.shop_id,
-          product_id:   p.product_id,
-          source:       d.source || null,
-          status:       "submitted",
+          report_date: d.report_date,
+          shop_id: d.shop_id,
+          product_id: null,
+          source: d.source || null,
+          status: "submitted",
           status_visit: d.status_visit || null,
           product_interest: d.product_interest || null,
-          note:         d.note,
-          attributes:   p.attributes || {},
-          sale_id:      session.user.id,
+          note: d.note,
+          attributes: {},
+          sale_id: session.user.id,
           submitted_at: now,
-          created_at:   d.saved_at || now
+          created_at: d.saved_at || now,
         });
+      } else {
+        for (const p of d.products) {
+          rows.push({
+            report_date: d.report_date,
+            shop_id: d.shop_id,
+            product_id: p.product_id,
+            source: d.source || null,
+            status: "submitted",
+            status_visit: d.status_visit || null,
+            product_interest: d.product_interest || null,
+            note: d.note,
+            attributes: p.attributes || {},
+            sale_id: session.user.id,
+            submitted_at: now,
+            created_at: d.saved_at || now,
+          });
+        }
       }
     }
 
@@ -566,7 +687,7 @@ async function submitAllDrafts() {
     showToast(`ส่งรายงาน ${rows.length} รายการสำเร็จ!`);
     await renderDraftList();
     await loadSubmittedReports();
-  } catch(e) {
+  } catch (e) {
     console.error("submitAllDrafts", e);
     alert("เกิดข้อผิดพลาด: " + e.message);
   }
@@ -580,7 +701,9 @@ async function loadSubmittedReports() {
   if (!tbody) return;
   tbody.innerHTML = `<tr><td colspan="6" style="text-align:center">กำลังโหลด...</td></tr>`;
   try {
-    const { data:{ session } } = await supabaseClient.auth.getSession();
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
     if (!session) return;
 
     const { data, error } = await supabaseClient
@@ -593,22 +716,30 @@ async function loadSubmittedReports() {
 
     submittedReports = data || [];
 
-    const missingProds = [...new Set(
-      submittedReports.map(r => r.product_id).filter(id => id && !productsMap[id])
-    )];
+    const missingProds = [
+      ...new Set(
+        submittedReports
+          .map((r) => r.product_id)
+          .filter((id) => id && !productsMap[id]),
+      ),
+    ];
     if (missingProds.length) {
       const { data: prods } = await supabaseClient
-        .from("products").select("id,name").in("id", missingProds);
-      prods?.forEach(p => { productsMap[p.id] = p.name; });
+        .from("products")
+        .select("id,name")
+        .in("id", missingProds);
+      prods?.forEach((p) => {
+        productsMap[p.id] = p.name;
+      });
     }
 
-    await resolveShopNames(submittedReports.map(r => r.shop_id));
+    await resolveShopNames(submittedReports.map((r) => r.shop_id));
 
     // ดึงจำนวน unread comment (เทียบกับ last_read_at ใน localStorage)
-    await loadUnreadCommentCounts(submittedReports.map(r => r.id));
+    await loadUnreadCommentCounts(submittedReports.map((r) => r.id));
 
     await renderSubmittedTable();
-  } catch(e) {
+  } catch (e) {
     console.error("loadSubmittedReports", e);
     tbody.innerHTML = `<tr><td colspan="6">เกิดข้อผิดพลาด</td></tr>`;
   }
@@ -624,10 +755,15 @@ function truncate(str, maxLen) {
 
 function formatDateShort(s) {
   if (!s) return "—";
-  try { return new Date(s).toLocaleDateString("th-TH", { day: "numeric", month: "short" }); }
-  catch(e) { return "—"; }
+  try {
+    return new Date(s).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch (e) {
+    return "—";
+  }
 }
-
 
 // =====================================================
 // GROUP SUBMITTED REPORTS — รวม shop + date + sale เดียวกัน
@@ -637,13 +773,13 @@ function groupSubmittedReports(reports) {
 
   for (const r of reports) {
     // key = ร้าน + วันที่รายงาน + เซลล์
-    const key = `${r.shop_id || 'no-shop'}__${r.report_date || 'no-date'}__${r.sale_id || 'no-sale'}`;
+    const key = `${r.shop_id || "no-shop"}__${r.report_date || "no-date"}__${r.sale_id || "no-sale"}`;
 
     if (!groups[key]) {
       groups[key] = {
         // ใช้ id ของ row แรกเป็นตัวแทน (สำหรับ handleView)
         id: r.id,
-        ids: [r.id],                            // เก็บ id ทั้งหมดใน group
+        ids: [r.id], // เก็บ id ทั้งหมดใน group
         shop_id: r.shop_id,
         sale_id: r.sale_id,
         report_date: r.report_date,
@@ -653,12 +789,16 @@ function groupSubmittedReports(reports) {
         product_interest: r.product_interest,
         note: r.note,
         manager_acknowledged: r.manager_acknowledged,
-        products: []                            // รวมสินค้าทุกตัว
+        products: [], // รวมสินค้าทุกตัว
       };
     } else {
       groups[key].ids.push(r.id);
       // ใช้ submitted_at ล่าสุด
-      if (r.submitted_at && (!groups[key].submitted_at || new Date(r.submitted_at) > new Date(groups[key].submitted_at))) {
+      if (
+        r.submitted_at &&
+        (!groups[key].submitted_at ||
+          new Date(r.submitted_at) > new Date(groups[key].submitted_at))
+      ) {
         groups[key].submitted_at = r.submitted_at;
       }
       // ถ้ามีตัวไหน ack แล้ว → group นี้ถือว่า ack
@@ -670,18 +810,16 @@ function groupSubmittedReports(reports) {
       groups[key].products.push({
         row_id: r.id,
         product_id: r.product_id,
-        attributes: r.attributes || {}
+        attributes: r.attributes || {},
       });
     }
   }
 
   // เรียงตาม submitted_at ใหม่สุดก่อน
-  return Object.values(groups).sort((a, b) =>
-    new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0)
+  return Object.values(groups).sort(
+    (a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0),
   );
 }
-
-
 
 async function renderSubmittedTable() {
   const tbody = document.getElementById("reportBody");
@@ -700,9 +838,11 @@ async function renderSubmittedTable() {
     const shopName = shopsMap[g.shop_id] || "—";
 
     // รวมชื่อสินค้าทุกตัวใน group
-    const prodNames = g.products.map(p => productsMap[p.product_id] || "—");
+    const prodNames = g.products.map((p) => productsMap[p.product_id] || "—");
     const prodDisplay = prodNames.length
-      ? (prodNames.length === 1 ? prodNames[0] : `${prodNames[0]} +${prodNames.length - 1}`)
+      ? prodNames.length === 1
+        ? prodNames[0]
+        : `${prodNames[0]} +${prodNames.length - 1}`
       : "—";
     const prodFull = prodNames.join(", ") || "—";
 
@@ -712,25 +852,34 @@ async function renderSubmittedTable() {
     const attrShort = truncate(attrText, 36);
 
     const ackBadge = g.manager_acknowledged
-      ? `<span class="badge-ack">✅ อ่านแล้ว</span>` : "";
+      ? `<span class="badge-ack">✅ อ่านแล้ว</span>`
+      : "";
 
     // นับ unread comment รวมทุก id ใน group
-    const unreadCount = g.ids.reduce((sum, id) => sum + (unreadCommentCountsMap[id] || 0), 0);
-    const commentBadge = unreadCount > 0
-      ? `<span class="comment-notify-badge" title="${unreadCount} ความคิดเห็นใหม่">${unreadCount}</span>`
-      : '';
+    const unreadCount = g.ids.reduce(
+      (sum, id) => sum + (unreadCommentCountsMap[id] || 0),
+      0,
+    );
+    const commentBadge =
+      unreadCount > 0
+        ? `<span class="comment-notify-badge" title="${unreadCount} ความคิดเห็นใหม่">${unreadCount}</span>`
+        : "";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td data-label="วันที่ส่ง" class="col-date">${formatDateShort(g.submitted_at || g.report_date)}</td>
       <td data-label="ร้านค้า" class="col-shop" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
       <td data-label="สถานะ" class="col-status">${ackBadge || "—"}</td>
-      <td data-label="รายละเอียด" class="col-note" title="${escapeHtml(g.note||"")}">${escapeHtml(truncate(g.note||"—", 22))}</td>
+      <td data-label="รายละเอียด" class="col-note" title="${escapeHtml(g.note || "")}">${escapeHtml(truncate(g.note || "—", 22))}</td>
       <td data-label="สินค้า" class="col-product" title="${escapeHtml(prodFull)}">
         <div style="font-weight:500;">${escapeHtml(truncate(prodDisplay, 16))}</div>
-        ${prodNames.length > 1
-          ? `<div class="attr-sub">${prodNames.length} รายการ</div>`
-          : (attrShort && attrShort !== "—" ? `<div class="attr-sub">${escapeHtml(attrShort)}</div>` : "")}
+        ${
+          prodNames.length > 1
+            ? `<div class="attr-sub">${prodNames.length} รายการ</div>`
+            : attrShort && attrShort !== "—"
+              ? `<div class="attr-sub">${escapeHtml(attrShort)}</div>`
+              : ""
+        }
       </td>
       <td class="col-action">
         <div class="action-buttons">
@@ -748,44 +897,52 @@ async function renderSubmittedTable() {
 // =====================================================
 async function handleView(id) {
   // หา row ที่กด แล้วหา group ที่มัน belong อยู่
-  const clicked = submittedReports.find(x => x.id === id);
+  const clicked = submittedReports.find((x) => x.id === id);
   if (!clicked) return;
 
   // หาทุก row ใน group เดียวกัน
-  const groupRows = submittedReports.filter(r =>
-    r.shop_id === clicked.shop_id &&
-    r.report_date === clicked.report_date &&
-    r.sale_id === clicked.sale_id
+  const groupRows = submittedReports.filter(
+    (r) =>
+      r.shop_id === clicked.shop_id &&
+      r.report_date === clicked.report_date &&
+      r.sale_id === clicked.sale_id,
   );
 
   const r = clicked; // ใช้ clicked เป็นตัวแทนสำหรับ field ที่ shared
-  const ackAny = groupRows.some(x => x.manager_acknowledged);
+  const ackAny = groupRows.some((x) => x.manager_acknowledged);
 
   document.getElementById("modalTitle").innerText = "รายละเอียดรายงาน";
-  const set = (eid, v) => { const el = document.getElementById(eid); if (el) el.innerText = v || "—"; };
-  set("m-date",    formatDate(r.submitted_at || r.report_date));
-  set("m-store",   shopsMap[r.shop_id] || "—");
-  set("m-source",  r.source || "—");
-  set("m-status",  ackAny ? "ส่งแล้ว • ผู้บริหารอ่านแล้ว" : "ส่งแล้ว");
+  const set = (eid, v) => {
+    const el = document.getElementById(eid);
+    if (el) el.innerText = v || "—";
+  };
+  set("m-date", formatDate(r.submitted_at || r.report_date));
+  set("m-store", shopsMap[r.shop_id] || "—");
+  set("m-source", r.source || "—");
+  set("m-status", ackAny ? "ส่งแล้ว • ผู้บริหารอ่านแล้ว" : "ส่งแล้ว");
   set("m-product-interest", r.product_interest || "—");
 
   // แสดงสินค้าทุกตัวใน group
   const prodEl = document.getElementById("m-product");
   const attrEl = document.getElementById("m-attributes");
-  const productsWithId = groupRows.filter(x => x.product_id);
+  const productsWithId = groupRows.filter((x) => x.product_id);
 
   if (productsWithId.length === 0) {
     if (prodEl) prodEl.innerText = "—";
     if (attrEl) attrEl.innerHTML = "";
   } else if (productsWithId.length === 1) {
     // สินค้าเดียว — แสดงแบบเดิม
-    if (prodEl) prodEl.innerText = productsMap[productsWithId[0].product_id] || "—";
-    if (attrEl) attrEl.innerHTML = await formatAttributesBlock(productsWithId[0].attributes);
+    if (prodEl)
+      prodEl.innerText = productsMap[productsWithId[0].product_id] || "—";
+    if (attrEl)
+      attrEl.innerHTML = await formatAttributesBlock(
+        productsWithId[0].attributes,
+      );
   } else {
     // หลายสินค้า — แสดงเป็นลิสต์
     if (prodEl) prodEl.innerText = `${productsWithId.length} รายการ`;
     if (attrEl) {
-      let html = '';
+      let html = "";
       for (const row of productsWithId) {
         const name = productsMap[row.product_id] || "—";
         const attrBlock = await formatAttributesBlock(row.attributes);
@@ -800,16 +957,19 @@ async function handleView(id) {
   }
 
   const noteEl = document.getElementById("m-note");
-  if (noteEl) { noteEl.value = r.note || ""; noteEl.disabled = true; }
+  if (noteEl) {
+    noteEl.value = r.note || "";
+    noteEl.disabled = true;
+  }
 
   const saveBtn = document.getElementById("saveEditBtn");
   if (saveBtn) saveBtn.style.display = "none";
 
   // โหลด comment ของทุก id ใน group
-  await loadManagerCommentsForGroup(groupRows.map(x => x.id));
+  await loadManagerCommentsForGroup(groupRows.map((x) => x.id));
 
   // Mark ทุก id ใน group ว่าอ่านแล้ว
-  groupRows.forEach(x => markCommentsAsRead(x.id));
+  groupRows.forEach((x) => markCommentsAsRead(x.id));
 
   openModal();
 }
@@ -821,57 +981,82 @@ async function handleView(id) {
 // =====================================================
 function getCommentRoleStyle(role) {
   // ถ้ามี roleConfig.js โหลดมาแล้ว ให้ใช้จากที่นั่น
-  if (typeof getRoleMeta === 'function') {
+  if (typeof getRoleMeta === "function") {
     const meta = getRoleMeta(role);
     // Map cssClass จาก reportTracker → inline style สำหรับใช้ใน modal
     const stylePresets = {
-      'comment-admin':     { bgColor: '#fde8e8', borderColor: '#dc2626', badgeGrad: 'linear-gradient(135deg,#dc2626,#991b1b)', icon: 'shield' },
-      'comment-executive': { bgColor: '#fff9e6', borderColor: '#f0ad4e', badgeGrad: 'linear-gradient(135deg,#f0ad4e,#ec971f)', icon: 'admin_panel_settings' },
-      'comment-manager':   { bgColor: '#e8f4fd', borderColor: '#17a2b8', badgeGrad: 'linear-gradient(135deg,#17a2b8,#138496)', icon: 'work' },
-      'comment-user':      { bgColor: '#f5f5f5', borderColor: '#6c757d', badgeGrad: '#7d7d6c', icon: 'person' }
+      "comment-admin": {
+        bgColor: "#fde8e8",
+        borderColor: "#dc2626",
+        badgeGrad: "linear-gradient(135deg,#dc2626,#991b1b)",
+        icon: "shield",
+      },
+      "comment-executive": {
+        bgColor: "#fff9e6",
+        borderColor: "#f0ad4e",
+        badgeGrad: "linear-gradient(135deg,#f0ad4e,#ec971f)",
+        icon: "admin_panel_settings",
+      },
+      "comment-manager": {
+        bgColor: "#e8f4fd",
+        borderColor: "#17a2b8",
+        badgeGrad: "linear-gradient(135deg,#17a2b8,#138496)",
+        icon: "work",
+      },
+      "comment-user": {
+        bgColor: "#f5f5f5",
+        borderColor: "#6c757d",
+        badgeGrad: "#7d7d6c",
+        icon: "person",
+      },
     };
-    const preset = stylePresets[meta.cssClass] || stylePresets['comment-user'];
+    const preset = stylePresets[meta.cssClass] || stylePresets["comment-user"];
     // ลบ emoji ออกจาก label เผื่อ roleConfig ส่ง emoji มา
-    const cleanLabel = (meta.labelShort || meta.label || '').replace(/[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F680}-\u{1F6FF}]/gu, '').trim();
+    const cleanLabel = (meta.labelShort || meta.label || "")
+      .replace(
+        /[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F680}-\u{1F6FF}]/gu,
+        "",
+      )
+      .trim();
     return {
       label: cleanLabel || getDefaultLabel(role),
-      ...preset
+      ...preset,
     };
   }
 
   // Fallback ถ้าไม่ได้โหลด roleConfig.js
   switch (role) {
-    case 'admin':
+    case "admin":
       return {
-        label: 'Admin',
-        icon: 'shield',
-        bgColor: '#fde8e8',
-        borderColor: '#dc2626',
-        badgeGrad: 'linear-gradient(135deg,#dc2626,#991b1b)'
+        label: "Admin",
+        icon: "shield",
+        bgColor: "#fde8e8",
+        borderColor: "#dc2626",
+        badgeGrad: "linear-gradient(135deg,#dc2626,#991b1b)",
       };
-    case 'executive':
+    case "executive":
       return {
-        label: 'Executive',
-        icon: 'verified',
-        bgColor: '#fff9e6',
-        borderColor: '#f0ad4e',
-        badgeGrad: 'linear-gradient(135deg,#f0ad4e,#ec971f)'
+        label: "Executive",
+        icon: "verified",
+        bgColor: "#fff9e6",
+        borderColor: "#f0ad4e",
+        badgeGrad: "linear-gradient(135deg,#f0ad4e,#ec971f)",
       };
-    case 'manager':
+    case "manager":
       return {
-        label: 'Manager',
-        icon: 'star_half',
-        bgColor: '#e8f4fd',
-        borderColor: '#17a2b8',
-        badgeGrad: 'linear-gradient(135deg,#17a2b8,#138496)'
+        label: "Manager",
+        icon: "star_half",
+        bgColor: "#e8f4fd",
+        borderColor: "#17a2b8",
+        badgeGrad: "linear-gradient(135deg,#17a2b8,#138496)",
       };
     default:
       return {
-        label: 'User',
-        icon: 'person',
-        bgColor: '#f5f5f5',
-        borderColor: '#6c757d',
-        badgeGrad: '#7d7d6c'
+        label: "User",
+        icon: "person",
+        bgColor: "#f5f5f5",
+        borderColor: "#6c757d",
+        badgeGrad: "#7d7d6c",
       };
   }
 }
@@ -879,13 +1064,13 @@ function getCommentRoleStyle(role) {
 // Helper สำหรับ label default
 function getDefaultLabel(role) {
   const labels = {
-    'admin':     'แอดมิน',
-    'executive': 'ผู้บริหาร',
-    'manager':   'ผู้จัดการ',
-    'sales':     'เซลล์',
-    'user':      'ผู้ใช้'
+    admin: "แอดมิน",
+    executive: "ผู้บริหาร",
+    manager: "ผู้จัดการ",
+    sales: "เซลล์",
+    user: "ผู้ใช้",
   };
-  return labels[role] || 'ผู้ใช้';
+  return labels[role] || "ผู้ใช้";
 }
 
 // =====================================================
@@ -912,15 +1097,16 @@ async function loadManagerComments(reportId) {
     const reads = getCommentReads();
     const lastRead = reads[reportId] ? new Date(reads[reportId]) : null;
 
-    container.innerHTML = data.map(c => {
-      const role = c.profiles?.role || 'user';
-      const displayName = c.profiles?.display_name || 'ผู้ใช้';
-      const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
+    container.innerHTML = data
+      .map((c) => {
+        const role = c.profiles?.role || "user";
+        const displayName = c.profiles?.display_name || "ผู้ใช้";
+        const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
 
-      // ดึง style ตาม role (4 tier)
-      const style = getCommentRoleStyle(role);
+        // ดึง style ตาม role (4 tier)
+        const style = getCommentRoleStyle(role);
 
-      const roleBadge = `
+        const roleBadge = `
         <span style="
           display:inline-flex;
           align-items:center;
@@ -938,19 +1124,19 @@ async function loadManagerComments(reportId) {
           ${style.label}
         </span>`;
 
-      // Badge "ใหม่" สำหรับ comment ที่ยังไม่เคยอ่าน
-      const newBadge = isNew
-        ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;margin-left:6px;font-weight:600;">ใหม่</span>'
-        : '';
+        // Badge "ใหม่" สำหรับ comment ที่ยังไม่เคยอ่าน
+        const newBadge = isNew
+          ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;margin-left:6px;font-weight:600;">ใหม่</span>'
+          : "";
 
-      return `
+        return `
         <div style="
           background:${style.bgColor};
           border-left:3px solid ${style.borderColor};
           border-radius:6px;
           padding:8px 10px;
           margin-bottom:6px;
-          ${isNew ? 'box-shadow:0 0 0 2px rgba(239,68,68,0.15);' : ''}
+          ${isNew ? "box-shadow:0 0 0 2px rgba(239,68,68,0.15);" : ""}
         ">
           <div style="font-size:11px;color:#555;margin-bottom:3px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
             <strong>${escapeHtml(displayName)}</strong>
@@ -961,18 +1147,28 @@ async function loadManagerComments(reportId) {
           <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${escapeHtml(c.comment)}</div>
         </div>
       `;
-    }).join("");
-  } catch(e) {
+      })
+      .join("");
+  } catch (e) {
     console.error("loadManagerComments error:", e);
     container.innerHTML = "";
   }
 }
 
-
-function openModal()  { const m=document.getElementById("reportModal"); if(m){ m.style.display="flex"; document.body.style.overflow="hidden"; } }
-function closeModal() { const m=document.getElementById("reportModal"); if(m){ m.style.display="none";  document.body.style.overflow=""; } }
-
-
+function openModal() {
+  const m = document.getElementById("reportModal");
+  if (m) {
+    m.style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
+}
+function closeModal() {
+  const m = document.getElementById("reportModal");
+  if (m) {
+    m.style.display = "none";
+    document.body.style.overflow = "";
+  }
+}
 
 async function loadManagerCommentsForGroup(reportIds) {
   const container = document.getElementById("m-manager-comments");
@@ -992,15 +1188,18 @@ async function loadManagerCommentsForGroup(reportIds) {
 
     const reads = getCommentReads();
 
-    container.innerHTML = data.map(c => {
-      const role = c.profiles?.role || 'user';
-      const displayName = c.profiles?.display_name || 'ผู้ใช้';
-      const lastRead = reads[c.report_id] ? new Date(reads[c.report_id]) : null;
-      const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
+    container.innerHTML = data
+      .map((c) => {
+        const role = c.profiles?.role || "user";
+        const displayName = c.profiles?.display_name || "ผู้ใช้";
+        const lastRead = reads[c.report_id]
+          ? new Date(reads[c.report_id])
+          : null;
+        const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
 
-      const style = getCommentRoleStyle(role);
+        const style = getCommentRoleStyle(role);
 
-      const roleBadge = `
+        const roleBadge = `
         <span style="display:inline-flex;align-items:center;gap:3px;background:${style.badgeGrad};
           color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;
           font-weight:500;white-space:nowrap;">
@@ -1008,14 +1207,14 @@ async function loadManagerCommentsForGroup(reportIds) {
           ${style.label}
         </span>`;
 
-      const newBadge = isNew
-        ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;margin-left:6px;font-weight:600;">ใหม่</span>'
-        : '';
+        const newBadge = isNew
+          ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;margin-left:6px;font-weight:600;">ใหม่</span>'
+          : "";
 
-      return `
+        return `
         <div style="background:${style.bgColor};border-left:3px solid ${style.borderColor};
           border-radius:6px;padding:8px 10px;margin-bottom:6px;
-          ${isNew ? 'box-shadow:0 0 0 2px rgba(239,68,68,0.15);' : ''}">
+          ${isNew ? "box-shadow:0 0 0 2px rgba(239,68,68,0.15);" : ""}">
           <div style="font-size:11px;color:#555;margin-bottom:3px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
             <strong>${escapeHtml(displayName)}</strong>
             ${roleBadge}
@@ -1024,35 +1223,32 @@ async function loadManagerCommentsForGroup(reportIds) {
           </div>
           <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${escapeHtml(c.comment)}</div>
         </div>`;
-    }).join("");
-  } catch(e) {
+      })
+      .join("");
+  } catch (e) {
     console.error("loadManagerCommentsForGroup error:", e);
     container.innerHTML = "";
   }
 }
-
-
-
-
 
 // =====================================================
 // FORM HELPERS
 // =====================================================
 function collectFormData() {
   return {
-    report_date:  document.getElementById("reportDate")?.value      || null,
-    province:     document.getElementById("provinceSelect")?.value  || null,
-    shop_id:      document.getElementById("shopSelect")?.value      || null,
-    status_visit: document.getElementById("status")?.value          || null,
-    note:         document.getElementById("note")?.value            || null,
+    report_date: document.getElementById("reportDate")?.value || null,
+    province: document.getElementById("provinceSelect")?.value || null,
+    shop_id: document.getElementById("shopSelect")?.value || null,
+    status_visit: document.getElementById("status")?.value || null,
+    note: document.getElementById("note")?.value || null,
     product_interest: document.getElementById("productInterest")?.value || null,
 
     no_product: document.getElementById("noProductFlag")?.checked || false,
 
-    products:     selectedProducts.map(p => ({
+    products: selectedProducts.map((p) => ({
       product_id: p.product_id,
-      attributes: p.attributes || {}
-    }))
+      attributes: p.attributes || {},
+    })),
   };
 }
 
@@ -1068,17 +1264,25 @@ function clearForm() {
     shopSel.disabled = true;
   }
 
-  ["status"].forEach(id => {
-    const el = document.getElementById(id); if(el) el.selectedIndex = 0;
+  const noProd = document.getElementById("noProductFlag");
+  if (noProd) {
+    noProd.checked = false;
+    noProd.dispatchEvent(new Event("change")); // ให้ UI update ตาม
+  }
+
+  ["status"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
   });
   document.getElementById("note").value = "";
   document.getElementById("productInterest").value = "";
 
-  const catSel  = document.getElementById("pickerCategory");
+  const catSel = document.getElementById("pickerCategory");
   const prodSel = document.getElementById("pickerProduct");
   const attrBox = document.getElementById("pickerAttributes");
-  if (catSel)  catSel.value = "";
-  if (prodSel) prodSel.innerHTML = `<option value="">-- เลือกสินค้า --</option>`;
+  if (catSel) catSel.value = "";
+  if (prodSel)
+    prodSel.innerHTML = `<option value="">-- เลือกสินค้า --</option>`;
   if (attrBox) attrBox.innerHTML = "";
 
   selectedProducts = [];
@@ -1096,17 +1300,25 @@ function setDefaultDate() {
 async function loadProvinces() {
   try {
     const { data } = await supabaseClient
-      .from("shops").select("province")
-      .eq("status","Active").not("province","is",null);
+      .from("shops")
+      .select("province")
+      .eq("status", "Active")
+      .not("province", "is", null);
     const sel = document.getElementById("provinceSelect");
     if (!sel) return;
-    const provinces = [...new Set((data||[]).map(s=>s.province).filter(Boolean))].sort();
+    const provinces = [
+      ...new Set((data || []).map((s) => s.province).filter(Boolean)),
+    ].sort();
     sel.innerHTML = `<option value="">-- เลือกจังหวัด --</option>`;
-    provinces.forEach(p => {
+    provinces.forEach((p) => {
       const o = document.createElement("option");
-      o.value = p; o.textContent = p; sel.appendChild(o);
+      o.value = p;
+      o.textContent = p;
+      sel.appendChild(o);
     });
-  } catch(e) { console.error("loadProvinces", e); }
+  } catch (e) {
+    console.error("loadProvinces", e);
+  }
 }
 
 async function loadShopsByProvince(province) {
@@ -1117,15 +1329,22 @@ async function loadShopsByProvince(province) {
   if (!province) return;
   try {
     const { data } = await supabaseClient
-      .from("shops").select("id,shop_name")
-      .eq("status","Active").eq("province", province).order("shop_name");
-    data?.forEach(s => {
+      .from("shops")
+      .select("id,shop_name")
+      .eq("status", "Active")
+      .eq("province", province)
+      .order("shop_name");
+    data?.forEach((s) => {
       shopsMap[s.id] = s.shop_name;
       const o = document.createElement("option");
-      o.value = s.id; o.textContent = s.shop_name; sel.appendChild(o);
+      o.value = s.id;
+      o.textContent = s.shop_name;
+      sel.appendChild(o);
     });
     sel.disabled = false;
-  } catch(e) { console.error("loadShopsByProvince", e); }
+  } catch (e) {
+    console.error("loadShopsByProvince", e);
+  }
 }
 
 // =====================================================
@@ -1133,13 +1352,20 @@ async function loadShopsByProvince(province) {
 // =====================================================
 function setupEventListeners() {
   const prov = document.getElementById("provinceSelect");
-  if (prov) prov.addEventListener("change", e => loadShopsByProvince(e.target.value));
+  if (prov)
+    prov.addEventListener("change", (e) => loadShopsByProvince(e.target.value));
 
   const pickerCat = document.getElementById("pickerCategory");
-  if (pickerCat) pickerCat.addEventListener("change", e => onPickerCategoryChange(e.target.value));
+  if (pickerCat)
+    pickerCat.addEventListener("change", (e) =>
+      onPickerCategoryChange(e.target.value),
+    );
 
   const pickerProd = document.getElementById("pickerProduct");
-  if (pickerProd) pickerProd.addEventListener("change", e => onPickerProductChange(e.target.value));
+  if (pickerProd)
+    pickerProd.addEventListener("change", (e) =>
+      onPickerProductChange(e.target.value),
+    );
 
   const addBtn = document.getElementById("addProductBtn");
   if (addBtn) addBtn.addEventListener("click", addSelectedProduct);
@@ -1147,7 +1373,10 @@ function setupEventListeners() {
   const closeBtn = document.getElementById("closeModalBtn");
   if (closeBtn) closeBtn.addEventListener("click", closeModal);
   const modal = document.getElementById("reportModal");
-  if (modal) modal.addEventListener("click", e => { if(e.target===modal) closeModal(); });
+  if (modal)
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
 
   const noProduct = document.getElementById("noProductFlag");
   const label = document.querySelector(".toggle-label");
@@ -1165,7 +1394,8 @@ function setupEventListeners() {
         document.getElementById("pickerAttributes").innerHTML = "";
       }
 
-      document.querySelector(".product-picker")
+      document
+        .querySelector(".product-picker")
         .classList.toggle("disabled", isChecked);
 
       if (label) {
@@ -1188,18 +1418,32 @@ function setupEventListeners() {
 // EXPORT CSV
 // =====================================================
 function exportData(type) {
-  if (type !== "csv") { alert("ฟีเจอร์นี้กำลังพัฒนา"); return; }
-  if (!submittedReports.length) { alert("ไม่มีข้อมูล"); return; }
-  const headers = ["วันที่ส่ง","ร้านค้า","สินค้า","รายละเอียด","ผู้บริหารอ่านแล้ว"];
-  const rows = submittedReports.map(r => [
-    formatDate(r.submitted_at||r.report_date),
-    shopsMap[r.shop_id]||"—",
+  if (type !== "csv") {
+    alert("ฟีเจอร์นี้กำลังพัฒนา");
+    return;
+  }
+  if (!submittedReports.length) {
+    alert("ไม่มีข้อมูล");
+    return;
+  }
+  const headers = [
+    "วันที่ส่ง",
+    "ร้านค้า",
+    "สินค้า",
+    "รายละเอียด",
+    "ผู้บริหารอ่านแล้ว",
+  ];
+  const rows = submittedReports.map((r) => [
+    formatDate(r.submitted_at || r.report_date),
+    shopsMap[r.shop_id] || "—",
     productsMap[r.product_id] || "—",
-    (r.note||"—").replace(/,/g," "),
-    r.manager_acknowledged?"ใช่":"ยังไม่"
+    (r.note || "—").replace(/,/g, " "),
+    r.manager_acknowledged ? "ใช่" : "ยังไม่",
   ]);
-  const csv = [headers,...rows].map(r=>r.map(c=>`"${c}"`).join(",")).join("\n");
-  const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const csv = [headers, ...rows]
+    .map((r) => r.map((c) => `"${c}"`).join(","))
+    .join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `my_reports_${new Date().toISOString().split("T")[0]}.csv`;
@@ -1211,8 +1455,15 @@ function exportData(type) {
 // =====================================================
 function formatDate(s) {
   if (!s) return "—";
-  try { return new Date(s).toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"}); }
-  catch(e) { return "—"; }
+  try {
+    return new Date(s).toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    return "—";
+  }
 }
 
 function formatDateTime(s) {
@@ -1222,42 +1473,59 @@ function formatDateTime(s) {
       day: "numeric",
       month: "short",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
+  } catch (e) {
+    return "—";
   }
-  catch(e) { return "—"; }
 }
 
 async function formatAttributesBlock(attrs) {
   if (!attrs || !Object.keys(attrs).length) return "";
   try {
-    const { data:ad } = await supabaseClient.from("attributes")
-      .select("id,name").in("id",Object.keys(attrs));
-    const am = Object.fromEntries((ad||[]).map(a=>[a.id,a.name]));
-    return `<div style="background:#f8fafc;border-radius:6px;padding:8px;font-size:13px;">` +
-      Object.entries(attrs).map(([k,v])=>`<strong>${escapeHtml(am[k]||k)}:</strong> ${escapeHtml(v)}`).join("<br>") +
-      `</div>`;
-  } catch(e) { return ""; }
+    const { data: ad } = await supabaseClient
+      .from("attributes")
+      .select("id,name")
+      .in("id", Object.keys(attrs));
+    const am = Object.fromEntries((ad || []).map((a) => [a.id, a.name]));
+    return (
+      `<div style="background:#f8fafc;border-radius:6px;padding:8px;font-size:13px;">` +
+      Object.entries(attrs)
+        .map(
+          ([k, v]) =>
+            `<strong>${escapeHtml(am[k] || k)}:</strong> ${escapeHtml(v)}`,
+        )
+        .join("<br>") +
+      `</div>`
+    );
+  } catch (e) {
+    return "";
+  }
 }
 
 function escapeHtml(t) {
   if (!t) return "";
-  const d = document.createElement("div"); d.textContent = t; return d.innerHTML;
+  const d = document.createElement("div");
+  d.textContent = t;
+  return d.innerHTML;
 }
 
 function showToast(msg) {
   const t = document.getElementById("toast");
-  if (!t) { console.log(msg); return; }
-  t.textContent = msg; t.classList.add("show");
+  if (!t) {
+    console.log(msg);
+    return;
+  }
+  t.textContent = msg;
+  t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 3000);
 }
 
 function setupLogout() {
-  const btn = document.getElementById("logoutBtn"); if(!btn) return;
+  const btn = document.getElementById("logoutBtn");
+  if (!btn) return;
   btn.addEventListener("click", async () => {
     await supabaseClient.auth.signOut();
     window.location.href = "/pages/auth/login.html";
   });
 }
-
-
