@@ -242,7 +242,7 @@ const Product = (function () {
     const yoyPct = rev2024 ? ((rev2025 - rev2024) / rev2024 * 100) : 0;
     const yoyEl = $('pKpiYoY');
     yoyEl.textContent = (yoyPct >= 0 ? '+' : '') + yoyPct.toFixed(1) + '%';
-    yoyEl.className = 'kpi-value ' + (yoyPct >= 0 ? 'positive' : 'negative');
+   yoyEl.className = 'kpi-number ' + (yoyPct >= 0 ? 'positive' : 'negative');
 
     const monthTotals = Array(12).fill(0);
     monthlySales.forEach(m => { monthTotals[m.month - 1] += Number(m.revenue); });
@@ -251,7 +251,7 @@ const Product = (function () {
 
     const topProd = products.find(p => p.revenue_rank === 1);
     const topName = topProd?.product_name || '-';
-    $('pKpiTopSku').textContent = topName.length > 25 ? topName.substring(0, 22) + '...' : topName;
+    $('pKpiTopSku').textContent = topName;
     $('pKpiTopSku').title = `${topName}\nรวมจาก ${topProd?.codes_count || 0} รหัส: ${topProd?.codes_list || '-'}`;
   }
 

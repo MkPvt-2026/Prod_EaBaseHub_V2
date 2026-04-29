@@ -5,27 +5,39 @@
 <title>Customer Dashboard | ฝ่ายบริหาร</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <link rel="stylesheet" href="/css/base/bassManager.css">
 <link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
 </head>
 <body>
 
-<header class="rfm-header">
+  <!-- ===== HEADER ===== -->
+  <header class="rfm-header">
   <div class="rfm-header-inner">
-    <div>
-      <h1>Customer & Product Dashboard</h1>
+    <div class="logo">
+      <div class="logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="logo">
+      </div>
+      <div>
+      <h2>Customer & Product Dashboard</h2>
       <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
     </div>
+    </div>
+
     <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
       <div class="user-info">
         <div class="user-name" data-user="display_name">-</div>
         <div class="user-role" data-user="role">-</div>
       </div>
       <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
     </div>
-  </div>
-</header>
+  </header>
+
+  <main class="rfm-main">
+
 
 <!-- NAV Container (โหลดตาม role) -->
   <div id="navContainer"></div>
@@ -40,7 +52,7 @@
 <!-- Global Date Range Filter -->
 <div class="date-filter-bar">
   <div class="date-filter-inner">
-    <span class="date-filter-label">📅 ช่วงเวลาวิเคราะห์:</span>
+    <span class="date-filter-label"><i class="fa-solid fa-calendar-days fa-xl" style="color: #119b6d;"></i> ช่วงเวลาวิเคราะห์:</span>
     <div class="date-presets">
       <button class="preset-btn" data-preset="all">ทั้งหมด</button>
       <button class="preset-btn" data-preset="ytd">ปีนี้ (YTD)</button>
@@ -53,6 +65,8 @@
       <button class="preset-btn" data-preset="q3-25">Q3/2025</button>
       <button class="preset-btn" data-preset="q4-25">Q4/2025</button>
     </div>
+
+    
     <div class="date-custom">
       <input type="date" id="dateStart" class="date-input">
       <span>ถึง</span>
@@ -64,7 +78,6 @@
   </div>
 </div>
 
-<main class="rfm-main">
 
   <div id="loadingBox" class="loading-box">
     <div class="spinner"></div>
@@ -94,14 +107,76 @@
   <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
 </div>
 
-    <section class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">ลูกค้าทั้งหมด</div><div class="kpi-value" id="kpiCustomers">-</div></div>
-      <div class="kpi"><div class="kpi-label">รายได้รวม</div><div class="kpi-value" id="kpiRevenue">-</div></div>
-      <div class="kpi"><div class="kpi-label">รายได้เฉลี่ย/ลูกค้า</div><div class="kpi-value" id="kpiAov">-</div></div>
-      <div class="kpi"><div class="kpi-label">Champions</div><div class="kpi-value positive" id="kpiChampions">-</div></div>
-      <div class="kpi"><div class="kpi-label">ต้องการการดูแล</div><div class="kpi-value negative" id="kpiAtRisk">-</div></div>
-      <div class="kpi"><div class="kpi-label">ซื้อล่าสุดเฉลี่ย</div><div class="kpi-value" id="kpiRecency">-</div></div>
-    </section>
+<!-- KPI Cards -->
+   <section class="kpi-grid">
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon green"><i class="fa-solid fa-users"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">ลูกค้าทั้งหมด</div>
+      <div class="kpi-number" id="kpiCustomers">-</div>
+      <div class="kpi-sub">ราย</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon emerald"><i class="fa-solid fa-sack-dollar"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">รายได้รวม</div>
+      <div class="kpi-number" id="kpiRevenue">-</div>
+      <div class="kpi-sub">บาท</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon blue"><i class="fa-solid fa-cart-shopping"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">รายได้เฉลี่ย/ลูกค้า</div>
+      <div class="kpi-number" id="kpiAov">-</div>
+      <div class="kpi-sub">บาท</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon gold"><i class="fa-solid fa-trophy"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">Champions</div>
+      <div class="kpi-number positive" id="kpiChampions">-</div>
+      <div class="kpi-sub">เปอร์เซ็นต์</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon orange"><i class="fa-solid fa-handshake-angle"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">ต้องการการดูแล</div>
+      <div class="kpi-number negative" id="kpiAtRisk">-</div>
+      <div class="kpi-sub">เปอร์เซ็นต์</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon purple"><i class="fa-solid fa-calendar-check"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">ซื้อล่าสุดเฉลี่ย</div>
+      <div class="kpi-number" id="kpiRecency">-</div>
+      <div class="kpi-sub">วัน</div>
+    </div>
+  </div>
+
+</section>
 
     <section class="charts-grid">
       <div class="chart-card">
@@ -193,15 +268,87 @@
       </div>
     </section>
 
-    <section class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">SKU ทั้งหมด</div><div class="kpi-value" id="pKpiSkus">-</div></div>
-      <div class="kpi"><div class="kpi-label">หมวดสินค้า</div><div class="kpi-value" id="pKpiCategories">-</div></div>
-      <div class="kpi"><div class="kpi-label">หมวดขายดีสุด</div><div class="kpi-value" id="pKpiTopCategory" style="font-size: 15px;">-</div></div>
-      <div class="kpi"><div class="kpi-label">เติบโต YoY</div><div class="kpi-value" id="pKpiYoY">-</div></div>
-      <div class="kpi"><div class="kpi-label">เดือนขายดีสุด</div><div class="kpi-value" id="pKpiPeakMonth" style="font-size: 15px;">-</div></div>
-      <div class="kpi"><div class="kpi-label">Top SKU (รายได้)</div><div class="kpi-value" id="pKpiTopSku" style="font-size: 13px;">-</div></div>
-    </section>
+   <section class="kpi-grid">
 
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon blue">
+        <i class="fa-solid fa-boxes-stacked"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">SKU ทั้งหมด</div>
+      <div class="kpi-number" id="pKpiSkus">-</div>
+      <div class="kpi-sub">รายการ</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon green">
+        <i class="fa-solid fa-layer-group"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">หมวดสินค้า</div>
+      <div class="kpi-number" id="pKpiCategories">-</div>
+      <div class="kpi-sub">หมวด</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon gold">
+        <i class="fa-solid fa-crown"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">หมวดขายดีสุด</div>
+      <div class="kpi-number small-text" id="pKpiTopCategory">-</div>
+      <div class="kpi-sub">อันดับ 1</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon emerald">
+        <i class="fa-solid fa-chart-line"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">เติบโต YoY</div>
+      <div class="kpi-number" id="pKpiYoY">-</div>
+      <div class="kpi-sub">เทียบปีก่อน</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon orange">
+        <i class="fa-solid fa-star"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">เดือนขายดีสุด</div>
+      <div class="kpi-number small-text" id="pKpiPeakMonth">-</div>
+      <div class="kpi-sub">Best Month</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon purple">
+        <i class="fa-solid fa-gem"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">Top SKU</div>
+      <div class="kpi-number mini-text" id="pKpiTopSku">-</div>
+      <div class="kpi-sub">รายได้สูงสุด</div>
+    </div>
+  </div>
+
+</section>
     <section class="chart-card" style="margin-bottom: 20px;">
       <h3>เทรนด์ยอดขายรายเดือน (2024 vs 2025)</h3>
       <div class="chart-wrap" style="height: 320px;"><canvas id="chartTrend" role="img" aria-label="เทรนด์ยอดขายรายเดือน"></canvas></div>
