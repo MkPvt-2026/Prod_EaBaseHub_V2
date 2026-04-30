@@ -7,42 +7,62 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
 
-<link rel="stylesheet" href="/css/base/bassManager.css">
+
+<link rel="stylesheet" href="/css/base/bass-layout.css">
+<!-- <link rel="stylesheet" href="/css/base/bassManager.css"> -->
 <link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
 </head>
 <body>
 
-  <!-- ===== HEADER ===== -->
-  <header class="rfm-header">
-  <div class="rfm-header-inner">
-    <div class="logo">
-      <div class="logo-circle">
-        <img src="/assets/icons/icon-192.png" alt="logo">
-      </div>
-      <div>
-      <h2>Customer & Product Dashboard</h2>
-      <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
-    </div>
-    </div>
+<body class="role-manager"> <!-- ใส่ class ตาม role เพื่อสลับธีม -->
 
-    <div class="user-box">
-      <div class="user-avatar" id="userAvatar">👤</div>
-      <div class="user-info">
-        <div class="user-name" data-user="display_name">-</div>
-        <div class="user-role" data-user="role">-</div>
+
+<!--======================================================-->
+  <!-- HEADER                                                -->
+  <!--======================================================-->
+  <header class="app-header">
+    <div class="app-header-inner">
+
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo">
+        </div>
+
+        <div>
+          <h2>Customer &amp; Product Dashboard</h2>
+          <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
+        </div>
       </div>
-      <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+
+        <div class="user-info">
+          <div class="user-name" data-user="display_name">-</div>
+          <div class="user-role" data-user="role">-</div>
+        </div>
+
+        <button class="btn-logout" type="button" onclick="logout()">
+          ออกจากระบบ
+        </button>
+      </div>
+
     </div>
   </header>
-
-  <main class="rfm-main">
-
-
-<!-- NAV Container (โหลดตาม role) -->
+  
+  <!-- NAV Container (โหลดตาม role) -->
   <div id="navContainer"></div>
-
-<nav class="tab-nav">
+  
+  <!--======================================================-->
+  <!-- END LAYOUT MAIN                                      -->
+  <!--======================================================-->
+  
+  <main class="rfm-main">
+    <nav class="tab-nav">
   <div class="tab-nav-inner">
     <button class="tab-btn active" data-tab="rfm">🎯 RFM Customer Analysis</button>
     <button class="tab-btn" data-tab="product">📦 Product Analytics</button>
@@ -172,7 +192,7 @@
     <div class="kpi-right">
       <div class="kpi-title">ซื้อล่าสุดเฉลี่ย</div>
       <div class="kpi-number" id="kpiRecency">-</div>
-      <div class="kpi-sub">วัน</div>
+     <div class="kpi-sub">วัน</div>
     </div>
   </div>
 
