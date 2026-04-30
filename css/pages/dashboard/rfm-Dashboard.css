@@ -60,7 +60,7 @@ img {
    3) LAYOUT
 ============================================================ */
 .rfm-header {
-  background: var(--header-gradient);
+  background: var(--header-manager);
   padding: 10px 28px;
   border-bottom: 0;
 }

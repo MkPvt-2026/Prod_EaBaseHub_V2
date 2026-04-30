@@ -1,3 +1,42 @@
+/* ----------- Reset & Base ----------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Kanit", "IBM Plex Sans Thai", sans-serif;
+  background: var(--page-bg);
+  color: var(--ink-2);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Container */
 .container {
   max-width: 960px;
   margin: 0 auto;
@@ -8,10 +47,10 @@
   max-width: 900px;
   min-height: 100px;
   margin: 0 auto 20px;
-  background: var(--header-gradient);
+  background: var(--header-manager);
   padding: 20px 24px;
   border-radius: 14px;
-  border: 2px solid #3d76df;
+  /* border: 2px solid #3d76df; */
 
   display: flex;
   flex-direction: column;
