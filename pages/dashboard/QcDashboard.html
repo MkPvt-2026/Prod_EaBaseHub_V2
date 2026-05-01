@@ -1,48 +1,53 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="dark">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EABaseHub | QC Dashboard</title>
 
-  <!-- ป้องกัน flash: อ่านค่าก่อน render -->
-  <script>
-    (function(){ var t=localStorage.getItem('ea-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();
-  </script>
-
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
   <!-- CSS -->
-  <!-- <link rel="stylesheet" href="/css/base/adminBase.css">   -->
-  <link rel="stylesheet" href="/css/components/badgeButtom.css">  
-  <link rel="stylesheet" href="/css/base/bassHeader.css"/>
+  <link rel="stylesheet" href="/css/base/role-colors.css"/>
+  <link rel="stylesheet" href="/css/base/bass-layout.css">
   <link rel="stylesheet" href="/css/pages/dashboard/QcDashboard.css">
 </head>
-<body>
+<body class="role-adminQc">
 
   <!-- ── HEADER ── -->
   <header class="app-header">
-    <div class="logo">
-      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
-      <h2>EABaseHub</h2>
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo">
+        </div>
+        <h2>EABaseHub</h2>
+      </div>
     </div>
+
     <div class="user-box">
-      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-avatar" id="userAvatar">
+        <span class="material-symbols-outlined" style="font-size:18px">person</span>
+      </div>
       <div class="user-info">
         <div class="user-name" id="userName">กำลังโหลด...</div>
+        <div class="user-role" id="userRole">QC Admin</div>
       </div>
 
       <div class="group">
-  <span class="badge badge--message-sent" onclick="logout()">
-    <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">Logout</span></span>
-    ออกจจากระบบ
-  </span>
+        <span class="badge badge--message-sent" onclick="logout()">
+          <span class="badge-icon">
+            <span class="material-symbols-outlined" style="font-size:17px">logout</span>
+          </span>
+          ออกจากระบบ
+        </span>
       </div>
-
+    </div>
   </header>
-  
+
   <!-- ── NAV ── -->
   <nav class="app-nav">
     <a href="/pages/dashboard/QcDashboard.html" class="active">Dashboard</a>
@@ -121,14 +126,14 @@
     </section>
 
     <!-- TOP PRODUCTS CHART -->
-<section class="card">
-  <div class="card-title"><span class="card-title-dot"></span>สินค้าที่เคลมบ่อย (Top 8)</div>
-  <div class="chart-legend">
-    <span><span class="legend-sq" style="background:#3fb950"></span>อนุมัติ</span>
-    <span><span class="legend-sq" style="background:#f85149"></span>ปฏิเสธ</span>
-  </div>
-  <div class="chart-wrap chart-wrap--tall"><canvas id="topProductChart"></canvas></div>
-</section>
+    <section class="card">
+      <div class="card-title"><span class="card-title-dot"></span>สินค้าที่เคลมบ่อย (Top 8)</div>
+      <div class="chart-legend">
+        <span><span class="legend-sq" style="background:#3fb950"></span>อนุมัติ</span>
+        <span><span class="legend-sq" style="background:#f85149"></span>ปฏิเสธ</span>
+      </div>
+      <div class="chart-wrap chart-wrap--tall"><canvas id="topProductChart"></canvas></div>
+    </section>
 
     <!-- CHART + RECENT -->
     <section class="row3">
@@ -147,8 +152,6 @@
         </div>
       </div>
     </section>
-
-    
 
     <!-- TABLE -->
     <section class="card table-card">
@@ -193,7 +196,6 @@
   <script src="/js/pages/dashboard/QcDashboard.js"></script>
   <script src="/js/core/splash.js"></script>
   <script src="/js/core/loadingSplash.js"></script>
-  <script src="/js/core/themeToggle.js"></script>
 
 </body>
 </html>

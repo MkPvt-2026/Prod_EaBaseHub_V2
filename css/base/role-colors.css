@@ -1,0 +1,134 @@
+/* =========================================================
+   ROLE COLORS — Theme tokens สำหรับสลับสีตามบทบาทผู้ใช้
+   วิธีใช้: เพิ่ม class เช่น <body class="role-manager">
+   แล้วโค้ดอื่น ๆ ใช้ var(--role-color) แทนสี hardcode
+
+   Palette ปัจจุบัน:
+   - Admin     — เทา
+   - Manager   — ฟ้า
+   - Executive — ม่วง
+   - AdminQc   — ส้ม
+   - Sale      — เขียว
+   - User      — แดงอ่อน
+
+   Tokens ที่มีให้ใช้:
+   - var(--role-color)   สีหลัก (sidebar, primary button)
+   - var(--role-hover)   สี hover (เข้มขึ้นนิด)
+   - var(--role-soft)    พื้นหลังอ่อน (icon-box, badge bg)
+   - var(--role-border)  เส้นขอบอ่อน
+   - var(--role-text)    สีตัวอักษรเข้ม (badge text)
+   - rgba(var(--role-rgb), 0.x)  สำหรับ shadow/overlay
+   ========================================================= */
+
+:root {
+  /* ================= ROLE COLORS ================= */
+
+  /* Admin — เทา */
+  --admin:        #6B7280;
+  --admin-hover:  #4B5563;
+  --admin-soft:   #F3F4F6;
+  --admin-border: #D1D5DB;
+  --admin-text:   #374151;
+
+  /* Manager — ฟ้า */
+  --manager:        #2563EB;
+  --manager-hover:  #1D4ED8;
+  --manager-soft:   #EFF6FF;
+  --manager-border: #BFDBFE;
+  --manager-text:   #1E3A8A;
+
+  /* Executive — ม่วง */
+  --executive:        #7C3AED;
+  --executive-hover:  #6D28D9;
+  --executive-soft:   #F3E8FF;
+  --executive-border: #DDD6FE;
+  --executive-text:   #4C1D95;
+
+  /* Admin QC — ส้ม */
+  --adminQc:        #F97316;
+  --adminQc-hover:  #EA580C;
+  --adminQc-soft:   #FFF3E8;
+  --adminQc-border: #FDBA74;
+  --adminQc-text:   #9A3412;
+
+  /* Sale — เขียว */
+  --sale:        #25A385;
+  --sale-hover:  #1D948A;
+  --sale-soft:   #E6F7F2;
+  --sale-border: #B7E4D8;
+  --sale-text:   #0F4F43;
+
+  /* User — แดงอ่อน (rose pink) */
+  --user:        #F43F5E;
+  --user-hover:  #E11D48;
+  --user-soft:   #FFE4E6;
+  --user-border: #FECDD3;
+  --user-text:   #9F1239;
+
+  /* ================= DEFAULT FALLBACK =================
+     ถ้าไม่มี role class ให้ใช้สี manager (ฟ้า) เป็นค่าเริ่มต้น */
+  --role-color:  var(--manager);
+  --role-hover:  var(--manager-hover);
+  --role-soft:   var(--manager-soft);
+  --role-border: var(--manager-border);
+  --role-text:   var(--manager-text);
+  --role-rgb:    37, 99, 235;
+}
+
+/* =========================================================
+   ROLE CLASS BINDING — map role → --role-* variables
+   ========================================================= */
+
+body.role-admin {
+  --role-color:  var(--admin);
+  --role-hover:  var(--admin-hover);
+  --role-soft:   var(--admin-soft);
+  --role-border: var(--admin-border);
+  --role-text:   var(--admin-text);
+  --role-rgb:    107, 114, 128;
+}
+
+body.role-manager {
+  --role-color:  var(--manager);
+  --role-hover:  var(--manager-hover);
+  --role-soft:   var(--manager-soft);
+  --role-border: var(--manager-border);
+  --role-text:   var(--manager-text);
+  --role-rgb:    37, 99, 235;
+}
+
+body.role-executive {
+  --role-color:  var(--executive);
+  --role-hover:  var(--executive-hover);
+  --role-soft:   var(--executive-soft);
+  --role-border: var(--executive-border);
+  --role-text:   var(--executive-text);
+  --role-rgb:    124, 58, 237;
+}
+
+body.role-adminQc {
+  --role-color:  var(--adminQc);
+  --role-hover:  var(--adminQc-hover);
+  --role-soft:   var(--adminQc-soft);
+  --role-border: var(--adminQc-border);
+  --role-text:   var(--adminQc-text);
+  --role-rgb:    249, 115, 22;
+}
+
+body.role-sale {
+  --role-color:  var(--sale);
+  --role-hover:  var(--sale-hover);
+  --role-soft:   var(--sale-soft);
+  --role-border: var(--sale-border);
+  --role-text:   var(--sale-text);
+  --role-rgb:    37, 163, 133;
+}
+
+body.role-user {
+  --role-color:  var(--user);
+  --role-hover:  var(--user-hover);
+  --role-soft:   var(--user-soft);
+  --role-border: var(--user-border);
+  --role-text:   var(--user-text);
+  --role-rgb:    244, 63, 94;
+}

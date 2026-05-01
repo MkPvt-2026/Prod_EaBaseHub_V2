@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (profile.role === "admin") {
         showLoginOverlay("/index.html");
       } else if (profile.role === "adminQc") {
-        showLoginOverlay("/pages/dashboard/QcDashboard.html");
+        showLoginOverlay("/index.html");
       } else if (profile.role === "sales") {
         showLoginOverlay("/index.html");
       } else if (profile.role === "manager") {

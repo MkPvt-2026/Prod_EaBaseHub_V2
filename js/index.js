@@ -1,5 +1,5 @@
 /*************************************************
- * HOME.JS (Production Ready - Fixed)
+ * index.js (Production Ready - Fixed)
  * ------------------------------------------------
  * - Protect page (Supabase session)
  * - Load data from Supabase
@@ -9,6 +9,7 @@
  * - Dynamic calendar
  * - UI controls (menu / sidebar)
  * - Announcements module integration
+ * - ★ Role-based dashboard buttons (Manager/Executive/AdminQc/Admin)
  *************************************************/
 
 /* =================================================
@@ -43,14 +44,10 @@ let currentDate = new Date();
    3️⃣ Notifications Helpers
 ================================================= */
 
-/**
- * สร้าง notification ลงตาราง notifications
- * มีการตรวจ duplicate ก่อนสร้าง
- */
 async function createNotification(userId, type, title, message) {
   try {
     const isDup = await isDuplicate(type, userId);
-    if (isDup) return; // ไม่สร้างซ้ำ
+    if (isDup) return;
 
     await supabaseClient.from("notifications").insert([
       { user_id: userId, type, title, message },
@@ -60,9 +57,6 @@ async function createNotification(userId, type, title, message) {
   }
 }
 
-/**
- * ตรวจว่ามี notification ประเภทนี้ที่ยังไม่อ่านอยู่แล้วหรือไม่
- */
 async function isDuplicate(type, userId) {
   try {
     const { data, error } = await supabaseClient
@@ -183,7 +177,6 @@ async function deleteItem(type, id) {
 
 /* =================================================
    7️⃣ Weekly Report Progress
-   แก้ไข: ใช้ report_date แทน date
 ================================================= */
 
 function renderWeeklyProgress() {
@@ -196,7 +189,6 @@ function renderWeeklyProgress() {
     return;
   }
 
-  // ✅ แก้: ใช้ report_date แทน date
   const latestReport = [...reports].sort(
     (a, b) => new Date(b.report_date || b.created_at) - new Date(a.report_date || a.created_at)
   )[0];
@@ -367,15 +359,8 @@ async function init() {
 
   if (profile?.role === "admin") document.body.classList.add("is-admin");
 
-  if (profile?.role === "manager" || profile?.role === "admin") {
-    const managerBtn = document.getElementById("managerDashboardBtn");
-    if (managerBtn) managerBtn.style.display = "flex";
-  }
-
-  if (profile?.role === "admin") {
-    const adminBtn = document.getElementById("adminDashboardBtn");
-    if (adminBtn) adminBtn.style.display = "flex";
-  }
+  // ★★★ แสดงปุ่ม dashboard ตาม role ★★★
+  showRoleButtons(profile?.role);
 
   const currentUser = {
     id: session.user.id,
@@ -407,6 +392,59 @@ async function init() {
   } else {
     console.warn("⚠️ AnnouncementsModule not loaded");
   }
+}
+
+/* =================================================
+   👥 Role-based Dashboard Buttons
+   ─────────────────────────────────────────────────
+   Permission Matrix:
+   ┌─────────────┬─────────┬───────────┬──────────┬───────┐
+   │  role       │ Manager │ Executive │ AdminQC  │ Admin │
+   ├─────────────┼─────────┼───────────┼──────────┼───────┤
+   │ admin       │   ✅    │    ✅     │    ✅    │  ✅   │
+   │ manager     │   ✅    │    ✅     │    ✅    │  ❌   │
+   │ executive   │   ❌    │    ✅     │    ❌    │  ❌   │
+   │ adminQc     │   ❌    │    ❌     │    ✅    │  ❌   │
+   │ sales/user  │   ❌    │    ❌     │    ❌    │  ❌   │
+   └─────────────┴─────────┴───────────┴──────────┴───────┘
+================================================= */
+
+function showRoleButtons(role) {
+  if (!role) return;
+
+  // normalize: ตัด _ - และทำเป็นพิมพ์เล็ก
+  // เช่น "Admin_QC" → "adminqc", "ADMIN" → "admin"
+  const r = String(role).trim().toLowerCase().replace(/[_-]/g, "");
+
+  const isAdmin     = (r === "admin");
+  const isManager   = (r === "manager");
+  const isExecutive = (r === "executive");
+  const isAdminQc   = (r === "adminqc");
+
+  // Manager Dashboard: manager + admin
+  if (isManager || isAdmin) {
+    showButton("managerDashboardBtn");
+  }
+
+  // Executive Dashboard: executive + manager + admin
+  if (isExecutive || isManager || isAdmin) {
+    showButton("executiveDashboardBtn");
+  }
+
+  // Admin QC Dashboard: adminQc + manager + admin
+  if (isAdminQc || isManager || isAdmin) {
+    showButton("adminQcDashboardBtn");
+  }
+
+  // Admin Hub: admin เท่านั้น
+  if (isAdmin) {
+    showButton("adminDashboardBtn");
+  }
+}
+
+function showButton(id) {
+  const btn = document.getElementById(id);
+  if (btn) btn.style.display = "flex";
 }
 
 /* =================================================
@@ -565,6 +603,16 @@ function handleAdminClick(btn) {
   setTimeout(() => goToAdmin(), 500);
 }
 
+function handleExecutiveClick(btn) {
+  btn.classList.add("loading");
+  setTimeout(() => goToExecutiveDashboard(), 500);
+}
+
+function handleAdminQcClick(btn) {
+  btn.classList.add("loading");
+  setTimeout(() => goToAdminQcDashboard(), 500);
+}
+
 /* =================================================
    🔔 Check Notifications
 ================================================= */
@@ -580,10 +628,10 @@ async function checkNotifications(currentUser, profile) {
   const isSaturday = today.getDay() === 6;
 
   const start = new Date(today);
-  start.setDate(today.getDate() - today.getDay() + 1); // วันจันทร์
+  start.setDate(today.getDate() - today.getDay() + 1);
 
   const end = new Date(start);
-  end.setDate(start.getDate() + 6); // วันอาทิตย์
+  end.setDate(start.getDate() + 6);
 
   const startStr = start.toISOString();
   const endStr = end.toISOString();
@@ -596,9 +644,7 @@ async function checkNotifications(currentUser, profile) {
 
   const reportsData = weeklyReports || [];
 
-  // =========================
   // 🟢 SALES
-  // =========================
   if (currentUser.role === "sales") {
     const myReports = reportsData.filter((r) => r.sale_id === currentUser.id);
     const REQUIRED = 5;
@@ -616,9 +662,7 @@ async function checkNotifications(currentUser, profile) {
     }
   }
 
-  // =========================
   // 🔵 MANAGER
-  // =========================
   if (currentUser.role === "manager") {
     const { data: team } = await supabaseClient
       .from("profiles")
@@ -658,10 +702,7 @@ async function checkNotifications(currentUser, profile) {
     }
   }
 
-  // ดึงจำนวน unread ทั้งหมดจาก database (รวม report_comment ด้วย)
   const dbUnreadCount = await loadUnreadNotificationCount();
-  
-  // ใช้จำนวนจาก DB เป็นหลัก (แม่นยำกว่า)
   updateNotificationUI(dbUnreadCount);
 }
 
@@ -702,7 +743,7 @@ function showToast(message) {
 function updateNotificationUI(count) {
   const badge = document.getElementById("notifyBadge");
   const number = document.getElementById("notificationCount");
-  const card = document.querySelector(".mini-card.claim"); // ✅ เพิ่ม
+  const card = document.querySelector(".mini-card.claim");
 
   if (number) number.textContent = count;
 
@@ -715,7 +756,6 @@ function updateNotificationUI(count) {
     }
   }
 
-  // ✅ เพิ่ม: toggle class has-unread ที่การ์ด
   if (card) {
     if (count > 0) {
       card.classList.add("has-unread");
@@ -724,7 +764,6 @@ function updateNotificationUI(count) {
     }
   }
 
-  // ✅ เพิ่ม: เปลี่ยน favicon และ title เมื่อมีแจ้งเตือน
   updateDocumentTitle(count);
 }
 
@@ -790,7 +829,7 @@ function setupNotificationRealtime(userId) {
     .on(
       "postgres_changes",
       {
-        event: "INSERT",  // เฉพาะตอน insert ใหม่
+        event: "INSERT",
         schema: "public",
         table: "notifications",
         filter: `user_id=eq.${userId}`
@@ -799,7 +838,6 @@ function setupNotificationRealtime(userId) {
         const count = await loadUnreadNotificationCount();
         updateNotificationUI(count);
 
-        // เล่นเสียง + toast เมื่อมีแจ้งเตือนใหม่ (ไม่ใช่ครั้งแรกโหลด)
         if (!isFirstLoad) {
           playNotificationSound();
           showToast("🔔 " + (payload.new.title || "มีแจ้งเตือนใหม่"));
@@ -825,7 +863,7 @@ function setupNotificationRealtime(userId) {
 }
 
 /* =================================================
-   🔊 Notification Sound (ใช้ Web Audio API ไม่ต้องมีไฟล์)
+   🔊 Notification Sound
 ================================================= */
 function playNotificationSound() {
   try {
@@ -837,7 +875,6 @@ function playNotificationSound() {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    // เสียง 2 tone แบบ "ติ๊ง-ติ๊ง"
     osc.frequency.value = 880;
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);

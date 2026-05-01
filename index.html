@@ -11,6 +11,7 @@
     />
     <meta name="theme-color" content="#4caf8a" />
     <meta name="description" content="EABaseHub - ระบบจัดการรายงานและร้านค้า" />
+
     <title>Home - EABaseHub</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -32,8 +33,10 @@
       href="/assets/icons/icon-192.png"
     />
 
-    <link rel="stylesheet" href="/css/index.css" />
     <link rel="stylesheet" href="/css/components/Announcements.css" />
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+
+    <link rel="stylesheet" href="/css/index.css" />
   </head>
 
   <body>
@@ -252,24 +255,47 @@
                 </div>
               </div>
 
+              <!-- ★ ปุ่มเข้า Dashboard ตาม Role -->
               <button
                 id="managerDashboardBtn"
-                class="btn-ea"
+                class="btn-ea btn-manager"
                 style="display: none"
                 onclick="goToManagerDashboard()"
               >
-                Marketing Manager
+                <span class="btn-text">Marketing Manager</span>
                 <span class="material-symbols-outlined icon">open_in_new</span>
                 <span class="spinner"></span>
               </button>
 
               <button
+                id="executiveDashboardBtn"
+                class="btn-ea btn-executive"
+                style="display: none"
+                onclick="goToExecutiveDashboard()"
+              >
+                <span class="btn-text">Executive</span>
+                <span class="material-symbols-outlined icon">analytics</span>
+                <span class="spinner"></span>
+              </button>
+
+              <button
+                id="adminQcDashboardBtn"
+                class="btn-ea btn-adminqc"
+                style="display: none"
+                onclick="goToAdminQcDashboard()"
+              >
+                <span class="btn-text">Admin QC</span>
+                <span class="material-symbols-outlined icon">verified</span>
+                <span class="spinner"></span>
+              </button>
+
+              <button
                 id="adminDashboardBtn"
-                class="btn-ea btn-secondary"
+                class="btn-ea btn-admin"
                 style="display: none"
                 onclick="goToAdmin()"
               >
-                Admin Hub
+                <span class="btn-text">Admin Hub</span>
                 <span class="material-symbols-outlined icon"
                   >admin_panel_settings</span
                 >
@@ -365,8 +391,6 @@
 
     <!-- =========================
          JAVASCRIPT
-         ✅ ลบ prevMonth / nextMonth / renderCalendar / toggleMenu / toggleSidebar
-            ออกจาก inline script เพื่อไม่ให้ทับ home.js
          ========================= -->
     <script>
       // SERVICE WORKER
@@ -403,13 +427,21 @@
         alert("🏪 ฟีเจอร์เปิดร้านค้าใหม่กำลังพัฒนา");
       }
 
-      // NAVIGATION (ใช้โดย home.js)
+      // ★ NAVIGATION (ใช้โดย index.js)
       function goToAdmin() {
         window.location.href = "/pages/dashboard/adminDashboard.html";
       }
 
       function goToManagerDashboard() {
         window.location.href = "/pages/dashboard/managerDashboard.html";
+      }
+
+      function goToExecutiveDashboard() {
+        window.location.href = "/pages/dashboard/executiveDashboard.html";
+      }
+
+      function goToAdminQcDashboard() {
+        window.location.href = "/pages/dashboard/QcDashboard.html";
       }
 
       // LOADING OVERLAY
@@ -440,9 +472,17 @@
     <script src="/js/core/userService.js"></script>
     <script src="/js/core/roleConfig.js"></script>
     <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+
     <script src="/js/pages/admin/Announcements.js"></script>
     <script src="/js/index.js"></script>
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        RoleTheme.init();
+      });
+    </script>
   </body>
 </html>

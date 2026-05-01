@@ -44,6 +44,7 @@ const ROLE_CONFIG = {
     allowedPages: [
       '/pages/dashboard/QcDashboard.html',
       '/pages/admin/adminQc.html',
+      '/index',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },

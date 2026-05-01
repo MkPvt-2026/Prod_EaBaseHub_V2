@@ -1,16 +1,18 @@
 /* =========================
    CSS VARIABLES - Pastel Green/Mint Palette (Soft Tone)
+   หมายเหตุ: ตัวแปร mint-* ยังเก็บไว้สำหรับ component อื่น ๆ ที่อาจ
+   import ไฟล์นี้ แต่ "ส่วน UI ที่ผูกกับ role" จะใช้ var(--role-*) แทน
    ========================= */
 :root {
   /* === Pastel Mint — primary / sidebar / accent === */
-  --mint-50:  #f4fdf9;      /* พื้นหลังอ่อนมาก */
-  --mint-100: #e0f7ed;      /* พื้นหลังอ่อน */
-  --mint-200: #b8ebd4;      /* accent อ่อน */
-  --mint-300: #8fdfba;      /* ★ accent หลัก */
-  --mint-400: #6dd3a3;      /* hover สดขึ้นนิด */
-  --mint-500: #4caf8a;      /* ★ sidebar bg */
-  --mint-600: #3d8c6f;      /* เข้มขึ้น */
-  --mint-700: #2f6b54;      /* เข้มพอใช้ text */
+  --mint-50:  #f4fdf9;
+  --mint-100: #e0f7ed;
+  --mint-200: #b8ebd4;
+  --mint-300: #8fdfba;
+  --mint-400: #6dd3a3;
+  --mint-500: #4caf8a;
+  --mint-600: #3d8c6f;
+  --mint-700: #2f6b54;
   --mint-800: #234d3d;
   --mint-900: #1a3d30;
   --mint-1000: #25A385;
@@ -19,7 +21,7 @@
   --mint-light-100: #B5E3D9;
   --mint-light-200: #82D1BF;
   --mint-light-300: #4FBEA5;
-  --mint-light-400: #25A385;    /* base */
+  --mint-light-400: #25A385;
 
   --mint-dark-500: #1E826A;
   --mint-dark-600: #176250;
@@ -30,18 +32,18 @@
   --sage-50:  #f0f6f0;
   --sage-100: #d9ebd9;
   --sage-200: #b3d9b3;
-  --sage-300: #8cc68c;      /* ★ secondary accent */
+  --sage-300: #8cc68c;
   --sage-400: #66b366;
-  --sage-500: #4d994d;      /* ★ badge text */
+  --sage-500: #4d994d;
   --sage-600: #3d7a3d;
   --sage-700: #2e5c2e;
   --sage-800: #204020;
   --sage-900: #152b15;
 
   /* === Neutrals — Warm Gray (อุ่นนุ่ม) === */
-  --gray-50:  #fafaf9;      /* เนื้อครีมอ่อน */
-  --gray-100: #f5f5f3;      /* พื้นหลังการ์ด */
-  --gray-200: #e8e8e5;      /* border อ่อน */
+  --gray-50:  #fafaf9;
+  --gray-100: #f5f5f3;
+  --gray-200: #e8e8e5;
   --gray-300: #d4d4cf;
   --gray-400: #a8a8a0;
   --gray-500: #787870;
@@ -51,30 +53,30 @@
   --gray-900: #1a1a16;
 
   /* === Semantic Colors === */
-  --bg-main:           #f9fcfb;   /* mint-50 + warm → พื้นหลังหน้าอ่อนมาก */
-  --bg-surface:        #ffffff;   /* card / panel ขาวสะอาด */
-  --bg-sidebar:        #e8f8ef;   /* ★ เปลี่ยน: เขียวอ่อนมากๆ */
-  --bg-sidebar-hover:  rgba(111,201,159,0.15);
-  --bg-sidebar-active: rgba(111,201,159,0.25);
+  --bg-main:           #f9fcfb;
+  --bg-surface:        #ffffff;
+  --bg-sidebar:        #e8f8ef;
+  --bg-sidebar-hover:  rgba(var(--role-rgb), 0.18);
+  --bg-sidebar-active: rgba(var(--role-rgb), 0.28);
 
-  --text-primary:   #2f5045;    /* เขียวเข้มแต่อ่านง่าย */
-  --text-secondary: #4a7060;    /* เขียวกลาง */
-  --text-muted:     #7a9b8b;    /* เขียวอ่อน */
-  --text-on-dark:   #e8f5f0;    /* บน sidebar */
-  --text-dark:      #ffffff;    /* บน sidebar */
+  --text-primary:   #2f5045;
+  --text-secondary: #4a7060;
+  --text-muted:     #7a9b8b;
+  --text-on-dark:   #ffffff;
+  --text-dark:      #ffffff;
 
-  --accent:        var(--mint-300);  /* accent หลัก — อ่อนกว่าเดิมเยอะ */
-  --accent-light:  var(--mint-100);
-  --accent-border: var(--mint-200);
+  --accent:        var(--role-color);
+  --accent-light:  var(--role-soft);
+  --accent-border: var(--role-border);
 
   /* === Border === */
-  --border:        1px solid #e0ede5;   /* mint-200 อ่อน */
-  --border-accent: 1px solid var(--mint-200);
+  --border:        1px solid #e8eae8;
+  --border-accent: 1px solid var(--role-border);
 
-  /* === Shadow — ลดความเข้มลง === */
-  --shadow-xs: 0 1px 3px rgba(92,189,154,0.06);
-  --shadow-sm: 0 2px 6px rgba(92,189,154,0.08);
-  --shadow-md: 0 4px 12px rgba(92,189,154,0.10);
+  /* === Shadow — ผูกกับ role ผ่าน rgb token === */
+  --shadow-xs: 0 1px 3px rgba(var(--role-rgb), 0.06);
+  --shadow-sm: 0 2px 6px rgba(var(--role-rgb), 0.10);
+  --shadow-md: 0 4px 12px rgba(var(--role-rgb), 0.14);
 
   /* === Radius === */
   --radius-sm: 10px;
@@ -119,7 +121,7 @@ body {
     'opsz' 24;
   font-size: 20px;
   line-height: 1;
-  color: var(--accent-dark);
+  color: var(--role-color);
   user-select: none;
   flex-shrink: 0;
   display: inline-flex;
@@ -128,16 +130,16 @@ body {
 }
 
 /* Color variants */
-.icon-primary  { color: var(--primary); }
+.icon-primary  { color: var(--role-color); }
 .icon-blue     { color: #3b82f6; }
 .icon-blue-dark{ color: #0093ad; }
-.icon-green    { color: var(--success); }
-.icon-red      { color: var(--danger); }
+.icon-green    { color: #22c55e; }
+.icon-red      { color: #ef4444; }
 .icon-orange   { color: #f59e0b; }
 .icon-yellow   { color: #eab308; }
 .icon-purple   { color: #a855f7; }
 .icon-brown    { color: #92400e; }
-.icon-cyan     { color: var(--info); }
+.icon-cyan     { color: #06b6d4; }
 .icon-white    { color: #ffffff; }
 .icon-muted    { color: var(--text-muted); }
 
@@ -151,7 +153,6 @@ body {
 .icon-filled {
   font-variation-settings: 'FILL' 1, 'wght' 500;
 }
- 
 
 
 /* =========================
@@ -163,7 +164,7 @@ body {
 }
 
 /* =========================
-   SIDEBAR — Very Light Pastel Green
+   SIDEBAR — สีหลักตาม role
    ========================= */
 .sidebar {
   width: 220px;
@@ -171,7 +172,7 @@ body {
   position: sticky;
   top: 12px;
   align-self: flex-start;
-  background: var(--mint-light-400);
+  background: var(--role-color);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -179,10 +180,10 @@ body {
   margin: 12px 0 12px 12px;
   border-radius: var(--radius-xl);
   flex-shrink: 0;
-  transition: width var(--transition);
+  transition: width var(--transition), background var(--transition);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  border: 1px solid #c8e8d6;
+  border: 1px solid rgba(var(--role-rgb), 0.25);
 }
 
 /* Logo */
@@ -199,7 +200,7 @@ body {
   height: 76px;
   border-radius: 50%;
   background: var(--bg-main);
-  border: 2px solid rgba(111,201,159,0.30);
+  border: 2px solid rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,32 +240,30 @@ body {
 }
 
 .menu-item:hover {
-  background: rgba(111,201,159,0.18);
-  color: var(--mint-800);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .menu-item.active {
-  background: var(--mint-light-300);
-  color: var(--text-dark);
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
   font-weight: 600;
 }
 
 .menu-icon {
   font-size: 19px;
-  opacity: 0.85;
+  opacity: 0.9;
   flex-shrink: 0;
   color: var(--bg-surface);
 }
 
-/* Hamburger - FIXED: แก้ typo จาก --mint --mint-1000 เป็น --mint-1000 */
+/* Hamburger */
 .hamburger {
   display: none;
-  size: 20px;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--mint-1000);
-  /* padding: 3px; */
+  color: var(--role-color);
   align-self: center;
 }
 
@@ -274,8 +273,8 @@ body {
   padding: 15px 15px 24px;
   background: none;
   border: none;
-  border-top: 1px solid rgba(111,201,159,0.20);
-  color: var(--mint-600);
+  border-top: 1px solid rgba(255, 255, 255, 0.20);
+  color: rgba(255, 255, 255, 0.80);
   cursor: pointer;
   font-family: 'Kanit', sans-serif;
   font-size: 13px;
@@ -287,13 +286,13 @@ body {
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
-.toggle-btn:hover { color: var(--mint-800); }
+.toggle-btn:hover { color: #ffffff; }
 
 /* Collapsed */
 .sidebar.collapsed {
-   width: 78px;
-   height: 90vh; 
-  }
+  width: 78px;
+  height: 90vh;
+}
 .sidebar.collapsed .menu-text,
 .sidebar.collapsed .brand { display: none; }
 .sidebar.collapsed .menu-item { justify-content: center; padding: 10px; }
@@ -371,7 +370,7 @@ body {
 }
 
 /* =========================
-   EA BUTTON STYLE (ใช้แทน Uiverse เดิม)
+   EA BUTTON STYLE
    ========================= */
 .btn-ea {
   position: relative;
@@ -392,8 +391,8 @@ body {
   border-radius: var(--radius-md);
   border: 2px solid rgba(255,255,255,0.2);
 
-  background: linear-gradient(135deg, #0076c5, #45c7fa);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, var(--role-color), var(--role-hover));
+  box-shadow: 0 6px 15px rgba(var(--role-rgb), 0.25);
 
   cursor: pointer;
   overflow: hidden;
@@ -409,7 +408,7 @@ body {
 /* HOVER */
 .btn-ea:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 20px rgba(var(--role-rgb), 0.35);
 }
 
 .btn-ea:hover .icon {
@@ -445,7 +444,7 @@ body {
   100% { left: 100%; }
 }
 
-/* ADMIN (สีรอง) */
+/* ADMIN (สีรอง) — คงสีทองเดิม ไม่ผูกกับ role */
 .btn-secondary {
   background: linear-gradient(135deg, #e4ad17, #f1b84c);
 }
@@ -453,8 +452,6 @@ body {
 /* =========================
    BUTTON LOADING STATE
    ========================= */
-
-/* ซ่อน spinner ปกติ */
 .btn-ea .spinner {
   width: 18px;
   height: 18px;
@@ -465,28 +462,22 @@ body {
   animation: spinBtn 0.8s linear infinite;
 }
 
-/* ตอน loading */
 .btn-ea.loading {
   pointer-events: none;
   opacity: 0.8;
 }
 
-/* ซ่อน text + icon */
 .btn-ea.loading .btn-text,
 .btn-ea.loading .icon {
   display: none;
 }
 
-/* แสดง spinner */
 .btn-ea.loading .spinner {
   display: inline-block;
 }
 
-/* หมุน */
 @keyframes spinBtn {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 /* =========================
@@ -503,13 +494,13 @@ body {
   height: 68px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--mint-200);
+  border: 3px solid var(--role-border);
   transition: all 0.3s ease;
 }
 
 .avatar-wrapper:hover img {
   opacity: 0.7;
-  border-color: var(--mint-400);
+  border-color: var(--role-color);
 }
 
 /* Camera Icon */
@@ -519,7 +510,7 @@ body {
   right: 0;
   width: 26px;
   height: 26px;
-  background: var(--mint-500);
+  background: var(--role-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -535,7 +526,7 @@ body {
 }
 
 .avatar-wrapper:hover .avatar-edit-icon {
-  background: var(--mint-600);
+  background: var(--role-hover);
   transform: scale(1.1);
 }
 
@@ -552,8 +543,8 @@ body {
   transform: translate(-50%, -50%);
   width: 24px;
   height: 24px;
-  border: 3px solid var(--mint-200);
-  border-top-color: var(--mint-500);
+  border: 3px solid var(--role-border);
+  border-top-color: var(--role-color);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -585,9 +576,8 @@ body {
 
 /* =================================================
    🔔 Notification Alert Animations
+   (สีแดงคงเดิม — เป็น semantic ของ "alert" ไม่ผูกกับ role)
 ================================================= */
-
-/* การ์ดแจ้งเตือนที่มีของค้าง - สั่น + เรืองแสง */
 .mini-card.claim.has-unread {
   animation: card-pulse 2s ease-in-out infinite;
   position: relative;
@@ -605,7 +595,6 @@ body {
   }
 }
 
-/* ไอคอนกระดิ่งสั่น */
 .mini-card.claim.has-unread .icon-box {
   animation: bell-shake 1.5s ease-in-out infinite;
   transform-origin: top center;
@@ -624,9 +613,8 @@ body {
   40% { transform: rotate(6deg); }
 }
 
-/* Badge แดง — ซ่อนเป็นค่า default, JS เป็นคนสั่งให้แสดง */
 .notify-badge {
-  display: none;                   /* ✅ ซ่อนตั้งต้น (ไม่ใช้ !important) */
+  display: none;
   align-items: center;
   justify-content: center;
   position: absolute;
@@ -642,10 +630,8 @@ body {
   border-radius: 11px;
   border: 2px solid #fff;
   z-index: 2;
-  /* ❌ ตัด animation ออกจากที่นี่ */
 }
 
-/* ✅ Animation จะเล่นเฉพาะตอนการ์ดมีของค้าง (has-unread) เท่านั้น */
 .mini-card.claim.has-unread .notify-badge {
   display: inline-flex;
   animation: badge-bounce 0.5s ease-out,
@@ -669,7 +655,6 @@ body {
   }
 }
 
-/* เลขจำนวนแจ้งเตือนในการ์ด - สีแดงตัวหนาเมื่อมีของค้าง */
 .mini-card.claim.has-unread .card-info h3 {
   color: #dc2626 !important;
   animation: number-flash 2s ease-in-out infinite;
@@ -680,7 +665,6 @@ body {
   50% { opacity: 0.65; }
 }
 
-/* Ripple effect รอบการ์ดเมื่อมีของค้าง */
 .mini-card.claim.has-unread::before {
   content: '';
   position: absolute;
@@ -697,7 +681,6 @@ body {
   100% { transform: scale(1.08); opacity: 0; }
 }
 
-/* Hover ให้แอนิเมชันหยุดชั่วคราว (ให้ผู้ใช้อ่านง่ายตอนจะคลิก) */
 .mini-card.claim.has-unread:hover,
 .mini-card.claim.has-unread:hover .icon-box,
 .mini-card.claim.has-unread:hover .card-info h3,
@@ -705,7 +688,6 @@ body {
   animation-play-state: paused;
 }
 
-/* ปิด animation ถ้าผู้ใช้ตั้งค่า reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .mini-card.claim.has-unread,
   .mini-card.claim.has-unread .icon-box,
@@ -743,7 +725,7 @@ body {
 }
 
 .mini-card:hover {
-  border-color: var(--mint-200);
+  border-color: var(--role-border);
   box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
@@ -779,22 +761,18 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Card Themes — Pastel Soft */
-.shop { border-left: 3px solid var(--mint-300); }
-.shop .icon-box { background: var(--mint-100); }
-.shop .icon-box .material-symbols-outlined { color: var(--mint-600); }
+/* Card Themes — ใช้ role color เป็นหลัก */
+.shop { border-left: 3px solid var(--role-color); }
+.shop .icon-box { background: var(--role-soft); }
+.shop .icon-box .material-symbols-outlined { color: var(--role-color); }
 
-.trip { border-left: 3px solid #d9c896; }
-.trip .icon-box { background: #fdf8ed; }
-.trip .icon-box .material-symbols-outlined { color: #b39a5a; }
+.trip { border-left: 3px solid var(--role-color); }
+.trip .icon-box { background: var(--role-soft); }
+.trip .icon-box .material-symbols-outlined { color: var(--role-color); }
 
-.claim { border-left: 3px solid #e8b8b8; }
-.claim .icon-box { background: #fef5f5; }
-.claim .icon-box .material-symbols-outlined { color: #c77777; }
-
-
-
-
+.claim { border-left: 3px solid var(--role-color); }
+.claim .icon-box { background: var(--role-soft); }
+.claim .icon-box .material-symbols-outlined { color: var(--role-color); }
 
 
 /* =========================
@@ -847,6 +825,7 @@ body {
 .action-card .material-symbols-outlined {
   font-size: 30px;
   margin-bottom: 14px;
+  color: var(--role-color);
 }
 
 .action-card h3 {
@@ -862,27 +841,28 @@ body {
   line-height: 1.5;
 }
 
-/* Action Themes — Pastel */
+/* Action Themes — ผูกกับ role ทุกใบ (ใช้ความเข้มต่างกันแยกใบ)
+   ถ้าต้องการให้ "ใบที่ 2/3 มีสีเสริม" ค่อย override ในไฟล์ของหน้านั้น */
 .theme-green {
-  background: var(--mint-100);
-  color: var(--text-primary);
-  border-color: var(--mint-200);
+  background: var(--role-soft);
+  color: var(--role-text);
+  border-color: var(--role-border);
 }
-.theme-green::before { background: var(--mint-light-400); }
+.theme-green::before { background: var(--role-color); }
 
 .theme-yellow {
-  background: linear-gradient(145deg, #fef9ed 0%, #fcf2d9 100%);
-  color: #5a4a28;
-  border-color: #f0e3bc;
+  background: var(--role-soft);
+  color: var(--role-text);
+  border-color: var(--role-border);
 }
-.theme-yellow::before { background: #d9c896; }
+.theme-yellow::before { background: var(--role-color); }
 
 .theme-pink {
-  background: linear-gradient(145deg, #fef5f5 0%, #fce8e8 100%);
-  color: #6b3535;
-  border-color: #f0d0d0;
+  background: var(--role-soft);
+  color: var(--role-text);
+  border-color: var(--role-border);
 }
-.theme-pink::before { background: #e8b8b8; }
+.theme-pink::before { background: var(--role-color); }
 
 /* =========================
    PROGRESS CARD
@@ -909,7 +889,7 @@ body {
 .progress-bar {
   width: 100%;
   height: 7px;
-  background: var(--mint-100);
+  background: var(--role-soft);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -917,7 +897,7 @@ body {
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--mint-400), var(--mint-500));
+  background: linear-gradient(90deg, var(--role-color), var(--role-hover));
   transition: width 0.6s ease;
   border-radius: 999px;
 }
@@ -962,7 +942,7 @@ body {
   margin-bottom: 3px;
 }
 
-.report-item:hover { background: var(--mint-50); }
+.report-item:hover { background: var(--role-soft); }
 
 .report-left {
   display: flex;
@@ -974,7 +954,7 @@ body {
 
 .report-left a {
   text-decoration: none;
-  color: var(--mint-700);
+  color: var(--role-text);
   font-size: 13.5px;
   white-space: nowrap;
   overflow: hidden;
@@ -997,8 +977,8 @@ body {
 }
 
 .report-actions button:hover {
-  background: var(--mint-100);
-  color: var(--text-primary);
+  background: var(--role-soft);
+  color: var(--role-text);
 }
 
 /* =========================
@@ -1032,12 +1012,12 @@ body {
 
 .user-info span {
   font-size: 12px;
-  background: var(--mint-100);
+  background: var(--role-soft);
   padding: 4px 12px;
   border-radius: 99px;
-  color: var(--mint-700);
+  color: var(--role-text);
   font-weight: 500;
-  border: 1px solid var(--mint-200);
+  border: 1px solid var(--role-border);
 }
 
 /* =========================
@@ -1082,9 +1062,9 @@ body {
 }
 
 .calendar-nav button:hover {
-  border-color: var(--mint-200);
-  color: var(--mint-600);
-  background: var(--mint-50);
+  border-color: var(--role-border);
+  color: var(--role-color);
+  background: var(--role-soft);
 }
 
 .calendar-grid {
@@ -1115,20 +1095,20 @@ body {
   transition: all var(--transition);
 }
 
-.calendar-day:hover { background: var(--mint-100); }
+.calendar-day:hover { background: var(--role-soft); }
 
 .calendar-day.today {
-  background: linear-gradient(135deg, var(--mint-400), var(--mint-500));
+  background: linear-gradient(135deg, var(--role-color), var(--role-hover));
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(92,189,154,0.25);
+  box-shadow: 0 2px 6px rgba(var(--role-rgb), 0.30);
 }
 
 .calendar-day.has-report {
-  background: var(--mint-100);
-  color: var(--mint-700);
+  background: var(--role-soft);
+  color: var(--role-text);
   font-weight: 600;
-  border: 1.5px solid var(--mint-200);
+  border: 1.5px solid var(--role-border);
 }
 
 /* =========================
@@ -1146,12 +1126,12 @@ body {
 }
 
 .open-shop-card:hover {
-  border-color: var(--mint-200);
+  border-color: var(--role-border);
   box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
 
-.open-shop-icon { color: var(--mint-500); margin-bottom: 8px; }
+.open-shop-icon { color: var(--role-color); margin-bottom: 8px; }
 .open-shop-icon .material-symbols-outlined { font-size: 38px; }
 
 .open-shop-card h4 {
@@ -1169,12 +1149,12 @@ body {
 
 .open-shop-badge {
   display: inline-block;
-  background: var(--mint-100);
+  background: var(--role-soft);
   padding: 3px 12px;
   border-radius: 14px;
   font-size: 11.5px;
-  color: var(--mint-600);
-  border: 1px solid var(--mint-200);
+  color: var(--role-text);
+  border: 1px solid var(--role-border);
   font-weight: 500;
 }
 
@@ -1187,7 +1167,7 @@ body.is-admin .admin-only { display: flex !important; }
 body.is-admin .admin-only {
   width: 100%;
   padding: 11px 16px;
-  background: var(--mint-500) !important;
+  background: var(--role-color) !important;
   color: white !important;
   border: none;
   border-radius: var(--radius-sm);
@@ -1204,21 +1184,21 @@ body.is-admin .admin-only {
 }
 
 body.is-admin .admin-only:hover {
-  background: var(--mint-600) !important;
+  background: var(--role-hover) !important;
   box-shadow: var(--shadow-sm);
 }
 
 /* =========================
-   ROLE-BASED
+   ROLE-BASED BADGE
    ========================= */
 .user-badge {
-  background: var(--mint-100);
-  color: var(--mint-700);
+  background: var(--role-soft);
+  color: var(--role-text);
   padding: 7px 14px;
   border-radius: var(--radius-sm);
   font-size: 12.5px;
   font-weight: 500;
-  border: 1px solid var(--mint-200);
+  border: 1px solid var(--role-border);
 }
 
 /* =========================
@@ -1307,7 +1287,7 @@ body.is-admin .admin-only:hover {
 
   .toggle-btn { display: none !important; }
 
-  /* Topbar: เขียวอ่อน นุ่ม */
+  /* Topbar: ใช้สีอ่อนของ role */
   .sidebar {
     width: 100%;
     height: auto;
@@ -1317,17 +1297,17 @@ body.is-admin .admin-only:hover {
     margin: 0;
     padding: 0 16px;
     border-radius: 0;
-    background: #f0faf4;
+    background: var(--role-soft);
     border: none;
-    border-bottom: 2.5px solid var(--mint-1000);
-    box-shadow: 0 2px 8px rgba(92,189,154,0.10);
+    border-bottom: 2.5px solid var(--role-color);
+    box-shadow: 0 2px 8px rgba(var(--role-rgb), 0.15);
     flex-direction: column;
     align-items: stretch;
   }
 
   .hamburger {
     display: flex;
-    color: var(--mint-500);
+    color: var(--role-color);
     order: 2;
     margin-left: auto;
     align-self: center;
@@ -1356,27 +1336,27 @@ body.is-admin .admin-only:hover {
     order: 3;
     flex-basis: 100%;
     margin-top: 10px;
-    border-top: 1px solid var(--mint-100);
+    border-top: 1px solid var(--role-border);
     padding-top: 10px;
   }
   .menu.show { display: flex; }
 
-  .logo-circle { 
-    background: var(--mint-100); 
-    border-color: var(--mint-200); 
-    width: 40px; 
-    height: 40px; 
+  .logo-circle {
+    background: var(--bg-surface);
+    border-color: var(--role-border);
+    width: 40px;
+    height: 40px;
   }
   .logo-circle img { width: 26px; }
 
-  .brand { color: var(--mint-700); opacity: 1; font-size: 14.5px; }
+  .brand { color: var(--role-text); opacity: 1; font-size: 14.5px; }
 
   .menu-item { color: var(--text-secondary); }
-  .menu-item:hover { background: var(--mint-100); color: var(--mint-700); }
-  .menu-item.active { 
-    background: var(--mint-100); 
-    color: var(--mint-700); 
-    font-weight: 600; 
+  .menu-item:hover { background: var(--role-soft); color: var(--role-text); }
+  .menu-item.active {
+    background: var(--role-soft);
+    color: var(--role-text);
+    font-weight: 600;
   }
 
   .content { padding: 14px; }
@@ -1384,11 +1364,11 @@ body.is-admin .admin-only:hover {
   .content-layout { flex-direction: column; gap: 16px; }
   .main-content, .right-column { width: 100%; flex: none; }
 
-  .header { 
-    flex-direction: column; 
-    align-items: flex-start; 
-    gap: 12px; 
-    padding: 14px 16px; 
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
   }
   .header-right { width: 100%; justify-content: flex-end; }
 
@@ -1417,26 +1397,26 @@ body.is-admin .admin-only:hover {
    ========================= */
 @media (max-width: 479px) {
   .shop-cards { grid-template-columns: 1fr; gap: 10px; }
-  .mini-card { 
-    flex-direction: row; 
-    text-align: left; 
-    padding: 14px 16px; 
-    min-height: auto; 
-    gap: 14px; 
+  .mini-card {
+    flex-direction: row;
+    text-align: left;
+    padding: 14px 16px;
+    min-height: auto;
+    gap: 14px;
   }
   .card-info { text-align: left; }
 
   .actions { grid-template-columns: 1fr; gap: 10px; }
-  .action-card { 
-    min-height: auto; 
-    flex-direction: row; 
-    align-items: center; 
-    padding: 16px 18px; 
+  .action-card {
+    min-height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 18px;
   }
-  .action-card .material-symbols-outlined { 
-    margin-bottom: 0; 
-    margin-right: 14px; 
-    font-size: 26px; 
+  .action-card .material-symbols-outlined {
+    margin-bottom: 0;
+    margin-right: 14px;
+    font-size: 26px;
   }
 
   .right-column { display: none; }
@@ -1449,3 +1429,49 @@ body.is-admin .admin-only:hover {
 .mt-auto { margin-top: auto; }
 .mb-0 { margin-bottom: 0; }
 .w-100 { width: 100%; }
+
+
+/* =========================================================
+   BTN VARIANTS — ปุ่มแยกสีตาม role
+   ใช้คู่กับ .btn-ea ใน base-layout.css
+   เพิ่มท้ายไฟล์ base-layout.css หรือไฟล์ index.css ก็ได้
+
+   หมายเหตุ: ปุ่มใช้สีคงที่ตาม "ปลายทางของลิงก์" ไม่ใช่ตาม role ผู้ใช้
+   เช่น ปุ่ม Manager ต้องเป็นฟ้าเสมอ ไม่ว่าผู้ใช้ที่กดเป็น role อะไร
+   ========================================================= */
+
+/* Manager — ฟ้า */
+.btn-ea.btn-manager {
+  background: linear-gradient(135deg, var(--manager), var(--manager-hover));
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25);
+}
+.btn-ea.btn-manager:hover {
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
+}
+
+/* Executive — ม่วง */
+.btn-ea.btn-executive {
+  background: linear-gradient(135deg, var(--executive), var(--executive-hover));
+  box-shadow: 0 6px 15px rgba(124, 58, 237, 0.25);
+}
+.btn-ea.btn-executive:hover {
+  box-shadow: 0 10px 20px rgba(124, 58, 237, 0.35);
+}
+
+/* Admin QC — ส้ม */
+.btn-ea.btn-adminqc {
+  background: linear-gradient(135deg, var(--adminQc), var(--adminQc-hover));
+  box-shadow: 0 6px 15px rgba(249, 115, 22, 0.25);
+}
+.btn-ea.btn-adminqc:hover {
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.35);
+}
+
+/* Admin — เทา */
+.btn-ea.btn-admin {
+  background: linear-gradient(135deg, var(--admin), var(--admin-hover));
+  box-shadow: 0 6px 15px rgba(107, 114, 128, 0.25);
+}
+.btn-ea.btn-admin:hover {
+  box-shadow: 0 10px 20px rgba(107, 114, 128, 0.35);
+}
