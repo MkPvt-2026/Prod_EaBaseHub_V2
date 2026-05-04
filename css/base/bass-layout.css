@@ -312,49 +312,27 @@ a {
   letter-spacing: 0.4px;
 }
 
+
 /* =====================================================
-   NAV
+   PAGE HEADER
    ===================================================== */
-.app-nav {
-  display: flex; 
-  align-items: center; 
-  color: var(--text-primary);
-  font-size: 14px;
-  gap: 2px; 
-  padding: 0 28px;
-  /* border: 1px solid rgba(255,255,255,0.5);  */
-  background: var(--bg-muted); 
-  overflow-x: auto;
-}
 
-.app-nav a {
-  display: inline-flex; 
-  align-items: center; 
-  gap: 6px; 
-  padding: 12px 14px;
-  font-size: 14px; 
-  font-weight: 500; 
+.page-header { 
+  background: var(--bg-card); 
+  border-bottom: 1px solid var(--border); 
+  padding: 20px 28px; 
+}
+.page-header h1 { 
+  font-size: 18px; 
+  font-weight: 600; 
+  color: var(--text-1); 
+  letter-spacing: -.01em; 
+  margin-bottom: 3px; 
+}
+.page-header p  { 
+  font-size: .75rem; 
   color: var(--text-2); 
-  text-decoration: none;
-  border-bottom: 3px solid transparent; 
-  white-space: nowrap;
-}
-.app-nav a:hover { 
-    color: var(--accent-dark); 
-    background: var(--text-3);
-    /* border: 1px solid rgba(255,255,255,0.5);  */
-    /* border-radius: var(--r-xl); */
-    padding: 12px 14px;
-    border-bottom-color: var(--text-muted);
-}
-
-.app-nav a.active { 
-  color: var(--accent-dark); 
-  font-weight: 500;
-  /* border-radius: var(--r-md); */
-  /* padding: 5px 8px ; */
-  border-bottom-color: var(--text-5);
-  background: rgba(198, 253, 244, 0.4);
+  letter-spacing: .04em; 
 }
 /* =====================================================
    MAIN / CONTAINER

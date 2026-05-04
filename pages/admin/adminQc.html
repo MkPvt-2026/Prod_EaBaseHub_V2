@@ -20,12 +20,14 @@
   <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 
   <!-- CSS -->
-  <!-- <link rel="stylesheet" href="/css/base/adminBase.css">   -->
+  <link rel="stylesheet" href="/css/base/role-colors.css">  
   <link rel="stylesheet" href="/css/components/badgeButtom.css">  
   <link rel="stylesheet" href="/css/base/bassHeader.css"/>
   <link rel="stylesheet" href="/css/pages/admin/adminQc.css">
 </head>
 <body>
+
+  <body class="role-adminQc">
 
   <!-- ── HEADER ── -->
   <header class="app-header">
@@ -49,14 +51,8 @@
   </header>
   
 
-  <!-- ── NAV ── -->
-  <nav class="app-nav">
-    <a href="/pages/dashboard/QcDashboard.html">Dashboard</a>
-    <a href="/pages/admin/adminQc.html" class="active">จัดการสินค้าส่งเคลม</a>
-    <a href="/UnderDev.html">เคลม วัตถุดิบ-สินค้า(ภายใน)</a>
-    <a href="/UnderDev.html">เคลมสินค้าสำเร็จรูป(ภายนอก)</a>
-    <a href="/UnderDev.html">ผลการพิจารณา</a>
-  </nav>
+  <!-- NAV Container -->
+  <div id="navContainer"></div>
 
   <!-- ── PAGE HEADER ── -->
   <header class="page-header">
@@ -250,6 +246,7 @@
   <script src="/js/core/splash.js"></script>
   <script src="/js/core/loadingSplash.js"></script>
   <script src="/js/core/themeToggle.js"></script>
+  <script src="/js/services/nav-service.js"></script>
 
 </body>
 </html>
