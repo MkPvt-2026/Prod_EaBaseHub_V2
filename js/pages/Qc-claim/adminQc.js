@@ -1,6 +1,9 @@
 // =====================================================
-// adminQC.js (FIXED VERSION)
+// adminQC.js (FULL VERSION — LINE notify DISABLED)
 // หน้า QC Dashboard — ตรวจสอบ อนุมัติ ปฏิเสธ Export
+//
+// ⚠️ NOTE: LINE notify ถูก comment ไว้ชั่วคราว (ระบบ production)
+//          พอ Edge Function พร้อม → un-comment ตามจุดที่ระบุไว้
 // =====================================================
 
 // =====================================================
@@ -42,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const ready = await waitForSupabase();
     if (!ready) { alert('ไม่สามารถเชื่อมต่อระบบได้'); return; }
-    
+
     setupLogout();
     await protectPage(["admin", "adminQc", "adminqc"]);
     await loadClaims();
@@ -97,7 +100,7 @@ async function loadClaims() {
     const { data, error } = await supabaseClient
       .from('claims')
       .select('*')
-      .in('status', ['submitted', 'approved', 'rejected'])
+      .in('status', ['submitted', 'in_progress', 'approved', 'rejected'])
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -120,30 +123,32 @@ async function loadClaims() {
 // 📊 UPDATE SUMMARY CARDS
 // =====================================================
 function updateSummaryCards() {
-  const sumTotal = document.getElementById('sumTotal');
-  const sumPending = document.getElementById('sumPending');
-  const sumApproved = document.getElementById('sumApproved');
-  const sumRejected = document.getElementById('sumRejected');
-  
-  if (sumTotal) sumTotal.textContent = allClaims.length;
-  if (sumPending) sumPending.textContent = allClaims.filter(c => c.status === 'submitted').length;
-  if (sumApproved) sumApproved.textContent = allClaims.filter(c => c.status === 'approved').length;
-  if (sumRejected) sumRejected.textContent = allClaims.filter(c => c.status === 'rejected').length;
+  const sumTotal      = document.getElementById('sumTotal');
+  const sumPending    = document.getElementById('sumPending');
+  const sumInProgress = document.getElementById('sumInProgress');
+  const sumApproved   = document.getElementById('sumApproved');
+  const sumRejected   = document.getElementById('sumRejected');
+
+  if (sumTotal)      sumTotal.textContent      = allClaims.length;
+  if (sumPending)    sumPending.textContent    = allClaims.filter(c => c.status === 'submitted').length;
+  if (sumInProgress) sumInProgress.textContent = allClaims.filter(c => c.status === 'in_progress').length;
+  if (sumApproved)   sumApproved.textContent   = allClaims.filter(c => c.status === 'approved').length;
+  if (sumRejected)   sumRejected.textContent   = allClaims.filter(c => c.status === 'rejected').length;
 }
 
 // =====================================================
 // 🔍 APPLY FILTERS
 // =====================================================
 function applyFilters() {
-  const searchEl = document.getElementById('searchInput');
-  const statusEl = document.getElementById('filterStatus');
+  const searchEl   = document.getElementById('searchInput');
+  const statusEl   = document.getElementById('filterStatus');
   const dateFromEl = document.getElementById('filterDateFrom');
-  const dateToEl = document.getElementById('filterDateTo');
-  
-  const search   = searchEl ? searchEl.value.toLowerCase().trim() : '';
-  const status   = statusEl ? statusEl.value : '';
+  const dateToEl   = document.getElementById('filterDateTo');
+
+  const search   = searchEl   ? searchEl.value.toLowerCase().trim() : '';
+  const status   = statusEl   ? statusEl.value   : '';
   const dateFrom = dateFromEl ? dateFromEl.value : '';
-  const dateTo   = dateToEl ? dateToEl.value : '';
+  const dateTo   = dateToEl   ? dateToEl.value   : '';
 
   filteredClaims = allClaims.filter(c => {
     if (search) {
@@ -163,15 +168,15 @@ function applyFilters() {
 // ♻️ RESET FILTERS
 // =====================================================
 function resetFilters() {
-  const searchEl = document.getElementById('searchInput');
-  const statusEl = document.getElementById('filterStatus');
+  const searchEl   = document.getElementById('searchInput');
+  const statusEl   = document.getElementById('filterStatus');
   const dateFromEl = document.getElementById('filterDateFrom');
-  const dateToEl = document.getElementById('filterDateTo');
-  
-  if (searchEl) searchEl.value = '';
-  if (statusEl) statusEl.value = '';
+  const dateToEl   = document.getElementById('filterDateTo');
+
+  if (searchEl)   searchEl.value   = '';
+  if (statusEl)   statusEl.value   = '';
   if (dateFromEl) dateFromEl.value = '';
-  if (dateToEl) dateToEl.value = '';
+  if (dateToEl)   dateToEl.value   = '';
 
   filteredClaims = [...allClaims];
   renderTable(filteredClaims);
@@ -201,7 +206,7 @@ function renderTable(claims) {
     tr.onclick = () => openModal(claim);
 
     const thumbHtml = buildThumbsHtml(claim.media_urls, 3, 'cell-thumb', 'cell-thumb-video');
-    const noMedia = (!claim.media_urls || claim.media_urls.length === 0);
+    const noMedia   = (!claim.media_urls || claim.media_urls.length === 0);
 
     const typesHtml = (claim.claim_types && claim.claim_types.length > 0)
       ? claim.claim_types.map(t => `<span class="type-tag">${escapeHtml(t)}</span>`).join('')
@@ -230,10 +235,18 @@ function renderTable(claims) {
       </td>
       <td>${buildStatusBadge(claim.status)}</td>
       <td>
-        <button class="btn-view" onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])">
-          <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
-          ดูรายละเอียด
-        </button>
+        <div class="cell-action-group">
+          <button class="btn-view" onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])">
+            <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
+            ดู
+          </button>
+          ${claim.status === 'submitted' ? `
+            <button class="btn-pick" onclick="event.stopPropagation(); pickClaim('${claim.id}')">
+              <span class="material-symbols-outlined" style="font-size:1rem;">how_to_reg</span>
+              รับเรื่อง
+            </button>
+          ` : ''}
+        </div>
       </td>`;
 
     tbody.appendChild(tr);
@@ -272,17 +285,32 @@ function buildThumbsHtml(urls, maxShow, imgClass, vidClass) {
 // =====================================================
 function buildStatusBadge(status) {
   const map = {
-    submitted: { label: '⏳ รออนุมัติ', cls: 'submitted' },
-    approved:  { label: '✅ อนุมัติแล้ว', cls: 'approved' },
-    rejected:  { label: '❌ ปฏิเสธ',    cls: 'rejected'  },
-    draft:     { label: '📝 Draft',      cls: 'draft'     },
+    submitted:   { label: '⏳ รออนุมัติ',     cls: 'submitted'   },
+    in_progress: { label: '🔍 กำลังตรวจสอบ', cls: 'in-progress' },
+    approved:    { label: '✅ อนุมัติแล้ว',   cls: 'approved'    },
+    rejected:    { label: '❌ ปฏิเสธ',         cls: 'rejected'    },
+    draft:       { label: '📝 Draft',          cls: 'draft'       },
   };
   const s = map[status] || { label: escapeHtml(status), cls: '' };
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
 }
 
 // =====================================================
-// 📂 OPEN MODAL (FIXED - ตรวจสอบ element ก่อนใช้)
+// 🏷️ STATUS LABEL (text-only) — ใช้ใน export
+// =====================================================
+function getStatusLabel(status) {
+  const map = {
+    submitted:   'รออนุมัติ',
+    in_progress: 'กำลังตรวจสอบ',
+    approved:    'อนุมัติ',
+    rejected:    'ปฏิเสธ',
+    draft:       'ฉบับร่าง',
+  };
+  return map[status] || status;
+}
+
+// =====================================================
+// 📂 OPEN MODAL
 // =====================================================
 function openModal(claim) {
   if (!claim) return;
@@ -290,7 +318,7 @@ function openModal(claim) {
 
   const modal = document.getElementById('qcModal');
   if (!modal) return;
-  
+
   modal.classList.add('open');
 
   // Title
@@ -367,14 +395,14 @@ function openModal(claim) {
   // Media
   renderModalMedia(claim.media_urls);
 
-  // QC Status (ถ้ามี element - อาจถูก comment ออก)
+  // QC Status
   const qcStatusEl = document.getElementById('qcStatusCurrent');
   if (qcStatusEl) {
     qcStatusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(claim.status)}
       ${claim.qc_comment ? `<br><span style="color:#475569;font-size:0.82rem;">💬 ${escapeHtml(claim.qc_comment)}</span>` : ''}`;
   }
 
-  // QC Comment input (ถ้ามี element - อาจถูก comment ออก)
+  // QC Comment input
   const qcCommentEl = document.getElementById('qcComment');
   if (qcCommentEl) {
     qcCommentEl.value = claim.qc_comment || '';
@@ -440,15 +468,102 @@ function closeModal() {
 }
 
 // =====================================================
+// ✋ PICK CLAIM — รับเรื่องเคลม
+// (LINE notify ปิดไว้ชั่วคราว — ดูจุดที่ comment ไว้ด้านล่าง)
+// =====================================================
+async function pickClaim(claimId) {
+  const claim = (window._claims || {})[claimId] || allClaims.find(c => c.id === claimId);
+  if (!claim) {
+    showToast('ไม่พบข้อมูลเคลม', 'danger');
+    return;
+  }
+
+  // ป้องกันการรับซ้ำ
+  if (claim.status !== 'submitted') {
+    showToast('เคลมนี้ถูกรับเรื่องไปแล้ว', 'warning');
+    return;
+  }
+
+  // ยืนยัน
+  let ok = true;
+  if (typeof ConfirmDialog !== 'undefined') {
+    ok = await ConfirmDialog.show({
+      title:   'ยืนยันการรับเรื่อง',
+      message: `รับเรื่องเคลม #${claim.id.substring(0, 8).toUpperCase()} ?\n(${claim.product || '—'})`,
+      okText:  'รับเรื่อง',
+      type:    'info',
+    });
+  } else {
+    ok = confirm(`รับเรื่องเคลม #${claim.id.substring(0, 8).toUpperCase()} ?`);
+  }
+  if (!ok) return;
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    // ── 1) อัปเดต DB (มี guard ป้องกัน race condition) ──
+    const updateData = {
+      status:     'in_progress',
+      picked_by:  user?.id || null,
+      picked_at:  new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabaseClient
+  .from('claims')
+  .update(updateData)
+  .eq('id', claim.id);
+
+if (error) throw error;
+
+    // ── 2) อัปเดต state ใน memory ──
+    const idx = allClaims.findIndex(c => c.id === claim.id);
+    if (idx !== -1) {
+      Object.assign(allClaims[idx], updateData);
+    }
+
+    updateSummaryCards();
+    applyFilters();
+
+    // ── 3) แสดง toast ──
+    showToast('รับเรื่องเคลมสำเร็จ', 'success');
+
+    /* ============================================================
+       🔕 LINE NOTIFY — ปิดไว้ชั่วคราว (ระบบ production)
+       ── พอ Edge Function send-line-notify พร้อมใช้งาน
+       ── 1) un-comment block ด้านล่าง
+       ── 2) ลบบรรทัด showToast('รับเรื่องเคลมสำเร็จ', 'success'); ด้านบน
+    ============================================================ */
+    /*
+    try {
+      await notifyLine('claim_picked', {
+        claim:   allClaims[idx] || claim,
+        qc_name: await getCurrentQcName(),
+      });
+      showToast('รับเรื่องสำเร็จ — แจ้งเตือน LINE แล้ว', 'success');
+    } catch (lineErr) {
+      console.warn('LINE notify failed (non-critical):', lineErr);
+      showToast('รับเรื่องสำเร็จ (แต่แจ้ง LINE ไม่สำเร็จ)', 'warning');
+    }
+    */
+
+  } catch (err) {
+    console.error('❌ pickClaim error:', err);
+    showToast('รับเรื่องไม่สำเร็จ: ' + err.message, 'danger');
+  }
+}
+
+// =====================================================
 // ✅ UPDATE CLAIM STATUS (อนุมัติ / ปฏิเสธ)
+// (LINE notify ปิดไว้ชั่วคราว — ดูจุดที่ comment ไว้ด้านล่าง)
 // =====================================================
 async function updateClaimStatus(newStatus) {
   if (!currentClaim) return;
 
   const qcCommentEl = document.getElementById('qcComment');
   const comment = qcCommentEl ? qcCommentEl.value.trim() : '';
-  const label = newStatus === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
-  const type  = newStatus === 'approved' ? 'success' : 'danger';
+  const label   = newStatus === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+  const type    = newStatus === 'approved' ? 'success' : 'danger';
 
   // ตรวจสอบว่ามี ConfirmDialog หรือไม่
   if (typeof ConfirmDialog !== 'undefined') {
@@ -490,8 +605,36 @@ async function updateClaimStatus(newStatus) {
 
     updateSummaryCards();
     applyFilters();
+
+    // เก็บ reference ก่อนปิด modal (สำหรับ LINE ในอนาคต)
+    const claimSnapshot = allClaims[idx] || currentClaim;
     closeModal();
+
+    // ── แสดง toast ──
     showToast(`${label}เคลมสำเร็จ`, type);
+
+    /* ============================================================
+       🔕 LINE NOTIFY — ปิดไว้ชั่วคราว (ระบบ production)
+       ── พอ Edge Function send-line-notify พร้อมใช้งาน
+       ── 1) un-comment block ด้านล่าง
+       ── 2) ลบบรรทัด showToast(`${label}เคลมสำเร็จ`, type); ด้านบน
+    ============================================================ */
+    /*
+    try {
+      await notifyLine(
+        newStatus === 'approved' ? 'claim_approved' : 'claim_rejected',
+        {
+          claim:      claimSnapshot,
+          qc_name:    await getCurrentQcName(),
+          qc_comment: comment,
+        }
+      );
+      showToast(`${label}เคลมสำเร็จ — แจ้งเตือน LINE แล้ว`, type);
+    } catch (lineErr) {
+      console.warn('LINE notify failed (non-critical):', lineErr);
+      showToast(`${label}เคลมสำเร็จ (แต่แจ้ง LINE ไม่สำเร็จ)`, 'warning');
+    }
+    */
 
   } catch (err) {
     console.error('❌ updateClaimStatus error:', err);
@@ -512,9 +655,9 @@ function openLightbox(url) {
 }
 
 function closeLightbox() {
-  const lb = document.getElementById('lightbox');
+  const lb  = document.getElementById('lightbox');
   const img = document.getElementById('lightboxImg');
-  if (lb) lb.classList.remove('open');
+  if (lb)  lb.classList.remove('open');
   if (img) img.src = '';
 }
 
@@ -539,7 +682,14 @@ function exportPDF() {
     ? c.claim_types.map(t => `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:3px 12px;font-size:13px;margin-right:4px;">${escapeHtml(t)}</span>`).join('')
     : '—';
 
-  const statusLabel = c.status === 'submitted' ? '⏳ รออนุมัติ' : c.status === 'approved' ? '✅ อนุมัติ' : '❌ ปฏิเสธ';
+  // ── status label รองรับ in_progress ──
+  const statusEmojiMap = {
+    submitted:   '⏳ รออนุมัติ',
+    in_progress: '🔍 กำลังตรวจสอบ',
+    approved:    '✅ อนุมัติ',
+    rejected:    '❌ ปฏิเสธ',
+  };
+  const statusLabel = statusEmojiMap[c.status] || c.status;
 
   const printWin = window.open('', '_blank', 'width=900,height=700');
   if (!printWin) {
@@ -568,9 +718,10 @@ function exportPDF() {
         .detail-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; line-height: 1.7; min-height: 60px; white-space: pre-wrap; }
         .media-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
         .status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .submitted { background: #fef9c3; color: #854d0e; }
-        .approved { background: #dcfce7; color: #166534; }
-        .rejected { background: #fee2e2; color: #991b1b; }
+        .submitted   { background: #fef9c3; color: #854d0e; }
+        .in_progress { background: #dbeafe; color: #1e40af; }
+        .approved    { background: #dcfce7; color: #166534; }
+        .rejected    { background: #fee2e2; color: #991b1b; }
         .footer-note { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 0.75rem; color: #94a3b8; display: flex; justify-content: space-between; }
         @media print { body { padding: 16px; } }
       </style>
@@ -619,7 +770,7 @@ function exportPDF() {
 }
 
 // =====================================================
-// 📊 EXPORT CSV (เคลมเดี่ยว - สำหรับปุ่มใน Modal)
+// 📊 EXPORT CSV (เคลมเดี่ยว)
 // =====================================================
 function exportCSV() {
   if (!currentClaim) {
@@ -628,7 +779,7 @@ function exportCSV() {
   }
 
   const c = currentClaim;
-  const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+  const statusLabel = getStatusLabel(c.status);
 
   const rows = [
     ['หัวข้อ', 'ค่า'],
@@ -648,7 +799,6 @@ function exportCSV() {
     ['สร้างเมื่อ', formatDateTime(c.created_at)]
   ];
 
-  // UTF-8 BOM สำหรับ Excel ภาษาไทย
   const csv = '\uFEFF' + rows.map(row =>
     row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
   ).join('\n');
@@ -667,17 +817,14 @@ function exportCSV() {
 }
 
 // =====================================================
-// 📊 EXPORT EXCEL (หลายรายการ - สำหรับปุ่ม Filter Bar)
-// หรือเคลมเดี่ยว ถ้าอยู่ใน Modal
+// 📊 EXPORT EXCEL (หลายรายการ / เคลมเดี่ยว)
 // =====================================================
 function exportExcel() {
-  // ถ้าอยู่ใน modal → export เคลมเดี่ยว
   if (currentClaim) {
     exportSingleClaimExcel();
     return;
   }
 
-  // ถ้าไม่มี filter data
   if (!filteredClaims || filteredClaims.length === 0) {
     showToast('ไม่มีข้อมูลสำหรับ Export', 'warning');
     return;
@@ -688,7 +835,6 @@ function exportExcel() {
   ];
 
   filteredClaims.forEach(c => {
-    const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
     rows.push([
       formatDate(c.claim_date),
       c.emp_name || '',
@@ -698,38 +844,26 @@ function exportExcel() {
       c.qty || '',
       (c.claim_types || []).join(', '),
       (c.detail || '').replace(/\n/g, ' '),
-      statusLabel,
+      getStatusLabel(c.status),
       formatDate(c.buy_date),
       formatDate(c.mfg_date),
       c.qc_comment || ''
     ]);
   });
 
-  // ใช้ SheetJS ถ้ามี
   if (typeof XLSX !== 'undefined') {
     try {
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      
-      // ปรับความกว้างคอลัมน์
       ws['!cols'] = [
-        { wch: 14 }, // วันที่แจ้งเคลม
-        { wch: 18 }, // พนักงานขาย
-        { wch: 12 }, // เขต
-        { wch: 20 }, // ร้านค้า
-        { wch: 25 }, // สินค้า
-        { wch: 8 },  // จำนวน
-        { wch: 20 }, // ประเภทปัญหา
-        { wch: 30 }, // รายละเอียด
-        { wch: 12 }, // สถานะ
-        { wch: 14 }, // วันที่บิล
-        { wch: 14 }, // วันที่ผลิต
-        { wch: 20 }, // หมายเหตุ QC
+        { wch: 14 }, { wch: 18 }, { wch: 12 }, { wch: 20 }, { wch: 25 },
+        { wch: 8 },  { wch: 20 }, { wch: 30 }, { wch: 14 }, { wch: 14 },
+        { wch: 14 }, { wch: 20 },
       ];
-      
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Claims");
       XLSX.writeFile(wb, `claims_export_${new Date().toISOString().split('T')[0]}.xlsx`);
-      
+
       showToast(`ดาวน์โหลด ${filteredClaims.length} รายการสำเร็จ`, 'success');
       return;
     } catch (err) {
@@ -737,7 +871,6 @@ function exportExcel() {
     }
   }
 
-  // Fallback เป็น CSV
   const csv = '\uFEFF' + rows.map(row =>
     row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
   ).join('\n');
@@ -756,7 +889,7 @@ function exportExcel() {
 }
 
 // =====================================================
-// 📊 EXPORT SINGLE CLAIM EXCEL (เคลมเดี่ยว)
+// 📊 EXPORT SINGLE CLAIM EXCEL
 // =====================================================
 function exportSingleClaimExcel() {
   if (!currentClaim) {
@@ -765,7 +898,7 @@ function exportSingleClaimExcel() {
   }
 
   const c = currentClaim;
-  const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+  const statusLabel = getStatusLabel(c.status);
 
   const data = [
     ['หัวข้อ', 'ค่า'],
@@ -785,16 +918,15 @@ function exportSingleClaimExcel() {
     ['สร้างเมื่อ', formatDateTime(c.created_at)]
   ];
 
-  // ใช้ SheetJS ถ้ามี
   if (typeof XLSX !== 'undefined') {
     try {
       const ws = XLSX.utils.aoa_to_sheet(data);
       ws['!cols'] = [{ wch: 20 }, { wch: 50 }];
-      
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Claim Detail");
       XLSX.writeFile(wb, `claim_${c.id.substring(0, 8)}.xlsx`);
-      
+
       showToast('ดาวน์โหลด Excel สำเร็จ', 'success');
       return;
     } catch (err) {
@@ -802,7 +934,6 @@ function exportSingleClaimExcel() {
     }
   }
 
-  // Fallback เป็น CSV
   const csv = '\uFEFF' + data.map(row =>
     row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
   ).join('\n');
@@ -821,7 +952,7 @@ function exportSingleClaimExcel() {
 }
 
 // =====================================================
-// 📊 EXPORT EXCEL PRO (พร้อม styling - ใช้ ExcelJS)
+// 📊 EXPORT EXCEL PRO (พร้อม styling - ExcelJS)
 // =====================================================
 async function exportCurrentClaimExcelPro() {
   if (!currentClaim) {
@@ -836,17 +967,15 @@ async function exportCurrentClaimExcelPro() {
   }
 
   const c = currentClaim;
-  const statusLabel = c.status === 'submitted' ? 'รออนุมัติ' : c.status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+  const statusLabel = getStatusLabel(c.status);
 
   try {
     showToast('กำลังสร้างไฟล์...', 'info');
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Claim");
-
     sheet.columns = [{ width: 25 }, { width: 50 }];
 
-    // Header
     sheet.mergeCells('A1:B1');
     const headerCell = sheet.getCell('A1');
     headerCell.value = "ใบแจ้งเคลมสินค้า";
@@ -855,7 +984,6 @@ async function exportCurrentClaimExcelPro() {
 
     sheet.addRow([]);
 
-    // Data rows
     const rows = [
       ["เลขเคลม", c.id],
       ["พนักงานขาย", c.emp_name || '-'],
@@ -881,16 +1009,14 @@ async function exportCurrentClaimExcelPro() {
       };
       row.eachCell(cell => {
         cell.border = {
-          top: { style: 'thin' },
-          bottom: { style: 'thin' },
-          left: { style: 'thin' },
-          right: { style: 'thin' },
+          top: { style: 'thin' }, bottom: { style: 'thin' },
+          left: { style: 'thin' }, right: { style: 'thin' },
         };
       });
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    
+
     if (typeof saveAs !== 'undefined') {
       saveAs(new Blob([buffer]), `claim_${c.id.substring(0, 8)}.xlsx`);
     } else {
@@ -913,6 +1039,143 @@ async function exportCurrentClaimExcelPro() {
     exportSingleClaimExcel();
   }
 }
+
+/* ============================================================
+   📲 LINE NOTIFY HELPERS — ปิดไว้ทั้งหมดชั่วคราว
+   ────────────────────────────────────────────────────────────
+   พอ Edge Function send-line-notify พร้อมใช้งาน:
+   1) un-comment ฟังก์ชันทั้ง 3 ตัวด้านล่างนี้
+      - callLineNotifyEndpoint()
+      - notifyLine()
+      - getCurrentQcName()
+   2) un-comment block try/catch ใน pickClaim() และ updateClaimStatus()
+      (และลบ showToast('...', type) บรรทัดที่อยู่ก่อน comment block ออก)
+============================================================ */
+
+/*
+const LINE_CONFIG = {
+  SUPABASE_URL: "https://kdgmilagtpizwnhwapgl.supabase.co",
+  ENDPOINT:     "/functions/v1/send-line-notify",
+};
+
+async function callLineNotifyEndpoint(payload) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('ไม่ได้ login');
+
+  const res = await fetch(LINE_CONFIG.SUPABASE_URL + LINE_CONFIG.ENDPOINT, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(result)}`);
+  return result;
+}
+
+async function notifyLine(eventType, ctx) {
+  const c = ctx.claim;
+  const claimNo  = (c.id || '').substring(0, 8).toUpperCase();
+  const product  = c.product  || '—';
+  const customer = c.customer || '—';
+  const empName  = c.emp_name || '—';
+  const area     = c.area     || '—';
+  const qcName   = ctx.qc_name    || 'QC';
+  const comment  = ctx.qc_comment || '';
+  const now      = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+
+  let title   = '';
+  let message = '';
+
+  switch (eventType) {
+    case 'claim_picked':
+      title = '🔍 QC รับเรื่องเคลมแล้ว';
+      message =
+        `🔍 QC รับเรื่องเคลมแล้ว\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `🆔 เลขที่: #${claimNo}\n` +
+        `📦 สินค้า: ${product}\n` +
+        `🏪 ลูกค้า: ${customer}\n` +
+        `👤 พนักงาน: ${empName} (${area})\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `✅ รับเรื่องโดย: ${qcName}\n` +
+        `⏰ ${now}\n` +
+        `📍 สถานะ: กำลังตรวจสอบ`;
+      break;
+
+    case 'claim_approved':
+      title = '✅ เคลมได้รับการอนุมัติ';
+      message =
+        `✅ เคลมได้รับการอนุมัติ\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `🆔 เลขที่: #${claimNo}\n` +
+        `📦 สินค้า: ${product}\n` +
+        `🏪 ลูกค้า: ${customer}\n` +
+        `👤 พนักงาน: ${empName} (${area})\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `✅ พิจารณาโดย: ${qcName}\n` +
+        (comment ? `💬 หมายเหตุ: ${comment}\n` : '') +
+        `⏰ ${now}`;
+      break;
+
+    case 'claim_rejected':
+      title = '❌ เคลมถูกปฏิเสธ';
+      message =
+        `❌ เคลมถูกปฏิเสธ\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `🆔 เลขที่: #${claimNo}\n` +
+        `📦 สินค้า: ${product}\n` +
+        `🏪 ลูกค้า: ${customer}\n` +
+        `👤 พนักงาน: ${empName} (${area})\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `❌ พิจารณาโดย: ${qcName}\n` +
+        (comment ? `💬 เหตุผล: ${comment}\n` : '') +
+        `⏰ ${now}`;
+      break;
+
+    default:
+      throw new Error('Unknown event type: ' + eventType);
+  }
+
+  const payload = {
+    type:     eventType,
+    title:    title,
+    message:  message,
+    claim_id: c.id,
+    metadata: {
+      product, customer,
+      emp_name:   empName,
+      area,
+      qc_name:    qcName,
+      qc_comment: comment,
+    },
+  };
+
+  return callLineNotifyEndpoint(payload);
+}
+
+async function getCurrentQcName() {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return 'QC';
+
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('display_name, username')
+      .eq('id', user.id)
+      .single();
+
+    return profile?.display_name || profile?.username || user.email || 'QC';
+  } catch (err) {
+    console.warn('getCurrentQcName failed:', err);
+    return 'QC';
+  }
+}
+*/
 
 // =====================================================
 // 🔧 UTILITIES
@@ -966,7 +1229,6 @@ function formatDateTime(ts) {
 // 🔔 TOAST NOTIFICATION
 // =====================================================
 function showToast(message, type = 'success') {
-  // ลบ toast เก่า
   const existingToast = document.getElementById('ea-toast');
   if (existingToast) existingToast.remove();
 
@@ -1003,13 +1265,11 @@ function showToast(message, type = 'success') {
   toast.innerHTML = `<span>${c.icon}</span><span>${escapeHtml(message)}</span>`;
   document.body.appendChild(toast);
 
-  // แสดง
   requestAnimationFrame(() => {
     toast.style.opacity = '1';
     toast.style.transform = 'translateY(0)';
   });
 
-  // หายเองใน 3 วิ
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(12px)';
@@ -1022,4 +1282,4 @@ function showToast(message, type = 'success') {
 // =====================================================
 // ✅ LOADED
 // =====================================================
-console.log('✅ adminQc.js loaded (fixed version)');
+console.log('✅ adminQc.js loaded (LINE notify disabled)');
