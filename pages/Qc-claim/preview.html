@@ -1,2126 +1,505 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>จัดการเคลมภายใน | EABaseHub</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
-
-  <!-- Base Styles -->
-  <style>/* =========================================================
-   INTERNAL CLAIM PAGE — Soft & Friendly Pastel Theme
-   ========================================================= */
-
-/* ----- CSS Variables (Pastel Palette) ----- */
-:root {
-  /* Pastel Colors */
-  --ic-bg:           #FAF7F2;     /* ครีมอ่อน */
-  --ic-surface:      #FFFFFF;
-  --ic-surface-2:    #FFF9F0;
-  --ic-border:       #EFE6DA;
-  --ic-border-soft:  #F4ECE0;
-
-  /* Primary - Soft Peach/Coral */
-  --ic-primary:      #F5A88B;
-  --ic-primary-2:    #FFC9B5;
-  --ic-primary-soft: #FFEFE6;
-  --ic-primary-dark: #D88463;
-
-  /* Accents */
-  --ic-mint:         #A8DAB5;
-  --ic-mint-soft:    #E5F5E9;
-  --ic-mint-dark:    #5BAA6F;
-
-  --ic-sky:          #A6CFE2;
-  --ic-sky-soft:     #E5F1F8;
-  --ic-sky-dark:     #4A8FAE;
-
-  --ic-rose:         #F0A8B8;
-  --ic-rose-soft:    #FCE4E9;
-  --ic-rose-dark:    #C76A7E;
-
-  --ic-lemon:        #F5D78E;
-  --ic-lemon-soft:   #FCF1D6;
-  --ic-lemon-dark:   #C99A3D;
-
-  --ic-lavender:     #C9B6E4;
-  --ic-lavender-soft:#EFE6FA;
-
-  /* Text */
-  --ic-text:         #4A3F35;
-  --ic-text-2:       #6B5E50;
-  --ic-text-mute:    #9A8E80;
-
-  /* Shadow */
-  --ic-shadow-sm:    0 2px 8px rgba(180, 150, 120, 0.08);
-  --ic-shadow:       0 6px 20px rgba(180, 150, 120, 0.10);
-  --ic-shadow-lg:    0 16px 40px rgba(180, 150, 120, 0.18);
-
-  /* Radius */
-  --ic-radius-sm:    8px;
-  --ic-radius:       14px;
-  --ic-radius-lg:    20px;
-
-  /* Transition */
-  --ic-trans:        0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ----- Base ----- */
-body {
-  font-family: 'Kanit', sans-serif;
-  background:
-    radial-gradient(circle at 10% 0%, #FFEFE6 0%, transparent 40%),
-    radial-gradient(circle at 90% 10%, #E5F1F8 0%, transparent 40%),
-    var(--ic-bg);
-  color: var(--ic-text);
-  min-height: 100vh;
-}
-
-main .container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 20px 60px;
-}
-
-/* =========================================================
-   PAGE HEADER
-   ========================================================= */
-.ic-page-header {
-  background: linear-gradient(135deg, #FFF6EE 0%, #FFEFE6 50%, #FCE4E9 100%);
-  border-bottom: 1px solid var(--ic-border);
-  padding: 28px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.ic-page-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(245, 168, 139, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.ic-header-content {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 24px;
-  flex-wrap: wrap;
-  position: relative;
-  z-index: 1;
-}
-
-.ic-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--ic-text-mute);
-  font-size: 0.85rem;
-  margin-bottom: 8px;
-}
-
-.ic-breadcrumb a {
-  color: var(--ic-text-2);
-  text-decoration: none;
-  transition: color var(--ic-trans);
-}
-
-.ic-breadcrumb a:hover {
-  color: var(--ic-primary-dark);
-}
-
-.ic-breadcrumb .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.ic-page-header h1 {
-  font-size: 1.85rem;
-  font-weight: 600;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--ic-text);
-}
-
-.ic-title-icon {
-  font-size: 36px !important;
-  background: var(--ic-primary);
-  color: #fff;
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: var(--ic-shadow);
-}
-
-.ic-page-header p {
-  margin: 8px 0 0;
-  color: var(--ic-text-2);
-  font-weight: 300;
-}
-
-.ic-header-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 18px;
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 500;
-  border: none;
-  border-radius: var(--ic-radius-sm);
-  cursor: pointer;
-  transition: all var(--ic-trans);
-  white-space: nowrap;
-}
-
-.btn .material-symbols-outlined {
-  font-size: 20px;
-}
-
-.btn--primary {
-  background: var(--ic-primary);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(245, 168, 139, 0.35);
-}
-
-.btn--primary:hover {
-  background: var(--ic-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(245, 168, 139, 0.45);
-}
-
-.btn--ghost {
-  background: var(--ic-surface);
-  color: var(--ic-text-2);
-  border: 1px solid var(--ic-border);
-}
-
-.btn--ghost:hover {
-  background: var(--ic-surface-2);
-  border-color: var(--ic-primary-2);
-  color: var(--ic-primary-dark);
-}
-
-.btn--soft {
-  background: var(--ic-sky-soft);
-  color: var(--ic-sky-dark);
-}
-
-.btn--soft:hover {
-  background: var(--ic-sky);
-  color: #fff;
-}
-
-.btn--success {
-  background: var(--ic-mint);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(168, 218, 181, 0.4);
-}
-
-.btn--success:hover {
-  background: var(--ic-mint-dark);
-  transform: translateY(-2px);
-}
-
-.btn--danger {
-  background: var(--ic-rose-soft);
-  color: var(--ic-rose-dark);
-}
-
-.btn--danger:hover {
-  background: var(--ic-rose);
-  color: #fff;
-}
-
-.btn--sm {
-  padding: 6px 12px;
-  font-size: 0.82rem;
-}
-
-.btn--icon {
-  padding: 8px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-}
-
-/* =========================================================
-   STATS CARDS
-   ========================================================= */
-.ic-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.ic-stat-card {
-  background: var(--ic-surface);
-  border-radius: var(--ic-radius-lg);
-  padding: 22px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: var(--ic-shadow-sm);
-  border: 1px solid var(--ic-border-soft);
-  position: relative;
-  overflow: hidden;
-  transition: all var(--ic-trans);
-}
-
-.ic-stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  border-radius: var(--ic-radius-lg) var(--ic-radius-lg) 0 0;
-}
-
-.ic-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--ic-shadow-lg);
-}
-
-.ic-stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ic-stat-icon .material-symbols-outlined {
-  font-size: 30px;
-  color: #fff;
-}
-
-.ic-stat-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ic-stat-label {
-  font-size: 0.85rem;
-  color: var(--ic-text-mute);
-  font-weight: 400;
-}
-
-.ic-stat-value {
-  font-size: 2rem;
-  font-weight: 600;
-  line-height: 1.1;
-  margin: 4px 0;
-  color: var(--ic-text);
-}
-
-.ic-stat-sub {
-  font-size: 0.78rem;
-  color: var(--ic-text-mute);
-}
-
-/* Stat variants */
-.ic-stat--total::before    { background: linear-gradient(90deg, var(--ic-sky), var(--ic-sky-dark)); }
-.ic-stat--total .ic-stat-icon { background: var(--ic-sky); }
-
-.ic-stat--pending::before  { background: linear-gradient(90deg, var(--ic-lemon), var(--ic-lemon-dark)); }
-.ic-stat--pending .ic-stat-icon { background: var(--ic-lemon-dark); }
-
-.ic-stat--approved::before { background: linear-gradient(90deg, var(--ic-mint), var(--ic-mint-dark)); }
-.ic-stat--approved .ic-stat-icon { background: var(--ic-mint-dark); }
-
-.ic-stat--rejected::before { background: linear-gradient(90deg, var(--ic-rose), var(--ic-rose-dark)); }
-.ic-stat--rejected .ic-stat-icon { background: var(--ic-rose-dark); }
-
-/* =========================================================
-   CARDS
-   ========================================================= */
-.card {
-  background: var(--ic-surface);
-  border-radius: var(--ic-radius-lg);
-  border: 1px solid var(--ic-border-soft);
-  box-shadow: var(--ic-shadow-sm);
-  margin-bottom: 24px;
-  overflow: hidden;
-}
-
-.card-header,
-.ic-card-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--ic-border-soft);
-  background: var(--ic-surface-2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.ic-card-header h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ic-text);
-}
-
-.ic-card-header h3 .material-symbols-outlined {
-  color: var(--ic-primary-dark);
-  font-size: 22px;
-}
-
-.card-body {
-  padding: 22px;
-}
-
-.ic-section-desc {
-  color: var(--ic-text-2);
-  font-size: 0.92rem;
-  margin: 0 0 16px;
-  line-height: 1.6;
-}
-
-/* =========================================================
-   FILTER CARD
-   ========================================================= */
-.ic-filter-card .card-body {
-  padding: 22px;
-}
-
-.ic-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.ic-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ic-field--full {
-  grid-column: 1 / -1;
-}
-
-.ic-field--actions {
-  justify-content: flex-end;
-}
-
-.ic-field label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--ic-text-2);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ic-field label .material-symbols-outlined {
-  font-size: 18px;
-  color: var(--ic-primary-dark);
-}
-
-.ic-required {
-  color: var(--ic-rose-dark);
-}
-
-.ic-input {
-  font-family: inherit;
-  font-size: 0.92rem;
-  padding: 10px 14px;
-  border: 1.5px solid var(--ic-border);
-  border-radius: var(--ic-radius-sm);
-  background: var(--ic-surface);
-  color: var(--ic-text);
-  transition: all var(--ic-trans);
-  outline: none;
-  width: 100%;
-}
-
-.ic-input:focus {
-  border-color: var(--ic-primary);
-  box-shadow: 0 0 0 4px var(--ic-primary-soft);
-}
-
-.ic-input::placeholder {
-  color: var(--ic-text-mute);
-}
-
-.ic-input--sm {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  width: auto;
-}
-
-textarea.ic-input {
-  resize: vertical;
-  min-height: 70px;
-}
-
-.ic-filter-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--ic-border);
-}
-
-.ic-toolbar-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
-  color: var(--ic-text-2);
-}
-
-.ic-toolbar-info .material-symbols-outlined {
-  font-size: 20px;
-  color: var(--ic-sky-dark);
-}
-
-.ic-toolbar-info strong {
-  color: var(--ic-primary-dark);
-  font-weight: 600;
-}
-
-.ic-toolbar-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* =========================================================
-   TABLE
-   ========================================================= */
-.ic-page-size {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.88rem;
-  color: var(--ic-text-2);
-}
-
-.ic-table-wrap {
-  overflow-x: auto;
-  border-radius: var(--ic-radius-sm);
-  border: 1px solid var(--ic-border-soft);
-}
-
-.ic-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.92rem;
-  background: var(--ic-surface);
-}
-
-.ic-table thead {
-  background: linear-gradient(180deg, var(--ic-surface-2) 0%, #FBF4E9 100%);
-}
-
-.ic-table th {
-  padding: 12px 14px;
-  text-align: left;
-  font-weight: 500;
-  color: var(--ic-text-2);
-  border-bottom: 2px solid var(--ic-border);
-  white-space: nowrap;
-  font-size: 0.88rem;
-}
-
-.ic-table td {
-  padding: 14px;
-  border-bottom: 1px solid var(--ic-border-soft);
-  color: var(--ic-text);
-  vertical-align: middle;
-}
-
-.ic-table tbody tr {
-  transition: background var(--ic-trans);
-}
-
-.ic-table tbody tr:hover {
-  background: var(--ic-primary-soft);
-}
-
-.ic-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.ic-th-action {
-  text-align: center;
-  width: 140px;
-}
-
-.ic-cell-id {
-  font-weight: 600;
-  color: var(--ic-primary-dark);
-  font-family: 'Kanit', monospace;
-}
-
-.ic-cell-issue {
-  max-width: 240px;
-  white-space: normal;
-  line-height: 1.5;
-  color: var(--ic-text-2);
-}
-
-/* Sort buttons */
-.ic-sort-btn {
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-weight: 500;
-  font-size: 0.88rem;
-  color: var(--ic-text-2);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  transition: color var(--ic-trans);
-}
-
-.ic-sort-btn:hover {
-  color: var(--ic-primary-dark);
-}
-
-.ic-sort-icon {
-  font-size: 16px !important;
-  opacity: 0.5;
-}
-
-.ic-sort-btn.active .ic-sort-icon {
-  opacity: 1;
-  color: var(--ic-primary-dark);
-}
-
-/* Action buttons in table */
-.ic-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-}
-
-.ic-action-btn {
-  background: var(--ic-surface-2);
-  border: 1px solid var(--ic-border);
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--ic-trans);
-  color: var(--ic-text-2);
-}
-
-.ic-action-btn .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.ic-action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--ic-shadow-sm);
-}
-
-.ic-action-btn--view:hover { background: var(--ic-sky-soft); color: var(--ic-sky-dark); border-color: var(--ic-sky); }
-.ic-action-btn--edit:hover { background: var(--ic-lemon-soft); color: var(--ic-lemon-dark); border-color: var(--ic-lemon); }
-.ic-action-btn--del:hover  { background: var(--ic-rose-soft); color: var(--ic-rose-dark); border-color: var(--ic-rose); }
-
-/* =========================================================
-   BADGES
-   ========================================================= */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.badge .material-symbols-outlined {
-  font-size: 14px;
-}
-
-.badge--pending {
-  background: var(--ic-lemon-soft);
-  color: var(--ic-lemon-dark);
-  border: 1px solid var(--ic-lemon);
-}
-
-.badge--approved {
-  background: var(--ic-mint-soft);
-  color: var(--ic-mint-dark);
-  border: 1px solid var(--ic-mint);
-}
-
-.badge--rejected {
-  background: var(--ic-rose-soft);
-  color: var(--ic-rose-dark);
-  border: 1px solid var(--ic-rose);
-}
-
-/* =========================================================
-   EMPTY STATE
-   ========================================================= */
-.ic-empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--ic-text-mute);
-}
-
-.ic-empty .material-symbols-outlined {
-  font-size: 64px;
-  color: var(--ic-primary-2);
-  margin-bottom: 12px;
-}
-
-.ic-empty h4 {
-  margin: 0 0 6px;
-  color: var(--ic-text-2);
-  font-weight: 500;
-}
-
-.ic-empty p {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* =========================================================
-   PAGINATION
-   ========================================================= */
-.ic-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-
-.ic-page-btn {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid var(--ic-border);
-  background: var(--ic-surface);
-  color: var(--ic-text-2);
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 500;
-  transition: all var(--ic-trans);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ic-page-btn:hover:not(:disabled) {
-  background: var(--ic-primary-soft);
-  border-color: var(--ic-primary-2);
-  color: var(--ic-primary-dark);
-}
-
-.ic-page-btn.active {
-  background: var(--ic-primary);
-  color: #fff;
-  border-color: var(--ic-primary);
-  box-shadow: 0 2px 8px rgba(245, 168, 139, 0.4);
-}
-
-.ic-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.ic-page-btn .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.ic-page-ellipsis {
-  padding: 0 6px;
-  color: var(--ic-text-mute);
-}
-
-/* =========================================================
-   NOTE LIST
-   ========================================================= */
-.ic-note-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.ic-note-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--ic-mint-soft);
-  border-radius: var(--ic-radius-sm);
-  border-left: 3px solid var(--ic-mint-dark);
-  color: var(--ic-text);
-  font-size: 0.92rem;
-  line-height: 1.6;
-}
-
-.ic-note-list li .material-symbols-outlined {
-  color: var(--ic-mint-dark);
-  font-size: 20px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-/* =========================================================
-   MODAL
-   ========================================================= */
-.ic-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.ic-modal[aria-hidden="false"] {
-  display: flex;
-  animation: icModalFade 0.2s ease;
-}
-
-.ic-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(74, 63, 53, 0.4);
-  backdrop-filter: blur(6px);
-}
-
-.ic-modal-dialog {
-  position: relative;
-  background: var(--ic-surface);
-  border-radius: var(--ic-radius-lg);
-  box-shadow: var(--ic-shadow-lg);
-  width: 100%;
-  max-width: 720px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  animation: icModalSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.ic-modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--ic-border-soft);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, var(--ic-primary-soft), var(--ic-rose-soft));
-  border-radius: var(--ic-radius-lg) var(--ic-radius-lg) 0 0;
-}
-
-.ic-modal-header h3 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ic-text);
-}
-
-.ic-modal-header h3 .material-symbols-outlined {
-  color: var(--ic-primary-dark);
-}
-
-.ic-modal-close {
-  background: rgba(255, 255, 255, 0.6);
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--ic-text-2);
-  transition: all var(--ic-trans);
-}
-
-.ic-modal-close:hover {
-  background: var(--ic-rose);
-  color: #fff;
-  transform: rotate(90deg);
-}
-
-.ic-modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.ic-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.ic-modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid var(--ic-border-soft);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  background: var(--ic-surface-2);
-  border-radius: 0 0 var(--ic-radius-lg) var(--ic-radius-lg);
-}
-
-@keyframes icModalFade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes icModalSlide {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* =========================================================
-   TOAST
-   ========================================================= */
-.ic-toast-container {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-
-.ic-toast {
-  background: var(--ic-surface);
-  padding: 14px 18px;
-  border-radius: var(--ic-radius);
-  box-shadow: var(--ic-shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 280px;
-  max-width: 380px;
-  font-size: 0.92rem;
-  border-left: 4px solid var(--ic-primary);
-  pointer-events: auto;
-  animation: icToastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.ic-toast.removing {
-  animation: icToastOut 0.25s ease forwards;
-}
-
-.ic-toast--success { border-left-color: var(--ic-mint-dark); }
-.ic-toast--success .ic-toast-icon { color: var(--ic-mint-dark); }
-
-.ic-toast--error   { border-left-color: var(--ic-rose-dark); }
-.ic-toast--error .ic-toast-icon { color: var(--ic-rose-dark); }
-
-.ic-toast--info    { border-left-color: var(--ic-sky-dark); }
-.ic-toast--info .ic-toast-icon { color: var(--ic-sky-dark); }
-
-.ic-toast-icon { font-size: 22px !important; }
-
-@keyframes icToastIn {
-  from { opacity: 0; transform: translateX(50px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes icToastOut {
-  to { opacity: 0; transform: translateX(50px); }
-}
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-@media (max-width: 768px) {
-  .ic-page-header h1 {
-    font-size: 1.4rem;
-  }
-  .ic-title-icon {
-    font-size: 28px !important;
-  }
-  .ic-form-grid {
-    grid-template-columns: 1fr;
-  }
-  .ic-stat-value {
-    font-size: 1.6rem;
-  }
-  .ic-header-actions {
-    width: 100%;
-  }
-  .ic-header-actions .btn {
-    flex: 1;
-  }
-  .card-body {
-    padding: 16px;
-  }
-}
-
-/* =========================================================
-   PRINT STYLES
-   ========================================================= */
-@media print {
-  body {
-    background: #fff;
-  }
-  .app-header,
-  #navContainer,
-  .ic-header-actions,
-  .ic-filter-card,
-  .ic-page-size,
-  .ic-pagination,
-  .ic-th-action,
-  .ic-actions,
-  .footer,
-  .btn {
-    display: none !important;
-  }
-  .ic-page-header,
-  .card {
-    box-shadow: none !important;
-    border: 1px solid #ccc !important;
-    background: #fff !important;
-    page-break-inside: avoid;
-  }
-  .ic-stat-card {
-    break-inside: avoid;
-  }
-  .ic-table tbody tr:hover {
-    background: transparent !important;
-  }
-}
-</style>
-
-<style>
-.app-header { background: linear-gradient(135deg,#FFF6EE,#FCE4E9); padding:14px 20px; border-bottom:1px solid #EFE6DA; }
-.app-header-inner { max-width:1280px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
-.app-header .logo { display:flex; align-items:center; gap:12px; }
-.logo-circle { width:48px; height:48px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
-.app-header h2 { margin:0; font-size:1.05rem; font-weight:600; color:#4A3F35; }
-.app-header .subtitle { margin:0; font-size:0.78rem; color:#6B5E50; }
-.user-box { display:flex; align-items:center; gap:10px; }
-.user-avatar { width:40px; height:40px; border-radius:50%; background:#F5A88B; color:#fff; display:flex; align-items:center; justify-content:center; }
-.user-info { font-size:0.85rem; }
-.user-name { font-weight:500; color:#4A3F35; }
-.user-role { font-size:0.75rem; color:#9A8E80; }
-.btn-logout { padding:8px 14px; border:1px solid #EFE6DA; background:#fff; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.85rem; color:#6B5E50; transition:all 0.2s; }
-.btn-logout:hover { background:#FCE4E9; color:#C76A7E; }
-.footer { text-align:center; padding:20px; color:#9A8E80; font-size:0.85rem; border-top:1px solid #EFE6DA; background:#fff; }
-.page-header { padding-top:20px; padding-bottom:20px; }
-</style>
-</head>
-
-<body class="role-adminQc">
-
-  <!-- ====================== HEADER ====================== -->
-  <header class="app-header">
-    <div class="app-header-inner">
-      <div class="logo">
-        <div class="logo-circle">
-          <span class="material-symbols-outlined" style="font-size:32px;color:#D88463;">factory</span>
-        </div>
-        <div>
-          <h2>Customer &amp; Product Dashboard</h2>
-          <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
-        </div>
-      </div>
-
-      <div class="user-box">
-        <div class="user-avatar" id="userAvatar">
-          <span class="material-symbols-outlined">person</span>
-        </div>
-        <div class="user-info">
-          <div class="user-name" data-user="display_name">-</div>
-          <div class="user-role" data-user="role">-</div>
-        </div>
-        <button class="btn-logout" type="button" onclick="alert('Logout (preview)')">ออกจากระบบ</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- NAV Container -->
-  <div id="navContainer"></div>
-
-  <!-- ====================== PAGE HEADER ====================== -->
-  <header class="page-header ic-page-header">
-    <div class="ic-header-content">
-      <div class="ic-header-text">
-        <div class="ic-breadcrumb">
-          <span class="material-symbols-outlined">home</span>
-          <a href="/pages/admin/adminQc.html">หน้าจัดการเคลม</a>
-          <span class="material-symbols-outlined">chevron_right</span>
-          <span>เคลมภายใน</span>
-        </div>
-        <h1>
-          <span class="material-symbols-outlined ic-title-icon">inventory_2</span>
-          จัดการเคลมภายใน
-        </h1>
-        <p>จัดการเคลมวัตถุดิบ · สินค้าในกระบวนการผลิต · ตรวจสอบ · อนุมัติ · บันทึกผล</p>
-      </div>
-      <div class="ic-header-actions">
-        <button class="btn btn--ghost" id="btnBack">
-          <span class="material-symbols-outlined">arrow_back</span>
-          กลับ
-        </button>
-        <button class="btn btn--primary" id="btnAddClaim">
-          <span class="material-symbols-outlined">add_circle</span>
-          เพิ่มเคลมใหม่
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- ====================== MAIN ====================== -->
-  <main>
-    <div class="container">
-
-      <!-- ===== STATS CARDS ===== -->
-      <section class="ic-stats">
-        <div class="ic-stat-card ic-stat--total">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">summarize</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลมทั้งหมด</div>
-            <div class="ic-stat-value" id="statTotal">0</div>
-            <div class="ic-stat-sub">รายการในระบบ</div>
-          </div>
-        </div>
-
-        <div class="ic-stat-card ic-stat--pending">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">pending</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">รออนุมัติ</div>
-            <div class="ic-stat-value" id="statPending">0</div>
-            <div class="ic-stat-sub">รอการพิจารณา</div>
-          </div>
-        </div>
-
-        <div class="ic-stat-card ic-stat--approved">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">verified</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">อนุมัติแล้ว</div>
-            <div class="ic-stat-value" id="statApproved">0</div>
-            <div class="ic-stat-sub">ผ่านการพิจารณา</div>
-          </div>
-        </div>
-
-        <div class="ic-stat-card ic-stat--rejected">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">cancel</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">ปฏิเสธ</div>
-            <div class="ic-stat-value" id="statRejected">0</div>
-            <div class="ic-stat-sub">ไม่ผ่านการพิจารณา</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== FILTER + SEARCH ===== -->
-      <section class="card ic-filter-card">
-        <div class="card-body">
-          <div class="ic-filter-grid">
-            <div class="ic-field">
-              <label for="searchInput">
-                <span class="material-symbols-outlined">search</span>
-                ค้นหา
-              </label>
-              <input
-                type="text"
-                id="searchInput"
-                class="ic-input"
-                placeholder="รหัสเคลม / ผู้แจ้ง / สินค้า..."
-              >
-            </div>
-
-            <div class="ic-field">
-              <label for="filterStatus">
-                <span class="material-symbols-outlined">filter_alt</span>
-                สถานะ
-              </label>
-              <select id="filterStatus" class="ic-input">
-                <option value="">ทั้งหมด</option>
-                <option value="pending">รออนุมัติ</option>
-                <option value="approved">อนุมัติแล้ว</option>
-                <option value="rejected">ปฏิเสธ</option>
-              </select>
-            </div>
-
-            <div class="ic-field">
-              <label for="filterDept">
-                <span class="material-symbols-outlined">groups</span>
-                แผนก
-              </label>
-              <select id="filterDept" class="ic-input">
-                <option value="">ทุกแผนก</option>
-                <option value="ผลิต">แผนกผลิต</option>
-                <option value="คลังสินค้า">แผนกคลังสินค้า</option>
-                <option value="QC">แผนก QC</option>
-                <option value="จัดซื้อ">แผนกจัดซื้อ</option>
-              </select>
-            </div>
-
-            <div class="ic-field">
-              <label for="filterDate">
-                <span class="material-symbols-outlined">event</span>
-                วันที่
-              </label>
-              <input type="date" id="filterDate" class="ic-input">
-            </div>
-
-            <div class="ic-field ic-field--actions">
-              <button class="btn btn--ghost" id="btnReset">
-                <span class="material-symbols-outlined">restart_alt</span>
-                ล้างค่า
-              </button>
-            </div>
-          </div>
-
-          <div class="ic-filter-toolbar">
-            <div class="ic-toolbar-info">
-              <span class="material-symbols-outlined">info</span>
-              พบ <strong id="resultCount">0</strong> รายการ
-            </div>
-            <div class="ic-toolbar-actions">
-              <button class="btn btn--soft" id="btnPrint">
-                <span class="material-symbols-outlined">print</span>
-                พิมพ์รายงาน
-              </button>
-              <button class="btn btn--success" id="btnExport">
-                <span class="material-symbols-outlined">download</span>
-                Export Excel
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== MAIN TABLE ===== -->
-      <section class="card ic-table-card">
-        <div class="card-header ic-card-header">
-          <h3>
-            <span class="material-symbols-outlined">list_alt</span>
-            ข้อมูลเคลมภายใน
-          </h3>
-          <div class="ic-page-size">
-            <label for="pageSize">แสดง</label>
-            <select id="pageSize" class="ic-input ic-input--sm">
-              <option value="5">5</option>
-              <option value="10" selected>10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
-            <span>รายการ</span>
-          </div>
-        </div>
-
-        <div class="card-body">
-          <div class="ic-table-wrap">
-            <table class="table ic-table" id="claimTable">
-              <thead>
-                <tr>
-                  <th data-sort="claim_id">
-                    <button class="ic-sort-btn">
-                      รหัสเคลม
-                      <span class="material-symbols-outlined ic-sort-icon">unfold_more</span>
-                    </button>
-                  </th>
-                  <th data-sort="date">
-                    <button class="ic-sort-btn">
-                      วันที่
-                      <span class="material-symbols-outlined ic-sort-icon">unfold_more</span>
-                    </button>
-                  </th>
-                  <th data-sort="reporter">ผู้แจ้งเคลม</th>
-                  <th data-sort="department">แผนก</th>
-                  <th>ประเภทสินค้า</th>
-                  <th>รายละเอียดปัญหา</th>
-                  <th data-sort="status">
-                    <button class="ic-sort-btn">
-                      สถานะ
-                      <span class="material-symbols-outlined ic-sort-icon">unfold_more</span>
-                    </button>
-                  </th>
-                  <th class="ic-th-action">การจัดการ</th>
-                </tr>
-              </thead>
-              <tbody id="claimTbody">
-                <!-- JS render -->
-              </tbody>
-            </table>
-
-            <!-- Empty state -->
-            <div class="ic-empty" id="emptyState" hidden>
-              <span class="material-symbols-outlined">inbox</span>
-              <h4>ไม่พบข้อมูลเคลม</h4>
-              <p>ลองเปลี่ยนตัวกรอง หรือเพิ่มเคลมใหม่</p>
-            </div>
-          </div>
-
-          <!-- Pagination -->
-          <div class="ic-pagination" id="pagination"></div>
-        </div>
-      </section>
-
-      <!-- ===== RESULT TABLE ===== -->
-      <section class="card ic-table-card ic-result-card">
-        <div class="card-header ic-card-header">
-          <h3>
-            <span class="material-symbols-outlined">fact_check</span>
-            ผลการพิจารณาเคลมภายใน
-          </h3>
-        </div>
-        <div class="card-body">
-          <p class="ic-section-desc">
-            หลังจากตรวจสอบเคลมแล้ว ผลการพิจารณาจะถูกบันทึกในตารางนี้
-            เพื่อให้ฝ่ายที่เกี่ยวข้องสามารถติดตามและดำเนินการต่อได้อย่างมีประสิทธิภาพ
-          </p>
-
-          <div class="ic-table-wrap">
-            <table class="table ic-table">
-              <thead>
-                <tr>
-                  <th>รหัสเคลม</th>
-                  <th>วันที่พิจารณา</th>
-                  <th>ผู้พิจารณา</th>
-                  <th>ผลการพิจารณา</th>
-                  <th>หมายเหตุ</th>
-                </tr>
-              </thead>
-              <tbody id="resultTbody">
-                <!-- JS render -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== NOTE CARD ===== -->
-      <section class="card ic-note-card">
-        <div class="card-header ic-card-header">
-          <h3>
-            <span class="material-symbols-outlined">tips_and_updates</span>
-            หมายเหตุ
-          </h3>
-        </div>
-        <div class="card-body">
-          <ul class="ic-note-list">
-            <li>
-              <span class="material-symbols-outlined">check_circle</span>
-              ข้อมูลในตารางเป็นเพียงตัวอย่างเพื่อแสดงรูปแบบการจัดการเคลมภายใน
-            </li>
-            <li>
-              <span class="material-symbols-outlined">check_circle</span>
-              ฟีเจอร์และข้อมูลจริงจะถูกพัฒนาและปรับปรุงเพิ่มเติมในอนาคต
-            </li>
-            <li>
-              <span class="material-symbols-outlined">check_circle</span>
-              สามารถ Export ข้อมูลเป็น Excel หรือพิมพ์รายงานได้จากปุ่มด้านบน
-            </li>
-          </ul>
-        </div>
-      </section>
-
-    </div>
-  </main>
-
-  <!-- ====================== MODAL: ADD/EDIT CLAIM ====================== -->
-  <div class="ic-modal" id="claimModal" aria-hidden="true">
-    <div class="ic-modal-backdrop" data-close></div>
-    <div class="ic-modal-dialog" role="dialog" aria-labelledby="modalTitle">
-      <div class="ic-modal-header">
-        <h3 id="modalTitle">
-          <span class="material-symbols-outlined">edit_note</span>
-          เพิ่มเคลมใหม่
-        </h3>
-        <button class="ic-modal-close" data-close aria-label="ปิด">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-
-      <div class="ic-modal-body">
-        <form id="claimForm" class="ic-form">
-          <input type="hidden" id="formClaimId">
-
-          <div class="ic-form-grid">
-            <div class="ic-field">
-              <label for="formDate">วันที่ <span class="ic-required">*</span></label>
-              <input type="date" id="formDate" class="ic-input" required>
-            </div>
-
-            <div class="ic-field">
-              <label for="formReporter">ผู้แจ้งเคลม <span class="ic-required">*</span></label>
-              <input type="text" id="formReporter" class="ic-input" placeholder="ชื่อผู้แจ้ง" required>
-            </div>
-
-            <div class="ic-field">
-              <label for="formDept">แผนก <span class="ic-required">*</span></label>
-              <select id="formDept" class="ic-input" required>
-                <option value="">-- เลือกแผนก --</option>
-                <option value="ผลิต">แผนกผลิต</option>
-                <option value="คลังสินค้า">แผนกคลังสินค้า</option>
-                <option value="QC">แผนก QC</option>
-                <option value="จัดซื้อ">แผนกจัดซื้อ</option>
-              </select>
-            </div>
-
-            <div class="ic-field">
-              <label for="formProductType">ประเภทสินค้า <span class="ic-required">*</span></label>
-              <input type="text" id="formProductType" class="ic-input" placeholder="เช่น วัตถุดิบ A" required>
-            </div>
-
-            <div class="ic-field ic-field--full">
-              <label for="formIssue">รายละเอียดปัญหา <span class="ic-required">*</span></label>
-              <textarea id="formIssue" class="ic-input" rows="3" placeholder="อธิบายปัญหาที่พบ..." required></textarea>
-            </div>
-
-            <div class="ic-field">
-              <label for="formStatus">สถานะ</label>
-              <select id="formStatus" class="ic-input">
-                <option value="pending">รออนุมัติ</option>
-                <option value="approved">อนุมัติแล้ว</option>
-                <option value="rejected">ปฏิเสธ</option>
-              </select>
-            </div>
-
-            <div class="ic-field ic-field--full">
-              <label for="formNote">หมายเหตุ</label>
-              <textarea id="formNote" class="ic-input" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"></textarea>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <div class="ic-modal-footer">
-        <button class="btn btn--ghost" data-close>ยกเลิก</button>
-        <button class="btn btn--primary" id="btnSaveClaim">
-          <span class="material-symbols-outlined">save</span>
-          บันทึก
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====================== TOAST ====================== -->
-  <div class="ic-toast-container" id="toastContainer"></div>
-
-  <!-- ====================== FOOTER ====================== -->
-  <footer class="footer">
-    © 2026 EABaseHub | ระบบจัดการเคลมสินค้า
-  </footer>
-
-  <!-- Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Page Script -->
-  <script>/* =========================================================
-   INTERNAL CLAIM PAGE — JavaScript
-   ฟีเจอร์: ค้นหา + กรอง + เรียง + Pagination + Modal + Export + พิมพ์
-   ========================================================= */
-
-(() => {
-  'use strict';
-
-  // ===================== CONFIG =====================
-  const STATUS_LABEL = {
-    pending:  { text: 'รออนุมัติ',    icon: 'pending',  cls: 'badge--pending'  },
-    approved: { text: 'อนุมัติแล้ว',  icon: 'verified', cls: 'badge--approved' },
-    rejected: { text: 'ปฏิเสธ',       icon: 'cancel',   cls: 'badge--rejected' },
-  };
-
-  // ===================== MOCK DATA =====================
-  // ในการใช้งานจริง ดึงข้อมูลจาก Supabase แทน mock นี้
-  let claims = [
-    {
-      claim_id: 'CLM001', date: '2026-04-28', reporter: 'สมชาย ใจดี',
-      department: 'ผลิต', product_type: 'วัตถุดิบ A',
-      issue: 'คุณภาพไม่ตรงตามสเปคที่กำหนด พบสิ่งเจือปนในล็อต',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM002', date: '2026-04-27', reporter: 'สมหญิง รักงาน',
-      department: 'ผลิต', product_type: 'สินค้าในกระบวนการผลิต B',
-      issue: 'เสียหายระหว่างการผลิต พบรอยแตกร้าว',
-      status: 'approved', note: 'ส่งคืนและเปลี่ยนใหม่เรียบร้อย'
-    },
-    {
-      claim_id: 'CLM003', date: '2026-04-25', reporter: 'มานพ ขยันงาน',
-      department: 'คลังสินค้า', product_type: 'วัตถุดิบ C',
-      issue: 'พบความชื้นเกินมาตรฐานในการจัดเก็บ',
-      status: 'rejected', note: 'เกิดจากการจัดเก็บไม่เหมาะสม'
-    },
-    {
-      claim_id: 'CLM004', date: '2026-04-22', reporter: 'วิภา สุขใจ',
-      department: 'QC', product_type: 'สินค้ากึ่งสำเร็จรูป D',
-      issue: 'ผลทดสอบไม่ผ่านเกณฑ์มาตรฐาน',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM005', date: '2026-04-20', reporter: 'ประยุทธ์ ทำงาน',
-      department: 'จัดซื้อ', product_type: 'วัตถุดิบ E',
-      issue: 'ส่งมาผิดสเปคจากผู้ขาย',
-      status: 'approved', note: 'แจ้งซัพพลายเออร์เปลี่ยนของแล้ว'
-    },
-    {
-      claim_id: 'CLM006', date: '2026-04-18', reporter: 'จันทรา แสงดาว',
-      department: 'ผลิต', product_type: 'วัตถุดิบ A',
-      issue: 'น้ำหนักไม่ครบตามใบส่งของ',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM007', date: '2026-04-15', reporter: 'กิตติ ตั้งใจ',
-      department: 'คลังสินค้า', product_type: 'บรรจุภัณฑ์ F',
-      issue: 'บรรจุภัณฑ์ฉีกขาดจำนวนมาก',
-      status: 'approved', note: 'เครมจากผู้ขนส่งสำเร็จ'
-    },
-    {
-      claim_id: 'CLM008', date: '2026-04-12', reporter: 'อรุณ รุ่งเรือง',
-      department: 'QC', product_type: 'สินค้าสำเร็จรูป G',
-      issue: 'สีไม่ตรงตามตัวอย่าง',
-      status: 'rejected', note: 'อยู่ในเกณฑ์ที่ยอมรับได้'
-    },
-    {
-      claim_id: 'CLM009', date: '2026-04-10', reporter: 'สมศรี มีสุข',
-      department: 'ผลิต', product_type: 'วัตถุดิบ H',
-      issue: 'อายุการใช้งานเหลือน้อยกว่าที่ระบุ',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM010', date: '2026-04-08', reporter: 'ธนา ทรัพย์มาก',
-      department: 'จัดซื้อ', product_type: 'อะไหล่ I',
-      issue: 'ขนาดไม่ตรงกับที่สั่งซื้อ',
-      status: 'approved', note: 'เปลี่ยนของใหม่แล้ว'
-    },
-    {
-      claim_id: 'CLM011', date: '2026-04-05', reporter: 'พรพรรณ สงสัย',
-      department: 'QC', product_type: 'วัตถุดิบ J',
-      issue: 'พบการปนเปื้อนของสิ่งแปลกปลอม',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM012', date: '2026-04-02', reporter: 'ชัยชนะ ก้าวหน้า',
-      department: 'คลังสินค้า', product_type: 'วัตถุดิบ K',
-      issue: 'จำนวนไม่ตรงตามใบสั่งซื้อ',
-      status: 'approved', note: 'ส่งของเพิ่มมาเติมแล้ว'
-    }
-  ];
-
-  // ===================== STATE =====================
-  const state = {
-    search: '',
-    status: '',
-    department: '',
-    date: '',
-    sortBy: 'date',
-    sortDir: 'desc',
-    page: 1,
-    pageSize: 10,
-  };
-
-  // ===================== ELEMENTS =====================
-  const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
-
-  const els = {
-    statTotal:    $('#statTotal'),
-    statPending:  $('#statPending'),
-    statApproved: $('#statApproved'),
-    statRejected: $('#statRejected'),
-
-    searchInput:   $('#searchInput'),
-    filterStatus:  $('#filterStatus'),
-    filterDept:    $('#filterDept'),
-    filterDate:    $('#filterDate'),
-    btnReset:      $('#btnReset'),
-    resultCount:   $('#resultCount'),
-
-    btnAddClaim:  $('#btnAddClaim'),
-    btnExport:    $('#btnExport'),
-    btnPrint:     $('#btnPrint'),
-    btnBack:      $('#btnBack'),
-
-    pageSize:     $('#pageSize'),
-    table:        $('#claimTable'),
-    tbody:        $('#claimTbody'),
-    resultTbody:  $('#resultTbody'),
-    emptyState:   $('#emptyState'),
-    pagination:   $('#pagination'),
-
-    // Modal
-    modal:        $('#claimModal'),
-    modalTitle:   $('#modalTitle'),
-    form:         $('#claimForm'),
-    formClaimId:  $('#formClaimId'),
-    formDate:     $('#formDate'),
-    formReporter: $('#formReporter'),
-    formDept:     $('#formDept'),
-    formProductType: $('#formProductType'),
-    formIssue:    $('#formIssue'),
-    formStatus:   $('#formStatus'),
-    formNote:     $('#formNote'),
-    btnSaveClaim: $('#btnSaveClaim'),
-
-    toastContainer: $('#toastContainer'),
-  };
-
-  // ===================== UTILITIES =====================
-  const formatDate = (d) => {
-    if (!d) return '-';
-    const date = new Date(d);
-    if (isNaN(date)) return d;
-    return date.toLocaleDateString('th-TH', {
-      year: 'numeric', month: 'short', day: '2-digit'
-    });
-  };
-
-  const escapeHtml = (str) => {
-    if (str == null) return '';
-    return String(str)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
-  };
-
-  const generateNextId = () => {
-    const nums = claims
-      .map(c => parseInt(c.claim_id.replace(/\D/g, ''), 10))
-      .filter(n => !isNaN(n));
-    const max = nums.length ? Math.max(...nums) : 0;
-    return 'CLM' + String(max + 1).padStart(3, '0');
-  };
-
-  // ===================== FILTER & SORT =====================
-  const getFilteredClaims = () => {
-    let list = [...claims];
-
-    // Search
-    if (state.search) {
-      const q = state.search.toLowerCase();
-      list = list.filter(c =>
-        c.claim_id.toLowerCase().includes(q) ||
-        c.reporter.toLowerCase().includes(q) ||
-        c.product_type.toLowerCase().includes(q) ||
-        c.issue.toLowerCase().includes(q)
-      );
-    }
-
-    // Status
-    if (state.status) {
-      list = list.filter(c => c.status === state.status);
-    }
-
-    // Department
-    if (state.department) {
-      list = list.filter(c => c.department === state.department);
-    }
-
-    // Date
-    if (state.date) {
-      list = list.filter(c => c.date === state.date);
-    }
-
-    // Sort
-    list.sort((a, b) => {
-      let av = a[state.sortBy];
-      let bv = b[state.sortBy];
-      if (av == null) av = '';
-      if (bv == null) bv = '';
-      if (av < bv) return state.sortDir === 'asc' ? -1 : 1;
-      if (av > bv) return state.sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return list;
-  };
-
-  // ===================== STATS =====================
-  const renderStats = () => {
-    const total = claims.length;
-    const pending = claims.filter(c => c.status === 'pending').length;
-    const approved = claims.filter(c => c.status === 'approved').length;
-    const rejected = claims.filter(c => c.status === 'rejected').length;
-
-    animateNumber(els.statTotal, total);
-    animateNumber(els.statPending, pending);
-    animateNumber(els.statApproved, approved);
-    animateNumber(els.statRejected, rejected);
-  };
-
-  const animateNumber = (el, target) => {
-    if (!el) return;
-    const current = parseInt(el.textContent, 10) || 0;
-    if (current === target) return;
-    const diff = target - current;
-    const steps = 20;
-    const step = diff / steps;
-    let i = 0;
-    const timer = setInterval(() => {
-      i++;
-      const val = Math.round(current + step * i);
-      el.textContent = i === steps ? target : val;
-      if (i >= steps) clearInterval(timer);
-    }, 25);
-  };
-
-  // ===================== TABLE RENDER =====================
-  const renderTable = () => {
-    const filtered = getFilteredClaims();
-    const total = filtered.length;
-
-    els.resultCount.textContent = total;
-
-    // Pagination math
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-    const start = (state.page - 1) * state.pageSize;
-    const pageItems = filtered.slice(start, start + state.pageSize);
-
-    // Empty
-    if (total === 0) {
-      els.tbody.innerHTML = '';
-      els.emptyState.hidden = false;
-    } else {
-      els.emptyState.hidden = true;
-      els.tbody.innerHTML = pageItems.map(c => {
-        const s = STATUS_LABEL[c.status] || STATUS_LABEL.pending;
-        return `
-          <tr>
-            <td><span class="ic-cell-id">${escapeHtml(c.claim_id)}</span></td>
-            <td>${formatDate(c.date)}</td>
-            <td>${escapeHtml(c.reporter)}</td>
-            <td>${escapeHtml(c.department)}</td>
-            <td>${escapeHtml(c.product_type)}</td>
-            <td class="ic-cell-issue">${escapeHtml(c.issue)}</td>
-            <td>
-              <span class="badge ${s.cls}">
-                <span class="material-symbols-outlined">${s.icon}</span>
-                ${s.text}
-              </span>
-            </td>
-            <td>
-              <div class="ic-actions">
-                <button class="ic-action-btn ic-action-btn--view" data-act="view" data-id="${c.claim_id}" title="ดูรายละเอียด">
-                  <span class="material-symbols-outlined">visibility</span>
-                </button>
-                <button class="ic-action-btn ic-action-btn--edit" data-act="edit" data-id="${c.claim_id}" title="แก้ไข">
-                  <span class="material-symbols-outlined">edit</span>
-                </button>
-                <button class="ic-action-btn ic-action-btn--del" data-act="del" data-id="${c.claim_id}" title="ลบ">
-                  <span class="material-symbols-outlined">delete</span>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    renderPagination(total, totalPages);
-    renderResultTable();
-  };
-
-  const renderResultTable = () => {
-    // แสดงเฉพาะที่อนุมัติ/ปฏิเสธ
-    const decided = claims.filter(c => c.status !== 'pending');
-    if (decided.length === 0) {
-      els.resultTbody.innerHTML = `
-        <tr><td colspan="5" style="text-align:center; color:var(--ic-text-mute); padding:30px;">
-          ยังไม่มีผลการพิจารณา
-        </td></tr>`;
-      return;
-    }
-    els.resultTbody.innerHTML = decided.map(c => {
-      const s = STATUS_LABEL[c.status];
-      return `
-        <tr>
-          <td><span class="ic-cell-id">${escapeHtml(c.claim_id)}</span></td>
-          <td>${formatDate(c.date)}</td>
-          <td>${escapeHtml(c.reporter)}</td>
-          <td>
-            <span class="badge ${s.cls}">
-              <span class="material-symbols-outlined">${s.icon}</span>
-              ${s.text}
-            </span>
-          </td>
-          <td class="ic-cell-issue">${escapeHtml(c.note || '-')}</td>
-        </tr>
-      `;
-    }).join('');
-  };
-
-  // ===================== PAGINATION =====================
-  const renderPagination = (total, totalPages) => {
-    if (total === 0) {
-      els.pagination.innerHTML = '';
-      return;
-    }
-
-    const pages = [];
-    const cur = state.page;
-
-    pages.push(`
-      <button class="ic-page-btn" ${cur === 1 ? 'disabled' : ''} data-page="${cur - 1}">
-        <span class="material-symbols-outlined">chevron_left</span>
-      </button>
-    `);
-
-    // เลขหน้า — แสดงแบบฉลาด (1 ... 4 5 6 ... 10)
-    const visiblePages = new Set([1, totalPages, cur - 1, cur, cur + 1]);
-    let prev = 0;
-    for (let i = 1; i <= totalPages; i++) {
-      if (!visiblePages.has(i)) continue;
-      if (i - prev > 1) pages.push(`<span class="ic-page-ellipsis">…</span>`);
-      pages.push(`
-        <button class="ic-page-btn ${i === cur ? 'active' : ''}" data-page="${i}">${i}</button>
-      `);
-      prev = i;
-    }
-
-    pages.push(`
-      <button class="ic-page-btn" ${cur === totalPages ? 'disabled' : ''} data-page="${cur + 1}">
-        <span class="material-symbols-outlined">chevron_right</span>
-      </button>
-    `);
-
-    els.pagination.innerHTML = pages.join('');
-  };
-
-  // ===================== MODAL =====================
-  const openModal = (mode = 'add', claim = null) => {
-    els.form.reset();
-    els.formClaimId.value = '';
-
-    if (mode === 'edit' && claim) {
-      els.modalTitle.innerHTML = `
-        <span class="material-symbols-outlined">edit</span>
-        แก้ไขเคลม ${escapeHtml(claim.claim_id)}
-      `;
-      els.formClaimId.value = claim.claim_id;
-      els.formDate.value = claim.date;
-      els.formReporter.value = claim.reporter;
-      els.formDept.value = claim.department;
-      els.formProductType.value = claim.product_type;
-      els.formIssue.value = claim.issue;
-      els.formStatus.value = claim.status;
-      els.formNote.value = claim.note || '';
-    } else {
-      els.modalTitle.innerHTML = `
-        <span class="material-symbols-outlined">add_circle</span>
-        เพิ่มเคลมใหม่
-      `;
-      els.formDate.value = new Date().toISOString().split('T')[0];
-    }
-
-    els.modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    els.modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  };
-
-  const saveClaim = () => {
-    if (!els.form.checkValidity()) {
-      els.form.reportValidity();
-      return;
-    }
-
-    const data = {
-      claim_id:     els.formClaimId.value || generateNextId(),
-      date:         els.formDate.value,
-      reporter:     els.formReporter.value.trim(),
-      department:   els.formDept.value,
-      product_type: els.formProductType.value.trim(),
-      issue:        els.formIssue.value.trim(),
-      status:       els.formStatus.value,
-      note:         els.formNote.value.trim(),
-    };
-
-    const existIdx = claims.findIndex(c => c.claim_id === data.claim_id);
-    if (existIdx >= 0) {
-      claims[existIdx] = data;
-      showToast('อัปเดตข้อมูลเรียบร้อย', 'success');
-    } else {
-      claims.unshift(data);
-      showToast('เพิ่มเคลมใหม่เรียบร้อย', 'success');
-    }
-
-    closeModal();
-    renderStats();
-    renderTable();
-  };
-
-  const deleteClaim = (id) => {
-    if (!confirm(`ต้องการลบเคลม ${id} ใช่หรือไม่?`)) return;
-    claims = claims.filter(c => c.claim_id !== id);
-    showToast('ลบเคลมเรียบร้อย', 'success');
-    renderStats();
-    renderTable();
-  };
-
-  const viewClaim = (id) => {
-    const c = claims.find(x => x.claim_id === id);
-    if (!c) return;
-    const s = STATUS_LABEL[c.status];
-    alert(
-      `รหัสเคลม: ${c.claim_id}\n` +
-      `วันที่: ${formatDate(c.date)}\n` +
-      `ผู้แจ้ง: ${c.reporter}\n` +
-      `แผนก: ${c.department}\n` +
-      `ประเภทสินค้า: ${c.product_type}\n` +
-      `ปัญหา: ${c.issue}\n` +
-      `สถานะ: ${s.text}\n` +
-      `หมายเหตุ: ${c.note || '-'}`
-    );
-  };
-
-  // ===================== EXPORT EXCEL =====================
-  const exportExcel = () => {
-    if (typeof XLSX === 'undefined') {
-      showToast('ไม่พบ XLSX library', 'error');
-      return;
-    }
-    const filtered = getFilteredClaims();
-    if (filtered.length === 0) {
-      showToast('ไม่มีข้อมูลให้ Export', 'error');
-      return;
-    }
-
-    const data = filtered.map(c => ({
-      'รหัสเคลม':       c.claim_id,
-      'วันที่':         formatDate(c.date),
-      'ผู้แจ้งเคลม':    c.reporter,
-      'แผนก':           c.department,
-      'ประเภทสินค้า':   c.product_type,
-      'รายละเอียดปัญหา': c.issue,
-      'สถานะ':          STATUS_LABEL[c.status]?.text || c.status,
-      'หมายเหตุ':       c.note || '',
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    ws['!cols'] = [
-      { wch: 12 }, { wch: 14 }, { wch: 18 }, { wch: 14 },
-      { wch: 22 }, { wch: 40 }, { wch: 14 }, { wch: 30 }
-    ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'เคลมภายใน');
-    const today = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(wb, `internal_claims_${today}.xlsx`);
-    showToast('Export Excel สำเร็จ', 'success');
-  };
-
-  // ===================== TOAST =====================
-  const showToast = (message, type = 'info') => {
-    const icons = { success: 'check_circle', error: 'error', info: 'info' };
-    const toast = document.createElement('div');
-    toast.className = `ic-toast ic-toast--${type}`;
-    toast.innerHTML = `
-      <span class="material-symbols-outlined ic-toast-icon">${icons[type] || 'info'}</span>
-      <span>${escapeHtml(message)}</span>
-    `;
-    els.toastContainer.appendChild(toast);
-    setTimeout(() => {
-      toast.classList.add('removing');
-      setTimeout(() => toast.remove(), 250);
-    }, 2800);
-  };
-
-  // ===================== EVENT BINDINGS =====================
-  const bindEvents = () => {
-    // Search (debounced)
-    let searchTimer;
-    els.searchInput.addEventListener('input', (e) => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        state.search = e.target.value.trim();
-        state.page = 1;
-        renderTable();
-      }, 250);
-    });
-
-    // Filters
-    els.filterStatus.addEventListener('change', (e) => {
-      state.status = e.target.value;
-      state.page = 1;
-      renderTable();
-    });
-    els.filterDept.addEventListener('change', (e) => {
-      state.department = e.target.value;
-      state.page = 1;
-      renderTable();
-    });
-    els.filterDate.addEventListener('change', (e) => {
-      state.date = e.target.value;
-      state.page = 1;
-      renderTable();
-    });
-
-    // Reset filter
-    els.btnReset.addEventListener('click', () => {
-      state.search = '';
-      state.status = '';
-      state.department = '';
-      state.date = '';
-      state.page = 1;
-      els.searchInput.value = '';
-      els.filterStatus.value = '';
-      els.filterDept.value = '';
-      els.filterDate.value = '';
-      renderTable();
-      showToast('ล้างตัวกรองเรียบร้อย', 'info');
-    });
-
-    // Page size
-    els.pageSize.addEventListener('change', (e) => {
-      state.pageSize = parseInt(e.target.value, 10);
-      state.page = 1;
-      renderTable();
-    });
-
-    // Sort
-    $$('#claimTable th[data-sort] .ic-sort-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const th = btn.closest('th');
-        const key = th.dataset.sort;
-        if (state.sortBy === key) {
-          state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
-        } else {
-          state.sortBy = key;
-          state.sortDir = 'asc';
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Promotion Download Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        // อัปเดต UI
-        $$('#claimTable .ic-sort-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const icon = btn.querySelector('.ic-sort-icon');
-        if (icon) icon.textContent = state.sortDir === 'asc' ? 'expand_less' : 'expand_more';
-        renderTable();
-      });
-    });
 
-    // Pagination (delegated)
-    els.pagination.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-page]');
-      if (!btn || btn.disabled) return;
-      const page = parseInt(btn.dataset.page, 10);
-      if (!isNaN(page)) {
-        state.page = page;
-        renderTable();
-        document.querySelector('.ic-table-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
 
-    // Table actions (delegated)
-    els.tbody.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-act]');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const act = btn.dataset.act;
-      if (act === 'view') viewClaim(id);
-      else if (act === 'edit') {
-        const c = claims.find(x => x.claim_id === id);
-        if (c) openModal('edit', c);
-      } else if (act === 'del') deleteClaim(id);
-    });
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    // Add / Save
-    els.btnAddClaim.addEventListener('click', () => openModal('add'));
-    els.btnSaveClaim.addEventListener('click', saveClaim);
+        header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+            text-align: center;
+        }
 
-    // Modal close
-    els.modal.querySelectorAll('[data-close]').forEach(el => {
-      el.addEventListener('click', closeModal);
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && els.modal.getAttribute('aria-hidden') === 'false') {
-        closeModal();
-      }
-    });
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
 
-    // Export & Print
-    els.btnExport.addEventListener('click', exportExcel);
-    els.btnPrint.addEventListener('click', () => {
-      showToast('กำลังเตรียมพิมพ์รายงาน...', 'info');
-      setTimeout(() => window.print(), 200);
-    });
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
 
-    // Back
-    els.btnBack.addEventListener('click', () => {
-      window.location.href = '/pages/admin/adminQc.html';
-    });
-  };
+        .user-info {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
 
-  // ===================== INIT =====================
-  const init = () => {
-    bindEvents();
-    renderStats();
-    renderTable();
-  };
+        .user-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
+        .area-display {
+            background: #f3f4f6;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .loading {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .skeleton {
+            background: #f3f4f6;
+            border-radius: 12px;
+            overflow: hidden;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .skeleton-image {
+            height: 180px;
+            background: #e5e7eb;
+        }
+
+        .skeleton-content {
+            padding: 16px;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .skeleton-line:last-child {
+            margin-bottom: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .promotions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .promotion-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .promotion-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+        }
+
+        .promotion-card.featured {
+            border: 2px solid #10b981;
+        }
+
+        .promotion-card.featured::before {
+            content: '⭐ Featured';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .promotion-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #f3f4f6;
+        }
+
+        .promotion-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .promotion-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+
+        .promotion-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #f0fdf4;
+            color: #10b981;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+            border: 1px solid #d1fae5;
+        }
+
+        .promotion-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-preview {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .btn-preview:hover {
+            background: #bae6fd;
+            color: #0c4a6e;
+        }
+
+        .btn-download {
+            background: #10b981;
+            color: white;
+            border: 1px solid #059669;
+        }
+
+        .btn-download:hover {
+            background: #059669;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-message {
+            font-size: 1.5em;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .date-info {
+            font-size: 0.8em;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .promotions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            right: 0;
+            background: white;
+            border: none;
+            font-size: 1.5em;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 600px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📢 โปรโมชั่นสำหรับฝ่ายขาย</h1>
+            <p>Sales Promotion Download Center</p>
+        </header>
+
+        <div class="user-info" id="userInfo">
+            <div><span class="user-badge">👤 Sales</span></div>
+            <div class="area-display" id="areaDisplay">📍 Area: Loading...</div>
+        </div>
+
+        <div id="loadingSkeletons" class="loading">
+            <div class="skeleton">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" style="width: 70%;"></div>
+                    <div class="skeleton-line" style="width: 50%; margin-top: 16px;"></div>
+                </div>
+            </div>
+            <div class="skeleton">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" style="width: 70%;"></div>
+                    <div class="skeleton-line" style="width: 50%; margin-top: 16px;"></div>
+                </div>
+            </div>
+            <div class="skeleton">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" style="width: 70%;"></div>
+                    <div class="skeleton-line" style="width: 50%; margin-top: 16px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="promotionsContainer"></div>
+    </div>
+
+    <div class="modal" id="previewModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <img id="previewImage" class="modal-image" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        const currentUser = { role: 'sale', area: 'bangkok' };
+
+        const promotionsData = [
+            { id: 1, title: 'Summer Sale 2024 - Up to 50% Off', file_url: '#', image_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop', file_type: 'pdf', visible_area: 'all', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), featured: true },
+            { id: 2, title: 'Bangkok Exclusive - New Product Launch', file_url: '#', image_url: 'https://images.unsplash.com/photo-1516321318423-f06f70d504f0?w=400&h=300&fit=crop', file_type: 'image', visible_area: 'bangkok', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), featured: false },
+            { id: 3, title: 'Q3 Sales Report & Strategy', file_url: '#', image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop', file_type: 'excel', visible_area: 'all', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), featured: false },
+            { id: 4, title: 'Upcountry Regional Campaign', file_url: '#', image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop', file_type: 'pdf', visible_area: 'upcountry', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), featured: false },
+            { id: 5, title: 'Flash Sale Announcement', file_url: '#', image_url: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=400&h=300&fit=crop', file_type: 'image', visible_area: 'all', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), featured: true },
+            { id: 6, title: 'Monthly Performance Metrics', file_url: '#', image_url: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop', file_type: 'excel', visible_area: 'bangkok', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), featured: false }
+        ];
+
+        function init() {
+            updateUserDisplay();
+            loadPromotions();
+        }
+
+        function updateUserDisplay() {
+            const areaLabel = { 'bangkok': '📍 Bangkok', 'upcountry': '📍 Upcountry' };
+            document.getElementById('areaDisplay').textContent = `${areaLabel[currentUser.area] || 'Area: Unknown'}`;
+        }
+
+        function filterPromotions(promotions) {
+            return promotions.filter(item => item.visible_area === 'all' || item.visible_area === currentUser.area);
+        }
+
+        function sortByLatest(promotions) {
+            return promotions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        function loadPromotions() {
+            setTimeout(() => {
+                document.getElementById('loadingSkeletons').style.display = 'none';
+                let filtered = filterPromotions(promotionsData);
+                filtered = sortByLatest(filtered);
+                filtered.length === 0 ? renderEmptyState() : renderPromotions(filtered);
+            }, 800);
+        }
+
+        function renderEmptyState() {
+            document.getElementById('promotionsContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-message">ไม่มีโปรโมชั่นสำหรับคุณ</div>
+                    <div style="color: #9ca3af; margin-top: 16px;">ขณะนี้ยังไม่มีโปรโมชั่นที่เหมาะสมกับพื้นที่ของคุณ</div>
+                </div>`;
+        }
+
+        function renderPromotions(promotions) {
+            const html = promotions.map(promo => `
+                <div class="promotion-card${promo.featured ? ' featured' : ''}">
+                    <img src="${promo.image_url}" alt="${promo.title}" class="promotion-image" loading="lazy">
+                    <div class="promotion-content">
+                        <h3 class="promotion-title">${escapeHtml(promo.title)}</h3>
+                        <div class="promotion-tags">
+                            <span class="tag">${getAreaLabel(promo.visible_area)}</span>
+                            <span class="tag">${getFileTypeLabel(promo.file_type)}</span>
+                        </div>
+                        <div class="date-info">${formatDate(promo.created_at)}</div>
+                        <div class="promotion-actions">
+                            <button class="btn btn-preview" onclick="openPreview('${promo.image_url}', '${escapeHtml(promo.title)}')">👁️ ดู</button>
+                            <a href="${promo.file_url}" download class="btn btn-download">📥 ดาวน์โหลด</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('promotionsContainer').innerHTML = `<div class="promotions-grid">${html}</div>`;
+        }
+
+        function openPreview(imageUrl, title) {
+            document.getElementById('previewImage').src = imageUrl;
+            document.getElementById('previewImage').alt = title;
+            document.getElementById('previewModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('previewModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('previewModal').addEventListener('click', (e) => {
+            if (e.target.id === 'previewModal') closeModal();
+        });
+
+        function getAreaLabel(area) {
+            return { 'all': '🌐 All Areas', 'bangkok': '🏙️ Bangkok', 'upcountry': '🏞️ Upcountry' }[area] || area;
+        }
+
+        function getFileTypeLabel(type) {
+            return { 'pdf': '📄 PDF', 'image': '🖼️ Image', 'excel': '📊 Excel' }[type] || type;
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
