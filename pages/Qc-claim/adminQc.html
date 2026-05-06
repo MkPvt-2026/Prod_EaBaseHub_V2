@@ -22,8 +22,8 @@
   <!-- CSS -->
   <link rel="stylesheet" href="/css/base/role-colors.css">  
   <link rel="stylesheet" href="/css/components/badgeButtom.css">  
-  <link rel="stylesheet" href="/css/base/bassHeader.css"/>
-  <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css">
+  <!-- <link rel="stylesheet" href="/css/base/bassHeader.css"/> -->
+  <!-- <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css"> -->
 </head>
 <body>
 
@@ -62,12 +62,21 @@
 
   <!-- ── MAIN ── -->
   <main class="container">
-
+    
     <!-- SUMMARY CARDS -->
     <div class="qc-summary">
       <div class="summary-card total">
         <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
         <div class="summary-info">
+          <div class="summary-head">สินค้าภายใน</div>
+          <div class="summary-num" id="sumTotal">—</div>
+          <div class="summary-label">ทั้งหมด</div>
+        </div>
+      </div>
+      <div class="summary-card total">
+        <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
+        <div class="summary-info">
+          <div class="summary-head">สินค้าภายนอก</div>
           <div class="summary-num" id="sumTotal">—</div>
           <div class="summary-label">ทั้งหมด</div>
         </div>
@@ -75,6 +84,7 @@
       <div class="summary-card pending">
         <div class="summary-icon"><span class="material-symbols-outlined">pending</span></div>
         <div class="summary-info">
+          <div class="summary-head">รอการตรวจสอบ</div>
           <div class="summary-num" id="sumPending">—</div>
           <div class="summary-label">รออนุมัติ</div>
         </div>
@@ -82,17 +92,18 @@
       <div class="summary-card approved">
         <div class="summary-icon"><span class="material-symbols-outlined">check_circle</span></div>
         <div class="summary-info">
+          <div class="summary-head">อนุมัติแล้ว</div>
           <div class="summary-num" id="sumApproved">—</div>
           <div class="summary-label">อนุมัติแล้ว</div>
         </div>
       </div>
-      <div class="summary-card rejected">
+      <!-- <div class="summary-card rejected">
         <div class="summary-icon"><span class="material-symbols-outlined">cancel</span></div>
         <div class="summary-info">
           <div class="summary-num" id="sumRejected">—</div>
           <div class="summary-label">ปฏิเสธ</div>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <!-- FILTER BAR -->

@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="/minipro/bass.css">
 
   <!-- Page Styles -->
-  <link rel="stylesheet" href="/css/pages/Qc-claim/internal-claims.css">
+  <!-- <link rel="stylesheet" href="/css/pages/Qc-claim/internal-claims.css"> -->
 </head>
 
 <body class="role-adminQc">
@@ -74,9 +74,40 @@
     </div>
   </header>
 
+
+  
   <!-- ====================== MAIN ====================== -->
   <main>
     <div class="container">
+      
+      <!-- ===== NOTE CARD ===== -->
+          <section class="card ic-note-card">
+            <div class="card-header ic-card-header">
+              <h3>
+                <span class="material-symbols-outlined">tips_and_updates</span>
+                หมายเหตุ
+              </h3>
+            </div>
+            <div class="card-body">
+              <ul class="ic-note-list">
+                <li>
+                  <span class="material-symbols-outlined">check_circle</span>
+                  <h4>เคลมสินค้าภายใน :</h4>
+                  <p>สินค้าสำเร็จรูป เสียหายก่อนส่งจำหน่าย หรือมีปัญหาคุณภาพที่ตรวจพบหลังจากนำไปใช้ในกระบวนการผลิตแล้ว</p>
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check_circle</span>
+                  <h4>เคลมวัตถุดิบภายใน :</h4>
+                  <p>วัตถุดิบ ที่ใช้ในกระบวนการผลิต ไม่ตรงกับสเปค หรือมีปัญหาคุณภาพที่ตรวจพบหลังจากนำไปใช้ในกระบวนการผลิตแล้ว</p>
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check_circle</span>
+                  <h4>เคลมวัตถุดิบ(ภายนอก) :</h4>                 
+                  <p>วัตถุดิบ ที่ใช้ในกระบวนการแปรรูปเป็นวัตถุดิบภายใน ไม่ตรงกับสเปค หรือมีปัญหาคุณภาพที่ตรวจพบก่อนนำไปใช้ในกระบวนการผลิต</p>
+                </li>
+              </ul>
+            </div>
+          </section>
 
       <!-- ===== STATS CARDS ===== -->
       <section class="ic-stats">
@@ -85,7 +116,18 @@
             <span class="material-symbols-outlined">summarize</span>
           </div>
           <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลมทั้งหมด</div>
+            <div class="ic-stat-label">เคลม วัตถุดิบ</div>
+            <div class="ic-stat-value" id="statTotal">0</div>
+            <div class="ic-stat-sub">รายการในระบบ</div>
+          </div>
+        </div>
+
+        <div class="ic-stat-card ic-stat--total">
+          <div class="ic-stat-icon">
+            <span class="material-symbols-outlined">summarize</span>
+          </div>
+          <div class="ic-stat-info">
+            <div class="ic-stat-label">เคลม สินค้าภายใน</div>
             <div class="ic-stat-value" id="statTotal">0</div>
             <div class="ic-stat-sub">รายการในระบบ</div>
           </div>
@@ -113,7 +155,7 @@
           </div>
         </div>
 
-        <div class="ic-stat-card ic-stat--rejected">
+        <!-- <div class="ic-stat-card ic-stat--rejected">
           <div class="ic-stat-icon">
             <span class="material-symbols-outlined">cancel</span>
           </div>
@@ -122,7 +164,7 @@
             <div class="ic-stat-value" id="statRejected">0</div>
             <div class="ic-stat-sub">ไม่ผ่านการพิจารณา</div>
           </div>
-        </div>
+        </div> -->
       </section>
 
       <!-- ===== FILTER + SEARCH ===== -->
