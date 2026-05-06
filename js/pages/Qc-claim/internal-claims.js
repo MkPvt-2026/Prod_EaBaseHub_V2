@@ -15,81 +15,8 @@
 
   // ===================== MOCK DATA =====================
   // ในการใช้งานจริง ดึงข้อมูลจาก Supabase แทน mock นี้
-  let claims = [
-    {
-      claim_id: 'CLM001', date: '2026-04-28', reporter: 'สมชาย ใจดี',
-      department: 'ผลิต', product_type: 'วัตถุดิบ A',
-      issue: 'คุณภาพไม่ตรงตามสเปคที่กำหนด พบสิ่งเจือปนในล็อต',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM002', date: '2026-04-27', reporter: 'สมหญิง รักงาน',
-      department: 'ผลิต', product_type: 'สินค้าในกระบวนการผลิต B',
-      issue: 'เสียหายระหว่างการผลิต พบรอยแตกร้าว',
-      status: 'approved', note: 'ส่งคืนและเปลี่ยนใหม่เรียบร้อย'
-    },
-    {
-      claim_id: 'CLM003', date: '2026-04-25', reporter: 'มานพ ขยันงาน',
-      department: 'คลังสินค้า', product_type: 'วัตถุดิบ C',
-      issue: 'พบความชื้นเกินมาตรฐานในการจัดเก็บ',
-      status: 'rejected', note: 'เกิดจากการจัดเก็บไม่เหมาะสม'
-    },
-    {
-      claim_id: 'CLM004', date: '2026-04-22', reporter: 'วิภา สุขใจ',
-      department: 'QC', product_type: 'สินค้ากึ่งสำเร็จรูป D',
-      issue: 'ผลทดสอบไม่ผ่านเกณฑ์มาตรฐาน',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM005', date: '2026-04-20', reporter: 'ประยุทธ์ ทำงาน',
-      department: 'จัดซื้อ', product_type: 'วัตถุดิบ E',
-      issue: 'ส่งมาผิดสเปคจากผู้ขาย',
-      status: 'approved', note: 'แจ้งซัพพลายเออร์เปลี่ยนของแล้ว'
-    },
-    {
-      claim_id: 'CLM006', date: '2026-04-18', reporter: 'จันทรา แสงดาว',
-      department: 'ผลิต', product_type: 'วัตถุดิบ A',
-      issue: 'น้ำหนักไม่ครบตามใบส่งของ',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM007', date: '2026-04-15', reporter: 'กิตติ ตั้งใจ',
-      department: 'คลังสินค้า', product_type: 'บรรจุภัณฑ์ F',
-      issue: 'บรรจุภัณฑ์ฉีกขาดจำนวนมาก',
-      status: 'approved', note: 'เครมจากผู้ขนส่งสำเร็จ'
-    },
-    {
-      claim_id: 'CLM008', date: '2026-04-12', reporter: 'อรุณ รุ่งเรือง',
-      department: 'QC', product_type: 'สินค้าสำเร็จรูป G',
-      issue: 'สีไม่ตรงตามตัวอย่าง',
-      status: 'rejected', note: 'อยู่ในเกณฑ์ที่ยอมรับได้'
-    },
-    {
-      claim_id: 'CLM009', date: '2026-04-10', reporter: 'สมศรี มีสุข',
-      department: 'ผลิต', product_type: 'วัตถุดิบ H',
-      issue: 'อายุการใช้งานเหลือน้อยกว่าที่ระบุ',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM010', date: '2026-04-08', reporter: 'ธนา ทรัพย์มาก',
-      department: 'จัดซื้อ', product_type: 'อะไหล่ I',
-      issue: 'ขนาดไม่ตรงกับที่สั่งซื้อ',
-      status: 'approved', note: 'เปลี่ยนของใหม่แล้ว'
-    },
-    {
-      claim_id: 'CLM011', date: '2026-04-05', reporter: 'พรพรรณ สงสัย',
-      department: 'QC', product_type: 'วัตถุดิบ J',
-      issue: 'พบการปนเปื้อนของสิ่งแปลกปลอม',
-      status: 'pending', note: ''
-    },
-    {
-      claim_id: 'CLM012', date: '2026-04-02', reporter: 'ชัยชนะ ก้าวหน้า',
-      department: 'คลังสินค้า', product_type: 'วัตถุดิบ K',
-      issue: 'จำนวนไม่ตรงตามใบสั่งซื้อ',
-      status: 'approved', note: 'ส่งของเพิ่มมาเติมแล้ว'
-    }
-  ];
-
+ let claims = [];
+    
   // ===================== STATE =====================
   const state = {
     search: '',
@@ -108,6 +35,8 @@
 
   const els = {
     statTotal:    $('#statTotal'),
+    statRawMaterial: $('#statRawMaterial'),
+    statInternalProduct: $('#statInternalProduct'),
     statPending:  $('#statPending'),
     statApproved: $('#statApproved'),
     statRejected: $('#statRejected'),
@@ -176,6 +105,46 @@
     return 'CLM' + String(max + 1).padStart(3, '0');
   };
 
+  async function loadClaimsFromSupabase() {
+  try {
+
+    if (typeof supabaseClient === 'undefined') {
+      console.warn('supabaseClient not found');
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('claims')
+      .select('*')
+      .eq('claim_scope', 'internal')
+      .in('status', ['in_progress', 'approved', 'rejected'])
+      .order('picked_at', { ascending: false });
+
+    if (error) throw error;
+
+    claims = (data || []).map(c => ({
+      claim_id: c.id?.substring(0, 8).toUpperCase() || '-',
+      date: c.claim_date || c.created_at,
+      reporter: c.emp_name || '-',
+      department: c.area || '-',
+      product_type: c.product || '-',
+      issue: c.detail || '-',
+      status:
+        c.status === 'in_progress'
+          ? 'pending'
+          : c.status,
+      note: c.qc_comment || '',
+      reviewer: c.qc_by || 'QC'
+    }));
+
+    renderStats();
+    renderTable();
+
+  } catch (err) {
+    console.error('โหลด claims ไม่สำเร็จ', err);
+    showToast('โหลดข้อมูลไม่สำเร็จ', 'error');
+  }
+}
   // ===================== FILTER & SORT =====================
   const getFilteredClaims = () => {
     let list = [...claims];
@@ -223,11 +192,17 @@
   // ===================== STATS =====================
   const renderStats = () => {
     const total = claims.length;
+    const rawMaterial = claims.filter(c =>
+      /วัตถุดิบ|บรรจุภัณฑ์|อะไหล่/i.test(c.product_type || '')
+    ).length;
+    const internalProduct = Math.max(total - rawMaterial, 0);
     const pending = claims.filter(c => c.status === 'pending').length;
     const approved = claims.filter(c => c.status === 'approved').length;
     const rejected = claims.filter(c => c.status === 'rejected').length;
 
     animateNumber(els.statTotal, total);
+    animateNumber(els.statRawMaterial, rawMaterial);
+    animateNumber(els.statInternalProduct, internalProduct);
     animateNumber(els.statPending, pending);
     animateNumber(els.statApproved, approved);
     animateNumber(els.statRejected, rejected);
@@ -322,7 +297,7 @@
         <tr>
           <td><span class="ic-cell-id">${escapeHtml(c.claim_id)}</span></td>
           <td>${formatDate(c.date)}</td>
-          <td>${escapeHtml(c.reporter)}</td>
+          <td>${escapeHtml(c.reviewer || 'QC')}</td>
           <td>
             <span class="badge ${s.cls}">
               <span class="material-symbols-outlined">${s.icon}</span>
@@ -506,6 +481,10 @@
       <span class="material-symbols-outlined ic-toast-icon">${icons[type] || 'info'}</span>
       <span>${escapeHtml(message)}</span>
     `;
+    if (!els.toastContainer) {
+      alert(message);
+      return;
+    }
     els.toastContainer.appendChild(toast);
     setTimeout(() => {
       toast.classList.add('removing');
@@ -638,11 +617,10 @@
   };
 
   // ===================== INIT =====================
-  const init = () => {
-    bindEvents();
-    renderStats();
-    renderTable();
-  };
+  const init = async () => {
+  bindEvents();
+  await loadClaimsFromSupabase();
+};
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

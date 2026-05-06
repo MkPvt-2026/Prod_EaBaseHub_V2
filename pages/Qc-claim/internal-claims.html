@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="/minipro/bass.css">
 
   <!-- Page Styles -->
-  <!-- <link rel="stylesheet" href="/css/pages/Qc-claim/internal-claims.css"> -->
+  <link rel="stylesheet" href="/css/pages/Qc-claim/internal-claims.css">
 </head>
 
 <body class="role-adminQc">
@@ -116,20 +116,31 @@
             <span class="material-symbols-outlined">summarize</span>
           </div>
           <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลม วัตถุดิบ</div>
+            <div class="ic-stat-label">เคลมทั้งหมด</div>
             <div class="ic-stat-value" id="statTotal">0</div>
             <div class="ic-stat-sub">รายการในระบบ</div>
           </div>
         </div>
 
-        <div class="ic-stat-card ic-stat--total">
+        <div class="ic-stat-card ic-stat--raw">
           <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">summarize</span>
+            <span class="material-symbols-outlined">inventory</span>
           </div>
           <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลม สินค้าภายใน</div>
-            <div class="ic-stat-value" id="statTotal">0</div>
-            <div class="ic-stat-sub">รายการในระบบ</div>
+            <div class="ic-stat-label">เคลมวัตถุดิบ</div>
+            <div class="ic-stat-value" id="statRawMaterial">0</div>
+            <div class="ic-stat-sub">วัตถุดิบ / บรรจุภัณฑ์ / อะไหล่</div>
+          </div>
+        </div>
+
+        <div class="ic-stat-card ic-stat--product">
+          <div class="ic-stat-icon">
+            <span class="material-symbols-outlined">precision_manufacturing</span>
+          </div>
+          <div class="ic-stat-info">
+            <div class="ic-stat-label">เคลมสินค้าภายใน</div>
+            <div class="ic-stat-value" id="statInternalProduct">0</div>
+            <div class="ic-stat-sub">สินค้าในกระบวนการ / สำเร็จรูป</div>
           </div>
         </div>
 
@@ -138,7 +149,7 @@
             <span class="material-symbols-outlined">pending</span>
           </div>
           <div class="ic-stat-info">
-            <div class="ic-stat-label">รออนุมัติ</div>
+            <div class="ic-stat-label">กำลังตรวจสอบ</div>
             <div class="ic-stat-value" id="statPending">0</div>
             <div class="ic-stat-sub">รอการพิจารณา</div>
           </div>
@@ -155,7 +166,7 @@
           </div>
         </div>
 
-        <!-- <div class="ic-stat-card ic-stat--rejected">
+        <div class="ic-stat-card ic-stat--rejected">
           <div class="ic-stat-icon">
             <span class="material-symbols-outlined">cancel</span>
           </div>
@@ -164,7 +175,7 @@
             <div class="ic-stat-value" id="statRejected">0</div>
             <div class="ic-stat-sub">ไม่ผ่านการพิจารณา</div>
           </div>
-        </div> -->
+        </div>
       </section>
 
       <!-- ===== FILTER + SEARCH ===== -->
@@ -462,7 +473,7 @@
 
   <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/roleConfig.js"></script>

@@ -179,7 +179,7 @@ body {
 /* ── SUMMARY CARDS ── */
 .qc-summary { 
   display: grid; 
-  grid-template-columns: repeat(4,1fr); 
+  grid-template-columns: repeat(5,1fr); 
   gap: 12px; 
 }
 
@@ -588,3 +588,18 @@ responsive ── */
   .logo h2 { display: none; }
   .user-info { display: none; }
 }
+/* ── เพิ่มสีสำหรับการ์ดกำลังตรวจสอบ ── */
+.summary-card.in-progress .summary-icon { background: var(--info-bg); color: var(--info); }
+
+/* ============================================================
+   FIX PATCH — adminQc complete
+============================================================ */
+.badge.badge--message-sent { border: 1px solid var(--border); }
+button.badge { appearance: none; -webkit-appearance: none; }
+.summary-head { font-size: .78rem; font-weight: 600; color: var(--text-1); margin-bottom: 5px; }
+.summary-card.in-progress .summary-icon { background: var(--info-bg); color: var(--info); }
+.qc-action-section.is-readonly .qc-action-btns { display: none; }
+.qc-action-section.is-readonly #qcComment { background: var(--bg-elevated); }
+@media (max-width: 1100px) { .qc-summary { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) { .qc-summary { grid-template-columns: repeat(2, 1fr); } .qc-modal-header { align-items:flex-start; gap:10px; } .qc-modal-header-actions { flex-wrap:wrap; justify-content:flex-end; } }
+@media (max-width: 520px) { .qc-summary { grid-template-columns: 1fr; } .modal-info-grid { grid-template-columns: 1fr; } .filter-group { min-width: 100%; } }

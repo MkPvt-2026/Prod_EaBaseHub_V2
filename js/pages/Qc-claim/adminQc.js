@@ -26,6 +26,46 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function normalizeStatus(status) {
+  if (status === 'pending') return 'submitted';
+  return status || 'submitted';
+}
+
+function normalizeMediaUrls(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    } catch (_) {}
+    return value.split(',').map(x => x.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function normalizeClaimTypes(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    } catch (_) {}
+    return value.split(',').map(x => x.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function getClaimNo(claim) {
+  const raw = claim?.claim_no || claim?.claim_code || claim?.claim_id || claim?.id || '';
+  return String(raw || '').substring(0, 8).toUpperCase() || '—';
+}
+
+function getClaimSearchText(claim) {
+  return `${claim.product || ''} ${claim.customer || ''} ${claim.emp_name || ''} ${claim.area || ''} ${claim.detail || ''} ${getClaimNo(claim)}`.toLowerCase();
+}
+
 // =====================================================
 // 🔄 รอให้ Supabase พร้อม
 // =====================================================
@@ -48,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupLogout();
     await protectPage(["admin", "adminQc", "adminqc"]);
+    await loadCurrentUserInfo();
     await loadClaims();
     setupEventListeners();
 
@@ -82,12 +123,42 @@ function setupEventListeners() {
     });
   }
 
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      closeLightbox();
+    }
+  });
+
   console.log('✅ Event listeners ready');
 }
 
 function setupLogout() {
   const btn = document.getElementById('logoutBtn');
   if (btn) btn.addEventListener('click', logout);
+}
+
+async function loadCurrentUserInfo() {
+  try {
+    const nameEl = document.getElementById('userName');
+    const avatarEl = document.getElementById('userAvatar');
+    if (!nameEl || typeof supabaseClient === 'undefined') return;
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('display_name, username, role')
+      .eq('id', user.id)
+      .single();
+
+    const displayName = profile?.display_name || profile?.username || user.email || 'ผู้ใช้งาน';
+    nameEl.textContent = displayName;
+    if (avatarEl) avatarEl.textContent = displayName.trim().charAt(0).toUpperCase() || '👤';
+  } catch (err) {
+    console.warn('loadCurrentUserInfo failed:', err);
+  }
 }
 
 // =====================================================
@@ -100,7 +171,7 @@ async function loadClaims() {
     const { data, error } = await supabaseClient
       .from('claims')
       .select('*')
-      .in('status', ['submitted', 'in_progress', 'approved', 'rejected'])
+      .in('status', ['draft', 'pending', 'submitted', 'in_progress', 'approved', 'rejected'])
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -130,10 +201,10 @@ function updateSummaryCards() {
   const sumRejected   = document.getElementById('sumRejected');
 
   if (sumTotal)      sumTotal.textContent      = allClaims.length;
-  if (sumPending)    sumPending.textContent    = allClaims.filter(c => c.status === 'submitted').length;
-  if (sumInProgress) sumInProgress.textContent = allClaims.filter(c => c.status === 'in_progress').length;
-  if (sumApproved)   sumApproved.textContent   = allClaims.filter(c => c.status === 'approved').length;
-  if (sumRejected)   sumRejected.textContent   = allClaims.filter(c => c.status === 'rejected').length;
+  if (sumPending)    sumPending.textContent    = allClaims.filter(c => normalizeStatus(c.status) === 'submitted').length;
+  if (sumInProgress) sumInProgress.textContent = allClaims.filter(c => normalizeStatus(c.status) === 'in_progress').length;
+  if (sumApproved)   sumApproved.textContent   = allClaims.filter(c => normalizeStatus(c.status) === 'approved').length;
+  if (sumRejected)   sumRejected.textContent   = allClaims.filter(c => normalizeStatus(c.status) === 'rejected').length;
 }
 
 // =====================================================
@@ -152,10 +223,10 @@ function applyFilters() {
 
   filteredClaims = allClaims.filter(c => {
     if (search) {
-      const text = `${c.product || ''} ${c.customer || ''} ${c.emp_name || ''} ${c.area || ''}`.toLowerCase();
+      const text = getClaimSearchText(c);
       if (!text.includes(search)) return false;
     }
-    if (status && c.status !== status) return false;
+    if (status && normalizeStatus(c.status) !== status) return false;
     if (dateFrom && c.claim_date < dateFrom) return false;
     if (dateTo && c.claim_date > dateTo) return false;
     return true;
@@ -205,11 +276,13 @@ function renderTable(claims) {
     const tr = document.createElement('tr');
     tr.onclick = () => openModal(claim);
 
-    const thumbHtml = buildThumbsHtml(claim.media_urls, 3, 'cell-thumb', 'cell-thumb-video');
-    const noMedia   = (!claim.media_urls || claim.media_urls.length === 0);
+    const mediaUrls = normalizeMediaUrls(claim.media_urls);
+    const thumbHtml = buildThumbsHtml(mediaUrls, 3, 'cell-thumb', 'cell-thumb-video');
+    const noMedia   = mediaUrls.length === 0;
 
-    const typesHtml = (claim.claim_types && claim.claim_types.length > 0)
-      ? claim.claim_types.map(t => `<span class="type-tag">${escapeHtml(t)}</span>`).join('')
+    const claimTypes = normalizeClaimTypes(claim.claim_types);
+    const typesHtml = (claimTypes.length > 0)
+      ? claimTypes.map(t => `<span class="type-tag">${escapeHtml(t)}</span>`).join('')
       : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>';
 
     tr.innerHTML = `
@@ -233,7 +306,7 @@ function renderTable(claims) {
           : `<div class="cell-thumbs">${thumbHtml}</div>`
         }
       </td>
-      <td>${buildStatusBadge(claim.status)}</td>
+      <td>${buildStatusBadge(normalizeStatus(claim.status))}</td>
       <td>
         <div class="cell-action-group">
           <button class="btn-view" onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])">
@@ -291,7 +364,8 @@ function buildStatusBadge(status) {
     rejected:    { label: '❌ ปฏิเสธ',         cls: 'rejected'    },
     draft:       { label: '📝 Draft',          cls: 'draft'       },
   };
-  const s = map[status] || { label: escapeHtml(status), cls: '' };
+  const normalized = normalizeStatus(status);
+  const s = map[normalized] || { label: escapeHtml(normalized), cls: '' };
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
 }
 
@@ -306,7 +380,7 @@ function getStatusLabel(status) {
     rejected:    'ปฏิเสธ',
     draft:       'ฉบับร่าง',
   };
-  return map[status] || status;
+  return map[normalizeStatus(status)] || status;
 }
 
 // =====================================================
@@ -324,7 +398,7 @@ function openModal(claim) {
   // Title
   const modalTitle = document.getElementById('modalTitle');
   if (modalTitle) {
-    modalTitle.textContent = `เคลม #${claim.id.substring(0, 8).toUpperCase()}`;
+    modalTitle.textContent = `เคลม #${getClaimNo(claim)}`;
   }
 
   // Info Grid
@@ -365,7 +439,7 @@ function openModal(claim) {
       </div>
       <div class="info-row">
         <div class="info-label">สถานะ</div>
-        <div class="info-value">${buildStatusBadge(claim.status)}</div>
+        <div class="info-value">${buildStatusBadge(normalizeStatus(claim.status))}</div>
       </div>
       ${claim.qc_comment ? `
       <div class="info-row full">
@@ -377,8 +451,9 @@ function openModal(claim) {
   // Claim Types
   const typesEl = document.getElementById('modalClaimTypes');
   if (typesEl) {
-    if (claim.claim_types && claim.claim_types.length > 0) {
-      typesEl.innerHTML = claim.claim_types
+    const claimTypes = normalizeClaimTypes(claim.claim_types);
+    if (claimTypes.length > 0) {
+      typesEl.innerHTML = claimTypes
         .map(t => `<span class="modal-type-tag">${escapeHtml(t)}</span>`)
         .join('');
     } else {
@@ -393,12 +468,12 @@ function openModal(claim) {
   }
 
   // Media
-  renderModalMedia(claim.media_urls);
+  renderModalMedia(normalizeMediaUrls(claim.media_urls));
 
   // QC Status
   const qcStatusEl = document.getElementById('qcStatusCurrent');
   if (qcStatusEl) {
-    qcStatusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(claim.status)}
+    qcStatusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(normalizeStatus(claim.status))}
       ${claim.qc_comment ? `<br><span style="color:#475569;font-size:0.82rem;">💬 ${escapeHtml(claim.qc_comment)}</span>` : ''}`;
   }
 
@@ -407,6 +482,12 @@ function openModal(claim) {
   if (qcCommentEl) {
     qcCommentEl.value = claim.qc_comment || '';
   }
+
+  const actionSection = document.querySelector('.qc-action-section');
+  const actionButtons = document.querySelectorAll('.qc-action-btns button');
+  const isDecided = ['approved', 'rejected'].includes(normalizeStatus(claim.status));
+  if (actionSection) actionSection.classList.toggle('is-readonly', isDecided);
+  actionButtons.forEach(btn => { btn.disabled = isDecided; });
 }
 
 // =====================================================
@@ -468,6 +549,30 @@ function closeModal() {
 }
 
 // =====================================================
+// getClaimScope
+// =====================================================
+
+function getClaimScope(claim) {
+  const text = `
+    ${claim.claim_scope || ''}
+    ${claim.product_type || ''}
+    ${claim.category || ''}
+    ${(claim.claim_types || []).join(' ')}
+  `.toLowerCase();
+
+  if (
+    text.includes('ภายใน') ||
+    text.includes('internal') ||
+    text.includes('วัตถุดิบ') ||
+    text.includes('สินค้าภายใน')
+  ) {
+    return 'internal';
+  }
+
+  return 'external';
+}
+
+// =====================================================
 // ✋ PICK CLAIM — รับเรื่องเคลม
 // (LINE notify ปิดไว้ชั่วคราว — ดูจุดที่ comment ไว้ด้านล่าง)
 // =====================================================
@@ -479,7 +584,7 @@ async function pickClaim(claimId) {
   }
 
   // ป้องกันการรับซ้ำ
-  if (claim.status !== 'submitted') {
+  if (normalizeStatus(claim.status) !== 'submitted') {
     showToast('เคลมนี้ถูกรับเรื่องไปแล้ว', 'warning');
     return;
   }
@@ -489,12 +594,12 @@ async function pickClaim(claimId) {
   if (typeof ConfirmDialog !== 'undefined') {
     ok = await ConfirmDialog.show({
       title:   'ยืนยันการรับเรื่อง',
-      message: `รับเรื่องเคลม #${claim.id.substring(0, 8).toUpperCase()} ?\n(${claim.product || '—'})`,
+      message: `รับเรื่องเคลม #${getClaimNo(claim)} ?\n(${claim.product || '—'})`,
       okText:  'รับเรื่อง',
       type:    'info',
     });
   } else {
-    ok = confirm(`รับเรื่องเคลม #${claim.id.substring(0, 8).toUpperCase()} ?`);
+    ok = confirm(`รับเรื่องเคลม #${getClaimNo(claim)} ?`);
   }
   if (!ok) return;
 
@@ -503,11 +608,12 @@ async function pickClaim(claimId) {
 
     // ── 1) อัปเดต DB (มี guard ป้องกัน race condition) ──
     const updateData = {
-      status:     'in_progress',
-      picked_by:  user?.id || null,
-      picked_at:  new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+  status: 'in_progress',
+  claim_scope: getClaimScope(claim),
+  picked_by: user?.id || null,
+  picked_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
 
     const { error } = await supabaseClient
   .from('claims')
@@ -672,14 +778,15 @@ function exportPDF() {
 
   const c = currentClaim;
 
-  const mediaHtml = (c.media_urls && c.media_urls.length > 0)
-    ? c.media_urls.filter(u => !isVideo(u))
+  const mediaHtml = (normalizeMediaUrls(c.media_urls).length > 0)
+    ? normalizeMediaUrls(c.media_urls).filter(u => !isVideo(u))
         .map(u => `<img src="${escapeHtml(u)}" style="width:180px;height:180px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;" onerror="this.style.display='none'">`)
         .join('')
     : '<p style="color:#94a3b8;">ไม่มีรูปภาพ</p>';
 
-  const typesHtml = (c.claim_types && c.claim_types.length > 0)
-    ? c.claim_types.map(t => `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:3px 12px;font-size:13px;margin-right:4px;">${escapeHtml(t)}</span>`).join('')
+  const pdfClaimTypes = normalizeClaimTypes(c.claim_types);
+  const typesHtml = pdfClaimTypes.length > 0
+    ? pdfClaimTypes.map(t => `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:3px 12px;font-size:13px;margin-right:4px;">${escapeHtml(t)}</span>`).join('')
     : '—';
 
   // ── status label รองรับ in_progress ──
@@ -689,7 +796,8 @@ function exportPDF() {
     approved:    '✅ อนุมัติ',
     rejected:    '❌ ปฏิเสธ',
   };
-  const statusLabel = statusEmojiMap[c.status] || c.status;
+  const normalizedStatus = normalizeStatus(c.status);
+  const statusLabel = statusEmojiMap[normalizedStatus] || normalizedStatus;
 
   const printWin = window.open('', '_blank', 'width=900,height=700');
   if (!printWin) {
@@ -702,7 +810,7 @@ function exportPDF() {
     <html lang="th">
     <head>
       <meta charset="UTF-8">
-      <title>ใบแจ้งเคลม — ${escapeHtml(c.id.substring(0,8).toUpperCase())}</title>
+      <title>ใบแจ้งเคลม — ${escapeHtml(getClaimNo(c))}</title>
       <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
       <style>
         * { box-sizing: border-box; }
@@ -728,7 +836,7 @@ function exportPDF() {
     </head>
     <body>
       <h1>⚠️ ใบแจ้งเคลมสินค้า</h1>
-      <div class="sub">เลขที่: ${escapeHtml(c.id.toUpperCase())} • สร้างเมื่อ: ${formatDateTime(c.created_at)}</div>
+      <div class="sub">เลขที่: ${escapeHtml(String(c.id || getClaimNo(c)).toUpperCase())} • สร้างเมื่อ: ${formatDateTime(c.created_at)}</div>
 
       <div class="section">
         <div class="section-title">ข้อมูลการแจ้งเคลม</div>
@@ -739,7 +847,7 @@ function exportPDF() {
           <div class="info-box"><div class="info-lbl">วันที่แจ้งเคลม</div><div class="info-val">${formatDate(c.claim_date)}</div></div>
           <div class="info-box" style="grid-column:1/-1"><div class="info-lbl">สินค้า</div><div class="info-val">${escapeHtml(c.product) || '—'}</div></div>
           <div class="info-box"><div class="info-lbl">จำนวน</div><div class="info-val">${escapeHtml(c.qty) || '—'}</div></div>
-          <div class="info-box"><div class="info-lbl">สถานะ</div><div class="info-val"><span class="status-badge ${c.status}">${statusLabel}</span></div></div>
+          <div class="info-box"><div class="info-lbl">สถานะ</div><div class="info-val"><span class="status-badge ${normalizedStatus}">${statusLabel}</span></div></div>
         </div>
       </div>
 
@@ -789,7 +897,7 @@ function exportCSV() {
     ['ร้านค้า / ลูกค้า', c.customer || '-'],
     ['สินค้า', c.product || '-'],
     ['จำนวน', c.qty || '-'],
-    ['ประเภทปัญหา', (c.claim_types || []).join(', ')],
+    ['ประเภทปัญหา', normalizeClaimTypes(c.claim_types).join(', ')],
     ['รายละเอียด', (c.detail || '').replace(/\n/g, ' ')],
     ['สถานะ', statusLabel],
     ['วันที่แจ้งเคลม', formatDate(c.claim_date)],
@@ -807,7 +915,7 @@ function exportCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `claim_${c.id.substring(0, 8)}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `claim_${getClaimNo(c)}_${new Date().toISOString().split('T')[0]}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -842,7 +950,7 @@ function exportExcel() {
       c.customer || '',
       c.product || '',
       c.qty || '',
-      (c.claim_types || []).join(', '),
+      normalizeClaimTypes(c.claim_types).join(', '),
       (c.detail || '').replace(/\n/g, ' '),
       getStatusLabel(c.status),
       formatDate(c.buy_date),
@@ -908,7 +1016,7 @@ function exportSingleClaimExcel() {
     ['ร้านค้า', c.customer || '-'],
     ['สินค้า', c.product || '-'],
     ['จำนวน', c.qty || '-'],
-    ['ประเภทปัญหา', (c.claim_types || []).join(', ')],
+    ['ประเภทปัญหา', normalizeClaimTypes(c.claim_types).join(', ')],
     ['รายละเอียด', c.detail || '-'],
     ['สถานะ', statusLabel],
     ['วันที่เคลม', formatDate(c.claim_date)],
@@ -925,7 +1033,7 @@ function exportSingleClaimExcel() {
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Claim Detail");
-      XLSX.writeFile(wb, `claim_${c.id.substring(0, 8)}.xlsx`);
+      XLSX.writeFile(wb, `claim_${getClaimNo(c)}.xlsx`);
 
       showToast('ดาวน์โหลด Excel สำเร็จ', 'success');
       return;
@@ -942,7 +1050,7 @@ function exportSingleClaimExcel() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `claim_${c.id.substring(0, 8)}.csv`;
+  a.download = `claim_${getClaimNo(c)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -991,7 +1099,7 @@ async function exportCurrentClaimExcelPro() {
       ["ร้านค้า", c.customer || '-'],
       ["สินค้า", c.product || '-'],
       ["จำนวน", c.qty || '-'],
-      ["ประเภทปัญหา", (c.claim_types || []).join(', ')],
+      ["ประเภทปัญหา", normalizeClaimTypes(c.claim_types).join(', ')],
       ["รายละเอียด", c.detail || '-'],
       ["สถานะ", statusLabel],
       ["วันที่เคลม", formatDate(c.claim_date)],
@@ -1018,13 +1126,13 @@ async function exportCurrentClaimExcelPro() {
     const buffer = await workbook.xlsx.writeBuffer();
 
     if (typeof saveAs !== 'undefined') {
-      saveAs(new Blob([buffer]), `claim_${c.id.substring(0, 8)}.xlsx`);
+      saveAs(new Blob([buffer]), `claim_${getClaimNo(c)}.xlsx`);
     } else {
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `claim_${c.id.substring(0, 8)}.xlsx`;
+      a.download = `claim_${getClaimNo(c)}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EABaseHub | Clims QC</title>
+  <title>EABaseHub | Claims QC</title>
 
   <!-- ป้องกัน flash: อ่านค่าก่อน render -->
   <script>
@@ -22,12 +22,10 @@
   <!-- CSS -->
   <link rel="stylesheet" href="/css/base/role-colors.css">  
   <link rel="stylesheet" href="/css/components/badgeButtom.css">  
-  <!-- <link rel="stylesheet" href="/css/base/bassHeader.css"/> -->
-  <!-- <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css"> -->
+  <link rel="stylesheet" href="/css/base/bassHeader.css"/>
+  <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css">
 </head>
-<body>
-
-  <body class="role-adminQc">
+<body class="role-adminQc">
 
   <!-- ── HEADER ── -->
   <header class="app-header">
@@ -42,12 +40,12 @@
       </div>
 
       <div class="group">
-  <span class="badge badge--message-sent" onclick="logout()">
-    <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">Logout</span></span>
-    ออกจจากระบบ
-  </span>
+  <button class="badge badge--message-sent" id="logoutBtn" type="button">
+    <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">logout</span></span>
+    ออกจากระบบ
+  </button>
       </div>
-
+    </div>
   </header>
   
 
@@ -68,42 +66,47 @@
       <div class="summary-card total">
         <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
         <div class="summary-info">
-          <div class="summary-head">สินค้าภายใน</div>
+          <div class="summary-head">ทั้งหมด</div>
           <div class="summary-num" id="sumTotal">—</div>
-          <div class="summary-label">ทั้งหมด</div>
+          <div class="summary-label">รายการเคลมในระบบ</div>
         </div>
       </div>
-      <div class="summary-card total">
-        <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
-        <div class="summary-info">
-          <div class="summary-head">สินค้าภายนอก</div>
-          <div class="summary-num" id="sumTotal">—</div>
-          <div class="summary-label">ทั้งหมด</div>
-        </div>
-      </div>
+
       <div class="summary-card pending">
-        <div class="summary-icon"><span class="material-symbols-outlined">pending</span></div>
+        <div class="summary-icon"><span class="material-symbols-outlined">pending_actions</span></div>
         <div class="summary-info">
-          <div class="summary-head">รอการตรวจสอบ</div>
+          <div class="summary-head">รอรับเรื่อง</div>
           <div class="summary-num" id="sumPending">—</div>
-          <div class="summary-label">รออนุมัติ</div>
+          <div class="summary-label">สถานะ submitted / pending</div>
         </div>
       </div>
+
+      <div class="summary-card in-progress">
+        <div class="summary-icon"><span class="material-symbols-outlined">manage_search</span></div>
+        <div class="summary-info">
+          <div class="summary-head">กำลังตรวจสอบ</div>
+          <div class="summary-num" id="sumInProgress">—</div>
+          <div class="summary-label">QC รับเรื่องแล้ว</div>
+        </div>
+      </div>
+
       <div class="summary-card approved">
         <div class="summary-icon"><span class="material-symbols-outlined">check_circle</span></div>
         <div class="summary-info">
           <div class="summary-head">อนุมัติแล้ว</div>
           <div class="summary-num" id="sumApproved">—</div>
-          <div class="summary-label">อนุมัติแล้ว</div>
+          <div class="summary-label">ผ่านการพิจารณา</div>
         </div>
       </div>
-      <!-- <div class="summary-card rejected">
+
+      <div class="summary-card rejected">
         <div class="summary-icon"><span class="material-symbols-outlined">cancel</span></div>
         <div class="summary-info">
+          <div class="summary-head">ปฏิเสธ</div>
           <div class="summary-num" id="sumRejected">—</div>
-          <div class="summary-label">ปฏิเสธ</div>
+          <div class="summary-label">ไม่ผ่านการพิจารณา</div>
         </div>
-      </div> -->
+      </div>
     </div>
 
     <!-- FILTER BAR -->
@@ -122,7 +125,8 @@
         <span class="material-symbols-outlined filter-icon">flag</span>
         <select id="filterStatus">
           <option value="">ทุกสถานะ</option>
-          <option value="submitted">รออนุมัติ</option>
+          <option value="submitted">รอรับเรื่อง</option>
+          <option value="in_progress">กำลังตรวจสอบ</option>
           <option value="approved">อนุมัติแล้ว</option>
           <option value="rejected">ปฏิเสธ</option>
         </select>
@@ -218,7 +222,7 @@
           <div class="modal-media-grid" id="modalMediaGrid"></div>
         </div>
 
-        <!-- <div class="modal-section qc-action-section">
+        <div class="modal-section qc-action-section">
           <div class="modal-section-label">
             <span class="material-symbols-outlined">rate_review</span> ผลการพิจารณา QC
           </div>
@@ -232,7 +236,7 @@
               <span class="material-symbols-outlined">cancel</span> ปฏิเสธ
             </button>
           </div>
-        </div> -->
+        </div>
 
       </div>
     </div>
@@ -250,7 +254,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/userService.js"></script>
-  <script src="/js/pages/admin/renderUsers.js"></script>
   <script src="/js/core/auth.js"></script>
 
   <script src="/js/core/confirm-dialog.js"></script>
