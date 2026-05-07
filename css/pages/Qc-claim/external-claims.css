@@ -944,6 +944,8 @@ textarea {
   flex-shrink: 0;
 }
 
+
+
 /* ======================== Animations ======================== */
 @keyframes ic-fade-in {
   from { opacity: 0; }
@@ -1077,5 +1079,625 @@ textarea {
     max-width: 100%;
     max-height: 100vh;
     border-radius: 0;
+  }
+}
+
+
+
+/* ============================================================
+   POLISH MODAL QC — External Claims
+   วางท้ายไฟล์ CSS
+============================================================ */
+
+.ic-modal {
+  backdrop-filter: blur(3px);
+}
+
+.ic-modal-dialog {
+  border: 1px solid #fed7aa;
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(124, 45, 18, 0.28);
+}
+
+.ic-modal-header {
+  padding: 16px 22px;
+  background: linear-gradient(135deg, #fff7ed, #ffffff);
+  border-bottom: 1px solid #fed7aa;
+}
+
+.ic-modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #7c2d12;
+}
+
+.ic-modal-body {
+  padding: 22px;
+  background: #fffaf4;
+}
+
+.qc-result-box {
+  background: #ffffff;
+  border: 1px solid #fed7aa;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 22px rgba(249, 115, 22, 0.08);
+}
+
+.qc-result-box h4 {
+  color: #9a3412;
+  font-size: 15px;
+  font-weight: 700;
+  border-bottom: 1px solid #fed7aa;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.qc-check-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #ffedd5;
+  border-radius: 14px;
+  background: #fff7ed;
+  margin-bottom: 10px;
+}
+
+.qc-check-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.qc-check-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #f97316;
+  flex-shrink: 0;
+}
+
+.qty-stepper {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  height: 36px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #fdba74;
+  background: #ffffff;
+}
+
+.qty-stepper button {
+  border: none;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.qty-stepper button:hover {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.qty-stepper input {
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  outline: none;
+  background: #ffffff;
+}
+
+.qc-comment-label {
+  display: block;
+  margin: 14px 0 8px;
+  color: #7c2d12;
+  font-weight: 700;
+}
+
+.qc-result-box textarea {
+  width: 100%;
+  min-height: 92px;
+  border: 1px solid #fdba74;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #ffffff;
+  color: #111827;
+  resize: vertical;
+  outline: none;
+  font-size: 14px;
+}
+
+.qc-result-box textarea:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+}
+
+#qcApproveStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fdba74;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ic-modal-footer,
+.qc-action-btns,
+.qc-result-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.btn-save-draft,
+.btn-send-ceo {
+  min-width: 120px;
+  height: 42px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-save-draft {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-save-draft:hover {
+  background: #e2e8f0;
+}
+
+.btn-send-ceo {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
+}
+
+.btn-send-ceo:hover {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .ic-modal-dialog {
+    max-width: 96vw;
+    border-radius: 18px;
+  }
+
+  .ic-modal-body {
+    padding: 16px;
+  }
+
+  .qc-check-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ic-modal-footer,
+  .qc-action-btns,
+  .qc-result-actions {
+    flex-direction: column;
+  }
+
+  .btn-save-draft,
+  .btn-send-ceo {
+    width: 100%;
+  }
+}
+
+
+
+
+/* ============================================================
+   QC MODAL — REFINED STYLES
+   วางทับท้ายไฟล์ CSS เดิม (จะ override ของเดิมอัตโนมัติ)
+   ============================================================ */
+
+/* ---------- Modal Box ---------- */
+.qc-modal {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.qc-modal .qc-modal-box,
+.qc-modal-dialog {
+  border-radius: 24px;
+  border: 1px solid #fed7aa;
+  box-shadow:
+    0 32px 80px rgba(124, 45, 18, 0.30),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  overflow: hidden;
+}
+
+/* ---------- Modal Header ---------- */
+.qc-modal .qc-modal-header {
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #ffedd5 0%, #fff7ed 60%, #ffffff 100%);
+  border-bottom: 1px solid #fed7aa;
+}
+
+.qc-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #7c2d12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qc-modal-title .material-symbols-outlined {
+  color: #ea580c;
+  font-size: 22px;
+}
+
+/* ---------- Modal Body ---------- */
+.qc-modal .qc-modal-body {
+  padding: 24px;
+  background: #fffaf4;
+}
+
+/* ---------- Status Bar ---------- */
+.qc-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin: 0 0 14px;
+  background: linear-gradient(135deg, #fff7ed, #ffffff);
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+}
+
+.qc-status-bar__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c2d12;
+}
+
+/* ---------- QC Result Box ---------- */
+.qc-result-box {
+  background: #ffffff;
+  border: 1px solid #fed7aa;
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.08);
+  margin-top: 6px;
+}
+
+.qc-result-box h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9a3412;
+  font-size: 15px;
+  font-weight: 700;
+  border-bottom: 2px solid #fed7aa;
+  padding-bottom: 12px;
+  margin: 0 0 16px;
+}
+
+.qc-result-box h4 .material-symbols-outlined {
+  font-size: 20px;
+  color: #ea580c;
+}
+
+/* ---------- QC Check Rows ---------- */
+.qc-check-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid #ffedd5;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+}
+
+.qc-check-row:hover {
+  border-color: #fdba74;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.10);
+  transform: translateY(-1px);
+}
+
+.qc-check-row:last-of-type {
+  margin-bottom: 0;
+}
+
+/* เมื่อ checkbox ติ๊ก -> highlight */
+.qc-check-row:has(input[type="checkbox"]:checked) {
+  border-color: #f97316;
+  background: linear-gradient(135deg, #ffedd5 0%, #fff7ed 100%);
+}
+
+.qc-check-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.qc-check-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #f97316;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.qc-check-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.qc-check-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ---------- Qty Stepper ---------- */
+.qty-stepper {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  height: 40px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid #fdba74;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.qty-stepper button {
+  border: none;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.qty-stepper button:hover {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.qty-stepper button:active {
+  transform: scale(0.92);
+}
+
+.qty-stepper input {
+  border: none;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  outline: none;
+  background: #ffffff;
+  /* ซ่อน spinner ของ number input */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.qty-stepper input::-webkit-outer-spin-button,
+.qty-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ---------- Total Summary ---------- */
+.qc-total-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0 4px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border: 1px dashed #fdba74;
+  border-radius: 12px;
+  color: #7c2d12;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.qc-total-summary .material-symbols-outlined {
+  font-size: 18px;
+  color: #ea580c;
+}
+
+.qc-total-summary strong {
+  color: #ea580c;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 4px;
+}
+
+/* ---------- Comment Section ---------- */
+.qc-comment-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 18px 0 10px;
+  color: #7c2d12;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.qc-comment-label .material-symbols-outlined {
+  font-size: 18px;
+  color: #ea580c;
+}
+
+.qc-result-box textarea,
+#qcComment {
+  width: 100%;
+  min-height: 96px;
+  border: 1.5px solid #fed7aa;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fffaf4;
+  color: #111827;
+  resize: vertical;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.qc-result-box textarea:focus,
+#qcComment:focus {
+  border-color: #f97316;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.qc-result-box textarea::placeholder,
+#qcComment::placeholder {
+  color: #c2410c;
+  opacity: 0.4;
+}
+
+/* ---------- Action Buttons ---------- */
+.qc-action-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #fed7aa;
+}
+
+.btn-save-draft,
+.btn-send-ceo {
+  min-width: 140px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-save-draft {
+  background: #ffffff;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+}
+
+.btn-save-draft:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(100, 116, 139, 0.15);
+}
+
+.btn-send-ceo {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.30);
+}
+
+.btn-send-ceo:hover {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.40);
+}
+
+.btn-save-draft:active,
+.btn-send-ceo:active {
+  transform: translateY(0);
+}
+
+.btn-save-draft:disabled,
+.btn-send-ceo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .qc-modal .qc-modal-box,
+  .qc-modal-dialog {
+    max-width: 96vw;
+    border-radius: 18px;
+  }
+
+  .qc-modal .qc-modal-body {
+    padding: 16px;
+  }
+
+  .qc-result-box {
+    padding: 16px;
+  }
+
+  .qc-check-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .qty-stepper {
+    width: 100%;
+    max-width: 200px;
+    margin-left: auto;
+  }
+
+  .qc-action-btns {
+    flex-direction: column-reverse;
+  }
+
+  .btn-save-draft,
+  .btn-send-ceo {
+    width: 100%;
   }
 }

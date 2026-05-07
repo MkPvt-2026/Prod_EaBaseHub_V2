@@ -899,3 +899,85 @@ a.qc-kpi-card:visited {
   }
 }
 
+/* ============================================================
+   GAUGE CHART — replace donut style
+============================================================ */
+
+.qc-gauge-wrap {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.qc-gauge-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  min-width: 220px;
+}
+
+.qc-gauge-center-label {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.qc-gauge-center-num {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--qc-mono);
+  line-height: 1;
+}
+
+.qc-gauge-center-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.qc-gauge-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qc-gauge-legend-row {
+  display: grid;
+  grid-template-columns: 10px 36px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.qc-gauge-legend-row strong {
+  font-family: var(--qc-mono);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.qc-gauge-dot {
+  width: 6px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .qc-gauge-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-gauge-chart-wrap {
+    min-width: 0;
+  }
+}
+
+

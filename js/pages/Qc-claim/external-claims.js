@@ -418,6 +418,27 @@ function openModal(claim) {
       <div class="info-row"><div class="info-label">สถานะ QC</div><div class="info-value">${buildStatusBadge(claim)}</div></div>
       ${claim.qc_comment ? `<div class="info-row full"><div class="info-label">หมายเหตุ QC</div><div class="info-value">${escapeHtml(claim.qc_comment)}</div></div>` : ""}
     `;
+      // แต่ง modal ให้สวยขึ้นด้วย class เสริม
+  modal.classList.add("qc-polish-modal");
+
+  const qcBox = document.querySelector(".qc-result-box");
+  if (qcBox) qcBox.classList.add("qc-result-box--polished");
+
+  document.querySelectorAll(".qc-check-row").forEach((row) => {
+    row.classList.add("qc-check-row--polished");
+  });
+
+  document.querySelectorAll(".qty-stepper").forEach((stepper) => {
+    stepper.classList.add("qty-stepper--polished");
+  });
+
+  document.querySelectorAll(".btn-save-draft").forEach((btn) => {
+    btn.classList.add("btn-save-draft--polished");
+  });
+
+  document.querySelectorAll(".btn-send-ceo").forEach((btn) => {
+    btn.classList.add("btn-send-ceo--polished");
+  });
   }
 
   const typesEl = document.getElementById("modalClaimTypes");
@@ -580,7 +601,13 @@ async function sendToCEO() {
   }
 }
 
-// ---------- Qty Stepper ----------
+// ============================================================
+// PATCH สำหรับ external-claims.js
+// แทนที่ฟังก์ชัน stepQty และ syncQtyCheckbox ของเดิม
+// แล้วเพิ่ม updateQcTotal เข้าไป
+// ============================================================
+
+// ---------- Sync checkbox ตามค่า qty ----------
 function syncQtyCheckbox(qtyId, checkId) {
   const qtyEl = document.getElementById(qtyId);
   const checkEl = document.getElementById(checkId);
@@ -588,6 +615,16 @@ function syncQtyCheckbox(qtyId, checkId) {
   checkEl.checked = Number(qtyEl.value || 0) > 0;
 }
 
+// ---------- อัปเดตยอดรวมในกล่อง summary ----------
+function updateQcTotal() {
+  const good = Number(document.getElementById("qcGoodQty")?.value || 0);
+  const repair = Number(document.getElementById("qcRepairQty")?.value || 0);
+  const scrap = Number(document.getElementById("qcScrapQty")?.value || 0);
+  const totalEl = document.getElementById("qcTotalQty");
+  if (totalEl) totalEl.textContent = good + repair + scrap;
+}
+
+// ---------- Step +/- ----------
 function stepQty(inputId, step) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -596,7 +633,6 @@ function stepQty(inputId, step) {
   const next = Math.max(0, current + step);
   input.value = next;
 
-  // map ของ qty -> checkbox ที่เกี่ยวข้อง
   const checkboxMap = {
     qcGoodQty: "qcGoodCheck",
     qcRepairQty: "qcRepairCheck",
@@ -604,7 +640,46 @@ function stepQty(inputId, step) {
   };
   const checkId = checkboxMap[inputId];
   if (checkId) syncQtyCheckbox(inputId, checkId);
+
+  updateQcTotal();
 }
+
+// ---------- ผูก event ให้ input number พิมพ์เองก็อัปเดต ----------
+document.addEventListener("DOMContentLoaded", () => {
+  ["qcGoodQty", "qcRepairQty", "qcScrapQty"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", () => {
+      const checkboxMap = {
+        qcGoodQty: "qcGoodCheck",
+        qcRepairQty: "qcRepairCheck",
+        qcScrapQty: "qcScrapCheck",
+      };
+      syncQtyCheckbox(id, checkboxMap[id]);
+      updateQcTotal();
+    });
+  });
+
+  // ผูก checkbox: ติ๊กแล้ว qty ยังเป็น 0 -> เซ็ตเป็น 1, ติ๊กออก -> 0
+  const checkMap = {
+    qcGoodCheck: "qcGoodQty",
+    qcRepairCheck: "qcRepairQty",
+    qcScrapCheck: "qcScrapQty",
+  };
+  Object.entries(checkMap).forEach(([checkId, qtyId]) => {
+    const checkEl = document.getElementById(checkId);
+    const qtyEl = document.getElementById(qtyId);
+    if (!checkEl || !qtyEl) return;
+    checkEl.addEventListener("change", () => {
+      if (checkEl.checked && Number(qtyEl.value || 0) === 0) {
+        qtyEl.value = 1;
+      } else if (!checkEl.checked) {
+        qtyEl.value = 0;
+      }
+      updateQcTotal();
+    });
+  });
+});
 
 // ---------- Lightbox ----------
 function openLightbox(url) {

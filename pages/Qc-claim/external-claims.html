@@ -270,149 +270,169 @@
     </main>
 
     <!-- MODAL -->
-    <div class="qc-modal" id="qcModal">
-      <div class="qc-modal-box">
-        <div class="qc-modal-header">
-          <div class="qc-modal-title">
-            <span class="material-symbols-outlined">manage_search</span>
-            <span id="modalTitle">รายละเอียดเคลม</span>
-          </div>
-          <div class="qc-modal-header-actions">
-            <button class="btn-export-pdf" onclick="exportPDF()">
-              <span class="material-symbols-outlined">picture_as_pdf</span> PDF
-            </button>
-            <button class="btn-export-csv" onclick="exportCSV()">
-              <span class="material-symbols-outlined">table_view</span> CSV
-            </button>
-            <button class="btn-export-excel" onclick="exportExcel()">
-              <span class="material-symbols-outlined">grid_on</span> Excel
-            </button>
-            <button class="modal-close-btn" onclick="closeModal()">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-          </div>
+   <!-- ============================================
+     MODAL ส่วนที่แก้ไขใหม่
+     แทนที่ส่วน <div class="qc-modal" id="qcModal">...</div> เดิม
+============================================ -->
+<div class="qc-modal" id="qcModal">
+  <div class="qc-modal-box">
+    <div class="qc-modal-header">
+      <div class="qc-modal-title">
+        <span class="material-symbols-outlined">manage_search</span>
+        <span id="modalTitle">รายละเอียดเคลม</span>
+      </div>
+      <div class="qc-modal-header-actions">
+        <button class="btn-export-pdf" onclick="exportPDF()">
+          <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+        </button>
+        <button class="btn-export-csv" onclick="exportCSV()">
+          <span class="material-symbols-outlined">table_view</span> CSV
+        </button>
+        <button class="btn-export-excel" onclick="exportExcel()">
+          <span class="material-symbols-outlined">grid_on</span> Excel
+        </button>
+        <button class="modal-close-btn" onclick="closeModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="qc-modal-body">
+      <!-- ข้อมูลเคลม -->
+      <div class="modal-section">
+        <div class="modal-info-grid" id="modalInfoGrid"></div>
+      </div>
+
+      <!-- ประเภทปัญหา -->
+      <div class="modal-section">
+        <div class="modal-section-label">
+          <span class="material-symbols-outlined">warning</span> ประเภทปัญหา
+        </div>
+        <div class="modal-claim-types" id="modalClaimTypes"></div>
+      </div>
+
+      <!-- รายละเอียด -->
+      <div class="modal-section">
+        <div class="modal-section-label">
+          <span class="material-symbols-outlined">notes</span> รายละเอียด
+        </div>
+        <div class="modal-detail-box" id="modalDetail">—</div>
+      </div>
+
+      <!-- รูปภาพ / วิดีโอ -->
+      <div class="modal-section">
+        <div class="modal-section-label">
+          <span class="material-symbols-outlined">photo_library</span>
+          รูปภาพ / วิดีโอ
+        </div>
+        <div class="modal-media-grid" id="modalMediaGrid"></div>
+      </div>
+
+      <!-- ============ QC RESULT (รวมทุกอย่างไว้ที่เดียว) ============ -->
+      <div class="modal-section qc-action-section">
+        <div class="modal-section-label">
+          <span class="material-symbols-outlined">rate_review</span>
+          ผลการพิจารณา QC
         </div>
 
-        <div class="qc-modal-body">
-          <div class="modal-section">
-            <div class="modal-info-grid" id="modalInfoGrid"></div>
+        <!-- สถานะปัจจุบัน -->
+        <div class="qc-status-bar">
+          <span class="qc-status-bar__label">สถานะปัจจุบัน:</span>
+          <span id="qcStatusCurrent"></span>
+        </div>
+
+        <!-- กล่องผลตรวจสอบ -->
+        <div class="qc-result-box">
+          <h4>
+            <span class="material-symbols-outlined">fact_check</span>
+            ผลการตรวจสอบสินค้า
+          </h4>
+
+          <!-- แถวที่ 1: สินค้าดี -->
+          <div class="qc-check-row">
+            <label class="qc-check-label" for="qcGoodCheck">
+              <input type="checkbox" id="qcGoodCheck" />
+              <span class="qc-check-text">
+                <span class="qc-check-num">1</span>
+                สินค้าดี สามารถนำกลับเป็นสินค้าได้
+              </span>
+            </label>
+            <div class="qty-stepper" data-variant="good">
+              <button type="button" onclick="stepQty('qcGoodQty', -1)" aria-label="ลดจำนวน">−</button>
+              <input type="number" id="qcGoodQty" value="0" min="0" />
+              <button type="button" onclick="stepQty('qcGoodQty', 1)" aria-label="เพิ่มจำนวน">+</button>
+            </div>
           </div>
 
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">warning</span> ประเภทปัญหา
+          <!-- แถวที่ 2: ซ่อม -->
+          <div class="qc-check-row">
+            <label class="qc-check-label" for="qcRepairCheck">
+              <input type="checkbox" id="qcRepairCheck" />
+              <span class="qc-check-text">
+                <span class="qc-check-num">2</span>
+                ชำรุดเล็กน้อย ปรับเป็นสินค้าเสปกอื่นและจำหน่ายได้
+              </span>
+            </label>
+            <div class="qty-stepper" data-variant="repair">
+              <button type="button" onclick="stepQty('qcRepairQty', -1)" aria-label="ลดจำนวน">−</button>
+              <input type="number" id="qcRepairQty" value="0" min="0" />
+              <button type="button" onclick="stepQty('qcRepairQty', 1)" aria-label="เพิ่มจำนวน">+</button>
             </div>
-            <div class="modal-claim-types" id="modalClaimTypes"></div>
           </div>
 
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">notes</span> รายละเอียด
+          <!-- แถวที่ 3: ทิ้ง -->
+          <div class="qc-check-row">
+            <label class="qc-check-label" for="qcScrapCheck">
+              <input type="checkbox" id="qcScrapCheck" />
+              <span class="qc-check-text">
+                <span class="qc-check-num">3</span>
+                เสียหายมาก ไม่สามารถแก้ไขได้ / ส่งบด
+              </span>
+            </label>
+            <div class="qty-stepper" data-variant="scrap">
+              <button type="button" onclick="stepQty('qcScrapQty', -1)" aria-label="ลดจำนวน">−</button>
+              <input type="number" id="qcScrapQty" value="0" min="0" />
+              <button type="button" onclick="stepQty('qcScrapQty', 1)" aria-label="เพิ่มจำนวน">+</button>
             </div>
-            <div class="modal-detail-box" id="modalDetail">—</div>
           </div>
 
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">photo_library</span>
-              รูปภาพ / วิดีโอ
-            </div>
-            <div class="modal-media-grid" id="modalMediaGrid"></div>
+          <!-- สรุปผลรวม -->
+          <div class="qc-total-summary" id="qcTotalSummary">
+            <span class="material-symbols-outlined">summarize</span>
+            รวมทั้งหมด: <strong id="qcTotalQty">0</strong> ชิ้น
           </div>
 
-          <!-- QC CHECKLIST SECTION (เฉพาะ external) -->
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">checklist</span>
-              รายการตรวจ QC
-            </div>
-            <div id="qcChecklist"></div>
-          </div>
+          <!-- ความเห็น QC (เหลือตัวเดียว) -->
+          <label class="qc-comment-label" for="qcComment">
+            <span class="material-symbols-outlined">edit_note</span>
+            ความเห็น QC
+          </label>
+          <textarea
+            id="qcComment"
+            rows="4"
+            placeholder="สรุปผลการตรวจสอบ / ความเห็น QC..."
+          ></textarea>
+        </div>
 
-          <div class="modal-section qc-action-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">rate_review</span>
-              ผลการพิจารณา QC
-            </div>
+        <!-- ปุ่มดำเนินการ -->
+        <div class="qc-action-btns">
+          <button type="button" class="btn-save-draft" onclick="saveQcDraft()">
+            <span class="material-symbols-outlined">save</span>
+            บันทึกร่าง
+          </button>
 
-            <div class="qc-result-box">
-  <h4>ผลการตรวจสอบ QC</h4>
-
-  <div class="qc-check-row">
-    <label class="qc-check-label">
-      <input type="checkbox" id="qcGoodCheck">
-      <span>1. สินค้าดี สามารถนำกลับเป็นสินค้าได้</span>
-    </label>
-
-    <div class="qty-stepper">
-      <button type="button" onclick="stepQty('qcGoodQty', -1)">−</button>
-      <input type="number" id="qcGoodQty" value="0" min="0">
-      <button type="button" onclick="stepQty('qcGoodQty', 1)">+</button>
+          <button type="button" class="btn-send-ceo" onclick="sendToCEO()">
+            <span class="material-symbols-outlined">forward</span>
+            ส่งอนุมัติ CEO
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="qc-check-row">
-    <label class="qc-check-label">
-      <input type="checkbox" id="qcRepairCheck">
-      <span>2. ชำรุดเล็กน้อย ปรับเป็นสินค้าเสปกอื่นและจำหน่ายได้</span>
-    </label>
-
-    <div class="qty-stepper">
-      <button type="button" onclick="stepQty('qcRepairQty', -1)">−</button>
-      <input type="number" id="qcRepairQty" value="0" min="0">
-      <button type="button" onclick="stepQty('qcRepairQty', 1)">+</button>
-    </div>
-  </div>
-
-  <div class="qc-check-row">
-    <label class="qc-check-label">
-      <input type="checkbox" id="qcScrapCheck">
-      <span>3. เสียหายมาก ไม่สามารถแก้ไขได้ / ส่งบด</span>
-    </label>
-
-    <div class="qty-stepper">
-      <button type="button" onclick="stepQty('qcScrapQty', -1)">−</button>
-      <input type="number" id="qcScrapQty" value="0" min="0">
-      <button type="button" onclick="stepQty('qcScrapQty', 1)">+</button>
-    </div>
-  </div>
-
-  <label class="qc-comment-label">ความเห็น QC</label>
-  <textarea
-    id="qcComment"
-    rows="4"
-    placeholder="สรุปผลการตรวจสอบ / ความเห็น QC..."
-  ></textarea>
 </div>
 
 
 
-
-            <div class="qc-status-current" id="qcStatusCurrent"></div>
-            <textarea
-              id="qcComment"
-              rows="3"
-              placeholder="หมายเหตุ / ความเห็น QC (ถ้ามี)..."></textarea>
-
-            <div class="qc-action-btns">
-              <button
-                type="button"
-                class="btn-save-draft"
-                onclick="saveQcDraft()"
-              >
-                <span class="material-symbols-outlined">save</span>
-                บันทึกร่าง
-              </button>
-
-              <button type="button" class="btn-send-ceo" onclick="sendToCEO()">
-                <span class="material-symbols-outlined">forward</span>
-                ส่งอนุมัติ
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- LIGHTBOX -->
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">

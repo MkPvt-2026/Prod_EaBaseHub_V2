@@ -1,10 +1,11 @@
 // ============================================================
-// QcDashboard.js (V2 — Hybrid Layout)
+// QcDashboard.js (V3 — Fix status field + Comparison Card)
 // ────────────────────────────────────────────────────────────
-// รวม:
-//   1) ตรรกะ Dashboard เดิม (KPI, charts, table)
-//   2) helpers จาก index.js ที่ใช้กับ right-panel
-//      (profile, avatar upload, calendar, sidebar)
+// แก้:
+//   ✅ ใช้ทั้ง qc_status และ status (เดิมตัดข้อมูลทิ้งเพราะ .in())
+//   ✅ KPI/Charts/Table ใช้ helper getEffectiveStatus()
+//   ✅ Realtime callback ไม่ return Promise (กัน console error)
+//   ✅ เพิ่มการ์ดเปรียบเทียบช่วงเวลา (Comparison Card)
 // ============================================================
 
 /* =================================================
@@ -14,12 +15,14 @@ const CHART_COLORS = {
   pass:        '#10b981',
   fail:        '#ef4444',
   pending:     '#f59e0b',
+  inProgress:  '#3b82f6',
   donutBorder: '#ffffff',
   axis:        '#6b7280',
   grid:        'rgba(0, 0, 0, 0.05)',
   tooltipBg:   '#1f2937',
   tooltipText: '#f9fafb',
   tooltipDim:  '#9ca3af',
+  prevPeriod:  '#cbd5e1',
 };
 
 /* =================================================
@@ -27,6 +30,28 @@ const CHART_COLORS = {
 ================================================= */
 let allClaims = [];
 let currentDate = new Date();
+let comparePeriod = '30d'; // ช่วงเริ่มต้นของการ์ดเปรียบเทียบ
+
+/* =================================================
+   🧭 STATUS NORMALIZER — ใช้ทั่วทั้งหน้า
+   - ถ้ามี qc_status → ใช้ qc_status
+   - ไม่งั้น fallback status
+   - map ค่าเป็น 4 กลุ่มหลัก: approved, rejected, in_progress, pending
+================================================= */
+function getEffectiveStatus(claim) {
+  const raw = (claim?.qc_status || claim?.status || '').toLowerCase();
+
+  if (raw === 'approved') return 'approved';
+  if (raw === 'rejected') return 'rejected';
+
+  // กลุ่ม "กำลังตรวจสอบ" — รวม draft / waiting_ceo / checking / in_progress / reviewing
+  if (['checking', 'in_progress', 'reviewing', 'draft', 'waiting_ceo'].includes(raw)) {
+    return 'in_progress';
+  }
+
+  // submitted / pending / ค่าว่าง → รอตรวจ
+  return 'pending';
+}
 
 /* =================================================
    ⏳ Wait for Supabase
@@ -49,28 +74,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   const ready = await waitForSupabase();
   if (!ready) { showLoadingError(); return; }
 
-  // ตรวจสิทธิ์
   if (typeof protectPage === 'function') {
     await protectPage(['admin', 'adminQc', 'manager', 'executive']);
   }
 
-  // โหลด session + profile (สำหรับ right-panel)
   await loadUserProfile();
-
-  // Avatar upload
   initAvatarUpload();
-
-  // Calendar
   renderCalendar();
 
-  // โหลดข้อมูล Dashboard
+  // เพิ่ม Comparison Card เข้า DOM ก่อนโหลดข้อมูล
+  injectComparisonCard();
+
   await loadDashboardData();
+  setupClaimsRealtime();
 
-  setupClaimsRealtime();   // ← เปิด realtime subscription
-
-  // Filter
   const filterEl = document.getElementById('filterStatus');
   if (filterEl) filterEl.addEventListener('change', filterTable);
+
+  // Listener ของ comparison card
+  const cmpSelect = document.getElementById('cmpPeriodSelect');
+  if (cmpSelect) {
+    cmpSelect.addEventListener('change', (e) => {
+      comparePeriod = e.target.value;
+      renderComparisonCard(allClaims);
+    });
+  }
 });
 
 /* =================================================
@@ -104,7 +132,6 @@ async function loadUserProfile() {
 
     const fullName = profile?.display_name || profile?.username || session.user.email;
 
-    // ใส่ค่าใน UI
     const displayNameEl = document.getElementById('displayName');
     const userEmailEl   = document.getElementById('userEmail');
     const userRoleEl    = document.getElementById('userRole');
@@ -128,6 +155,7 @@ async function loadUserProfile() {
 
 /* =================================================
    📊 Load Dashboard Data
+   ⚠️ ลบ .in('status', [...]) ออก — โหลดทั้งหมดแล้ว filter ฝั่ง JS
 ================================================= */
 async function loadDashboardData() {
   try {
@@ -135,12 +163,14 @@ async function loadDashboardData() {
 
     const { data, error } = await supabaseClient
       .from('claims')
-      .select('id,status,claim_date,created_at,emp_name,area,customer,product,qty,claim_types,detail,media_urls,qc_comment')
-      .in('status', ['submitted', 'approved', 'rejected'])
+      .select('id,status,qc_status,claim_date,created_at,emp_name,area,customer,product,qty,claim_types,detail,media_urls,qc_comment,picked_at,claim_scope')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     allClaims = data || [];
+
+    console.log(`📦 โหลด claims ทั้งหมด: ${allClaims.length} รายการ`);
+    console.log('📊 status breakdown:', summarizeStatuses(allClaims));
 
     renderKPICards(allClaims);
     renderPassFailPie(allClaims);
@@ -150,54 +180,49 @@ async function loadDashboardData() {
     renderTrendChart(allClaims);
     renderTopProductsChart(allClaims);
     renderMiniStats(allClaims);
+    renderComparisonCard(allClaims);
   } catch (err) {
-    console.error(err);
+    console.error('❌ loadDashboardData error:', err);
     showLoadingError();
   }
 }
 
-// ============================================================
-// PATCH: KPI Cards (V3.1 — Self-contained, รวม setKPI)
-// ────────────────────────────────────────────────────────────
-// แทนที่บล็อก renderKPICards + setKPI เดิมในไฟล์ QcDashboard.js
-// (snippet นี้รวม setKPI ไว้ด้วยแล้ว ไม่ต้องพึ่งของเดิม)
-// อย่าลืมเพิ่ม setupClaimsRealtime(); ใน init() ด้วย
-// ============================================================
+function summarizeStatuses(claims) {
+  const map = {};
+  claims.forEach(c => {
+    const eff = getEffectiveStatus(c);
+    map[eff] = (map[eff] || 0) + 1;
+  });
+  return map;
+}
 
 /* =================================================
-   📊 KPI CARDS — V3.1
+   📊 KPI CARDS — V3 (ใช้ getEffectiveStatus)
 ================================================= */
 function renderKPICards(claims) {
-  // ── นับเฉพาะเดือนนี้ ──
   const now = new Date();
   const thisYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const monthly = claims.filter(c =>
     (c.claim_date || c.created_at || '').startsWith(thisYM)
   );
 
-  // ── นับสถานะ (ใช้ทั้งหมด ไม่เฉพาะเดือน) ──
   const totalMonth = monthly.length;
-  const approved   = claims.filter(c => c.status === 'approved').length;
-  const inProgress = claims.filter(c => c.status === 'in_progress' || c.status === 'reviewing').length;
-  const newPending = claims.filter(c => c.status === 'submitted').length;
+  const approved   = claims.filter(c => getEffectiveStatus(c) === 'approved').length;
+  const inProgress = claims.filter(c => getEffectiveStatus(c) === 'in_progress').length;
+  const newPending = claims.filter(c => getEffectiveStatus(c) === 'pending').length;
 
-  // ── คำนวณอัตรา ──
-  const approveRate = totalMonth > 0 ? Math.round(approved / totalMonth * 100) : 0;
+  const approveRate = (approved + inProgress + newPending) > 0
+    ? Math.round(approved / (approved + inProgress + newPending) * 100)
+    : 0;
 
-  // ── set ค่า KPI ──
   setKPI('kpi-total',   totalMonth, 'ทั้งหมดในเดือนนี้');
   setKPI('kpi-fail',    inProgress, 'รายการที่กำลังตรวจสอบ', 'fail');
   setKPI('kpi-pass',    approved,   `${approveRate}% อัตราอนุมัติ`, 'pass');
   setKPI('kpi-pending', newPending, newPending > 0 ? `มี ${newPending} เคลมรอตรวจ` : 'ไม่มีเคลมใหม่', 'warn');
 
-  // ── 🔔 จัดการ alert mode ──
   toggleNewClaimAlert(newPending);
 }
 
-/* =================================================
-   🛠️ setKPI — helper ใส่ค่าเข้าใบ KPI
-   รองรับทั้ง a.qc-kpi-card และ div.qc-kpi-card
-================================================= */
 function setKPI(id, value, subText, colorClass) {
   const card = document.getElementById(id);
   if (!card) return;
@@ -211,13 +236,9 @@ function setKPI(id, value, subText, colorClass) {
     valEl.className = 'qc-kpi-val';
     if (colorClass) valEl.classList.add(colorClass);
   }
-
   if (subEl && subText != null) subEl.textContent = subText;
 }
 
-/* =================================================
-   🔔 TOGGLE ALERT — เปิด/ปิดกระพริบ + badge
-================================================= */
 function toggleNewClaimAlert(count) {
   const card  = document.getElementById('kpi-pending');
   const badge = document.getElementById('kpiPendingBadge');
@@ -240,52 +261,41 @@ function toggleNewClaimAlert(count) {
   }
 }
 
-/* =================================================
-   🏷️ Document title — โชว์จำนวนเคลมใหม่ใน tab
-================================================= */
 function updateDocumentTitleAlert(count) {
   const baseTitle = 'QC Dashboard - EABaseHub';
   document.title = count > 0 ? `(${count}) 🔔 ${baseTitle}` : baseTitle;
 }
 
 /* =================================================
-   📡 REALTIME — sub claim ใหม่/อัปเดต
-   เรียกใน init() หลัง loadDashboardData() สำเร็จ:
-       setupClaimsRealtime();
+   📡 REALTIME — ไม่ return Promise ใน callback
+   (แก้ "message channel closed before a response was received")
 ================================================= */
 function setupClaimsRealtime() {
   if (typeof supabaseClient === 'undefined') return;
 
   let isFirstLoad = true;
 
+  const handleChange = (payload) => {
+    // fire-and-forget — ไม่ return Promise ออกจาก callback
+    loadDashboardData().catch(err => console.error('reload error:', err));
+
+    if (!isFirstLoad && payload?.eventType === 'INSERT') {
+      const eff = getEffectiveStatus(payload.new || {});
+      if (eff === 'pending') {
+        playAlertSound();
+        showQcToast(`🔔 เคลมใหม่: ${payload.new?.product || 'ไม่ระบุชื่อสินค้า'}`);
+      }
+    }
+  };
+
   supabaseClient
     .channel('qc-dashboard-claims')
-    .on('postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'claims' },
-      async (payload) => {
-        await loadDashboardData();
-        if (!isFirstLoad && payload.new?.status === 'submitted') {
-          playAlertSound();
-          showQcToast(`🔔 เคลมใหม่: ${payload.new.product || 'ไม่ระบุชื่อสินค้า'}`);
-        }
-      }
-    )
-    .on('postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'claims' },
-      async () => { await loadDashboardData(); }
-    )
-    .on('postgres_changes',
-      { event: 'DELETE', schema: 'public', table: 'claims' },
-      async () => { await loadDashboardData(); }
-    )
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'claims' }, handleChange)
     .subscribe(() => {
       setTimeout(() => { isFirstLoad = false; }, 2000);
     });
 }
 
-/* =================================================
-   🔊 Alert Sound
-================================================= */
 function playAlertSound() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -300,27 +310,18 @@ function playAlertSound() {
     osc.start(ctx.currentTime);
     osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
     osc.stop(ctx.currentTime + 0.25);
-  } catch (_) { /* silent */ }
+  } catch (_) {}
 }
 
-/* =================================================
-   📣 Mini Toast
-================================================= */
 function showQcToast(message) {
   const div = document.createElement('div');
   div.textContent = message;
   Object.assign(div.style, {
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    background: '#1f2937',
-    color: '#fff',
-    padding: '10px 18px',
-    borderRadius: '12px',
-    fontSize: '13px',
-    fontFamily: "'Kanit', sans-serif",
-    zIndex: '9999',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+    position: 'fixed', top: '20px', right: '20px',
+    background: '#1f2937', color: '#fff',
+    padding: '10px 18px', borderRadius: '12px',
+    fontSize: '13px', fontFamily: "'Kanit', sans-serif",
+    zIndex: '9999', boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
     transform: 'translateX(120%)',
     transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
   });
@@ -331,23 +332,24 @@ function showQcToast(message) {
     setTimeout(() => div.remove(), 300);
   }, 3500);
 }
+
 /* =================================================
    🍩 PASS / FAIL DONUT
 ================================================= */
 function renderPassFailPie(claims) {
-  const total    = claims.length;
-  const approved = claims.filter(c => c.status === 'approved').length;
-  const rejected = claims.filter(c => c.status === 'rejected').length;
-  const pending  = claims.filter(c => c.status === 'submitted').length;
+  const total      = claims.length;
+  const approved   = claims.filter(c => getEffectiveStatus(c) === 'approved').length;
+  const rejected   = claims.filter(c => getEffectiveStatus(c) === 'rejected').length;
+  const inProgress = claims.filter(c => getEffectiveStatus(c) === 'in_progress').length;
+  const pending    = claims.filter(c => getEffectiveStatus(c) === 'pending').length;
 
-  const pPass = total > 0 ? Math.round(approved / total * 100) : 0;
-  const pFail = total > 0 ? Math.round(rejected / total * 100) : 0;
-  const pPend = 100 - pPass - pFail;
+  const waitingCount = inProgress + pending;
 
   const centerEl = document.getElementById('pieCenterNum');
-  if (centerEl) centerEl.textContent = total;
+  if (centerEl) centerEl.textContent = total.toLocaleString();
 
   if (window._pfChart) window._pfChart.destroy();
+
   const canvas = document.getElementById('pfPieChart');
   if (!canvas || typeof Chart === 'undefined') return;
 
@@ -356,24 +358,29 @@ function renderPassFailPie(claims) {
     data: {
       labels: ['Pass', 'Fail', 'รอตรวจ'],
       datasets: [{
-        data: [approved, rejected, pending],
-        backgroundColor: [CHART_COLORS.pass, CHART_COLORS.fail, CHART_COLORS.pending],
-        borderColor: CHART_COLORS.donutBorder,
-        borderWidth: 3,
-        hoverOffset: 8,
-        hoverBorderWidth: 3,
-      }],
+        data: [approved, rejected, waitingCount],
+        backgroundColor: [
+          CHART_COLORS.pass,
+          CHART_COLORS.fail,
+          CHART_COLORS.pending
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 4,
+        cutout: '78%',
+        circumference: 180,
+        rotation: 270,
+        borderRadius: 8
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '70%',
       plugins: {
         legend: { display: false },
         tooltip: {
           backgroundColor: CHART_COLORS.tooltipBg,
           titleColor: CHART_COLORS.tooltipDim,
-          bodyColor:  CHART_COLORS.tooltipText,
+          bodyColor: CHART_COLORS.tooltipText,
           padding: 10,
           cornerRadius: 8,
           callbacks: {
@@ -383,29 +390,31 @@ function renderPassFailPie(claims) {
             }
           }
         }
-      },
-    },
+      }
+    }
   });
 
-  // Legend (ใช้ class .qc-*)
   const legend = document.getElementById('pfLegend');
   if (legend) {
-    legend.innerHTML = [
-      { cls: 'qc-dot-pass', label: 'Pass',   count: approved, pct: pPass, color: CHART_COLORS.pass },
-      { cls: 'qc-dot-fail', label: 'Fail',   count: rejected, pct: pFail, color: CHART_COLORS.fail },
-      { cls: 'qc-dot-pend', label: 'รอตรวจ', count: pending,  pct: pPend, color: CHART_COLORS.pending },
-    ].map(item => `
-      <div class="qc-legend-item">
-        <div class="qc-legend-left">
-          <span class="qc-dot ${item.cls}"></span>
-          <span class="qc-legend-label">${item.label}</span>
-        </div>
-        <span class="qc-legend-count">${item.count} ราย · ${item.pct}%</span>
+    legend.innerHTML = `
+      <div class="qc-gauge-legend-row">
+        <span class="qc-gauge-dot qc-dot-pass"></span>
+        <strong>${approved.toLocaleString()}</strong>
+        <span>Pass</span>
       </div>
-      <div class="qc-legend-bar">
-        <div class="qc-legend-bar-fill" style="width:${item.pct}%;background:${item.color}"></div>
+
+      <div class="qc-gauge-legend-row">
+        <span class="qc-gauge-dot qc-dot-fail"></span>
+        <strong>${rejected.toLocaleString()}</strong>
+        <span>Fail</span>
       </div>
-    `).join('');
+
+      <div class="qc-gauge-legend-row">
+        <span class="qc-gauge-dot qc-dot-pend"></span>
+        <strong>${waitingCount.toLocaleString()}</strong>
+        <span>รอตรวจ</span>
+      </div>
+    `;
   }
 }
 
@@ -426,15 +435,17 @@ function renderRecentClaims(claims) {
   }
 
   const statusMap = {
-    submitted: { label: 'รอพิจารณา', cls: 'qc-sb-pending' },
-    approved:  { label: 'อนุมัติ',   cls: 'qc-sb-pass' },
-    rejected:  { label: 'ไม่อนุมัติ', cls: 'qc-sb-fail' },
+    pending:     { label: 'รอพิจารณา',     cls: 'qc-sb-pending' },
+    in_progress: { label: 'กำลังตรวจสอบ', cls: 'qc-sb-pending' },
+    approved:    { label: 'อนุมัติ',        cls: 'qc-sb-pass' },
+    rejected:    { label: 'ไม่อนุมัติ',     cls: 'qc-sb-fail' },
   };
 
   container.innerHTML = recent.map(c => {
-    const s  = statusMap[c.status] || { label: c.status, cls: 'qc-sb-pending' };
-    const id = (c.id || '').substring(0, 8).toUpperCase();
-    const dt = formatDate(c.claim_date || c.created_at);
+    const eff = getEffectiveStatus(c);
+    const s   = statusMap[eff] || statusMap.pending;
+    const id  = (c.id || '').substring(0, 8).toUpperCase();
+    const dt  = formatDate(c.claim_date || c.created_at);
     return `
       <div class="qc-claim-row">
         <div>
@@ -465,19 +476,22 @@ function renderTable(data) {
   }
 
   tbody.innerHTML = data.map(r => {
-    const scoreVal   = r.status === 'approved' ? 100 : r.status === 'rejected' ? 30 : 60;
-    const scoreColor = r.status === 'approved' ? 'var(--qc-pass)'
-                     : r.status === 'rejected' ? 'var(--qc-fail)'
+    const eff = getEffectiveStatus(r);
+    const scoreVal   = eff === 'approved' ? 100 : eff === 'rejected' ? 30 : eff === 'in_progress' ? 60 : 40;
+    const scoreColor = eff === 'approved' ? 'var(--qc-pass)'
+                     : eff === 'rejected' ? 'var(--qc-fail)'
                      : 'var(--qc-warn)';
-    const scoreLabel = r.status === 'approved' ? 'ผ่าน'
-                     : r.status === 'rejected' ? 'ไม่ผ่าน'
+    const scoreLabel = eff === 'approved' ? 'ผ่าน'
+                     : eff === 'rejected' ? 'ไม่ผ่าน'
+                     : eff === 'in_progress' ? 'กำลังตรวจ'
                      : 'รอตรวจ';
     const sMap = {
-      submitted: { label: 'รอตรวจ', cls: 'qc-sb-pending' },
-      approved:  { label: 'Pass',   cls: 'qc-sb-pass' },
-      rejected:  { label: 'Fail',   cls: 'qc-sb-fail' },
+      pending:     { label: 'รอตรวจ',     cls: 'qc-sb-pending' },
+      in_progress: { label: 'กำลังตรวจ',  cls: 'qc-sb-pending' },
+      approved:    { label: 'Pass',        cls: 'qc-sb-pass' },
+      rejected:    { label: 'Fail',        cls: 'qc-sb-fail' },
     };
-    const s = sMap[r.status] || { label: r.status, cls: 'qc-sb-pending' };
+    const s = sMap[eff] || sMap.pending;
 
     return `
       <tr>
@@ -502,9 +516,18 @@ function renderTable(data) {
 
 function filterTable() {
   const filter = document.getElementById('filterStatus')?.value;
-  const sMap = { pass: 'approved', fail: 'rejected', pending: 'submitted' };
-  const dbStatus = sMap[filter] || filter;
-  renderTable(dbStatus ? allClaims.filter(r => r.status === dbStatus) : allClaims);
+  const sMap = { pass: 'approved', fail: 'rejected', pending: 'pending' };
+  const target = sMap[filter] || filter;
+  if (!target) {
+    renderTable(allClaims);
+    return;
+  }
+  const filtered = allClaims.filter(r => {
+    const eff = getEffectiveStatus(r);
+    if (target === 'pending') return eff === 'pending' || eff === 'in_progress';
+    return eff === target;
+  });
+  renderTable(filtered);
 }
 
 /* =================================================
@@ -516,8 +539,11 @@ function renderClaimSummary(claims) {
 
   const countMap = {};
   claims.forEach(c => {
-    (Array.isArray(c.claim_types) ? c.claim_types : []).forEach(t => {
-      countMap[t] = (countMap[t] || 0) + 1;
+    const types = Array.isArray(c.claim_types)
+      ? c.claim_types
+      : (typeof c.claim_types === 'string' ? safeParseArray(c.claim_types) : []);
+    types.forEach(t => {
+      if (t) countMap[t] = (countMap[t] || 0) + 1;
     });
   });
 
@@ -550,6 +576,15 @@ function renderClaimSummary(claims) {
   `;
 }
 
+function safeParseArray(value) {
+  try {
+    const p = JSON.parse(value);
+    return Array.isArray(p) ? p : [];
+  } catch (_) {
+    return String(value).split(',').map(s => s.trim()).filter(Boolean);
+  }
+}
+
 /* =================================================
    📊 TREND CHART
 ================================================= */
@@ -566,10 +601,10 @@ function renderTrendChart(claims) {
   }
 
   const passData = months.map(m =>
-    claims.filter(c => c.status === 'approved' && (c.claim_date || c.created_at || '').startsWith(m)).length
+    claims.filter(c => getEffectiveStatus(c) === 'approved' && (c.claim_date || c.created_at || '').startsWith(m)).length
   );
   const failData = months.map(m =>
-    claims.filter(c => c.status === 'rejected' && (c.claim_date || c.created_at || '').startsWith(m)).length
+    claims.filter(c => getEffectiveStatus(c) === 'rejected' && (c.claim_date || c.created_at || '').startsWith(m)).length
   );
 
   if (window._trendChart) window._trendChart.destroy();
@@ -582,40 +617,7 @@ function renderTrendChart(claims) {
         { label: 'Fail (ปฏิเสธ)', data: failData, backgroundColor: CHART_COLORS.fail, borderRadius: 6, stack: 'stack', borderSkipped: false },
       ],
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: CHART_COLORS.tooltipBg,
-          titleColor: CHART_COLORS.tooltipDim,
-          bodyColor:  CHART_COLORS.tooltipText,
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} ราย` }
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          grid: { display: false },
-          border: { display: false },
-          ticks: { color: CHART_COLORS.axis, font: { size: 11, family: "'Kanit', sans-serif" } }
-        },
-        y: {
-          stacked: true,
-          grid: { color: CHART_COLORS.grid },
-          border: { display: false },
-          ticks: {
-            color: CHART_COLORS.axis,
-            font: { size: 11, family: "'Kanit', sans-serif" },
-            stepSize: 1,
-            callback: v => Number.isInteger(v) ? v : null
-          }
-        },
-      },
-    },
+    options: chartBaseOptions(),
   });
 }
 
@@ -629,22 +631,28 @@ function renderTopProductsChart(claims) {
   const map = {};
   claims.forEach(c => {
     if (!c.product) return;
-    if (!map[c.product]) map[c.product] = { total: 0, approved: 0, rejected: 0 };
+    if (!map[c.product]) map[c.product] = { total: 0, approved: 0, rejected: 0, waiting: 0 };
+    const eff = getEffectiveStatus(c);
     map[c.product].total++;
-    if (c.status === 'approved') map[c.product].approved++;
-    if (c.status === 'rejected') map[c.product].rejected++;
+    if (eff === 'approved') map[c.product].approved++;
+    else if (eff === 'rejected') map[c.product].rejected++;
+    else map[c.product].waiting++;
   });
 
-  const sorted = Object.entries(map)
-    .sort((a, b) => b[1].total - a[1].total)
-    .slice(0, 8);
-
+  const sorted = Object.entries(map).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
   const labels   = sorted.map(([name]) => name);
   const passData = sorted.map(([, v]) => v.approved);
   const failData = sorted.map(([, v]) => v.rejected);
-  const pendData = sorted.map(([, v]) => v.total - v.approved - v.rejected);
+  const pendData = sorted.map(([, v]) => v.waiting);
 
   if (window._topProductChart) window._topProductChart.destroy();
+
+  if (sorted.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+
   window._topProductChart = new Chart(canvas, {
     type: 'bar',
     data: {
@@ -655,60 +663,52 @@ function renderTopProductsChart(claims) {
         { label: 'รอตรวจสอบ', data: pendData, backgroundColor: CHART_COLORS.pending, borderRadius: 6, stack: 'stack', borderSkipped: false },
       ],
     },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: CHART_COLORS.tooltipBg,
-          titleColor: CHART_COLORS.tooltipDim,
-          bodyColor:  CHART_COLORS.tooltipText,
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x} ราย` },
-        },
+    options: { ...chartBaseOptions(), indexAxis: 'y' },
+  });
+}
+
+function chartBaseOptions() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: CHART_COLORS.tooltipBg,
+        titleColor: CHART_COLORS.tooltipDim,
+        bodyColor:  CHART_COLORS.tooltipText,
+        padding: 10, cornerRadius: 8,
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y ?? ctx.parsed.x} ราย` }
+      }
+    },
+    scales: {
+      x: {
+        stacked: true, grid: { display: false }, border: { display: false },
+        ticks: { color: CHART_COLORS.axis, font: { size: 11, family: "'Kanit', sans-serif" } }
       },
-      scales: {
-        x: {
-          stacked: true,
-          grid: { color: CHART_COLORS.grid },
-          border: { display: false },
-          ticks: {
-            color: CHART_COLORS.axis,
-            font: { size: 11, family: "'Kanit', sans-serif" },
-            stepSize: 1,
-            callback: v => Number.isInteger(v) ? v : null
-          }
-        },
-        y: {
-          stacked: true,
-          grid: { display: false },
-          border: { display: false },
-          ticks: { color: CHART_COLORS.axis, font: { size: 11, family: "'Kanit', sans-serif" } }
-        },
+      y: {
+        stacked: true, grid: { color: CHART_COLORS.grid }, border: { display: false },
+        ticks: {
+          color: CHART_COLORS.axis, font: { size: 11, family: "'Kanit', sans-serif" },
+          stepSize: 1, callback: v => Number.isInteger(v) ? v : null
+        }
       },
     },
-  });
+  };
 }
 
 /* =================================================
    📊 MINI STATS (Right Panel)
 ================================================= */
 function renderMiniStats(claims) {
-  const total    = claims.length;
-  const approved = claims.filter(c => c.status === 'approved').length;
-  const rejected = claims.filter(c => c.status === 'rejected').length;
+  const approved = claims.filter(c => getEffectiveStatus(c) === 'approved').length;
+  const rejected = claims.filter(c => getEffectiveStatus(c) === 'rejected').length;
 
   const passRate = (approved + rejected) > 0
     ? Math.round(approved / (approved + rejected) * 100)
     : 0;
 
-  // ค่าเฉลี่ย/วัน (30 วันล่าสุด)
   const now = new Date();
-  const monthAgo = new Date(now);
-  monthAgo.setDate(now.getDate() - 30);
+  const monthAgo = new Date(now); monthAgo.setDate(now.getDate() - 30);
   const recent = claims.filter(c => {
     const d = new Date(c.claim_date || c.created_at);
     return !isNaN(d) && d >= monthAgo;
@@ -721,8 +721,268 @@ function renderMiniStats(claims) {
   if (avgEl)  avgEl.textContent  = avgPerDay;
 }
 
+/* ============================================================
+   🆕 COMPARISON CARD — เปรียบเทียบช่วงเวลา (KPI + กราฟ + %)
+   ============================================================ */
+function injectComparisonCard() {
+  // หา anchor — แทรกก่อน "สินค้าที่เคลมบ่อย" (qc-row3 ก็ได้)
+  const tableCard = document.querySelector('.qc-table-card');
+  if (!tableCard || document.getElementById('cmpCard')) return;
+
+  const html = `
+    <section class="qc-card cmp-card" id="cmpCard">
+      <style>
+        .cmp-card { padding: 18px; }
+        .cmp-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+        .cmp-header h3 { font-size:15px; font-weight:600; margin:0; display:flex; align-items:center; gap:8px; color:#1f2937; }
+        .cmp-header h3::before { content:''; width:4px; height:16px; background:var(--role-color, #f97316); border-radius:2px; }
+        .cmp-controls { display:flex; align-items:center; gap:8px; }
+        .cmp-controls label { font-size:12px; color:#6b7280; }
+        .cmp-controls select {
+          padding:6px 10px; border:1px solid #e5e7eb; border-radius:8px;
+          font-family:'Kanit', sans-serif; font-size:12.5px; background:#fff; cursor:pointer;
+        }
+        .cmp-controls select:focus { outline:2px solid var(--role-color, #f97316); outline-offset:1px; }
+        .cmp-period-info { font-size:11.5px; color:#9ca3af; font-family:'IBM Plex Mono', monospace; }
+
+        .cmp-kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:16px; }
+        @media (max-width: 768px) { .cmp-kpi-grid { grid-template-columns:repeat(2, 1fr); } }
+
+        .cmp-kpi {
+          background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;
+          display:flex; flex-direction:column; gap:4px; min-width:0;
+        }
+        .cmp-kpi-label { font-size:11px; color:#6b7280; font-weight:500; }
+        .cmp-kpi-val { font-size:22px; font-weight:700; color:#111827; line-height:1; font-family:'IBM Plex Mono', monospace; }
+        .cmp-kpi-val.pass { color:#10b981; }
+        .cmp-kpi-val.fail { color:#ef4444; }
+        .cmp-kpi-val.warn { color:#f59e0b; }
+        .cmp-kpi-delta { font-size:11px; font-weight:600; display:flex; align-items:center; gap:3px; margin-top:2px; }
+        .cmp-kpi-delta.up   { color:#10b981; }
+        .cmp-kpi-delta.down { color:#ef4444; }
+        .cmp-kpi-delta.flat { color:#9ca3af; }
+        .cmp-kpi-prev { font-size:10.5px; color:#9ca3af; }
+
+        .cmp-chart-wrap { position:relative; height:220px; }
+        .cmp-empty { text-align:center; color:#9ca3af; font-size:13px; padding:30px; }
+      </style>
+
+      <div class="cmp-header">
+        <h3>📊 เปรียบเทียบช่วงเวลา</h3>
+        <div class="cmp-controls">
+          <label for="cmpPeriodSelect">ช่วงเวลา:</label>
+          <select id="cmpPeriodSelect">
+            <option value="today">วันนี้</option>
+            <option value="7d">7 วันล่าสุด</option>
+            <option value="30d" selected>30 วันล่าสุด</option>
+            <option value="month">เดือนนี้</option>
+            <option value="quarter">ไตรมาสนี้</option>
+            <option value="year">ปีนี้</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cmp-period-info" id="cmpPeriodInfo">—</div>
+
+      <div class="cmp-kpi-grid" id="cmpKpiGrid"></div>
+
+      <div class="cmp-chart-wrap">
+        <canvas id="cmpChart"></canvas>
+      </div>
+    </section>
+  `;
+
+  tableCard.insertAdjacentHTML('beforebegin', html);
+}
+
+function getPeriodRange(period) {
+  const now = new Date();
+  const end = new Date(now);
+  let start = new Date(now);
+  let label = '';
+
+  switch (period) {
+    case 'today':
+      start.setHours(0, 0, 0, 0);
+      label = 'วันนี้';
+      break;
+    case '7d':
+      start.setDate(now.getDate() - 6);
+      start.setHours(0, 0, 0, 0);
+      label = '7 วันล่าสุด';
+      break;
+    case 'month':
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      label = `เดือน${now.toLocaleDateString('th-TH', { month: 'long' })}`;
+      break;
+    case 'quarter': {
+      const q = Math.floor(now.getMonth() / 3);
+      start = new Date(now.getFullYear(), q * 3, 1);
+      label = `Q${q + 1} ${now.getFullYear()}`;
+      break;
+    }
+    case 'year':
+      start = new Date(now.getFullYear(), 0, 1);
+      label = `ปี ${now.getFullYear()}`;
+      break;
+    case '30d':
+    default:
+      start.setDate(now.getDate() - 29);
+      start.setHours(0, 0, 0, 0);
+      label = '30 วันล่าสุด';
+  }
+
+  // ช่วงก่อนหน้า — มีระยะเวลาเท่ากัน
+  const durationMs = end - start;
+  const prevEnd   = new Date(start.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - durationMs);
+
+  return { start, end, prevStart, prevEnd, label };
+}
+
+function filterClaimsInRange(claims, start, end) {
+  const s = start.getTime();
+  const e = end.getTime();
+  return claims.filter(c => {
+    const d = new Date(c.claim_date || c.created_at);
+    if (isNaN(d)) return false;
+    const t = d.getTime();
+    return t >= s && t <= e;
+  });
+}
+
+function calcDelta(current, previous) {
+  if (previous === 0 && current === 0) return { pct: 0, dir: 'flat' };
+  if (previous === 0) return { pct: 100, dir: 'up' };
+  const diff = current - previous;
+  const pct = Math.round((diff / previous) * 100);
+  if (pct === 0) return { pct: 0, dir: 'flat' };
+  return { pct: Math.abs(pct), dir: pct > 0 ? 'up' : 'down' };
+}
+
+function deltaArrow(dir) {
+  if (dir === 'up')   return '▲';
+  if (dir === 'down') return '▼';
+  return '—';
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
+}
+
+function renderComparisonCard(claims) {
+  const grid = document.getElementById('cmpKpiGrid');
+  const info = document.getElementById('cmpPeriodInfo');
+  const canvas = document.getElementById('cmpChart');
+  if (!grid || !canvas) return;
+
+  const { start, end, prevStart, prevEnd, label } = getPeriodRange(comparePeriod);
+
+  if (info) {
+    info.textContent = `${label} · ${fmtDate(start)} → ${fmtDate(end)}  เทียบกับ  ${fmtDate(prevStart)} → ${fmtDate(prevEnd)}`;
+  }
+
+  const cur  = filterClaimsInRange(claims, start, end);
+  const prev = filterClaimsInRange(claims, prevStart, prevEnd);
+
+  const stats = (arr) => {
+    const total    = arr.length;
+    const approved = arr.filter(c => getEffectiveStatus(c) === 'approved').length;
+    const rejected = arr.filter(c => getEffectiveStatus(c) === 'rejected').length;
+    const waiting  = arr.filter(c => ['in_progress', 'pending'].includes(getEffectiveStatus(c))).length;
+    const passRate = (approved + rejected) > 0 ? Math.round(approved / (approved + rejected) * 100) : 0;
+    return { total, approved, rejected, waiting, passRate };
+  };
+
+  const c = stats(cur);
+  const p = stats(prev);
+
+  const kpis = [
+    { label: 'ทั้งหมด', cur: c.total,    prev: p.total,    cls: '',     unit: 'ราย' },
+    { label: 'Pass',    cur: c.approved, prev: p.approved, cls: 'pass', unit: 'ราย' },
+    { label: 'Fail',    cur: c.rejected, prev: p.rejected, cls: 'fail', unit: 'ราย' },
+    { label: 'รอตรวจ',  cur: c.waiting,  prev: p.waiting,  cls: 'warn', unit: 'ราย' },
+  ];
+
+  grid.innerHTML = kpis.map(k => {
+    const d = calcDelta(k.cur, k.prev);
+    return `
+      <div class="cmp-kpi">
+        <div class="cmp-kpi-label">${k.label}</div>
+        <div class="cmp-kpi-val ${k.cls}">${k.cur.toLocaleString()}</div>
+        <div class="cmp-kpi-delta ${d.dir}">
+          ${deltaArrow(d.dir)} ${d.pct}%
+        </div>
+        <div class="cmp-kpi-prev">ช่วงก่อน: ${k.prev.toLocaleString()} ${k.unit}</div>
+      </div>
+    `;
+  }).join('') + `
+    <div class="cmp-kpi" style="grid-column: span 2;">
+      <div class="cmp-kpi-label">Pass Rate</div>
+      <div class="cmp-kpi-val pass">${c.passRate}%</div>
+      <div class="cmp-kpi-delta ${c.passRate >= p.passRate ? 'up' : 'down'}">
+        ${deltaArrow(c.passRate >= p.passRate ? 'up' : 'down')} ${Math.abs(c.passRate - p.passRate)} จุด
+      </div>
+      <div class="cmp-kpi-prev">ช่วงก่อน: ${p.passRate}%</div>
+    </div>
+  `;
+
+  // ปรับ grid ให้รองรับ Pass Rate ที่ span 2
+  grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+
+  // กราฟเปรียบเทียบ
+  if (window._cmpChart) window._cmpChart.destroy();
+  if (typeof Chart === 'undefined') return;
+
+  window._cmpChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: ['ทั้งหมด', 'Pass', 'Fail', 'รอตรวจ'],
+      datasets: [
+        {
+          label: `ช่วงก่อน (${fmtDate(prevStart)} - ${fmtDate(prevEnd)})`,
+          data: [p.total, p.approved, p.rejected, p.waiting],
+          backgroundColor: CHART_COLORS.prevPeriod,
+          borderRadius: 6,
+        },
+        {
+          label: `ช่วงนี้ (${fmtDate(start)} - ${fmtDate(end)})`,
+          data: [c.total, c.approved, c.rejected, c.waiting],
+          backgroundColor: ['#6366f1', CHART_COLORS.pass, CHART_COLORS.fail, CHART_COLORS.pending],
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true, position: 'bottom',
+          labels: { font: { size: 11, family: "'Kanit', sans-serif" }, boxWidth: 12, padding: 10 },
+        },
+        tooltip: {
+          backgroundColor: CHART_COLORS.tooltipBg,
+          titleColor: CHART_COLORS.tooltipDim,
+          bodyColor:  CHART_COLORS.tooltipText,
+          padding: 10, cornerRadius: 8,
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false },
+             ticks: { color: CHART_COLORS.axis, font: { size: 11, family: "'Kanit', sans-serif" } } },
+        y: { grid: { color: CHART_COLORS.grid }, border: { display: false },
+             ticks: {
+               color: CHART_COLORS.axis, font: { size: 11, family: "'Kanit', sans-serif" },
+               stepSize: 1, callback: v => Number.isInteger(v) ? v : null
+             } },
+      },
+    },
+  });
+}
+
 /* =================================================
-   🗓️ CALENDAR (จาก Index)
+   🗓️ CALENDAR
 ================================================= */
 function renderCalendar() {
   const grid  = document.getElementById('calendarGrid');
@@ -730,7 +990,6 @@ function renderCalendar() {
   if (!grid || !title) return;
 
   grid.innerHTML = '';
-
   const year  = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const today = new Date();
@@ -745,7 +1004,6 @@ function renderCalendar() {
   const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // วันที่มีเคลม (highlight ตาม claim_date)
   const claimDates = (allClaims || [])
     .map(c => c.claim_date)
     .filter(Boolean)
@@ -766,19 +1024,11 @@ function renderCalendar() {
     const dateEl = document.createElement('div');
     dateEl.className = 'calendar-day';
     dateEl.textContent = day;
-
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
     if (claimDates.includes(dateStr)) dateEl.classList.add('has-report');
-
-    if (
-      day   === today.getDate()  &&
-      month === today.getMonth() &&
-      year  === today.getFullYear()
-    ) {
+    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
       dateEl.classList.add('today');
     }
-
     grid.appendChild(dateEl);
   }
 }
@@ -793,7 +1043,7 @@ function nextMonth() {
 }
 
 /* =================================================
-   📷 AVATAR UPLOAD (จาก Index)
+   📷 AVATAR UPLOAD
 ================================================= */
 async function initAvatarUpload() {
   const uploadInput   = document.getElementById('uploadAvatar');
@@ -806,17 +1056,9 @@ async function initAvatarUpload() {
   uploadInput.addEventListener('change', async function () {
     const file = this.files[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น'); return; }
+    if (file.size > 2 * 1024 * 1024) { alert('ไฟล์ใหญ่เกินไป (ไม่เกิน 2MB)'); return; }
 
-    if (!file.type.startsWith('image/')) {
-      alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('ไฟล์ใหญ่เกินไป (ไม่เกิน 2MB)');
-      return;
-    }
-
-    // แสดงรูป preview
     const reader = new FileReader();
     reader.onload = (e) => { profileImage.src = e.target.result; };
     reader.readAsDataURL(file);
@@ -834,7 +1076,6 @@ async function uploadAvatar(file, imgElement, wrapperElement) {
     const fileExt  = file.name.split('.').pop().toLowerCase();
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
 
-    // ลบรูปเก่า (ถ้ามี)
     try {
       const { data: oldProfile } = await supabaseClient
         .from('profiles').select('avatar_url').eq('id', user.id).single();
@@ -844,22 +1085,18 @@ async function uploadAvatar(file, imgElement, wrapperElement) {
           await supabaseClient.storage.from('avatars').remove([oldFileName]);
         }
       }
-    } catch (_) { /* ignore */ }
+    } catch (_) {}
 
     const { error: uploadError } = await supabaseClient.storage
       .from('avatars')
       .upload(fileName, file, { cacheControl: '3600', upsert: true });
     if (uploadError) throw uploadError;
 
-    const { data: urlData } = supabaseClient.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
+    const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
     const publicUrl = urlData.publicUrl;
 
     const { error: updateError } = await supabaseClient
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('id', user.id);
+      .from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
     if (updateError) throw updateError;
 
     imgElement.src = publicUrl + '?t=' + Date.now();
@@ -876,9 +1113,7 @@ async function uploadAvatar(file, imgElement, wrapperElement) {
    🚪 LOGOUT
 ================================================= */
 async function logout() {
-  try {
-    await supabaseClient.auth.signOut();
-  } catch (_) { /* ignore */ }
+  try { await supabaseClient.auth.signOut(); } catch (_) {}
   window.location.href = '/pages/auth/login.html';
 }
 
@@ -921,4 +1156,4 @@ function escapeHtml(str) {
     .replaceAll("'", '&#39;');
 }
 
-console.log('QC Dashboard V2 (Hybrid) loaded 🚀');
+console.log('QC Dashboard V3 (Fixed status field + Comparison Card) loaded 🚀');
