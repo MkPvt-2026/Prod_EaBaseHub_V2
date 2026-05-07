@@ -1,48 +1,47 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>จัดการเคลมภายใน | EABaseHub</title>
+  <title>EABaseHub | Internal Claims</title>
+
+  <!-- ป้องกัน flash: อ่านค่า theme ก่อน render -->
+  <script>
+    (function(){ var t=localStorage.getItem('ea-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();
+  </script>
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 
-  <!-- Base Styles -->
-  <link rel="stylesheet" href="/css/base/bass-layout.css">
-  <link rel="stylesheet" href="/minipro/bass.css">
-
-  <!-- Page Styles -->
-  <link rel="stylesheet" href="/css/pages/Qc-claim/internal-claims.css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/base/role-colors.css">
+  <link rel="stylesheet" href="/css/components/badgeButtom.css">
+  <link rel="stylesheet" href="/css/base/bassHeader.css"/>
+  <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css">
 </head>
-
 <body class="role-adminQc">
 
-  <!-- ====================== HEADER ====================== -->
+  <!-- HEADER -->
   <header class="app-header">
-    <div class="app-header-inner">
-      <div class="logo">
-        <div class="logo-circle">
-          <img src="/assets/icons/icon-192.png" alt="logo">
-        </div>
-        <div>
-          <h2>Customer &amp; Product Dashboard</h2>
-          <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
-        </div>
+    <div class="logo">
+      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
+      <h2>EABaseHub</h2>
+    </div>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
-
-      <div class="user-box">
-        <div class="user-avatar" id="userAvatar">
-          <span class="material-symbols-outlined">person</span>
-        </div>
-        <div class="user-info">
-          <div class="user-name" data-user="display_name">-</div>
-          <div class="user-role" data-user="role">-</div>
-        </div>
-        <button class="btn-logout" type="button" onclick="logout()">ออกจากระบบ</button>
+      <div class="group">
+        <button class="badge badge--message-sent" id="logoutBtn" type="button">
+          <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">logout</span></span>
+          ออกจากระบบ
+        </button>
       </div>
     </div>
   </header>
@@ -50,440 +49,227 @@
   <!-- NAV Container -->
   <div id="navContainer"></div>
 
-  <!-- ====================== PAGE HEADER ====================== -->
-  <header class="page-header ic-page-header">
-    <div class="ic-header-content">
-      <div class="ic-header-text">
-        
-        <h1>
-          <span class="material-symbols-outlined ic-title-icon">inventory_2</span>
-          จัดการเคลมภายใน
-        </h1>
-        <p>จัดการเคลมวัตถุดิบ · สินค้าในกระบวนการผลิต · ตรวจสอบ · อนุมัติ · บันทึกผล</p>
-      </div>
-      <div class="ic-header-actions">
-        <button class="btn btn--ghost" id="btnBack">
-          <span class="material-symbols-outlined">arrow_back</span>
-          กลับ
-        </button>
-        <button class="btn btn--primary" id="btnAddClaim">
-          <span class="material-symbols-outlined">add_circle</span>
-          เพิ่มเคลมใหม่
-        </button>
-      </div>
-    </div>
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <h1>🏭 ระบบจัดการเคลมภายใน</h1>
+    <p>ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
   </header>
 
+  <!-- MAIN -->
+  <main class="container">
 
-  
-  <!-- ====================== MAIN ====================== -->
-  <main>
-    <div class="container">
-      
-      <!-- ===== NOTE CARD ===== -->
-          <section class="card ic-note-card">
-            <div class="card-header ic-card-header">
-              <h3>
-                <span class="material-symbols-outlined">tips_and_updates</span>
-                หมายเหตุ
-              </h3>
-            </div>
-            <div class="card-body">
-              <ul class="ic-note-list">
-                <li>
-                  <span class="material-symbols-outlined">check_circle</span>
-                  <h4>เคลมสินค้าภายใน :</h4>
-                  <p>สินค้าสำเร็จรูป เสียหายก่อนส่งจำหน่าย หรือมีปัญหาคุณภาพที่ตรวจพบหลังจากนำไปใช้ในกระบวนการผลิตแล้ว</p>
-                </li>
-                <li>
-                  <span class="material-symbols-outlined">check_circle</span>
-                  <h4>เคลมวัตถุดิบภายใน :</h4>
-                  <p>วัตถุดิบ ที่ใช้ในกระบวนการผลิต ไม่ตรงกับสเปค หรือมีปัญหาคุณภาพที่ตรวจพบหลังจากนำไปใช้ในกระบวนการผลิตแล้ว</p>
-                </li>
-                <li>
-                  <span class="material-symbols-outlined">check_circle</span>
-                  <h4>เคลมวัตถุดิบ(ภายนอก) :</h4>                 
-                  <p>วัตถุดิบ ที่ใช้ในกระบวนการแปรรูปเป็นวัตถุดิบภายใน ไม่ตรงกับสเปค หรือมีปัญหาคุณภาพที่ตรวจพบก่อนนำไปใช้ในกระบวนการผลิต</p>
-                </li>
-              </ul>
-            </div>
-          </section>
-
-      <!-- ===== STATS CARDS ===== -->
-      <section class="ic-stats">
-        <div class="ic-stat-card ic-stat--total">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">summarize</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลมทั้งหมด</div>
-            <div class="ic-stat-value" id="statTotal">0</div>
-            <div class="ic-stat-sub">รายการในระบบ</div>
-          </div>
+    <!-- SUMMARY CARDS -->
+    <div class="qc-summary">
+      <div class="summary-card total">
+        <div class="summary-icon"><span class="material-symbols-outlined">factory</span></div>
+        <div class="summary-info">
+          <div class="summary-head">ทั้งหมด</div>
+          <div class="summary-num" id="sumTotal">—</div>
+          <div class="summary-label">เคลมภายในทั้งหมด</div>
         </div>
+      </div>
 
-        <div class="ic-stat-card ic-stat--raw">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">inventory</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลมวัตถุดิบ</div>
-            <div class="ic-stat-value" id="statRawMaterial">0</div>
-            <div class="ic-stat-sub">วัตถุดิบ / บรรจุภัณฑ์ / อะไหล่</div>
-          </div>
+      <div class="summary-card pending">
+        <div class="summary-icon"><span class="material-symbols-outlined">pending_actions</span></div>
+        <div class="summary-info">
+          <div class="summary-head">รอรับเรื่อง</div>
+          <div class="summary-num" id="sumPending">—</div>
+          <div class="summary-label">submitted / pending</div>
         </div>
+      </div>
 
-        <div class="ic-stat-card ic-stat--product">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">precision_manufacturing</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">เคลมสินค้าภายใน</div>
-            <div class="ic-stat-value" id="statInternalProduct">0</div>
-            <div class="ic-stat-sub">สินค้าในกระบวนการ / สำเร็จรูป</div>
-          </div>
+      <div class="summary-card in-progress">
+        <div class="summary-icon"><span class="material-symbols-outlined">manage_search</span></div>
+        <div class="summary-info">
+          <div class="summary-head">กำลังตรวจสอบ</div>
+          <div class="summary-num" id="sumInProgress">—</div>
+          <div class="summary-label">QC รับเรื่องแล้ว</div>
         </div>
+      </div>
 
-        <div class="ic-stat-card ic-stat--pending">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">pending</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">กำลังตรวจสอบ</div>
-            <div class="ic-stat-value" id="statPending">0</div>
-            <div class="ic-stat-sub">รอการพิจารณา</div>
-          </div>
+      <div class="summary-card approved">
+        <div class="summary-icon"><span class="material-symbols-outlined">check_circle</span></div>
+        <div class="summary-info">
+          <div class="summary-head">อนุมัติแล้ว</div>
+          <div class="summary-num" id="sumApproved">—</div>
+          <div class="summary-label">ผ่านการพิจารณา</div>
         </div>
+      </div>
 
-        <div class="ic-stat-card ic-stat--approved">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">verified</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">อนุมัติแล้ว</div>
-            <div class="ic-stat-value" id="statApproved">0</div>
-            <div class="ic-stat-sub">ผ่านการพิจารณา</div>
-          </div>
+      <div class="summary-card rejected">
+        <div class="summary-icon"><span class="material-symbols-outlined">cancel</span></div>
+        <div class="summary-info">
+          <div class="summary-head">ปฏิเสธ</div>
+          <div class="summary-num" id="sumRejected">—</div>
+          <div class="summary-label">ไม่ผ่านการพิจารณา</div>
         </div>
-
-        <div class="ic-stat-card ic-stat--rejected">
-          <div class="ic-stat-icon">
-            <span class="material-symbols-outlined">cancel</span>
-          </div>
-          <div class="ic-stat-info">
-            <div class="ic-stat-label">ปฏิเสธ</div>
-            <div class="ic-stat-value" id="statRejected">0</div>
-            <div class="ic-stat-sub">ไม่ผ่านการพิจารณา</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== FILTER + SEARCH ===== -->
-      <section class="card ic-filter-card">
-        <div class="card-body">
-          <div class="ic-filter-grid">
-            <div class="ic-field">
-              <label for="searchInput">
-                <span class="material-symbols-outlined">search</span>
-                ค้นหา
-              </label>
-              <input
-                type="text"
-                id="searchInput"
-                class="ic-input"
-                placeholder="รหัสเคลม / ผู้แจ้ง / สินค้า..."
-              >
-            </div>
-
-            <div class="ic-field">
-              <label for="filterStatus">
-                <span class="material-symbols-outlined">filter_alt</span>
-                สถานะ
-              </label>
-              <select id="filterStatus" class="ic-input">
-                <option value="">ทั้งหมด</option>
-                <option value="pending">รออนุมัติ</option>
-                <option value="approved">อนุมัติแล้ว</option>
-                <option value="rejected">ปฏิเสธ</option>
-              </select>
-            </div>
-
-            <div class="ic-field">
-              <label for="filterDept">
-                <span class="material-symbols-outlined">groups</span>
-                แผนก
-              </label>
-              <select id="filterDept" class="ic-input">
-                <option value="">ทุกแผนก</option>
-                <option value="ผลิต">แผนกผลิต</option>
-                <option value="คลังสินค้า">แผนกคลังสินค้า</option>
-                <option value="QC">แผนก QC</option>
-                <option value="จัดซื้อ">แผนกจัดซื้อ</option>
-              </select>
-            </div>
-
-            <div class="ic-field">
-              <label for="filterDate">
-                <span class="material-symbols-outlined">event</span>
-                วันที่
-              </label>
-              <input type="date" id="filterDate" class="ic-input">
-            </div>
-
-            <div class="ic-field ic-field--actions">
-              <button class="btn btn--ghost" id="btnReset">
-                <span class="material-symbols-outlined">restart_alt</span>
-                ล้างค่า
-              </button>
-            </div>
-          </div>
-
-          <div class="ic-filter-toolbar">
-            <div class="ic-toolbar-info">
-              <span class="material-symbols-outlined">info</span>
-              พบ <strong id="resultCount">0</strong> รายการ
-            </div>
-            <div class="ic-toolbar-actions">
-              <button class="btn btn--soft" id="btnPrint">
-                <span class="material-symbols-outlined">print</span>
-                พิมพ์รายงาน
-              </button>
-              <button class="btn btn--success" id="btnExport">
-                <span class="material-symbols-outlined">download</span>
-                Export Excel
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== MAIN TABLE ===== -->
-      <section class="card ic-table-card">
-        <div class="card-header ic-card-header">
-          <h3>
-            <span class="material-symbols-outlined">list_alt</span>
-            ข้อมูลเคลมภายใน
-          </h3>
-          <div class="ic-page-size">
-            <label for="pageSize">แสดง</label>
-            <select id="pageSize" class="ic-input ic-input--sm">
-              <option value="5">5</option>
-              <option value="10" selected>10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
-            <span>รายการ</span>
-          </div>
-        </div>
-
-        <div class="card-body">
-          <div class="ic-table-wrap">
-            <table class="table ic-table" id="claimTable">
-              <thead>
-                <tr>
-                  <th data-sort="claim_id">
-                    <button class="ic-sort-btn">
-                      รหัสเคลม
-                      <span class="material-symbols-outlined ic-sort-icon">unfold_more</span>
-                    </button>
-                  </th>
-                  <th data-sort="date">
-                    <button class="ic-sort-btn">
-                      วันที่
-                      <span class="material-symbols-outlined ic-sort-icon">unfold_more</span>
-                    </button>
-                  </th>
-                  <th data-sort="reporter">ผู้แจ้งเคลม</th>
-                  <th data-sort="department">แผนก</th>
-                  <th>ประเภทสินค้า</th>
-                  <th>รายละเอียดปัญหา</th>
-                  <th data-sort="status">
-                    <button class="ic-sort-btn">
-                      สถานะ
-                      <span class="material-symbols-outlined ic-sort-icon">unfold_more</span>
-                    </button>
-                  </th>
-                  <th class="ic-th-action">การจัดการ</th>
-                </tr>
-              </thead>
-              <tbody id="claimTbody">
-                <!-- JS render -->
-              </tbody>
-            </table>
-
-            <!-- Empty state -->
-            <div class="ic-empty" id="emptyState" hidden>
-              <span class="material-symbols-outlined">inbox</span>
-              <h4>ไม่พบข้อมูลเคลม</h4>
-              <p>ลองเปลี่ยนตัวกรอง หรือเพิ่มเคลมใหม่</p>
-            </div>
-          </div>
-
-          <!-- Pagination -->
-          <div class="ic-pagination" id="pagination"></div>
-        </div>
-      </section>
-
-      <!-- ===== RESULT TABLE ===== -->
-      <section class="card ic-table-card ic-result-card">
-        <div class="card-header ic-card-header">
-          <h3>
-            <span class="material-symbols-outlined">fact_check</span>
-            ผลการพิจารณาเคลมภายใน
-          </h3>
-        </div>
-        <div class="card-body">
-          <p class="ic-section-desc">
-            หลังจากตรวจสอบเคลมแล้ว ผลการพิจารณาจะถูกบันทึกในตารางนี้
-            เพื่อให้ฝ่ายที่เกี่ยวข้องสามารถติดตามและดำเนินการต่อได้อย่างมีประสิทธิภาพ
-          </p>
-
-          <div class="ic-table-wrap">
-            <table class="table ic-table">
-              <thead>
-                <tr>
-                  <th>รหัสเคลม</th>
-                  <th>วันที่พิจารณา</th>
-                  <th>ผู้พิจารณา</th>
-                  <th>ผลการพิจารณา</th>
-                  <th>หมายเหตุ</th>
-                </tr>
-              </thead>
-              <tbody id="resultTbody">
-                <!-- JS render -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== NOTE CARD ===== -->
-      <section class="card ic-note-card">
-        <div class="card-header ic-card-header">
-          <h3>
-            <span class="material-symbols-outlined">tips_and_updates</span>
-            หมายเหตุ
-          </h3>
-        </div>
-        <div class="card-body">
-          <ul class="ic-note-list">
-            <li>
-              <span class="material-symbols-outlined">check_circle</span>
-              ข้อมูลในตารางเป็นเพียงตัวอย่างเพื่อแสดงรูปแบบการจัดการเคลมภายใน
-            </li>
-            <li>
-              <span class="material-symbols-outlined">check_circle</span>
-              ฟีเจอร์และข้อมูลจริงจะถูกพัฒนาและปรับปรุงเพิ่มเติมในอนาคต
-            </li>
-            <li>
-              <span class="material-symbols-outlined">check_circle</span>
-              สามารถ Export ข้อมูลเป็น Excel หรือพิมพ์รายงานได้จากปุ่มด้านบน
-            </li>
-          </ul>
-        </div>
-      </section>
-
+      </div>
     </div>
+
+    <!-- FILTER BAR -->
+    <div class="qc-filter-bar">
+      <div class="filter-group" style="flex:2;min-width:220px;">
+        <span class="material-symbols-outlined filter-icon">search</span>
+        <input type="text" id="searchInput" placeholder="ค้นหาสินค้า / ผู้แจ้ง / รายละเอียด...">
+      </div>
+      <div class="filter-group">
+        <span class="material-symbols-outlined filter-icon">calendar_month</span>
+        <input type="date" id="filterDateFrom" title="จากวันที่">
+        <span class="filter-sep">–</span>
+        <input type="date" id="filterDateTo" title="ถึงวันที่">
+      </div>
+      <div class="filter-group" style="min-width:140px;flex:0;">
+        <span class="material-symbols-outlined filter-icon">apartment</span>
+        <select id="filterDept">
+          <option value="">ทุกแผนก</option>
+          <option value="ผลิต">ผลิต</option>
+          <option value="คลังสินค้า">คลังสินค้า</option>
+          <option value="QC">QC</option>
+          <option value="วิศวกรรม">วิศวกรรม</option>
+        </select>
+      </div>
+      <div class="filter-group" style="min-width:140px;flex:0;">
+        <span class="material-symbols-outlined filter-icon">flag</span>
+        <select id="filterStatus">
+          <option value="">ทุกสถานะ</option>
+          <option value="submitted">รอรับเรื่อง</option>
+          <option value="in_progress">กำลังตรวจสอบ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ปฏิเสธ</option>
+        </select>
+      </div>
+      <button class="btn-filter-reset" onclick="resetFilters()">
+        <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+      </button>
+      <button class="btn-export-excel" onclick="exportExcel()">
+        <span class="material-symbols-outlined">table_view</span> Excel
+      </button>
+    </div>
+
+    <!-- TABLE — internal: ไม่มี column ลูกค้า -->
+    <div class="qc-main">
+      <div class="table-wrap">
+        <table class="qc-table" id="qcTable">
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>ผู้แจ้ง / แผนก</th>
+              <th>สินค้า / วัตถุดิบ</th>
+              <th>ประเภทปัญหา</th>
+              <th>ไฟล์</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="qcTableBody">
+            <tr>
+              <td colspan="7" class="table-loading">
+                <span class="material-symbols-outlined spin">progress_activity</span>
+                กำลังโหลด...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
-  <!-- ====================== MODAL: ADD/EDIT CLAIM ====================== -->
-  <div class="ic-modal" id="claimModal" aria-hidden="true">
-    <div class="ic-modal-backdrop" data-close></div>
-    <div class="ic-modal-dialog" role="dialog" aria-labelledby="modalTitle">
-      <div class="ic-modal-header">
-        <h3 id="modalTitle">
-          <span class="material-symbols-outlined">edit_note</span>
-          เพิ่มเคลมใหม่
-        </h3>
-        <button class="ic-modal-close" data-close aria-label="ปิด">
-          <span class="material-symbols-outlined">close</span>
-        </button>
+  <!-- MODAL -->
+  <div class="qc-modal" id="qcModal">
+    <div class="qc-modal-box">
+
+      <div class="qc-modal-header">
+        <div class="qc-modal-title">
+          <span class="material-symbols-outlined">manage_search</span>
+          <span id="modalTitle">รายละเอียดเคลม</span>
+        </div>
+        <div class="qc-modal-header-actions">
+          <button class="btn-export-pdf" onclick="exportPDF()">
+            <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+          </button>
+          <button class="btn-export-csv" onclick="exportCSV()">
+            <span class="material-symbols-outlined">table_view</span> CSV
+          </button>
+          <button class="btn-export-excel" onclick="exportExcel()">
+            <span class="material-symbols-outlined">grid_on</span> Excel
+          </button>
+          <button class="modal-close-btn" onclick="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
       </div>
 
-      <div class="ic-modal-body">
-        <form id="claimForm" class="ic-form">
-          <input type="hidden" id="formClaimId">
+      <div class="qc-modal-body">
 
-          <div class="ic-form-grid">
-            <div class="ic-field">
-              <label for="formDate">วันที่ <span class="ic-required">*</span></label>
-              <input type="date" id="formDate" class="ic-input" required>
-            </div>
+        <div class="modal-section">
+          <div class="modal-info-grid" id="modalInfoGrid"></div>
+        </div>
 
-            <div class="ic-field">
-              <label for="formReporter">ผู้แจ้งเคลม <span class="ic-required">*</span></label>
-              <input type="text" id="formReporter" class="ic-input" placeholder="ชื่อผู้แจ้ง" required>
-            </div>
-
-            <div class="ic-field">
-              <label for="formDept">แผนก <span class="ic-required">*</span></label>
-              <select id="formDept" class="ic-input" required>
-                <option value="">-- เลือกแผนก --</option>
-                <option value="ผลิต">แผนกผลิต</option>
-                <option value="คลังสินค้า">แผนกคลังสินค้า</option>
-                <option value="QC">แผนก QC</option>
-                <option value="จัดซื้อ">แผนกจัดซื้อ</option>
-              </select>
-            </div>
-
-            <div class="ic-field">
-              <label for="formProductType">ประเภทสินค้า <span class="ic-required">*</span></label>
-              <input type="text" id="formProductType" class="ic-input" placeholder="เช่น วัตถุดิบ A" required>
-            </div>
-
-            <div class="ic-field ic-field--full">
-              <label for="formIssue">รายละเอียดปัญหา <span class="ic-required">*</span></label>
-              <textarea id="formIssue" class="ic-input" rows="3" placeholder="อธิบายปัญหาที่พบ..." required></textarea>
-            </div>
-
-            <div class="ic-field">
-              <label for="formStatus">สถานะ</label>
-              <select id="formStatus" class="ic-input">
-                <option value="pending">รออนุมัติ</option>
-                <option value="approved">อนุมัติแล้ว</option>
-                <option value="rejected">ปฏิเสธ</option>
-              </select>
-            </div>
-
-            <div class="ic-field ic-field--full">
-              <label for="formNote">หมายเหตุ</label>
-              <textarea id="formNote" class="ic-input" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"></textarea>
-            </div>
+        <div class="modal-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">warning</span> ประเภทปัญหา
           </div>
-        </form>
-      </div>
+          <div class="modal-claim-types" id="modalClaimTypes"></div>
+        </div>
 
-      <div class="ic-modal-footer">
-        <button class="btn btn--ghost" data-close>ยกเลิก</button>
-        <button class="btn btn--primary" id="btnSaveClaim">
-          <span class="material-symbols-outlined">save</span>
-          บันทึก
-        </button>
+        <div class="modal-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">notes</span> รายละเอียด
+          </div>
+          <div class="modal-detail-box" id="modalDetail">—</div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">photo_library</span> รูปภาพ / วิดีโอ
+          </div>
+          <div class="modal-media-grid" id="modalMediaGrid"></div>
+        </div>
+
+        <div class="modal-section qc-action-section">
+          <div class="modal-section-label">
+            <span class="material-symbols-outlined">rate_review</span> ผลการพิจารณา QC
+          </div>
+          <div class="qc-status-current" id="qcStatusCurrent"></div>
+          <textarea id="qcComment" rows="3" placeholder="หมายเหตุ / ความเห็น QC (ถ้ามี)..."></textarea>
+          <div class="qc-action-btns">
+            <button class="btn-approve" onclick="updateClaimStatus('approved')">
+              <span class="material-symbols-outlined">check_circle</span> อนุมัติ
+            </button>
+            <button class="btn-reject" onclick="updateClaimStatus('rejected')">
+              <span class="material-symbols-outlined">cancel</span> ปฏิเสธ
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- ====================== TOAST ====================== -->
-  <div class="ic-toast-container" id="toastContainer"></div>
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  </div>
 
-  <!-- ====================== FOOTER ====================== -->
-  <footer class="footer">
-    © 2026 EABaseHub | ระบบจัดการเคลมสินค้า
-  </footer>
+  <footer class="footer">© 2026 EABaseHub | ระบบจัดการเคลมภายใน</footer>
 
-  <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- ── SCRIPTS ── -->
+  <!-- ⚠️ ลำดับการโหลดสำคัญ: supabase library → supabaseClient → roleConfig → userService → auth → page script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/core/supabaseClient.js"></script>
-  <script src="/js/core/userService.js"></script>
   <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
-  
 
-  <!-- Page Script -->
+  <script src="/js/core/confirm-dialog.js"></script>
+
   <script src="/js/pages/Qc-claim/internal-claims.js"></script>
   <script src="/js/core/splash.js"></script>
   <script src="/js/core/loadingSplash.js"></script>
+  <script src="/js/core/themeToggle.js"></script>
   <script src="/js/services/nav-service.js"></script>
+
 </body>
 </html>

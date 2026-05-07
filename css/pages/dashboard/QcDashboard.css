@@ -759,6 +759,11 @@ a.qc-kpi-card:visited {
   animation-play-state: paused;
 }
 
+
+
+
+
+
 /* ============================================================
    KEYFRAMES
 ============================================================ */
@@ -893,3 +898,4 @@ a.qc-kpi-card:visited {
     page-break-inside: avoid;
   }
 }
+

@@ -11,6 +11,46 @@
 // =====================================================
 let allClaims      = [];
 let filteredClaims = [];
+async function loadClaims() {
+  const { data, error } = await supabaseClient
+    .from('claims')
+    .select('*')
+    .in('status', ['pending', 'submitted'])
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  allClaims = data || [];
+  filteredClaims = [...allClaims];
+
+  updateSummaryCards();
+  renderTable(filteredClaims);
+}
+
+async function pickClaim(id) {
+  const claim = window._claims[id];
+  if (!claim) return;
+
+  const { error } = await supabaseClient
+    .from('claims')
+    .update({
+      status: 'in_progress',
+      picked_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if (error) {
+    alert('รับเรื่องไม่สำเร็จ');
+    return;
+  }
+
+  if (claim.claim_scope === 'internal') {
+    window.location.href = '/pages/Qc-claim/internal-claims.html';
+  } else {
+    window.location.href = '/pages/Qc-claim/external-claims.html';
+  }
+}
+
 let currentClaim   = null;
 
 // =====================================================
@@ -26,9 +66,13 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-function normalizeStatus(status) {
-  if (status === 'pending') return 'submitted';
-  return status || 'submitted';
+function normalizeStatus(claimOrStatus) {
+  if (typeof claimOrStatus === 'object' && claimOrStatus !== null) {
+    return claimOrStatus.qc_status || claimOrStatus.status || 'pending';
+  }
+
+  if (claimOrStatus === 'submitted') return 'pending';
+  return claimOrStatus || 'pending';
 }
 
 function normalizeMediaUrls(value) {
@@ -171,25 +215,23 @@ async function loadClaims() {
     const { data, error } = await supabaseClient
       .from('claims')
       .select('*')
-      .in('status', ['draft', 'pending', 'submitted', 'in_progress', 'approved', 'rejected'])
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     allClaims = data || [];
-    filteredClaims = [...allClaims];
+
+    // ตารางแสดงเฉพาะรายการที่ยังไม่ได้รับเรื่อง
+    filteredClaims = allClaims.filter(c => !c.picked_at);
 
     updateSummaryCards();
     renderTable(filteredClaims);
-
-    console.log(`✅ Loaded ${allClaims.length} claims`);
 
   } catch (err) {
     console.error('❌ loadClaims error:', err);
     showTableError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
   }
 }
-
 // =====================================================
 // 📊 UPDATE SUMMARY CARDS
 // =====================================================
@@ -200,11 +242,14 @@ function updateSummaryCards() {
   const sumApproved   = document.getElementById('sumApproved');
   const sumRejected   = document.getElementById('sumRejected');
 
+  const pendingClaims = allClaims.filter(c => !c.picked_at);
+  const pickedClaims  = allClaims.filter(c => c.picked_at);
+
   if (sumTotal)      sumTotal.textContent      = allClaims.length;
-  if (sumPending)    sumPending.textContent    = allClaims.filter(c => normalizeStatus(c.status) === 'submitted').length;
-  if (sumInProgress) sumInProgress.textContent = allClaims.filter(c => normalizeStatus(c.status) === 'in_progress').length;
-  if (sumApproved)   sumApproved.textContent   = allClaims.filter(c => normalizeStatus(c.status) === 'approved').length;
-  if (sumRejected)   sumRejected.textContent   = allClaims.filter(c => normalizeStatus(c.status) === 'rejected').length;
+  if (sumPending)    sumPending.textContent    = pendingClaims.length;
+  if (sumInProgress) sumInProgress.textContent = pickedClaims.filter(c => (c.qc_status || 'pending') === 'pending').length;
+  if (sumApproved)   sumApproved.textContent   = allClaims.filter(c => c.qc_status === 'approved').length;
+  if (sumRejected)   sumRejected.textContent   = allClaims.filter(c => c.qc_status === 'rejected').length;
 }
 
 // =====================================================
@@ -306,14 +351,14 @@ function renderTable(claims) {
           : `<div class="cell-thumbs">${thumbHtml}</div>`
         }
       </td>
-      <td>${buildStatusBadge(normalizeStatus(claim.status))}</td>
+      <td>${buildStatusBadge(normalizeStatus(claim))}</td>
       <td>
         <div class="cell-action-group">
           <button class="btn-view" onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])">
             <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
             ดู
           </button>
-          ${claim.status === 'submitted' ? `
+          ${!claim.picked_at ? `
             <button class="btn-pick" onclick="event.stopPropagation(); pickClaim('${claim.id}')">
               <span class="material-symbols-outlined" style="font-size:1rem;">how_to_reg</span>
               รับเรื่อง
@@ -357,15 +402,17 @@ function buildThumbsHtml(urls, maxShow, imgClass, vidClass) {
 // 🏷️ BUILD STATUS BADGE
 // =====================================================
 function buildStatusBadge(status) {
-  const map = {
-    submitted:   { label: '⏳ รออนุมัติ',     cls: 'submitted'   },
-    in_progress: { label: '🔍 กำลังตรวจสอบ', cls: 'in-progress' },
-    approved:    { label: '✅ อนุมัติแล้ว',   cls: 'approved'    },
-    rejected:    { label: '❌ ปฏิเสธ',         cls: 'rejected'    },
-    draft:       { label: '📝 Draft',          cls: 'draft'       },
-  };
   const normalized = normalizeStatus(status);
-  const s = map[normalized] || { label: escapeHtml(normalized), cls: '' };
+
+  const map = {
+    pending:     { label: '⏳ รอตรวจสอบ', cls: 'submitted' },
+    in_progress: { label: '🔍 กำลังตรวจสอบ', cls: 'in-progress' },
+    approved:    { label: '✅ อนุมัติแล้ว', cls: 'approved' },
+    rejected:    { label: '❌ ปฏิเสธ', cls: 'rejected' },
+    draft:       { label: '📝 Draft', cls: 'draft' }, 
+  };
+
+  const s = map[normalized] || map.pending;
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
 }
 
@@ -439,7 +486,7 @@ function openModal(claim) {
       </div>
       <div class="info-row">
         <div class="info-label">สถานะ</div>
-        <div class="info-value">${buildStatusBadge(normalizeStatus(claim.status))}</div>
+        <div class="info-value">${buildStatusBadge(normalizeStatus(claim))}</div>
       </div>
       ${claim.qc_comment ? `
       <div class="info-row full">
@@ -473,7 +520,7 @@ function openModal(claim) {
   // QC Status
   const qcStatusEl = document.getElementById('qcStatusCurrent');
   if (qcStatusEl) {
-    qcStatusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(normalizeStatus(claim.status))}
+    qcStatusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(normalizeStatus(claim))}
       ${claim.qc_comment ? `<br><span style="color:#475569;font-size:0.82rem;">💬 ${escapeHtml(claim.qc_comment)}</span>` : ''}`;
   }
 
@@ -485,13 +532,13 @@ function openModal(claim) {
 
   const actionSection = document.querySelector('.qc-action-section');
   const actionButtons = document.querySelectorAll('.qc-action-btns button');
-  const isDecided = ['approved', 'rejected'].includes(normalizeStatus(claim.status));
+  const isDecided = ['approved', 'rejected'].includes(normalizeStatus(claim));
   if (actionSection) actionSection.classList.toggle('is-readonly', isDecided);
   actionButtons.forEach(btn => { btn.disabled = isDecided; });
 }
 
 // =====================================================
-// 🖼️ RENDER MEDIA ใน MODAL
+// 🖼️ RENDER MEDIA ใน MODAL9i;0lv[ ]
 // =====================================================
 function renderModalMedia(urls) {
   const grid = document.getElementById('modalMediaGrid');
@@ -553,22 +600,35 @@ function closeModal() {
 // =====================================================
 
 function getClaimScope(claim) {
+  const claimTypes = normalizeClaimTypes(claim?.claim_types);
   const text = `
-    ${claim.claim_scope || ''}
-    ${claim.product_type || ''}
-    ${claim.category || ''}
-    ${(claim.claim_types || []).join(' ')}
+    ${claim?.claim_scope || ''}
+    ${claim?.product_type || ''}
+    ${claim?.category || ''}
+    ${claim?.customer || ''}
+    ${claim?.product || ''}
+    ${claimTypes.join(' ')}
   `.toLowerCase();
 
+  // ถ้าใน DB มี claim_scope อยู่แล้ว ให้เชื่อค่านี้ก่อน
+  if (claim?.claim_scope === 'internal') return 'internal';
+  if (claim?.claim_scope === 'external') return 'external';
+
+  // คำที่บ่งบอกว่าเป็นเคลมภายใน
   if (
     text.includes('ภายใน') ||
     text.includes('internal') ||
     text.includes('วัตถุดิบ') ||
-    text.includes('สินค้าภายใน')
+    text.includes('สินค้าภายใน') ||
+    text.includes('ผลิต') ||
+    text.includes('คลังสินค้า') ||
+    text.includes('qc') ||
+    text.includes('วิศวกรรม')
   ) {
     return 'internal';
   }
 
+  // ที่เหลือถือเป็นเคลมลูกค้า/ภายนอก
   return 'external';
 }
 
@@ -577,63 +637,56 @@ function getClaimScope(claim) {
 // (LINE notify ปิดไว้ชั่วคราว — ดูจุดที่ comment ไว้ด้านล่าง)
 // =====================================================
 async function pickClaim(claimId) {
-  const claim = (window._claims || {})[claimId] || allClaims.find(c => c.id === claimId);
+  console.log("📌 claimId ที่กด =", claimId);
+  console.log("📌 window._claims =", window._claims);
+
+  const claim = (window._claims || {})[claimId] 
+    || allClaims.find(c => String(c.id) === String(claimId));
+
+  console.log("📌 claim ที่เจอ =", claim);
+
   if (!claim) {
-    showToast('ไม่พบข้อมูลเคลม', 'danger');
+    alert("ไม่พบข้อมูลเคลม");
     return;
   }
 
-  // ป้องกันการรับซ้ำ
-  if (normalizeStatus(claim.status) !== 'submitted') {
-    showToast('เคลมนี้ถูกรับเรื่องไปแล้ว', 'warning');
+  const claimScope = claim.claim_scope || "external";
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  console.log("📌 user =", user);
+
+  const { data, error } = await supabaseClient
+    .from("claims")
+    .update({
+      status: "in_progress",
+      claim_scope: claimScope,
+      picked_by: user?.id || null,
+      picked_at: new Date().toISOString()
+    })
+    .eq("id", claim.id)
+    .select("*");
+
+  console.log("✅ update data =", data);
+  console.log("❌ update error =", error);
+
+  if (error) {
+    alert("รับเรื่องไม่สำเร็จ: " + error.message);
     return;
   }
 
-  // ยืนยัน
-  let ok = true;
-  if (typeof ConfirmDialog !== 'undefined') {
-    ok = await ConfirmDialog.show({
-      title:   'ยืนยันการรับเรื่อง',
-      message: `รับเรื่องเคลม #${getClaimNo(claim)} ?\n(${claim.product || '—'})`,
-      okText:  'รับเรื่อง',
-      type:    'info',
-    });
+  if (!data || data.length === 0) {
+    alert("กดแล้วแต่ไม่มีแถวถูกอัปเดต — น่าจะติด RLS UPDATE policy");
+    return;
+  }
+
+  alert("รับเรื่องสำเร็จ");
+
+  if (claimScope === "internal") {
+    window.location.href = "/pages/Qc-claim/internal-claims.html";
   } else {
-    ok = confirm(`รับเรื่องเคลม #${getClaimNo(claim)} ?`);
+    window.location.href = "/pages/Qc-claim/external-claims.html";
   }
-  if (!ok) return;
-
-  try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-
-    // ── 1) อัปเดต DB (มี guard ป้องกัน race condition) ──
-    const updateData = {
-  status: 'in_progress',
-  claim_scope: getClaimScope(claim),
-  picked_by: user?.id || null,
-  picked_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
-    const { error } = await supabaseClient
-  .from('claims')
-  .update(updateData)
-  .eq('id', claim.id);
-
-if (error) throw error;
-
-    // ── 2) อัปเดต state ใน memory ──
-    const idx = allClaims.findIndex(c => c.id === claim.id);
-    if (idx !== -1) {
-      Object.assign(allClaims[idx], updateData);
-    }
-
-    updateSummaryCards();
-    applyFilters();
-
-    // ── 3) แสดง toast ──
-    showToast('รับเรื่องเคลมสำเร็จ', 'success');
-
+}
     /* ============================================================
        🔕 LINE NOTIFY — ปิดไว้ชั่วคราว (ระบบ production)
        ── พอ Edge Function send-line-notify พร้อมใช้งาน
@@ -653,11 +706,11 @@ if (error) throw error;
     }
     */
 
-  } catch (err) {
-    console.error('❌ pickClaim error:', err);
-    showToast('รับเรื่องไม่สำเร็จ: ' + err.message, 'danger');
-  }
-}
+//   } catch (err) {
+//     console.error('❌ pickClaim error:', err);
+//     showToast('รับเรื่องไม่สำเร็จ: ' + err.message, 'danger');
+//   }
+// }
 
 // =====================================================
 // ✅ UPDATE CLAIM STATUS (อนุมัติ / ปฏิเสธ)
