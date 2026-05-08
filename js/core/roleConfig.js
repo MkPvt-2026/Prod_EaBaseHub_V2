@@ -72,6 +72,7 @@ const ROLE_CONFIG = {
     defaultPage: '/pages/executive/executiveHome.html',
     allowedPages: [
       '/pages/executive/executiveHome.html',
+      '/pages/Qc-claim/claim-evaluation.html',
       '/pages/executive/executiveDashboard.html',
       '/pages/executive/rfmDashboard.html', 
       '/pages/manager/reportManager.html',
