@@ -1,7 +1,7 @@
-// =====================================================
+// ============================================================
 // external-claims.js
-// หน้า QC ตรวจสอบเคลมลูกค้า
-// =====================================================
+// หน้า QC ตรวจสอบเคลมลูกค้า (External Claims)
+// ============================================================
 
 const CLAIM_SCOPE = "external";
 
@@ -92,22 +92,89 @@ async function waitForSupabase() {
 }
 
 // ---------- QC Form Helpers (ใช้ร่วมกัน) ----------
+// ---------- อัปเดตฟังก์ชันดึงข้อมูลฟอร์ม (รองรับ 5 เกรด + สาเหตุ) ----------
 function getQcFormData() {
-  const comment = document.getElementById("qcComment")?.value.trim() || "";
-  const goodQty = Number(document.getElementById("qcGoodQty")?.value || 0);
-  const repairQty = Number(document.getElementById("qcRepairQty")?.value || 0);
-  const scrapQty = Number(document.getElementById("qcScrapQty")?.value || 0);
-
   return {
-    comment,
     qcResult: {
-      good_qty: goodQty,
-      repair_qty: repairQty,
-      scrap_qty: scrapQty,
-      comment: comment || null,
-    },
+      material_type: document.getElementById("qcMaterialType")?.value,
+      grade_a_qty: Number(document.getElementById("qcGradeAQty")?.value || 0),
+      grade_b_qty: Number(document.getElementById("qcGradeBQty")?.value || 0),
+      regrind_qty: Number(document.getElementById("qcRegrindQty")?.value || 0),
+      waste_qty: Number(document.getElementById("qcWasteQty")?.value || 0),
+      defect_reason: document.getElementById("qcDefectReason")?.value,
+      responsibility: document.getElementById("qcResponsibility")?.value,
+      comment: document.getElementById("qcComment")?.value.trim()
+    }
   };
 }
+
+// ฟังก์ชันอัปเดตยอดรวม (Weight/Unit)
+function updateQcTotal() {
+  const a = Number(document.getElementById("qcGradeAQty")?.value || 0);
+  const b = Number(document.getElementById("qcGradeBQty")?.value || 0);
+  const r = Number(document.getElementById("qcRegrindQty")?.value || 0);
+  const w = Number(document.getElementById("qcWasteQty")?.value || 0);
+  
+  const totalEl = document.getElementById("qcTotalQty");
+  if (totalEl) totalEl.textContent = (a + b + r + w).toLocaleString();
+}
+
+
+// ---------- อัปเดตการแสดงผลใน Modal เมื่อเปิดดูข้อมูลเก่า ----------
+// (แก้ไขส่วนหนึ่งใน openModal)
+function fillQcFormData(claim) {
+  const res = claim.qc_result || {};
+  
+  document.getElementById("qcGradeAQty").value = res.grade_a_qty || 0;
+  document.getElementById("qcGradeBQty").value = res.grade_b_qty || 0;
+  document.getElementById("qcRepairQty").value = res.repair_qty || 0;
+  document.getElementById("qcSpareQty").value = res.spare_qty || 0;
+  document.getElementById("qcScrapQty").value = res.scrap_qty || 0;
+  
+  document.getElementById("qcDefectReason").value = res.defect_reason || "";
+  document.getElementById("qcResponsibility").value = res.responsibility || "";
+  document.getElementById("qcComment").value = claim.qc_comment || "";
+
+  // Sync Checkboxes
+  syncQtyCheckbox("qcGradeAQty", "qcGradeACheck");
+  syncQtyCheckbox("qcGradeBQty", "qcGradeBCheck");
+  syncQtyCheckbox("qcRepairQty", "qcRepairCheck");
+  syncQtyCheckbox("qcSpareQty", "qcSpareCheck");
+  syncQtyCheckbox("qcScrapQty", "qcScrapCheck");
+  
+  updateQcTotal();
+}
+
+// ---------- อัปเดตฟังก์ชันรวมยอด ----------
+function updateQcTotal() {
+  const a = Number(document.getElementById("qcGradeAQty")?.value || 0);
+  const b = Number(document.getElementById("qcGradeBQty")?.value || 0);
+  const r = Number(document.getElementById("qcRepairQty")?.value || 0);
+  const s = Number(document.getElementById("qcSpareQty")?.value || 0);
+  const c = Number(document.getElementById("qcScrapQty")?.value || 0);
+  
+  const totalEl = document.getElementById("qcTotalQty");
+  if (totalEl) totalEl.textContent = (a + b + r + s + c);
+}
+
+// ---------- แก้ไขฟังก์ชัน stepQty ให้รองรับ ID ใหม่ ----------
+function stepQty(inputId, step) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const next = Math.max(0, Number(input.value || 0) + step);
+  input.value = next;
+
+  const checkboxMap = {
+    qcGradeAQty: "qcGradeACheck",
+    qcGradeBQty: "qcGradeBCheck",
+    qcRepairQty: "qcRepairCheck",
+    qcSpareQty: "qcSpareCheck",
+    qcScrapQty: "qcScrapCheck",
+  };
+  syncQtyCheckbox(inputId, checkboxMap[inputId]);
+  updateQcTotal();
+}
+
 
 async function getCurrentUserId() {
   try {
@@ -201,18 +268,18 @@ function updateSummaryCards() {
   const sumApproved = document.getElementById("sumApproved");
   const sumRejected = document.getElementById("sumRejected");
 
-  const pending = allClaims.filter(
-    (c) => (c.qc_status || "pending") === "pending",
+  const pending = allClaims.filter((c) => normalizeStatus(c) === "pending").length;
+
+  const inProgress = allClaims.filter((c) =>
+    ["checking", "in_progress", "draft", "waiting_ceo"].includes(normalizeStatus(c))
   ).length;
-  const checking = allClaims.filter((c) =>
-    ["checking", "in_progress"].includes(c.qc_status),
-  ).length;
-  const approved = allClaims.filter((c) => c.qc_status === "approved").length;
-  const rejected = allClaims.filter((c) => c.qc_status === "rejected").length;
+
+  const approved = allClaims.filter((c) => normalizeStatus(c) === "approved").length;
+  const rejected = allClaims.filter((c) => normalizeStatus(c) === "rejected").length;
 
   if (sumTotal) sumTotal.textContent = allClaims.length;
-  if (sumPending) sumPending.textContent = 0;
-  if (sumInProgress) sumInProgress.textContent = pending + checking;
+  if (sumPending) sumPending.textContent = pending;
+  if (sumInProgress) sumInProgress.textContent = inProgress;
   if (sumApproved) sumApproved.textContent = approved;
   if (sumRejected) sumRejected.textContent = rejected;
 }
@@ -277,8 +344,7 @@ function applyFilters() {
   const customer = document.getElementById("filterCustomer")?.value || "";
   filteredClaims = allClaims.filter((claim) => {
     if (search && !getClaimSearchText(claim).includes(search)) return false;
-    if (status && normalizeStatus(claim) !== normalizeStatus(status))
-      return false;
+    if (status && normalizeStatus(claim) !== normalizeStatus(status)) return false;
     if (dateFrom && claim.claim_date < dateFrom) return false;
     if (dateTo && claim.claim_date > dateTo) return false;
     if (dept && claim.area !== dept) return false;
@@ -418,7 +484,9 @@ function openModal(claim) {
       <div class="info-row"><div class="info-label">สถานะ QC</div><div class="info-value">${buildStatusBadge(claim)}</div></div>
       ${claim.qc_comment ? `<div class="info-row full"><div class="info-label">หมายเหตุ QC</div><div class="info-value">${escapeHtml(claim.qc_comment)}</div></div>` : ""}
     `;
-      // แต่ง modal ให้สวยขึ้นด้วย class เสริม
+  }
+
+  // แต่ง modal ด้วย class เสริม
   modal.classList.add("qc-polish-modal");
 
   const qcBox = document.querySelector(".qc-result-box");
@@ -439,7 +507,6 @@ function openModal(claim) {
   document.querySelectorAll(".btn-send-ceo").forEach((btn) => {
     btn.classList.add("btn-send-ceo--polished");
   });
-  }
 
   const typesEl = document.getElementById("modalClaimTypes");
   if (typesEl) {
@@ -457,7 +524,7 @@ function openModal(claim) {
   const commentEl = document.getElementById("qcComment");
   if (commentEl) commentEl.value = claim.qc_comment || "";
 
-  // เติมค่า qc_result กลับเข้า input (ถ้ามี draft เดิม)
+  // เติมค่า qc_result
   const qcResult = claim.qc_result || {};
   const goodEl = document.getElementById("qcGoodQty");
   const repairEl = document.getElementById("qcRepairQty");
@@ -466,14 +533,13 @@ function openModal(claim) {
   if (repairEl) repairEl.value = qcResult.repair_qty ?? 0;
   if (scrapEl) scrapEl.value = qcResult.scrap_qty ?? 0;
 
-  // sync checkbox ตามค่า qty
   syncQtyCheckbox("qcGoodQty", "qcGoodCheck");
   syncQtyCheckbox("qcRepairQty", "qcRepairCheck");
   syncQtyCheckbox("qcScrapQty", "qcScrapCheck");
+  updateQcTotal();
 
   const statusEl = document.getElementById("qcStatusCurrent");
-  if (statusEl)
-    statusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(claim)}`;
+  if (statusEl) statusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(claim)}`;
 
   renderModalMedia(normalizeMediaUrls(claim.media_urls));
 
@@ -489,12 +555,12 @@ function closeModal() {
   currentClaim = null;
 }
 
+// Modal media renderer
 function renderModalMedia(urls) {
   const grid = document.getElementById("modalMediaGrid");
   if (!grid) return;
   if (!urls || urls.length === 0) {
-    grid.innerHTML =
-      '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>';
+    grid.innerHTML = '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>';
     return;
   }
   grid.innerHTML = "";
@@ -539,7 +605,7 @@ async function updateClaimStatus(newStatus) {
     await loadClaims();
   } catch (err) {
     console.error("❌ updateClaimStatus error:", err);
-    showToast("บันทึกผลไม่สำเร็จ: " + err.message, "danger");
+    showToast("บันทึกผลไม่สำเร็จ: " + (err?.message ?? err), "danger");
   }
 }
 
@@ -566,7 +632,7 @@ async function saveQcDraft() {
     await loadClaims();
   } catch (err) {
     console.error("❌ saveQcDraft error:", err);
-    showToast("บันทึกร่างไม่สำเร็จ: " + err.message, "danger");
+    showToast("บันทึกร่างไม่สำเร็จ: " + (err?.message ?? err), "danger");
   }
 }
 
@@ -597,12 +663,12 @@ async function sendToCEO() {
     await loadClaims();
   } catch (err) {
     console.error("❌ sendToCEO error:", err);
-    showToast("ส่งอนุมัติไม่สำเร็จ: " + err.message, "danger");
+    showToast("ส่งอนุมัติไม่สำเร็จ: " + (err?.message ?? err), "danger");
   }
 }
 
 // ============================================================
-// PATCH สำหรับ external-claims.js
+// Patch สำหรับ external-claims.js
 // แทนที่ฟังก์ชัน stepQty และ syncQtyCheckbox ของเดิม
 // แล้วเพิ่ม updateQcTotal เข้าไป
 // ============================================================
@@ -701,7 +767,7 @@ function closeLightbox() {
 }
 
 // ---------- Export ----------
-function exportExcel() {
+function exportExcelAll() {
   if (!filteredClaims || filteredClaims.length === 0) {
     showToast("ไม่มีข้อมูลสำหรับ Export", "warning");
     return;
@@ -758,11 +824,14 @@ function exportExcel() {
     return;
   }
 
+  // Fallback CSV
   const csv =
     "\uFEFF" +
     rows
       .map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
       )
       .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -775,6 +844,80 @@ function exportExcel() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast("ดาวน์โหลด CSV สำเร็จ", "success");
+}
+
+// Wrapper for backward compatibility
+function exportExcel() {
+  exportExcelAll();
+}
+
+function exportClaimCSV() {
+  if (!currentClaim) {
+    showToast("ยังไม่ได้เลือกเคลม", "warning");
+    return;
+  }
+  const c = currentClaim;
+  const r = c.qc_result || {};
+
+  const header = [
+    "เลขเคลม",
+    "วันที่แจ้ง",
+    "ผู้แจ้ง",
+    "เขต/แผนก",
+    "ลูกค้า",
+    "สินค้า",
+    "จำนวน",
+    "ประเภทปัญหา",
+    "รายละเอียด",
+    "สถานะ QC",
+    "วันที่รับเรื่อง",
+    "หมายเหตุ QC",
+    "ของดี",
+    "ซ่อม",
+    "ทิ้ง",
+  ];
+
+  const row = [
+    getClaimNo(c),
+    formatDate(c.claim_date),
+    c.emp_name || "",
+    c.area || "",
+    c.customer || "",
+    c.product || "",
+    c.qty || "",
+    normalizeClaimTypes(c.claim_types).join(", "),
+    c.detail || "",
+    getStatusLabel(c),
+    formatDateTime(c.picked_at),
+    c.qc_comment || "",
+    r.good_qty ?? "",
+    r.repair_qty ?? "",
+    r.scrap_qty ?? "",
+  ];
+
+  const csv =
+    "\uFEFF" +
+    [header, row]
+      .map((r) =>
+        r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${CLAIM_SCOPE}_${getClaimNo(c)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("ดาวน์โหลด CSV รายการนี้สำเร็จ", "success");
+}
+
+// Backward-compatible wrappers for modal CSV button
+function exportCSV() {
+  exportClaimCSV();
 }
 
 // ---------- Toast ----------
@@ -813,7 +956,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log(`✅ ${CLAIM_SCOPE}-claims init done`);
   } catch (err) {
     console.error(`❌ ${CLAIM_SCOPE} init error:`, err);
-    showTableError("โหลดหน้าไม่สำเร็จ: " + err.message);
+    showTableError("โหลดหน้าไม่สำเร็จ: " + (err?.message ?? err));
   }
 });
 

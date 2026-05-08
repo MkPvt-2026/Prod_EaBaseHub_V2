@@ -33,68 +33,11 @@
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <link rel="stylesheet" href="/css/components/badgeButtom.css" />
     <link rel="stylesheet" href="/css/base/bassHeader.css" />
-    <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css" />
+    <!-- <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css" /> -->
+    <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
 
     <!-- QC Checklist styling (เฉพาะหน้านี้) -->
-    <style>
-      #qcChecklist {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin: 8px 0 16px;
-      }
-      .qc-checklist-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 14px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        background: #f8fafc;
-      }
-      [data-theme="dark"] .qc-checklist-item {
-        background: #1e293b;
-        border-color: #334155;
-      }
-      .qc-checklist-label {
-        flex: 1;
-        font-size: 0.92rem;
-      }
-      .qc-checklist-result {
-        display: flex;
-        gap: 6px;
-      }
-      .qc-radio-pill {
-        position: relative;
-        cursor: pointer;
-      }
-      .qc-radio-pill input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-      }
-      .qc-radio-pill span {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 999px;
-        background: #e2e8f0;
-        color: #64748b;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border: 1px solid transparent;
-        transition: all 0.15s;
-      }
-      .qc-radio-pill input:checked + span.pass {
-        background: #dcfce7;
-        color: #166534;
-        border-color: #10b981;
-      }
-      .qc-radio-pill input:checked + span.fail {
-        background: #fee2e2;
-        color: #991b1b;
-        border-color: #ef4444;
-      }
-    </style>
+    
   </head>
   <body class="role-adminQc">
     <!-- HEADER -->
@@ -328,109 +271,131 @@
         <div class="modal-media-grid" id="modalMediaGrid"></div>
       </div>
 
-      <!-- ============ QC RESULT (รวมทุกอย่างไว้ที่เดียว) ============ -->
+      <!-- ============ QC RESULT (อัปเกรด Grading 5 ระดับ) ============ -->
       <div class="modal-section qc-action-section">
         <div class="modal-section-label">
           <span class="material-symbols-outlined">rate_review</span>
-          ผลการพิจารณา QC
+          ผลการพิจารณา QC แบบละเอียด
         </div>
 
-        <!-- สถานะปัจจุบัน -->
         <div class="qc-status-bar">
           <span class="qc-status-bar__label">สถานะปัจจุบัน:</span>
           <span id="qcStatusCurrent"></span>
         </div>
 
-        <!-- กล่องผลตรวจสอบ -->
-        <div class="qc-result-box">
-          <h4>
-            <span class="material-symbols-outlined">fact_check</span>
-            ผลการตรวจสอบสินค้า
-          </h4>
+     <div class="qc-result-box">
+  <h4><span class="material-symbols-outlined">assignment_return</span> ผลการตรวจสอบสินค้าคืน (เคลมภายนอก)</h4>
 
-          <!-- แถวที่ 1: สินค้าดี -->
-          <div class="qc-check-row">
-            <label class="qc-check-label" for="qcGoodCheck">
-              <input type="checkbox" id="qcGoodCheck" />
-              <span class="qc-check-text">
-                <span class="qc-check-num">1</span>
-                สินค้าดี สามารถนำกลับเป็นสินค้าได้
-              </span>
-            </label>
-            <div class="qty-stepper" data-variant="good">
-              <button type="button" onclick="stepQty('qcGoodQty', -1)" aria-label="ลดจำนวน">−</button>
-              <input type="number" id="qcGoodQty" value="0" min="0" />
-              <button type="button" onclick="stepQty('qcGoodQty', 1)" aria-label="เพิ่มจำนวน">+</button>
-            </div>
-          </div>
+  <!-- ส่วนคัดแยกประเภทการเคลม -->
+  <div class="qc-analysis-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; background: #fff7ed; padding: 15px; border-radius: 12px; border: 1px solid #fed7aa;">
+    <div class="analysis-item">
+      <label class="qc-comment-label">ประเภทสินค้าที่เคลม</label>
+      <select id="qcProductSource" class="qc-select-full">
+        <option value="in_house">สินค้าโรงงานผลิตเอง (รีไซเคิลได้)</option>
+        <option value="trading">สินค้าซื้อมาขายไป (รีไซเคิลไม่ได้)</option>
+      </select>
+    </div>
+    <div class="analysis-item">
+      <label class="qc-comment-label">ต้นเหตุความเสียหาย</label>
+      <select id="qcClaimRootCause" class="qc-select-full">
+        <option value="logistics">ความเสียหายจากการขนส่ง</option>
+        <option value="production">คุณภาพสินค้า (ผลิต/โรงงาน)</option>
+        <option value="wrong_delivery">ส่งสินค้าผิดสเปก/ผิดรุ่น</option>
+      </select>
+    </div>
+  </div>
 
-          <!-- แถวที่ 2: ซ่อม -->
-          <div class="qc-check-row">
-            <label class="qc-check-label" for="qcRepairCheck">
-              <input type="checkbox" id="qcRepairCheck" />
-              <span class="qc-check-text">
-                <span class="qc-check-num">2</span>
-                ชำรุดเล็กน้อย ปรับเป็นสินค้าเสปกอื่นและจำหน่ายได้
-              </span>
-            </label>
-            <div class="qty-stepper" data-variant="repair">
-              <button type="button" onclick="stepQty('qcRepairQty', -1)" aria-label="ลดจำนวน">−</button>
-              <input type="number" id="qcRepairQty" value="0" min="0" />
-              <button type="button" onclick="stepQty('qcRepairQty', 1)" aria-label="เพิ่มจำนวน">+</button>
-            </div>
-          </div>
+  <!-- การจัดการซากสินค้า (Grading) -->
+  <div class="qc-grading-section">
+    <!-- Grade A -->
+    <div class="qc-check-row">
+      <label class="qc-check-label" for="qcGradeA">
+        <input type="checkbox" id="qcGradeA" />
+        <span class="qc-check-text">
+          <span class="qc-check-num" style="background:var(--qc-success)">A</span>
+          คืนสต็อก/พร้อมขาย (สินค้าปกติ)
+        </span>
+      </label>
+      <div class="qty-stepper">
+        <button type="button" onclick="stepQty('qcGradeAQty', -1)">−</button>
+        <input type="number" id="qcGradeAQty" value="0" />
+        <button type="button" onclick="stepQty('qcGradeAQty', 1)">+</button>
+      </div>
+    </div>
 
-          <!-- แถวที่ 3: ทิ้ง -->
-          <div class="qc-check-row">
-            <label class="qc-check-label" for="qcScrapCheck">
-              <input type="checkbox" id="qcScrapCheck" />
-              <span class="qc-check-text">
-                <span class="qc-check-num">3</span>
-                เสียหายมาก ไม่สามารถแก้ไขได้ / ส่งบด
-              </span>
-            </label>
-            <div class="qty-stepper" data-variant="scrap">
-              <button type="button" onclick="stepQty('qcScrapQty', -1)" aria-label="ลดจำนวน">−</button>
-              <input type="number" id="qcScrapQty" value="0" min="0" />
-              <button type="button" onclick="stepQty('qcScrapQty', 1)" aria-label="เพิ่มจำนวน">+</button>
-            </div>
-          </div>
+    <!-- Grade B -->
+    <div class="qc-check-row">
+      <label class="qc-check-label" for="qcGradeB">
+        <input type="checkbox" id="qcGradeB" />
+        <span class="qc-check-text">
+          <span class="qc-check-num" style="background:#3b82f6">B</span>
+          ขายเกรดรอง/Outlet (มีรอย/ตำหนิ)
+        </span>
+      </label>
+      <div class="qty-stepper">
+        <button type="button" onclick="stepQty('qcGradeBQty', -1)">−</button>
+        <input type="number" id="qcGradeBQty" value="0" />
+        <button type="button" onclick="stepQty('qcGradeBQty', 1)">+</button>
+      </div>
+    </div>
 
-          <!-- สรุปผลรวม -->
-          <div class="qc-total-summary" id="qcTotalSummary">
-            <span class="material-symbols-outlined">summarize</span>
-            รวมทั้งหมด: <strong id="qcTotalQty">0</strong> ชิ้น
-          </div>
+    <!-- Grade R (Regrind) -->
+    <div id="recycleRow" class="qc-check-row" style="background: #ecfdf5; border-color: #a7f3d0;">
+      <label class="qc-check-label" for="qcGradeR">
+        <input type="checkbox" id="qcGradeR" />
+        <span class="qc-check-text">
+          <span class="qc-check-num" style="background:var(--qc-success-dark)">R</span>
+          ส่งกลับบด/หลอมใหม่ (เฉพาะของผลิตเอง)
+        </span>
+      </label>
+      <div class="qty-stepper">
+        <button type="button" onclick="stepQty('qcGradeRQty', -1)">−</button>
+        <input type="number" id="qcGradeRQty" value="0" />
+        <button type="button" onclick="stepQty('qcGradeRQty', 1)">+</button>
+      </div>
+    </div>
 
-          <!-- ความเห็น QC (เหลือตัวเดียว) -->
-          <label class="qc-comment-label" for="qcComment">
-            <span class="material-symbols-outlined">edit_note</span>
-            ความเห็น QC
-          </label>
-          <textarea
-            id="qcComment"
-            rows="4"
-            placeholder="สรุปผลการตรวจสอบ / ความเห็น QC..."
-          ></textarea>
-        </div>
-
-        <!-- ปุ่มดำเนินการ -->
-        <div class="qc-action-btns">
-          <button type="button" class="btn-save-draft" onclick="saveQcDraft()">
-            <span class="material-symbols-outlined">save</span>
-            บันทึกร่าง
-          </button>
-
-          <button type="button" class="btn-send-ceo" onclick="sendToCEO()">
-            <span class="material-symbols-outlined">forward</span>
-            ส่งอนุมัติ CEO
-          </button>
-        </div>
+    <!-- Grade C -->
+    <div class="qc-check-row">
+      <label class="qc-check-label" for="qcGradeC">
+        <input type="checkbox" id="qcGradeC" />
+        <span class="qc-check-text">
+          <span class="qc-check-num" style="background:var(--qc-danger)">C</span>
+          ทิ้ง/ตัดจ่าย/คืน Supplier
+        </span>
+      </label>
+      <div class="qty-stepper">
+        <button type="button" onclick="stepQty('qcGradeCQty', -1)">−</button>
+        <input type="number" id="qcGradeCQty" value="0" />
+        <button type="button" onclick="stepQty('qcGradeCQty', 1)">+</button>
       </div>
     </div>
   </div>
+
+  <div class="qc-total-summary">
+    รวมทั้งหมด: <strong id="qcTotalQty">0</strong>
+  </div>
+
+  <label class="qc-comment-label" for="qcComment">ความเห็น QC / รายละเอียดความเสียหาย</label>
+  <textarea id="qcComment" rows="3" placeholder="เช่น ท่อบุบจากการซ้อนทับ หรือถุงรั่วบริเวณตะเข็บ..."></textarea>
 </div>
 
+          <!-- <label class="qc-comment-label" for="qcComment">
+            <span class="material-symbols-outlined">edit_note</span>
+            หมายเหตุเพิ่มเติม
+          </label>
+          <textarea id="qcComment" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+        </div> -->
+
+        <div class="qc-action-btns">
+          <button type="button" class="btn-save-draft" onclick="saveQcDraft()">
+            <span class="material-symbols-outlined">save</span> บันทึกร่าง
+          </button>
+          <button type="button" class="btn-send-ceo" onclick="sendToCEO()">
+            <span class="material-symbols-outlined">forward</span> ส่งอนุมัติ CEO
+          </button>
+        </div>
+      </div>
 
 
 
