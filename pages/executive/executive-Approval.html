@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="th" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EABaseHub | CEO Approvals</title>
+
+    <script>
+      (function () {
+        const t = localStorage.getItem("ea-theme");
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <link rel="stylesheet" href="/css/base/bassHeader.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Approval.css" />
+  </head>
+  <body class="role-executive">
+    <header class="app-header">
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo" />
+        </div>
+        <h2>EABaseHub</h2>
+      </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">กำลังโหลด...</div>
+        </div>
+        <div class="group">
+          <button class="badge badge--message-sent" id="logoutBtn" type="button">
+            <span class="badge-icon">
+              <span class="material-symbols-outlined" style="font-size: 17px">logout</span>
+            </span>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="navContainer"></div>
+
+    <header class="page-header">
+      <h1>📝 อนุมัติการเคลม (CEO)</h1>
+      <p>รายการที่ QC ส่งขออนุมัติ • อนุมัติ/ปฏิเสธ • บันทึกความเห็นผู้บริหาร</p>
+    </header>
+
+    <main class="container">
+      <!-- SUMMARY -->
+      <div class="qc-summary">
+        <div class="summary-card pending">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">hourglass_top</span>
+          </div>
+          <div class="summary-info">
+            <div class="summary-head">รออนุมัติ</div>
+            <div class="summary-num" id="sumWaiting">—</div>
+            <div class="summary-label">รายการที่รอ CEO พิจารณา</div>
+          </div>
+        </div>
+
+        <div class="summary-card approved">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">verified</span>
+          </div>
+          <div class="summary-info">
+            <div class="summary-head">อนุมัติแล้ว</div>
+            <div class="summary-num" id="sumExecApproved">—</div>
+            <div class="summary-label">รายการที่ CEO อนุมัติ</div>
+          </div>
+        </div>
+
+        <div class="summary-card rejected">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">block</span>
+          </div>
+          <div class="summary-info">
+            <div class="summary-head">ปฏิเสธ</div>
+            <div class="summary-num" id="sumExecRejected">—</div>
+            <div class="summary-label">รายการที่ CEO ปฏิเสธ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="qc-filter-bar">
+        <div class="filter-group" style="flex: 2; min-width: 220px">
+          <span class="material-symbols-outlined filter-icon">search</span>
+          <input type="text" id="searchInput" placeholder="เลขเคลม / สินค้า / ลูกค้า / ผู้แจ้ง..." />
+        </div>
+        <div class="filter-group">
+          <span class="material-symbols-outlined filter-icon">calendar_month</span>
+          <input type="date" id="filterDateFrom" title="จากวันที่" />
+          <span class="filter-sep">–</span>
+          <input type="date" id="filterDateTo" title="ถึงวันที่" />
+        </div>
+        <div class="filter-group" style="min-width: 140px; flex: 0">
+          <span class="material-symbols-outlined filter-icon">category</span>
+          <select id="filterScope">
+            <option value="">Internal + External</option>
+            <option value="internal">เฉพาะเคลมภายใน</option>
+            <option value="external">เฉพาะเคลมภายนอก</option>
+          </select>
+        </div>
+        <div class="filter-group" style="min-width: 140px; flex: 0">
+          <span class="material-symbols-outlined filter-icon">approval</span>
+          <select id="filterExecStatus">
+            <option value="" selected>ทั้งหมด</option>
+            <option value="pending">รออนุมัติ</option>
+            <option value="approved">อนุมัติแล้ว</option>
+            <option value="rejected">ปฏิเสธ</option>
+          </select>
+        </div>
+        <button class="btn-filter-reset" type="button" onclick="resetFilters()">
+          <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+        </button>
+        <button class="btn-export-excel" type="button" onclick="exportExecExcel()">
+          <span class="material-symbols-outlined">table_view</span> Excel
+        </button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="qc-main">
+        <div class="table-wrap">
+          <table class="qc-table" id="ceoTable">
+            <thead>
+              <tr>
+                <th>วันที่แจ้ง</th>
+                <th>ประเภทเคลม</th>
+                <th>ผู้แจ้ง / ลูกค้า</th>
+                <th>สินค้า</th>
+                <th>ผลสรุป QC</th>
+                <th>สถานะ QC / CEO</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="ceoTableBody">
+              <tr>
+                <td colspan="7" class="table-loading">
+                  <span class="material-symbols-outlined spin">progress_activity</span>
+                  กำลังโหลด...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- MODAL CEO APPROVE -->
+    <div class="qc-modal" id="ceoModal" role="dialog" aria-modal="true" aria-labelledby="ceoModalTitle">
+      <div class="qc-modal-box">
+        <div class="qc-modal-header">
+          <div class="qc-modal-title">
+            <span class="material-symbols-outlined">rule</span>
+            <span id="ceoModalTitle">รายละเอียดเคลม</span>
+          </div>
+          <button class="modal-close-btn" type="button" onclick="closeCeoModal()" aria-label="ปิด">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="qc-modal-body">
+          <div class="modal-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">info</span>
+              ข้อมูลเคลม
+            </div>
+            <div class="modal-info-grid" id="ceoInfoGrid"></div>
+          </div>
+
+          <div class="modal-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">fact_check</span>
+              สรุปผลจาก QC
+            </div>
+            <div class="modal-detail-box" id="ceoQcSummary">—</div>
+          </div>
+
+          <div class="modal-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">rate_review</span>
+              การอนุมัติของ CEO
+            </div>
+            <div class="qc-result-box">
+              <label class="qc-comment-label">ผลการพิจารณา</label>
+              <div class="decision-options">
+                <label class="decision-pill">
+                  <input type="radio" name="execDecision" value="approved" checked />
+                  <span class="material-symbols-outlined" style="font-size: 18px">check_circle</span>
+                  <span>อนุมัติ</span>
+                </label>
+                <label class="decision-pill">
+                  <input type="radio" name="execDecision" value="rejected" />
+                  <span class="material-symbols-outlined" style="font-size: 18px">cancel</span>
+                  <span>ปฏิเสธ</span>
+                </label>
+              </div>
+
+              <label class="qc-comment-label" for="execComment">เหตุผล / เงื่อนไขเพิ่มเติม</label>
+              <textarea
+                id="execComment"
+                rows="3"
+                placeholder="เช่น อนุมัติ แต่ให้เคลม Supplier 50% หรือ ปฏิเสธเพราะ..."
+              ></textarea>
+
+              <label class="qc-comment-label" style="margin-top: 14px">ลายเซ็น CEO</label>
+              <div class="signature-box">
+                <canvas id="execSignaturePad"></canvas>
+              </div>
+              <div class="signature-actions">
+                <button type="button" class="btn-clear-signature" onclick="clearExecSignature()">
+                  <span class="material-symbols-outlined" style="font-size: 16px">restart_alt</span>
+                  ล้างลายเซ็น
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qc-action-btns">
+          <button type="button" class="btn-cancel" onclick="closeCeoModal()">
+            ยกเลิก
+          </button>
+          <button type="button" class="btn-save-draft" onclick="saveExecDecision()">
+            <span class="material-symbols-outlined">done_all</span>
+            บันทึกผลการพิจารณา
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIGHTBOX (สำหรับขยายรูป) -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+      <img id="lightboxImg" alt="" />
+      <button class="lightbox-close" type="button" onclick="event.stopPropagation();closeLightbox()">✕</button>
+    </div>
+
+    <footer class="footer">© 2026 EABaseHub | CEO Approval</footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/auth.js"></script>
+
+    <script src="/js/pages/executive/executive-Approval.js"></script>
+    <script src="/js/core/themeToggle.js"></script>
+    <script src="/js/services/nav-service.js"></script>
+  </body>
+</html>
