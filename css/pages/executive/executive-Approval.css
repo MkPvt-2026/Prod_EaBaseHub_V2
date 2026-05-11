@@ -1,5 +1,5 @@
 /* ================================================================
-   CEO APPROVALS PAGE  •  executive-Approval.css
+   CEO APPROVALS PAGE  •  executive-Approval.css  (FIXED & CLEANED)
    - รองรับ Light / Dark mode (data-theme="dark")
    - โทนหลัก: ม่วง CEO
    - Polished components, smoother animations
@@ -164,16 +164,6 @@ body {
   transition: transform var(--t), box-shadow var(--t), border-color var(--t);
   position: relative;
   overflow: hidden;
-}
-
-.summary-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--t);
 }
 
 .summary-card:hover {
@@ -735,6 +725,11 @@ body {
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
 }
 
+#execComment:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* action footer */
 .qc-action-btns {
   display: flex;
@@ -744,6 +739,7 @@ body {
   background: var(--card);
   padding: 14px 22px 18px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .btn-cancel {
@@ -851,9 +847,14 @@ body {
   gap: 6px;
 }
 
-.btn-clear-signature:hover {
+.btn-clear-signature:hover:not(:disabled) {
   background: var(--border-soft);
   border-color: var(--ceo-light);
+}
+
+.btn-clear-signature:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ---------- LIGHTBOX ---------- */
@@ -1114,7 +1115,8 @@ body {
   }
 
   .btn-save-draft,
-  .btn-cancel {
+  .btn-cancel,
+  #approvalDocumentPreviewBtn {
     width: 100%;
   }
 

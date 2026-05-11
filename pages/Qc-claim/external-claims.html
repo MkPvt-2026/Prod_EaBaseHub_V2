@@ -33,11 +33,7 @@
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <link rel="stylesheet" href="/css/components/badgeButtom.css" />
     <link rel="stylesheet" href="/css/base/bassHeader.css" />
-    <!-- <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css" /> -->
     <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
-
-    <!-- QC Checklist styling (เฉพาะหน้านี้) -->
-    
   </head>
   <body class="role-adminQc">
     <!-- HEADER -->
@@ -181,7 +177,7 @@
         </button>
       </div>
 
-      <!-- TABLE — external: มี column ลูกค้า -->
+      <!-- TABLE — external: 9 คอลัมน์ (เพิ่ม "เอกสารอนุมัติ") -->
       <div class="qc-main">
         <div class="table-wrap">
           <table class="qc-table" id="qcTable">
@@ -194,12 +190,13 @@
                 <th>ประเภทปัญหา</th>
                 <th>ไฟล์</th>
                 <th>สถานะ</th>
+                <th>เอกสารอนุมัติ</th>
                 <th>จัดการ</th>
               </tr>
             </thead>
             <tbody id="qcTableBody">
               <tr>
-                <td colspan="8" class="table-loading">
+                <td colspan="9" class="table-loading">
                   <span class="material-symbols-outlined spin"
                     >progress_activity</span
                   >
@@ -213,10 +210,6 @@
     </main>
 
     <!-- MODAL -->
-   <!-- ============================================
-     MODAL ส่วนที่แก้ไขใหม่
-     แทนที่ส่วน <div class="qc-modal" id="qcModal">...</div> เดิม
-============================================ -->
 <div class="qc-modal" id="qcModal">
   <div class="qc-modal-box">
     <div class="qc-modal-header">
@@ -380,13 +373,6 @@
   <textarea id="qcComment" rows="3" placeholder="เช่น ท่อบุบจากการซ้อนทับ หรือถุงรั่วบริเวณตะเข็บ..."></textarea>
 </div>
 
-          <!-- <label class="qc-comment-label" for="qcComment">
-            <span class="material-symbols-outlined">edit_note</span>
-            หมายเหตุเพิ่มเติม
-          </label>
-          <textarea id="qcComment" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
-        </div> -->
-
         <div class="qc-action-btns">
           <button type="button" class="btn-save-draft" onclick="saveQcDraft()">
             <span class="material-symbols-outlined">save</span> บันทึกร่าง
@@ -396,8 +382,9 @@
           </button>
         </div>
       </div>
-
-
+    </div>
+  </div>
+</div>
 
     <!-- LIGHTBOX -->
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -417,7 +404,10 @@
 
     <script src="/js/core/confirm-dialog.js"></script>
 
+    <!-- ⚠️ approval-document.js ต้อง load ก่อน external-claims.js -->
+    <script src="/js/pages/Qc-claim/approval-document.js"></script>
     <script src="/js/pages/Qc-claim/external-claims.js"></script>
+
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
     <script src="/js/core/themeToggle.js"></script>
