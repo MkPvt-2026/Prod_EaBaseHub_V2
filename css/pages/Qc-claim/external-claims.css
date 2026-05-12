@@ -51,13 +51,13 @@ body {
   min-height: 100vh;
   font-family: "Kanit", "IBM Plex Sans Thai", sans-serif;
   color: var(--qc-text);
-  background:
-    radial-gradient(
+  background:#fff;
+    /* radial-gradient(
       circle at top left,
       rgba(249, 115, 22, 0.14),
       transparent 34%
     ),
-    linear-gradient(180deg, #fff7ed 0%, #fffaf4 48%, #ffffff 100%);
+    linear-gradient(180deg, #fff7ed 0%, #fffaf4 48%, #ffffff 100%); */
 }
 
 button,
@@ -70,6 +70,164 @@ textarea {
 button {
   cursor: pointer;
 }
+
+/* ลบขีดเส้นใต้และให้สีเหมือนกับ text ปกติ */
+a { 
+  text-decoration: none; 
+  color: inherit; 
+}
+
+body{
+  font-family:'Kanit',sans-serif;  
+  background:var(--bg-base );
+}
+
+
+/* ================= STICKY HEADER ================= */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  background: var(--mint-900);
+  padding: 10px 24px;
+  height: 64px;  
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(92,189,154,0.24);
+}
+
+.app-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 400;
+  font-size: 14px;
+  flex-direction: row;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.app-header .logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.logo h2 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.logo-circle{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.logo-circle img{
+  width:65%;
+}
+
+/* ================= USER ================= */
+
+.user-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color: #fff;
+}
+
+.user-avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:var(--qc-bg);
+  color: var(--qc-primary-dark);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 2px 6px rgba(92,189,154,0.20);
+}
+
+.logout-btn{
+  padding:6px 12px;
+  border:none;
+  border-radius:18px;
+  background:#f8e2c5;
+  color:var(--qc-primary-dark);
+  align-items: center;
+  justify-content: center;
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+}
+
+.logout-btn:hover{
+  background:#f0f9f8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+}
+
+
+/* ================= NAV ================= */
+
+.app-nav{
+  display:flex;
+  position:sticky;
+  align-items: center;
+  top:64px;
+  z-index:999;
+
+  background:#ffffff;
+  border-bottom: 1px solid #e0ede5;
+  font-size: 14px;
+  padding: 0px 28px;
+  overflow-x: auto;
+  color: var(--qc-warning-dark);
+  margin-bottom: 2px;
+  gap: 16px 16px;
+  flex-wrap: wrap;
+}
+
+.app-nav a{
+  padding:10px 14px;
+  /* border-radius:8px; */
+  font-size:14px;
+  white-space:nowrap;
+  transition: all 0.2s ease;
+  color: #5a7870;
+}
+
+.app-nav a:hover{
+  background: var(--qc-primary-soft);
+  color: var(--qc-primary);
+}
+
+.app-nav a.active{
+  background: var(--qc-primary-soft);
+  color:  var(--qc-primary-dark);
+  font-weight: 600;
+  /* box-shadow: 0 2px 6px rgba(92,189,154,0.20); */
+  border-bottom: 2px solid var(--qc-primary);
+  
+}
+
+
 
 /* Header / Layout */
 .app-header {
@@ -93,16 +251,19 @@ button {
 }
 
 .page-header {
-  width: min(1400px, calc(100% - 32px));
+  display:flex;
+  /* width: min(1400px, calc(100% - 32px)); */
   margin: 24px auto 20px;
-  padding: 24px 28px;
-  border: 1px solid var(--qc-primary-border);
-  border-radius: var(--qc-radius-lg);
-  background:
-    linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(251, 146, 60, 0.92)),
-    #f97316;
-  color: #fff;
-  box-shadow: var(--qc-shadow);
+  align-items: center;
+  margin-bottom: 48px;
+  padding: 20px 24px;
+  /* border: 1px solid var(--qc-primary-border); */
+  /* border-radius: var(--qc-radius-lg); */
+  /* background: */
+    /* linear-gradient(135deg, rgba(249, 115, 22, 0.5), rgba(251, 146, 60, 0.5)),
+    #f97316; */
+  color: var(--qc-primary-dark);
+  box-shadow: var(--qc-shadow-sm);
 }
 
 .page-header h1 {
@@ -113,8 +274,8 @@ button {
 
 .page-header p {
   margin: 6px 0 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 15px;
+  color: var(--qc-warning);
+  font-size: 16px;
 }
 
 /* Summary Cards */
@@ -129,12 +290,12 @@ button {
   overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 24px;
   min-height: 116px;
   padding: 18px;
-  border: 1px solid var(--qc-primary-border);
-  border-radius: var(--qc-radius-lg);
-  background: rgba(255, 255, 255, 0.92);
+  border: 0.1px solid var(--qc-border);
+  border-radius: var(--qc-radius-sm);
+  background: #fff;
   box-shadow: var(--qc-shadow-sm);
 }
 .summary-card::before {
@@ -146,7 +307,7 @@ button {
 }
 .summary-card:hover {
   transform: translateY(-2px);
-  border-color: var(--qc-primary);
+  border-color: var(--qc-surface-soft);
   box-shadow: var(--qc-shadow);
 }
 
@@ -165,8 +326,97 @@ button {
 .summary-icon .material-symbols-outlined {
   font-size: 28px;
 }
+
+/* =========================
+   SUMMARY CARD COLORS
+========================= */
+
+.summary-card.total {
+  border-left: 5px solid #2563eb;
+  background: linear-gradient(135deg, #ffffff, #eff6ff);
+}
+
+.summary-card.pending {
+  border-left: 5px solid #f59e0b;
+  background: linear-gradient(135deg, #ffffff, #fff7ed);
+}
+
+.summary-card.in-progress {
+  border-left: 5px solid #f97316;
+  background: linear-gradient(135deg, #ffffff, #fff7ed);
+}
+
+.summary-card.approved {
+  border-left: 5px solid #10b981;
+  background: linear-gradient(135deg, #ffffff, #ecfdf5);
+}
+
+.summary-card.rejected {
+  border-left: 5px solid #ef4444;
+  background: linear-gradient(135deg, #ffffff,#fef2f2);
+}
+
+.summary-card.total .summary-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.summary-card.pending .summary-icon {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.summary-card.in-progress .summary-icon {
+  background: #ffedd5;
+  color: #f97316;
+}
+
+.summary-card.approved .summary-icon {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.summary-card.rejected .summary-icon {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.summary-card {
+  transition: all 0.25s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+
+.summary-card.in-progress {
+  animation: pulseCard 2s infinite;
+}
+
+@keyframes pulseCard {
+  0% {
+    box-shadow: 0 0 0 rgba(249,115,22,0);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(249,115,22,0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(249,115,22,0);
+  }
+}
+
+
+
+
+
+
+/* .summary-card.total {
+  border: 0.1px solid var(--qc-info);
+} */
 .summary-card.total::before {
-  background: var(--qc-primary);
+  background: var(--qc-info-dark);  
 }
 .summary-card.pending::before,
 .summary-card.in-progress::before {
@@ -210,8 +460,8 @@ button {
   gap: 10px;
   margin-bottom: 18px;
   padding: 14px;
-  border: 1px solid var(--qc-primary-border);
-  border-radius: var(--qc-radius-lg);
+  border: 0.1px solid var(--qc-border);
+  border-radius: var(--qc-radius-sm);
   background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--qc-shadow-sm);
 }
@@ -222,10 +472,86 @@ button {
   gap: 8px;
   flex: 1 1 180px;
   padding: 0 12px;
-  border: 1px solid var(--qc-primary-border);
-  border-radius: var(--qc-radius);
+  border: 0.1px solid var(--qc-border);
+  border-radius: var(--qc-radius-sm);
   background: #fff;
 }
+
+/* === Date Range Filter (เฉพาะช่องวันที่) === */
+.filter-group.filter-date-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 6px 12px;
+  min-width: 320px;
+  flex: 1.5;
+}
+
+.filter-date-range .date-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-date-range .date-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.filter-date-range .date-label .material-symbols-outlined {
+  font-size: 14px;
+  color: #f97316; /* สีส้มธีม EABaseHub */
+}
+
+.filter-date-range input[type="date"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #111827;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.filter-date-range input[type="date"]:hover {
+  border-color: #d1d5db;
+}
+
+.filter-date-range input[type="date"]:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.filter-date-range .date-arrow {
+  padding-bottom: 8px;
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filter-group.filter-date-range {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 100%;
+  }
+  .filter-date-range .date-arrow {
+    display: none;
+  }
+}
+
 .filter-icon {
   color: var(--qc-primary-dark);
   font-size: 20px;
@@ -300,7 +626,7 @@ button {
 /* Table */
 .qc-main {
   border: 1px solid var(--qc-primary-border);
-  border-radius: var(--qc-radius-lg);
+  border-radius: var(--qc-radius-sm);
   background: #fff;
   box-shadow: var(--qc-shadow-sm);
   overflow: hidden;
@@ -1380,3 +1706,327 @@ button {
 .doc-action-group .btn-doc-share { background: linear-gradient(135deg,#3b82f6,#60a5fa); color:#fff; border-color:transparent; }
 
 .doc-action-group button:hover { transform: translateY(-2px); }
+
+
+/* =========================================================
+   external-claims.css — TABLE LAYOUT FIX (9 columns)
+   วางไว้ล่างสุดของไฟล์ external-claims.css เดิม
+   (หรือใส่หลัง section "FINAL FIX: QC TABLE FIT NOTEBOOK SCREEN")
+   ========================================================= */
+
+/* ---------- ลบ width 8-column เดิม override ด้วย 9-column ---------- */
+.qc-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.qc-table th,
+.qc-table td {
+  padding: 10px 6px !important;
+  font-size: 12px !important;
+  overflow: hidden !important;
+  vertical-align: middle;
+}
+
+/* สัดส่วน 9 คอลัมน์ — รวม 100% พอดี */
+.qc-table th:nth-child(1),
+.qc-table td:nth-child(1) { width: 8% !important; }   /* วันที่ */
+
+.qc-table th:nth-child(2),
+.qc-table td:nth-child(2) { width: 11% !important; }  /* พนักงาน/เขต */
+
+.qc-table th:nth-child(3),
+.qc-table td:nth-child(3) { width: 10% !important; }  /* ร้านค้า */
+
+.qc-table th:nth-child(4),
+.qc-table td:nth-child(4) { width: 21% !important; }  /* สินค้า */
+
+.qc-table th:nth-child(5),
+.qc-table td:nth-child(5) { width: 11% !important; }  /* ประเภทปัญหา */
+
+.qc-table th:nth-child(6),
+.qc-table td:nth-child(6) { width: 7% !important; }   /* ไฟล์ */
+
+.qc-table th:nth-child(7),
+.qc-table td:nth-child(7) { width: 11% !important; }  /* สถานะ */
+
+.qc-table th:nth-child(8),
+.qc-table td:nth-child(8) { width: 13% !important; }  /* เอกสารอนุมัติ — ขยาย */
+
+.qc-table th:nth-child(9),
+.qc-table td:nth-child(9) { width: 8% !important; }   /* จัดการ */
+
+/* ---------- ปุ่มเอกสารอนุมัติ — กระชับ + ไม่ล้น ---------- */
+.doc-action-group {
+  display: inline-flex !important;
+  gap: 3px !important;
+  align-items: center;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  justify-content: flex-start;
+}
+
+.doc-action-group .btn-doc-view,
+.doc-action-group .btn-doc-download,
+.doc-action-group .btn-doc-share {
+  flex-shrink: 0;
+  padding: 4px 6px !important;
+  border-radius: 8px !important;
+  font-size: 10.5px !important;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 28px;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ปุ่ม "ดู" — มีข้อความ */
+.doc-action-group .btn-doc-view {
+  min-width: 38px;
+  padding: 4px 7px !important;
+  background: #fff7ed;
+  color: #ea580c;
+  border-color: #fed7aa;
+}
+.doc-action-group .btn-doc-view:hover {
+  background: #f97316;
+  color: #fff;
+  border-color: #f97316;
+}
+
+/* ปุ่ม download — icon only */
+.doc-action-group .btn-doc-download {
+  width: 28px;
+  padding: 0 !important;
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: #fff;
+}
+.doc-action-group .btn-doc-download:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.35);
+}
+
+/* ปุ่ม share — icon only */
+.doc-action-group .btn-doc-share {
+  width: 28px;
+  padding: 0 !important;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  color: #fff;
+}
+.doc-action-group .btn-doc-share:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(59, 130, 246, 0.35);
+}
+
+/* icon ขนาดในปุ่ม */
+.doc-action-group .material-symbols-outlined {
+  font-size: 14px !important;
+}
+
+/* ---------- ปุ่ม "ดู" คอลัมน์จัดการ — กระชับ ---------- */
+.cell-action-group {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-view {
+  min-height: 28px !important;
+  height: 28px;
+  width: 100%;
+  max-width: 60px;
+  padding: 0 6px !important;
+  font-size: 11px !important;
+  gap: 2px;
+  border-radius: 8px;
+}
+
+.btn-view .material-symbols-outlined {
+  font-size: 13px !important;
+}
+
+/* ---------- thumbs ไฟล์ — กระชับ ---------- */
+.cell-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.cell-thumb,
+.cell-thumb-video {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+}
+
+/* ---------- status badge — ไม่ขึ้นบรรทัดใหม่จนเลอะ ---------- */
+.status-badge {
+  width: fit-content;
+  max-width: 100% !important;
+  padding: 3px 7px !important;
+  font-size: 10.5px !important;
+  line-height: 1.3;
+  white-space: nowrap !important;
+}
+
+/* ---------- type tag — ไม่ใหญ่ ---------- */
+.type-tag,
+.modal-type-tag {
+  padding: 3px 6px !important;
+  font-size: 10px !important;
+  line-height: 1.25;
+}
+
+/* ---------- ป้องกัน overflow ของข้อความ ---------- */
+.cell-date,
+.cell-sub,
+.cell-product div:first-child {
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-sub {
+  font-size: 10.5px !important;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   จอ Notebook 14" / 15" (1366×768, 1440×900, 1536×864)
+   ========================================================= */
+@media (max-width: 1440px) {
+  .qc-table th,
+  .qc-table td {
+    padding: 9px 5px !important;
+    font-size: 11.5px !important;
+  }
+
+  /* ปรับสัดส่วนนิดเดียวให้พอดี */
+  .qc-table th:nth-child(4),
+  .qc-table td:nth-child(4) { width: 20% !important; }
+
+  .qc-table th:nth-child(8),
+  .qc-table td:nth-child(8) { width: 14% !important; }
+}
+
+/* =========================================================
+   จอ Notebook เล็กมาก / DevTools เปิด
+   ========================================================= */
+@media (max-width: 1180px) {
+  .container,
+  .page-header {
+    width: calc(100% - 20px) !important;
+  }
+
+  .qc-table th,
+  .qc-table td {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+  }
+
+  /* ปุ่ม view ในคอลัมน์จัดการ — ซ่อนข้อความ เหลือแต่ icon */
+  .btn-view {
+    max-width: 36px;
+    padding: 0 !important;
+  }
+  .btn-view::after {
+    content: none;
+  }
+
+  .doc-action-group .btn-doc-view {
+    min-width: 32px;
+    padding: 4px 5px !important;
+    font-size: 10px !important;
+  }
+
+  /* ลดสัดส่วนสินค้านิด ขยายเอกสารอนุมัติ */
+  .qc-table th:nth-child(4),
+  .qc-table td:nth-child(4) { width: 19% !important; }
+
+  .qc-table th:nth-child(8),
+  .qc-table td:nth-child(8) { width: 15% !important; }
+}
+
+/* =========================================================
+   มือถือ — Stack เป็นการ์ด (ปรับให้รองรับ 9 คอลัมน์)
+   ========================================================= */
+@media (max-width: 760px) {
+  .qc-table,
+  .qc-table thead,
+  .qc-table tbody,
+  .qc-table th,
+  .qc-table td,
+  .qc-table tr {
+    display: block;
+    width: 100% !important;
+  }
+
+  .qc-table thead {
+    display: none;
+  }
+
+  .qc-table tr {
+    margin: 10px;
+    padding: 12px;
+    border: 1px solid var(--qc-primary-border);
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .qc-table td {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 10px;
+    padding: 8px 0 !important;
+    border-bottom: 1px dashed #fed7aa;
+  }
+
+  .qc-table td:last-child {
+    border-bottom: 0;
+  }
+
+  /* Override label สำหรับ 9 คอลัมน์ */
+  .qc-table td:nth-child(1)::before { content: "วันที่"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(2)::before { content: "พนักงาน / เขต"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(3)::before { content: "ร้านค้า / ลูกค้า"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(4)::before { content: "สินค้า"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(5)::before { content: "ประเภทปัญหา"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(6)::before { content: "ไฟล์"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(7)::before { content: "สถานะ"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(8)::before { content: "เอกสารอนุมัติ"; font-weight: 700; color: #7c2d12; }
+  .qc-table td:nth-child(9)::before { content: "จัดการ"; font-weight: 700; color: #7c2d12; }
+
+  .btn-view {
+    width: auto;
+    max-width: none;
+  }
+
+  .doc-action-group .btn-doc-view {
+    min-width: auto;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* =========================================================
+   จอใหญ่มาก — ขยายตารางให้เต็ม container (1400px max)
+   ========================================================= */
+@media (min-width: 1600px) {
+  .container,
+  .page-header {
+    width: min(1400px, calc(100% - 32px));
+  }
+
+  .qc-table th,
+  .qc-table td {
+    padding: 12px 10px !important;
+    font-size: 13px !important;
+  }
+
+  .doc-action-group .btn-doc-view {
+    font-size: 12px !important;
+  }
+}

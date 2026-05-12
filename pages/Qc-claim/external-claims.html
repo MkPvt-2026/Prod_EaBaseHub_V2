@@ -31,8 +31,8 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
-    <link rel="stylesheet" href="/css/components/badgeButtom.css" />
-    <link rel="stylesheet" href="/css/base/bassHeader.css" />
+    <!-- <link rel="stylesheet" href="/css/components/badgeButtom.css" /> -->
+    <!-- <link rel="stylesheet" href="/css/base/bassHeader.css" /> -->
     <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
   </head>
   <body class="role-adminQc">
@@ -51,7 +51,7 @@
         </div>
         <div class="group">
           <button
-            class="badge badge--message-sent"
+            class="logout-btn"
             id="logoutBtn"
             type="button"
           >
@@ -69,14 +69,24 @@
     <!-- NAV Container -->
     <div id="navContainer"></div>
 
-    <!-- PAGE HEADER -->
-    <header class="page-header">
-      <h1>👥 ระบบจัดการเคลมลูกค้า</h1>
-      <p>ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
-    </header>
 
+    
+    <!-- PAGE HEADER -->     
+    <div class="page-header">
+      <div>
+        <h1>
+          <span class="material-symbols-outlined icon-lg">assignment</span>
+          ระบบจัดการเคลมลูกค้า
+        </h1>
+        <p>รับเคลม • ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
+      </div>
+    </div>
+    
+    
     <!-- MAIN -->
     <main class="container">
+
+    
       <!-- SUMMARY CARDS -->
       <div class="qc-summary">
         <div class="summary-card total">
@@ -145,20 +155,34 @@
             placeholder="ค้นหาสินค้า / ลูกค้า / พนักงาน..."
           />
         </div>
-        <div class="filter-group">
-          <span class="material-symbols-outlined filter-icon"
-            >calendar_month</span
-          >
-          <input type="date" id="filterDateFrom" title="จากวันที่" />
-          <span class="filter-sep">–</span>
-          <input type="date" id="filterDateTo" title="ถึงวันที่" />
-        </div>
+
+        <div class="filter-group filter-date-range">
+  <div class="date-field">
+    <label for="filterDateFrom" class="date-label">
+      <span class="material-symbols-outlined">calendar_month</span>
+      จากวันที่
+    </label>
+    <input type="date" id="filterDateFrom" />
+  </div>
+
+  <span class="date-arrow">→</span>
+
+  <div class="date-field">
+    <label for="filterDateTo" class="date-label">
+      <span class="material-symbols-outlined">event_available</span>
+      ถึงวันที่
+    </label>
+    <input type="date" id="filterDateTo" />
+  </div>
+</div>
+
         <div class="filter-group" style="min-width: 160px; flex: 0">
           <span class="material-symbols-outlined filter-icon">storefront</span>
           <select id="filterCustomer">
             <option value="">ทุกลูกค้า</option>
           </select>
         </div>
+
         <div class="filter-group" style="min-width: 140px; flex: 0">
           <span class="material-symbols-outlined filter-icon">flag</span>
           <select id="filterStatus">
