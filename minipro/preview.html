@@ -1,713 +1,637 @@
 <!doctype html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<title>${escapeHtml(docNo)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  @page { size: A4; margin: 8mm; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    font-family: "Kanit", "Sarabun", Tahoma, sans-serif;
-    color: #0f172a;
-    background: #e2e8f0;
-    font-size: 10.5px;
-    line-height: 1.35;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    min-height: 100vh;
-    padding: 20px 0 40px;
-  }
-  .doc {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0 auto;
-    background: #fff;
-    padding: 8mm 9mm;
-    box-shadow: 0 1px 3px rgba(15,23,42,.1), 0 10px 40px rgba(15,23,42,.15);
-    border-radius: 2px;
-    position: relative;
-  }
+<html lang="th" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EABaseHub | External Claims</title>
 
-  /* ========= TOP HEADER (Banner เล็กในนี้) ========= */
- .top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;         
-  border-bottom: 2px solid #7c3aed;
-  padding-bottom: 12px;
-  margin-bottom: 14px;
-  flex-wrap: nowrap;
-}
+    <script>
+      (function () {
+        var t = localStorage.getItem("ea-theme");
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
 
-.brand-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
-}
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 
-.company-logo {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <!-- <link rel="stylesheet" href="/css/components/badgeButtom.css" /> -->
+    <!-- <link rel="stylesheet" href="/css/base/bassHeader.css" /> -->
+    <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
+    <link rel="stylesheet" href="/minipro/preview.css" />
+  </head>
+  <body class="role-adminQc has-sidebar">
 
-.brand {
-  min-width: 0;
-}
+   <!-- =========================
+           SIDEBAR (เหมือน Index)
+           ========================= -->
+      <aside class="sidebar" id="sidebar">
+        <button
+          class="hamburger"
+          id="hamburgerBtn"
+          onclick="toggleMenu()"
+          aria-label="เปิด/ปิดเมนู"
+        >
+          <span class="material-symbols-outlined">menu</span>
+        </button>
 
-.brand h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.25;
-}
+        <div class="logo">
+          <div class="logo-circle">
+            <img src="/assets/icons/icon-192.png" alt="EABaseHub Logo" />
+          </div>
+          <div class="brand">EABaseHub</div>
+        </div>
 
-.brand p {
-  margin: 3px 0 0;
-  color: #475569;
-  font-size: 12px;
-  line-height: 1.25;
-}
+        <nav class="menu" id="sidebarMenu">
+          <a class="menu-item active" href="/pages/dashboard/QcDashboard.html">
+            <span class="material-symbols-outlined menu-icon">home</span>
+            <span class="menu-text">หน้าแรก</span>
+          </a>
 
-.doc-no {
-  text-align: right;
-  min-width: 180px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;       
-  gap: 2px;
-  min-height: 100px;            
-}
+          <a class="menu-item" href="/pages/Qc-claim/adminQc.html">
+            <span class="material-symbols-outlined menu-icon">fact_check</span>
+            <span class="menu-text">จัดการเคลม</span>
+          </a>
 
-.doc-no > div {
-  color: #475569;
-  font-size: 10px;
-  line-height: 1.2;
-}
+          <a class="menu-item" href="/pages/Qc-claim/internal-claims.html">
+            <span class="material-symbols-outlined menu-icon"
+              >edit_document</span
+            >
+            <span class="menu-text">เคลม วัตถุดิบ-สินค้า(ภายใน)</span>
+          </a>
 
-.doc-no strong {
-  font-size: 13px;
-  color: #5b21b6;
-  font-weight: 700;
-  line-height: 1.2;
-}
+          <a class="menu-item" href="/pages/Qc-claim/external-claims.html">
+            <span class="material-symbols-outlined menu-icon">description</span>
+            <span class="menu-text">เคลม วัตถุดิบ-สินค้า(ภายนอก)</span>
+          </a>
 
-.doc-no .status-badge {
-  margin-top: 2px;
-}
+          <a class="menu-item" href="/pages/Qc-claim/claim-evaluation.html">
+            <span class="material-symbols-outlined menu-icon">verified</span>
+            <span class="menu-text">ผลการพิจารณา</span>
+          </a>
 
-  .brand-wrap{
-  display:flex;
-  align-items:center;
-  gap:14px;
+          <a class="menu-item" href="/pages/forms/formClaim.html">
+            <span class="material-symbols-outlined menu-icon"
+              >assignment_late</span
+            >
+            <span class="menu-text">แจ้งเคลมสินค้า</span>
+          </a>
+        </nav>
 
-  flex:1;
-  min-width:0;
-}
+        <button
+          class="toggle-btn"
+          onclick="toggleSidebar()"
+          aria-label="ย่อ/ขยายเมนู"
+        >
+          <span class="material-symbols-outlined icon-white">menu</span>
+        </button>
+      </aside>
 
-.company-name{
-  margin:2px 0;
-  font-size:13px;
-  font-weight:600;
-  color:#334155;
-}
-
-
-  /* ========= Decision Badge (เล็ก มุมขวาบน) ========= */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 10.5px;
-    line-height: 1.2;
-  }
-  .status-badge.approved {
-    background: #dcfce7;
-    color: #14532d;
-    border: 1px solid #86efac;
-  }
-  .status-badge.rejected {
-    background: #fee2e2;
-    color: #7f1d1d;
-    border: 1px solid #fca5a5;
-  }
-  .status-badge.pending {
-    background: #fef3c7;
-    color: #78350f;
-    border: 1px solid #fcd34d;
-    text-align: center;
-  }
-  .status-badge .icon {
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  /* ========= Doc Title (อยู่กลาง) ========= */
-  .doc-title {
-    text-align: center;
-    margin: 4px 0 8px;
-  }
-  .doc-title h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 700;
-    color: #0f172a;
-    letter-spacing: 0.2px;
-  }
-  .doc-title .sub {
-    font-size: 10px;
-    color: #64748b;
-    margin-top: 1px;
-  }
-
-  /* ========= Info Grid ========= */
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-  }
-  .box {
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 4px 8px;
-    background: #f8fafc;
-  }
-  .box.full {
-    grid-column: 1 / -1;
-  }
-  .label {
-    color: #475569;
-    font-size: 9.5px;
-    margin-bottom: 1px;
-    font-weight: 500;
-  }
-  .value {
-    font-weight: 600;
-    color: #0f172a;
-    font-size: 10.5px;
-    word-break: break-word;
-  }
-
-  /* ========= Section Heading ========= */
-  h2.section {
-    font-size: 14px;
-    margin: 8px 0 4px;
-    color: #4c1d95;
-    border-left: 3px solid #7c3aed;
-    padding-left: 6px;
-    font-weight: 700;
-  }
-
-  /* ========= QC Result + Grade Table (FIX: pad + checkbox) ========= */
-  .qc-result-section {
-    display: grid;
-    gap: 5px;
     
-  }
 
-  .qc-meta-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-  }
-
-  .qc-meta-card {
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 4px 8px;
-    background: #faf5ff;
-  }
-  .qc-meta-card .label {
-    color: #6b21a8;
-    font-weight: 600;
-    
-  }
-
-  table.grade-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    margin-top: 2px;
-    
-  }
-  
-  table.grade-table td {
-    border: 1px solid #cbd5e1;
-    padding: 4px 7px;
-    font-size: 10.5px;
-    vertical-align: middle;
-    
-  }
-  table.grade-table th {
-    background: #ede9fe;
-    color: #4c1d95;
-    text-align: center;
-    font-weight: 700;
-    padding: 5px 7px;
-  }
-
-  /* คอลัมน์ width — รวม 100% */
-  .grade-check-cell {
-    text-align: center;
-    width: 7%;
-  }
-  .grade-badge-cell {
-    text-align: center;
-    width: 11%;
-  }
-  .grade-label-cell {
-    color: #1e293b;
-    width: 64%;   
-    
-  }
-  .grade-qty-cell {
-    text-align: center;
-    font-weight: 700;
-    color: #0f172a;
-    width: 18%;
-  }
-
-  .grade-check {
-    text-align: center;
-    width: 13px;
-    height: 13px;
-    margin: 0;
-    vertical-align: middle;
-    accent-color: #7c3aed;
-    cursor: not-allowed;
-  }
-
-  .grade-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    color: #fff;
-    font-weight: 800;
-    font-size: 10.5px;
-  }
-
-  table.grade-table tfoot td {
-    align-items: center;
-    background: #fff7ed;
-    color: #7c2d12;
-    font-weight: 800;
-    padding: 5px 7px;
-  }
-
-  td.total-label {
-    text-align: center;
-  }
+    <!-- NAV Container -->
+    <div id="navContainer"></div>
 
 
-  /* ========= Approval Section (CEO Signature) ========= */
-  .approval {
-    margin-top: 5px;
-    border: 1.5px solid #7c3aed;
-    border-radius: 8px;
-    padding: 8px 10px;
-    background: #faf5ff;
-  }
-
-  /* ========= Comment Box (ความเห็น QC + CEO เด่น) ========= */
-  .comment-box {
-    border: 1.2px solid;
-    border-radius: 7px;
-    padding: 6px 10px;
-    margin-top: 5px;
-  }
-  .comment-box.qc-comment {
-    background: #eff6ff;
-    border-color: #93c5fd;
-  }
-  .comment-box.ceo-comment {
-    background: #fefce8;
-    border-color: #facc15;
-    margin-top: 0;
-  }
-  .comment-box .comment-label {
-    font-size: 10.5px;
-    font-weight: 700;
-    margin-bottom: 3px;
-    padding-bottom: 3px;
-    border-bottom: 1px dashed currentColor;
-    opacity: 0.85;
-  }
-  .comment-box.qc-comment .comment-label {
-    color: #1e40af;
-  }
-  .comment-box.ceo-comment .comment-label {
-    color: #854d0e;
-  }
-  .comment-box .comment-value {
-    font-size: 10.5px;
-    line-height: 1.5;
-    color: #0f172a;
-    white-space: pre-wrap;
-    word-break: break-word;
-    min-height: 22px;
-  }
-
-  .approval-row {
-    font-size: 10.5px;
-    color: #0f172a;
-    margin-bottom: 3px;
-  }
-  .approval-row strong {
-    color: #4c1d95;
-    font-weight: 700;
-  }
-
-  .signature-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 8px;
-    align-items: stretch;
-  }
-  .signature-wrap {
-    display: flex;
-    flex-direction: column;
-  }
-  .signature-box {
-    border: 1px solid #94a3b8;
-    border-radius: 6px;
-    height: 75px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    padding: 3px;
-    overflow: hidden;
-    margin-top: 2px;
-  }
-  .signature-box img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    /* FIX: ลายเซ็นชัด ไม่จาง */
-    filter: contrast(1.6) brightness(0.75) saturate(0);
-    mix-blend-mode: multiply;
-  }
-  .signature-box .no-sig {
-    color: #94a3b8;
-    font-size: 10px;
-    font-style: italic;
-  }
-  .signature-box .sig-text {
-    font-family: "Brush Script MT", cursive;
-    font-size: 20px;
-    color: #1e3a8a;
-  }
-
-  .signer-info {
-    margin-top: 4px;
-    padding-top: 3px;
-    border-top: 1px dashed #cbd5e1;
-    font-size: 10px;
-  }
-  .signer-info .signer-name {
-    font-weight: 700;
-    color: #0f172a;
-    font-size: 10.5px;
-  }
-  .signer-info .signer-role {
-    color: #6b7280;
-    font-size: 9.5px;
-    margin-top: 1px;
-  }
-  .signer-info .signer-date {
-    color: #94a3b8;
-    font-size: 9.5px;
-    margin-top: 1px;
-  }
-
-  /* ========= Footer ========= */
-  .footer {
-    margin-top: 8px;
-    padding-top: 5px;
-    border-top: 1px solid #cbd5e1;
-    color: #64748b;
-    font-size: 9.5px;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  /* ========= Print Actions ========= */
-  .actions {
-    position: fixed;
-    right: 14px;
-    top: 14px;
-    display: flex;
-    gap: 8px;
-    z-index: 10;
-  }
-  .actions button {
-    border: 0;
-    border-radius: 8px;
-    padding: 8px 14px;
-    background: #7c3aed;
-    color: #fff;
-    cursor: pointer;
-    font-weight: 700;
-    font-family: inherit;
-    font-size: 13px;
-    box-shadow: 0 4px 12px rgba(124,58,237,0.3);
-  }
-  .actions button:hover {
-    background: #6d28d9;
-  }
-
-  @media print {
-    @page { size: A4; margin: 7mm; }
-    html, body {
-      background: #fff !important;
-      padding: 0 !important;
-      min-height: 0 !important;
-    }
-    .actions { display: none !important; }
-    .doc {
-      width: 100% !important;
-      min-height: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      background: #fff !important;
-    }
-    body { font-size: 10px; }
-    /* บังคับให้ไม่แบ่งหน้าระหว่าง section */
-    .approval, .qc-result-section, .grid {
-      page-break-inside: avoid;
-    }
-  }
-</style>
-</head>
-<body>
-  <div class="actions">
-    <button onclick="window.print()">🖨️ พิมพ์ / Save PDF</button>
-  </div>
-
-  <div class="doc">
-    <!-- ====== Top Header + Decision Badge (เล็กในมุมขวาบน) ====== -->
-
-    <!-- ====== Top Header + Decision Badge ====== -->
-<div class="top">
-  <div class="brand-wrap">
-    <img
-      src="/assets/icons/logo-pvt.png"
-      alt="Company Logo"
-      class="company-logo"
-    >
-    <div class="brand">
-      <h1>ใบอนุมัติการเคลมสินค้า</h1>
-      <p>Claim Approval Document · EABaseHub</p>
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb-bar">
+      <span class="home">
+        <span class="material-symbols-outlined">home</span>
+        Dashboard
+      </span>
+      <span>›</span>
+      <span>จัดการเคลมลูกค้า</span>
+      <span>›</span>
+      <span>เคลมสินค้าสำเร็จรูปภายนอก</span>
     </div>
-  </div>
 
-  <div class="doc-no">
-    <div>เลขที่เอกสาร</div>
-    <strong>${escapeHtml(docNo)}</strong>
-    <span class="status-badge ${statusClass}">
-      <span class="icon">${
-        isApproved ? "✅" : isRejected ? "❌" : "⏳"
-      }</span>
-      CEO ${statusText}
-    </span>
-  </div>
-</div>
-
-    <!-- ====== ข้อมูลเคลม ====== -->
-    <h2 class="section">ข้อมูลเคลม</h2>
-    <div class="grid">
-      <div class="box">
-        <div class="label">เลขเคลม</div>
-        <div class="value">${escapeHtml(getClaimNo(claim))}</div>
-      </div>
-      <div class="box">
-        <div class="label">วันที่อนุมัติ</div>
-        <div class="value">${escapeHtml(formatDateTime(claim.exec_at))}</div>
-      </div>
-      <div class="box">
-        <div class="label">ประเภทเคลม</div>
-        <div class="value">${
-          claim.claim_scope === "internal" ? "เคลมภายใน" : "เคลมภายนอก"
-        }</div>
-      </div>
-      <div class="box">
-        <div class="label">ผู้แจ้ง / พื้นที่</div>
-        <div class="value">${escapeHtml(
-          val(claim.emp_name, claim.created_by_name),
-        )} · ${escapeHtml(val(claim.area, claim.department))}</div>
-      </div>
-      <div class="box">
-        <div class="label">ลูกค้า</div>
-        <div class="value">${escapeHtml(
-          val(claim.customer, claim.customer_name),
-        )}</div>
-      </div>
-      <div class="box">
-        <div class="label">สินค้า · จำนวน</div>
-        <div class="value">${escapeHtml(
-          val(claim.product, claim.product_name),
-        )} · ${escapeHtml(val(claim.qty, claim.quantity))}</div>
-      </div>
-      <div class="box full">
-        <div class="label">รายละเอียดปัญหา</div>
-        <div class="value">${escapeHtml(
-          val(
-            claim.detail,
-            claim.claim_detail,
-            claim.problem_detail,
-            claim.description,
-          ),
-        )}</div>
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <h1>
+          <span class="material-symbols-outlined icon-lg">assignment</span>
+          ระบบจัดการเคลมลูกค้า
+        </h1>
+        <p>รับเคลม • ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
       </div>
     </div>
 
-    <!-- ====== ผลการตรวจสอบ QC ====== -->
-    <h2 class="section">ผลการตรวจสอบและคัดแยก QC</h2>
-
-    <div class="qc-result-section">
-      ${
-        qc.product_source || qc.claim_root_cause
-          ? `
-        <div class="qc-meta-grid">
-          <div class="qc-meta-card">
-            <div class="label">ประเภทสินค้า</div>
-            <div class="value">${escapeHtml(productSource)}</div>
+    <!-- MAIN -->
+    <main class="container">
+      <!-- SUMMARY CARDS -->
+      <div class="qc-summary">
+        <div class="summary-card total">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">support_agent</span>
           </div>
-          <div class="qc-meta-card">
-            <div class="label">ต้นเหตุความเสียหาย</div>
-            <div class="value">${escapeHtml(rootCause)}</div>
+          <div class="summary-info">
+            <div class="summary-head">ทั้งหมด</div>
+            <div class="summary-num" id="sumTotal">—</div>
+            <div class="summary-label">เคลมลูกค้าทั้งหมด</div>
           </div>
-        </div>`
-          : ""
-      }
-
-      <table class="grade-table">
-        <thead>
-          <tr>
-            <th style="width:7%;">เลือก</th>
-            <th style="width:11%;">เกรด</th>
-            <th style="width:64%;">การจัดการ</th>
-            <th style="width:18%; text-align:right;">จำนวน</th>
-          </tr>
-        </thead>
-        <tbody>${gradeRows}</tbody>
-        <tfoot>
-          <tr>
-            <td colspan="3" style="text-align:right;">รวมทั้งหมด</td>
-            <td style="text-align:right;">${totalQty.toLocaleString()}</td>
-          </tr>
-        </tfoot>
-      </table>
-
-      <!-- ====== สาเหตุหลัก + ผู้รับผิดชอบ (จาก qc_result) ====== -->
-      <div class="qc-meta-grid">
-        <div class="qc-meta-card">
-          <div class="label">สาเหตุหลัก</div>
-          <div class="value">${escapeHtml(qc.defect_reason || "-")}</div>
         </div>
-        <div class="qc-meta-card">
-          <div class="label">ผู้รับผิดชอบ</div>
-          <div class="value">${escapeHtml(qc.responsibility || "-")}</div>
+
+        <div class="summary-card pending">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">pending_actions</span>
+          </div>
+          <div class="summary-info">
+            <div class="summary-head">รอรับเรื่อง</div>
+            <div class="summary-num" id="sumPending">—</div>
+            <div class="summary-label">submitted / pending</div>
+          </div>
+        </div>
+
+        <div class="summary-card in-progress">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">manage_search</span>
+          </div>
+          <div class="summary-info">
+            <div class="summary-head">กำลังตรวจสอบ</div>
+            <div class="summary-num" id="sumInProgress">—</div>
+            <div class="summary-label">QC รับเรื่องแล้ว</div>
+          </div>
+        </div>
+        
+        <div class="summary-card waiting">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">pending_actions</span>
+          </div>
+
+          <div class="summary-info">
+            <div class="summary-head">รออนุมัติ</div>
+            <div class="summary-num" id="sumWaiting">—</div>
+            <div class="summary-label">รอ Executive พิจารณา</div>
+          </div>
+        </div>
+        
+        <div class="summary-card approved">
+          <div class="summary-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <div class="summary-info">
+            <div class="summary-head">อนุมัติแล้ว</div>
+            <div class="summary-num" id="sumApproved">—</div>
+            <div class="summary-label">ผ่านการพิจารณา</div>
+          </div>
         </div>
       </div>
 
-      <!-- ====== ความเห็น QC ====== -->
-      <div class="comment-box qc-comment">
-        <div class="comment-label">
-          ความเห็น / รายละเอียดจาก QC
+      <!-- FILTER BAR -->
+      <div class="qc-filter-bar">
+        <div class="filter-group" style="flex: 2; min-width: 220px">
+          <span class="material-symbols-outlined filter-icon">search</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="ค้นหาสินค้า / ลูกค้า / พนักงาน..."
+          />
         </div>
-        <div class="comment-value">${escapeHtml(
-          val(claim.qc_comment, qc.comment, "-"),
-        )}</div>
+
+        <div class="filter-group filter-date-range">
+          <div class="date-field">
+            <label for="filterDateFrom" class="date-label">
+              <span class="material-symbols-outlined">calendar_month</span>
+              จากวันที่
+            </label>
+            <input type="date" id="filterDateFrom" />
+          </div>
+
+          <span class="date-arrow">→</span>
+
+          <div class="date-field">
+            <label for="filterDateTo" class="date-label">
+              <span class="material-symbols-outlined">event_available</span>
+              ถึงวันที่
+            </label>
+            <input type="date" id="filterDateTo" />
+          </div>
+        </div>
+
+        <div class="filter-group" style="min-width: 160px; flex: 0">
+          <span class="material-symbols-outlined filter-icon">storefront</span>
+          <select id="filterCustomer">
+            <option value="">ทุกลูกค้า</option>
+          </select>
+        </div>
+
+        <div class="filter-group" style="min-width: 140px; flex: 0">
+          <span class="material-symbols-outlined filter-icon">flag</span>
+          <select id="filterStatus">
+            <option value="">ทุกสถานะ</option>
+            <option value="submitted">รอรับเรื่อง</option>
+            <option value="in_progress">กำลังตรวจสอบ</option>
+            <option value="approved">อนุมัติแล้ว</option>
+            <option value="waiting_ceo">รออนุมัติ</option>
+          </select>
+        </div>
+        <button class="btn-filter-reset" onclick="resetFilters()">
+          <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+        </button>
+        <button class="btn-export-excel" onclick="exportExcel()">
+          <span class="material-symbols-outlined">table_view</span> Excel
+        </button>
       </div>
-    </div>
 
-    <!-- ====== ผลการพิจารณาผู้บริหาร (FIX 3: ลายเซ็น + ชื่อ + role + ความเห็นเด่น) ====== -->
-    <h2 class="section">ผลการพิจารณาผู้บริหาร</h2>
-    <div class="approval">
-      <!-- ความเห็นผู้บริหาร (กล่องเด่น - เป็นหลักฐานสำคัญของเอกสารยืนยัน) -->
-      <div class="comment-box ceo-comment">
-        <div class="comment-label">
-          ความเห็น / หมายเหตุ / เงื่อนไขจากผู้บริหาร
+      <!-- TABLE — external: 9 คอลัมน์ (เพิ่ม "เอกสารอนุมัติ") -->
+      <div class="qc-main">
+        <div class="table-wrap">
+          <table class="qc-table" id="qcTable">
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th>พนักงาน / เขต</th>
+                <th>ร้านค้า / ลูกค้า</th>
+                <th>สินค้า</th>
+                <th>ประเภทปัญหา</th>
+                <th>ไฟล์</th>
+                <th>สถานะ</th>
+                <th>เอกสารอนุมัติ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="qcTableBody">
+              <tr>
+                <td colspan="9" class="table-loading">
+                  <span class="material-symbols-outlined spin"
+                    >progress_activity</span
+                  >
+                  กำลังโหลด...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="comment-value">${escapeHtml(
-          claim.exec_comment || "— ไม่มีความเห็นเพิ่มเติม —",
-        )}</div>
       </div>
+    </main>
 
-      <div class="signature-row">
-        <!-- QC Officer -->
-        <div class="signature-wrap">
-          <div class="label">ลายเซ็น QC</div>
-          <div class="signature-box">
-            ${
-              claim.qc_signature
-                ? renderSignatureImg(claim.qc_signature, "QC Signature")
-                : '<span class="no-sig">— ไม่มีลายเซ็น —</span>'
-            }
+    <!-- MODAL -->
+    <div class="qc-modal" id="qcModal">
+      <div class="qc-modal-box">
+        <div class="qc-modal-header">
+          <div class="qc-modal-title">
+            <span class="material-symbols-outlined">manage_search</span>
+            <span id="modalTitle">รายละเอียดเคลม</span>
           </div>
-          <div class="signer-info">
-            <div class="signer-name">${escapeHtml(qcName)}</div>
-            <div class="signer-role">${escapeHtml(qcRoleLabel)}</div>
-            <div class="signer-date">${escapeHtml(
-              formatDateTime(claim.updated_at),
-            )}</div>
+          <div class="qc-modal-header-actions">
+            <button class="btn-export-pdf" onclick="exportPDF()">
+              <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+            </button>
+            <button class="btn-export-csv" onclick="exportCSV()">
+              <span class="material-symbols-outlined">table_view</span> CSV
+            </button>
+            <button class="btn-export-excel" onclick="exportExcel()">
+              <span class="material-symbols-outlined">grid_on</span> Excel
+            </button>
+            <button class="modal-close-btn" onclick="closeModal()">
+              <span class="material-symbols-outlined">close</span>
+            </button>
           </div>
         </div>
 
-        <!-- CEO -->
-        <div class="signature-wrap">
-          <div class="label">ลายเซ็นผู้บริหาร</div>
-          <div class="signature-box">
-            ${renderSignatureImg(claim.exec_signature, "CEO Signature")}
+        <div class="qc-modal-body">
+          <!-- ข้อมูลเคลม -->
+          <div class="modal-section">
+            <div class="modal-info-grid" id="modalInfoGrid"></div>
           </div>
-          <div class="signer-info">
-            <div class="signer-name">${escapeHtml(execName)}</div>
-            <div class="signer-role">${escapeHtml(execRoleLabel)}</div>
-            <div class="signer-date">${escapeHtml(
-              formatDateTime(claim.exec_at),
-            )}</div>
+
+          <!-- ประเภทปัญหา -->
+          <div class="modal-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">warning</span> ประเภทปัญหา
+            </div>
+            <div class="modal-claim-types" id="modalClaimTypes"></div>
+          </div>
+
+          <!-- รายละเอียด -->
+          <div class="modal-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">notes</span> รายละเอียด
+            </div>
+            <div class="modal-detail-box" id="modalDetail">—</div>
+          </div>
+
+          <!-- รูปภาพ / วิดีโอ -->
+          <div class="modal-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">photo_library</span>
+              รูปภาพ / วิดีโอ
+            </div>
+            <div class="modal-media-grid" id="modalMediaGrid"></div>
+          </div>
+
+          <!-- ============ QC RESULT (อัปเกรด Grading 5 ระดับ) ============ -->
+          <div class="modal-section qc-action-section">
+            <div class="modal-section-label">
+              <span class="material-symbols-outlined">rate_review</span>
+              ผลการตรวจสอบของ QC
+            </div>
+
+            <div class="qc-status-bar">
+              <span class="qc-status-bar__label">สถานะปัจจุบัน:</span>
+              <span id="qcStatusCurrent"></span>
+            </div>
+
+            <div class="qc-result-box">
+              <h4>
+                <span class="material-symbols-outlined">assignment_return</span>
+                ผลการตรวจสอบสินค้าคืน (เคลมภายนอก)
+              </h4>
+
+              <!-- ส่วนคัดแยกประเภทการเคลม -->
+              <div
+                class="qc-analysis-grid"
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                  background: #fff7ed;
+                  padding: 15px;
+                  border-radius: 12px;
+                  border: 1px solid #fed7aa;
+                "
+              >
+                <div class="analysis-item">
+                  <label class="qc-comment-label">ประเภทสินค้าที่เคลม</label>
+                  <select id="qcProductSource" class="qc-select-full">
+                    <option value="in_house">
+                      สินค้าโรงงานผลิตเอง (รีไซเคิลได้)
+                    </option>
+                    <option value="trading">
+                      สินค้าซื้อมาขายไป (รีไซเคิลไม่ได้)
+                    </option>
+                  </select>
+                </div>
+                <div class="analysis-item">
+                  <label class="qc-comment-label">ต้นเหตุความเสียหาย</label>
+                  <select id="qcClaimRootCause" class="qc-select-full">
+                    <option value="logistics">ความเสียหายจากการขนส่ง</option>
+                    <option value="production">
+                      คุณภาพสินค้า (ผลิต/โรงงาน)
+                    </option>
+                    <option value="wrong_delivery">
+                      ส่งสินค้าผิดสเปก/ผิดรุ่น
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- การจัดการซากสินค้า (Grading) -->
+              <div class="qc-grading-section">
+                <!-- Grade A -->
+                <div class="qc-check-row">
+                  <label class="qc-check-label" for="qcGradeA">
+                    <input type="checkbox" id="qcGradeA" />
+                    <span class="qc-check-text">
+                      <span
+                        class="qc-check-num"
+                        style="background: var(--qc-success)"
+                        >A</span
+                      >
+                      คืนสต็อก/พร้อมขาย (สินค้าปกติ)
+                    </span>
+                  </label>
+                  <div class="qty-stepper">
+                    <button type="button" onclick="stepQty('qcGradeAQty', -1)">
+                      −
+                    </button>
+                    <input type="number" id="qcGradeAQty" value="0" />
+                    <button type="button" onclick="stepQty('qcGradeAQty', 1)">
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Grade B -->
+                <div class="qc-check-row">
+                  <label class="qc-check-label" for="qcGradeB">
+                    <input type="checkbox" id="qcGradeB" />
+                    <span class="qc-check-text">
+                      <span class="qc-check-num" style="background: #3b82f6"
+                        >B</span
+                      >
+                      ขายเกรดรอง/Outlet (มีรอย/ตำหนิ)
+                    </span>
+                  </label>
+                  <div class="qty-stepper">
+                    <button type="button" onclick="stepQty('qcGradeBQty', -1)">
+                      −
+                    </button>
+                    <input type="number" id="qcGradeBQty" value="0" />
+                    <button type="button" onclick="stepQty('qcGradeBQty', 1)">
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Grade R (Regrind) -->
+                <div
+                  id="recycleRow"
+                  class="qc-check-row"
+                  style="background: #ecfdf5; border-color: #a7f3d0"
+                >
+                  <label class="qc-check-label" for="qcGradeR">
+                    <input type="checkbox" id="qcGradeR" />
+                    <span class="qc-check-text">
+                      <span
+                        class="qc-check-num"
+                        style="background: var(--qc-success-dark)"
+                        >R</span
+                      >
+                      ส่งกลับบด/หลอมใหม่ (เฉพาะของผลิตเอง)
+                    </span>
+                  </label>
+                  <div class="qty-stepper">
+                    <button type="button" onclick="stepQty('qcGradeRQty', -1)">
+                      −
+                    </button>
+                    <input type="number" id="qcGradeRQty" value="0" />
+                    <button type="button" onclick="stepQty('qcGradeRQty', 1)">
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Grade C -->
+                <div class="qc-check-row">
+                  <label class="qc-check-label" for="qcGradeC">
+                    <input type="checkbox" id="qcGradeC" />
+                    <span class="qc-check-text">
+                      <span
+                        class="qc-check-num"
+                        style="background: var(--qc-danger)"
+                        >C</span
+                      >
+                      ทิ้ง/ตัดจ่าย/คืน Supplier
+                    </span>
+                  </label>
+                  <div class="qty-stepper">
+                    <button type="button" onclick="stepQty('qcGradeCQty', -1)">
+                      −
+                    </button>
+                    <input type="number" id="qcGradeCQty" value="0" />
+                    <button type="button" onclick="stepQty('qcGradeCQty', 1)">
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="qc-total-summary">
+                รวมทั้งหมด: <strong id="qcTotalQty">0</strong>
+              </div>
+
+              <!-- สาเหตุหลัก -->
+              <div class="form-group">
+                <label for="mainCause">สาเหตุหลัก :</label>
+                <textarea
+                  id="mainCause"
+                  class="qc-textarea"
+                  placeholder="ระบุสาเหตุหลักของการเคลม..."
+                ></textarea>
+              </div>
+
+              <!-- ผู้รับผิดชอบ -->
+              <div class="form-group">
+                <label for="responsiblePerson">ผู้รับผิดชอบ :</label>
+                <textarea
+                  id="responsiblePerson"
+                  class="qc-textarea"
+                  placeholder="ระบุผู้รับผิดชอบ / แผนก..."
+                ></textarea>
+              </div>
+
+              <label class="qc-comment-label" for="qcComment"
+                >ความเห็น QC / รายละเอียดความเสียหาย</label
+              >
+              <textarea
+                id="qcComment"
+                rows="3"
+                placeholder="เช่น ท่อบุบจากการซ้อนทับ หรือถุงรั่วบริเวณตะเข็บ..."
+              ></textarea>
+            </div>
+
+            <div class="qc-action-btns">
+              <button
+                type="button"
+                class="btn-save-draft"
+                onclick="saveQcDraft()"
+              >
+                <span class="material-symbols-outlined">save</span> บันทึกร่าง
+              </button>
+              <button type="button" class="btn-send-ceo" onclick="sendToCEO()">
+                <span class="material-symbols-outlined">forward</span>
+                ส่งอนุมัติ Executive
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="footer">
-      <span>Generated by EABaseHub</span>
-      <span>${escapeHtml(docNo)}</span>
+    <!-- LIGHTBOX -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+      <img id="lightboxImg" src="" alt="" />
+      <button class="lightbox-close" onclick="closeLightbox()">✕</button>
     </div>
-  </div>
 
-  <script src="/minipro/preview.js"></script>
-  <script src="/js/pages/Qc-claim/external-claims.js"></script>
+    <footer class="footer">© 2026 EABaseHub | ระบบจัดการเคลมลูกค้า</footer>
+
+    <!-- ── SCRIPTS ── -->
+    <!-- ⚠️ ลำดับการโหลดสำคัญ: supabase library → supabaseClient → roleConfig → userService → auth → page script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/auth.js"></script>
+
+    <script src="/js/core/confirm-dialog.js"></script>
+
+    <!-- ⚠️ approval-document.js ต้อง load ก่อน external-claims.js -->
+    <script src="/js/pages/Qc-claim/approval-document.js"></script>
+    <script src="/minipro/preview.js"></script>
+
+    <script src="/js/core/splash.js"></script>
+    <script src="/js/core/loadingSplash.js"></script>
+    <script src="/js/core/themeToggle.js"></script>
+    <script src="/js/services/nav-service.js"></script>
 
 
-</body>
+    <script>
+      /* Sidebar ย่อ/ขยาย + จำสถานะ */
+      document.addEventListener("DOMContentLoaded", function () {
+        var body = document.body;
+        var toggleBtn = document.getElementById("sidebarToggle");
+        var mobileBtn = document.getElementById("mobileSidebarBtn");
+        var backdrop = document.getElementById("sidebarBackdrop");
+        var sideLogout = document.getElementById("sidebarLogoutBtn");
+
+        var saved = localStorage.getItem("ea-sidebar-collapsed");
+        if (saved === "1" && window.innerWidth > 780) {
+          body.classList.add("sidebar-collapsed");
+        }
+
+        function toggleSidebar() {
+          if (window.innerWidth <= 780) {
+            body.classList.toggle("sidebar-open");
+            return;
+          }
+
+          body.classList.toggle("sidebar-collapsed");
+          localStorage.setItem(
+            "ea-sidebar-collapsed",
+            body.classList.contains("sidebar-collapsed") ? "1" : "0",
+          );
+        }
+
+        toggleBtn?.addEventListener("click", toggleSidebar);
+        mobileBtn?.addEventListener("click", function () {
+          body.classList.add("sidebar-open");
+        });
+
+        backdrop?.addEventListener("click", function () {
+          body.classList.remove("sidebar-open");
+        });
+
+        sideLogout?.addEventListener("click", function () {
+          var mainLogout = document.getElementById("logoutBtn");
+          if (mainLogout) {
+            mainLogout.click();
+            return;
+          }
+          if (typeof logout === "function") logout();
+        });
+
+        document.querySelectorAll(".sidebar-link[href]").forEach(function (link) {
+          var href = link.getAttribute("href");
+          if (!href || href === "#") return;
+          if (location.pathname.toLowerCase() === href.toLowerCase()) {
+            document.querySelectorAll(".sidebar-link").forEach(function (x) {
+              x.classList.remove("active");
+            });
+            link.classList.add("active");
+          }
+        });
+      });
+    </script>
+  </body>
 </html>
 
-
-
-
-
- 
+    <script src="/js/pages/Qc-claim/external-claims-sidebar.js"></script>
