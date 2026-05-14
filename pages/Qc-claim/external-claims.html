@@ -36,9 +36,69 @@
     <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
   </head>
   <body class="role-adminQc">
-    
+    <!-- MINI SIDEBAR -->
+    <aside class="ea-sidebar" id="eaSidebar">
+      <div class="ea-logo">
+        <img src="/assets/icons/icon-192.png" alt="logo" />
+      </div>
+
+      <div class="mini-brand-text">
+        <strong>EABaseHub</strong>
+        <span>Claim System</span>
+      </div>
+
+      <nav class="ea-menu">
+        <a
+          href="/pages/dashboard/QcDashboard.html"
+          class="ea-link"
+          title="Dashboard"
+        >
+          <span class="material-symbols-outlined">home</span>
+          <span class="ea-text">Dashboard</span>
+        </a>
+
+        <a href="/pages/Qc-claim/adminQc.html" class="ea-link" title="ตรวจสอบ">
+          <span class="material-symbols-outlined">manage_search</span>
+          <span class="ea-text">รับเคลม</span>
+        </a>
+
+        <a
+          href="/pages/Qc-claim/external-claims.html"
+          class="ea-link active"
+          title="เคลมลูกค้า"
+        >
+          <span class="material-symbols-outlined">assignment</span>
+          <span class="ea-text">เคลมสินค้า(ภายนอก)</span>
+        </a>
+
+        <a href="#" class="ea-link" title="อนุมัติ">
+          <span class="material-symbols-outlined">approval</span>
+          <span class="ea-text">เคลมสินค้า(ภายใน)</span>
+        </a>
+
+        <!-- <a href="#" class="ea-link" title="รายงาน">
+      <span class="material-symbols-outlined">analytics</span>
+      <span class="ea-text">รายงาน</span>
+    </a> -->
+      </nav>
+
+      <button
+        class="ea-toggle"
+        id="eaSidebarToggle"
+        type="button"
+        aria-label="ย่อ/ขยาย sidebar"
+      >
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+
+      <button class="ea-user" id="logoutBtn" type="button" title="Logout">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="ea-text">Logout</span>
+      </button>
+    </aside>
+
     <!-- HEADER -->
-    <header class="app-header">
+    <!-- <header class="app-header">
       <div class="logo">
         <div class="logo-circle">
           <img src="/assets/icons/icon-192.png" alt="logo" />
@@ -61,24 +121,56 @@
           </button>
         </div>
       </div>
-    </header>
+    </header> -->
 
     <!-- NAV Container -->
-    <div id="navContainer"></div>
+    <!-- <div id="navContainer"></div> -->
+    <!-- <div id="navContainer" style="display:none"></div> -->
 
     <!-- PAGE HEADER -->
-    <div class="page-header">
-      <div>
-        <h1>
-          <span class="material-symbols-outlined icon-lg">assignment</span>
-          ระบบจัดการเคลมลูกค้า
-        </h1>
-        <p>รับเคลม • ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="app-header-icon">
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <div class="app-header-text">
+          <h1>จัดการเคลมสินค้า(ภายนอก)</h1>
+          <p>รับเคลม • ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
+        </div>
       </div>
-    </div>
+
+      <div class="app-header-date" id="appHeaderDate">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span id="appHeaderDateText">—</span>
+      </div>
+    </header>
 
     <!-- MAIN -->
     <main class="container">
+      <!-- BREADCRUMB -->
+      <nav class="breadcrumb-bar" aria-label="breadcrumb">
+        <a
+          href="/pages/dashboard/QcDashboard.html"
+          class="breadcrumb-item home"
+        >
+          <span class="material-symbols-outlined">home</span>
+          <span>หน้าหลัก</span>
+        </a>
+        <span class="breadcrumb-sep">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </span>
+        <a href="#" class="breadcrumb-item">
+          <span class="material-symbols-outlined">assignment</span>
+          <span>QC</span>
+        </a>
+        <span class="breadcrumb-sep">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </span>
+        <span class="breadcrumb-item current" aria-current="page">
+          เคลมลูกค้า (External)
+        </span>
+      </nav>
+
       <!-- SUMMARY CARDS -->
       <div class="qc-summary">
         <div class="summary-card total">
@@ -113,7 +205,7 @@
             <div class="summary-label">QC รับเรื่องแล้ว</div>
           </div>
         </div>
-        
+
         <div class="summary-card waiting">
           <div class="summary-icon">
             <span class="material-symbols-outlined">pending_actions</span>
@@ -125,7 +217,7 @@
             <div class="summary-label">รอ Executive พิจารณา</div>
           </div>
         </div>
-        
+
         <div class="summary-card approved">
           <div class="summary-icon">
             <span class="material-symbols-outlined">check_circle</span>
@@ -471,6 +563,43 @@
                 rows="3"
                 placeholder="เช่น ท่อบุบจากการซ้อนทับ หรือถุงรั่วบริเวณตะเข็บ..."
               ></textarea>
+
+              <!-- ลายเซ็น QC -->
+              <div class="form-group qc-signature-group">
+                <label>
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 18px; vertical-align: -3px"
+                    >draw</span
+                  >
+                  ลายเซ็น QC :
+                </label>
+
+                <div class="qc-signature-wrap">
+                  <canvas
+                    id="qcSignatureCanvas"
+                    class="qc-signature-canvas"
+                  ></canvas>
+                  <div
+                    class="qc-signature-placeholder"
+                    id="qcSignaturePlaceholder"
+                  >
+                    <span class="material-symbols-outlined">gesture</span>
+                    <span>เซ็นชื่อตรงนี้</span>
+                  </div>
+                </div>
+
+                <div class="qc-signature-actions">
+                  <button
+                    type="button"
+                    class="qc-sig-btn qc-sig-btn-clear"
+                    onclick="clearQcSignature()"
+                  >
+                    <span class="material-symbols-outlined">restart_alt</span>
+                    ล้างลายเซ็น
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="qc-action-btns">
@@ -511,11 +640,11 @@
 
     <!-- ⚠️ approval-document.js ต้อง load ก่อน external-claims.js -->
     <script src="/js/pages/Qc-claim/approval-document.js"></script>
+    <script src="/js/pages/Qc-claim/external-claims-sidebar.js"></script>
     <script src="/js/pages/Qc-claim/external-claims.js"></script>
 
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
     <script src="/js/core/themeToggle.js"></script>
-    <script src="/js/services/nav-service.js"></script>
   </body>
 </html>

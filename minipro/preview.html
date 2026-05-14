@@ -34,76 +34,564 @@
     <!-- <link rel="stylesheet" href="/css/components/badgeButtom.css" /> -->
     <!-- <link rel="stylesheet" href="/css/base/bassHeader.css" /> -->
     <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
-    <link rel="stylesheet" href="/minipro/preview.css" />
+
+
+    <style>
+      /* =========================================================
+         SIDEBAR LAYOUT OVERRIDE — External Claims
+         วางไว้ในไฟล์นี้เพื่อให้ copy ใช้งานได้ทันที
+         ========================================================= */
+      :root {
+        --sidebar-width: 280px;
+        --sidebar-collapsed: 86px;
+        --sidebar-bg: #ffffff;
+        --sidebar-soft: #fff7ed;
+        --sidebar-line: #fed7aa;
+        --sidebar-ink: #44403c;
+        --sidebar-muted: #78716c;
+        --sidebar-accent: #f97316;
+        --sidebar-accent-2: #ea580c;
+      }
+
+      body.has-sidebar {
+        padding-left: var(--sidebar-width);
+        background: #fafaf9 !important;
+        transition: padding-left 240ms ease;
+      }
+
+      body.sidebar-collapsed {
+        padding-left: var(--sidebar-collapsed);
+      }
+
+      /* ซ่อน nav เก่า เพราะใช้ sidebar แทน */
+      #navContainer {
+        display: none !important;
+      }
+
+      /* Header ด้านบนให้เข้ากับ sidebar */
+      body.has-sidebar .app-header {
+        position: sticky;
+        top: 0;
+        left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        z-index: 900;
+        min-height: 76px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #fb923c 0%, #f97316 48%, #ea580c 100%) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 10px 26px rgba(249, 115, 22, 0.18);
+      }
+
+      body.sidebar-collapsed .app-header {
+        left: var(--sidebar-collapsed);
+        width: calc(100% - var(--sidebar-collapsed));
+      }
+
+      body.has-sidebar .app-header .logo-circle {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.92) !important;
+        box-shadow: 0 8px 20px rgba(124, 45, 18, 0.18);
+      }
+
+      body.has-sidebar .app-header .logo h2 {
+        color: #ffffff !important;
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        background-clip: initial !important;
+        font-size: 1.35rem;
+      }
+
+      body.has-sidebar .user-avatar {
+        background: rgba(255, 255, 255, 0.94) !important;
+        color: var(--sidebar-accent-2) !important;
+        border-color: rgba(255, 255, 255, 0.6) !important;
+        box-shadow: 0 8px 18px rgba(124, 45, 18, 0.16);
+      }
+
+      body.has-sidebar .user-name {
+        color: #ffffff !important;
+        font-weight: 700;
+      }
+
+      body.has-sidebar .logout-btn {
+        height: 42px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: #44403c !important;
+        box-shadow: 0 8px 18px rgba(124, 45, 18, 0.12);
+      }
+
+      body.has-sidebar .logout-btn:hover {
+        transform: translateY(-2px);
+        background: #ffffff !important;
+        color: #ea580c !important;
+      }
+
+      /* Sidebar */
+      .app-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: var(--sidebar-width);
+        z-index: 1200;
+        display: flex;
+        flex-direction: column;
+        padding: 18px 14px;
+        background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+        border-right: 1px solid var(--sidebar-line);
+        box-shadow: 10px 0 34px rgba(124, 45, 18, 0.08);
+        transition: width 240ms ease, transform 240ms ease;
+      }
+
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 8px 18px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid #ffedd5;
+      }
+
+      .sidebar-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, var(--sidebar-accent), var(--sidebar-accent-2));
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        box-shadow: 0 10px 22px rgba(249, 115, 22, 0.24);
+      }
+
+      .sidebar-logo img {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+      }
+
+      .sidebar-brand {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .sidebar-brand strong {
+        display: block;
+        font-family: "Kanit", "IBM Plex Sans Thai", sans-serif;
+        font-size: 1.22rem;
+        color: #1c1917;
+        line-height: 1.1;
+      }
+
+      .sidebar-brand span {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.78rem;
+        color: var(--sidebar-muted);
+      }
+
+      .sidebar-toggle {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--sidebar-line);
+        border-radius: 13px;
+        background: #ffffff;
+        color: var(--sidebar-accent-2);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: 180ms ease;
+        flex-shrink: 0;
+      }
+
+      .sidebar-toggle:hover {
+        background: #fff7ed;
+        transform: translateY(-1px);
+      }
+
+      .sidebar-menu,
+      .sidebar-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .sidebar-menu {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      .sidebar-section-title {
+        margin: 12px 12px 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #a8a29e;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .sidebar-link {
+        min-height: 48px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        color: var(--sidebar-ink);
+        text-decoration: none;
+        border: 1px solid transparent;
+        font-weight: 600;
+        font-size: 0.92rem;
+        white-space: nowrap;
+        transition: 180ms ease;
+        background: transparent;
+      }
+
+      .sidebar-link .material-symbols-outlined {
+        font-size: 22px;
+        color: var(--sidebar-accent);
+        flex-shrink: 0;
+      }
+
+      .sidebar-link:hover {
+        background: #fff7ed;
+        color: var(--sidebar-accent-2);
+        border-color: var(--sidebar-line);
+        transform: translateX(3px);
+      }
+
+      .sidebar-link.active {
+        color: #ffffff;
+        background: linear-gradient(135deg, var(--sidebar-accent), var(--sidebar-accent-2));
+        border-color: transparent;
+        box-shadow: 0 10px 22px rgba(249, 115, 22, 0.25);
+      }
+
+      .sidebar-link.active .material-symbols-outlined {
+        color: #ffffff;
+      }
+
+      .sidebar-footer {
+        padding-top: 14px;
+        border-top: 1px solid #ffedd5;
+      }
+
+      .logout-side {
+        width: 100%;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .logout-side:hover {
+        background: #fee2e2;
+        color: #dc2626;
+        border-color: #fecaca;
+      }
+
+      .logout-side:hover .material-symbols-outlined {
+        color: #dc2626;
+      }
+
+      /* Collapsed */
+      body.sidebar-collapsed .app-sidebar {
+        width: var(--sidebar-collapsed);
+      }
+
+      body.sidebar-collapsed .sidebar-brand,
+      body.sidebar-collapsed .link-text,
+      body.sidebar-collapsed .sidebar-section-title {
+        display: none;
+      }
+
+      body.sidebar-collapsed .sidebar-header {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      body.sidebar-collapsed .sidebar-toggle {
+        position: absolute;
+        top: 28px;
+        right: -18px;
+        box-shadow: 0 8px 18px rgba(124, 45, 18, 0.12);
+      }
+
+      body.sidebar-collapsed .sidebar-toggle .material-symbols-outlined {
+        transform: rotate(180deg);
+      }
+
+      body.sidebar-collapsed .sidebar-link {
+        justify-content: center;
+        padding: 0;
+      }
+
+      body.sidebar-collapsed .sidebar-link:hover {
+        transform: none;
+      }
+
+      /* Breadcrumb + Page header ให้สวยเหมือน hero */
+      .breadcrumb-bar {
+        max-width: 1400px;
+        margin: 18px auto 0;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #78716c;
+        font-size: 0.9rem;
+      }
+
+      .breadcrumb-bar .home {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #ea580c;
+        font-weight: 700;
+      }
+
+      .breadcrumb-bar .material-symbols-outlined {
+        font-size: 18px;
+      }
+
+      .page-header {
+        max-width: 1400px !important;
+        margin: 18px auto 24px !important;
+        padding: 0 24px !important;
+      }
+
+      .page-header > div {
+        position: relative;
+        overflow: hidden;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 28px 34px 28px 104px;
+        border: 1px solid #ffedd5;
+        border-left: 5px solid #f97316;
+        border-radius: 22px;
+        background:
+          radial-gradient(circle at 86% 48%, rgba(249, 115, 22, 0.14), transparent 24%),
+          linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+        box-shadow: 0 12px 34px rgba(124, 45, 18, 0.08);
+      }
+
+      .page-header > div::before {
+        content: "";
+        position: absolute;
+        right: 40px;
+        top: 28px;
+        width: 180px;
+        height: 100px;
+        opacity: 0.45;
+        background-image: radial-gradient(#fdba74 1.2px, transparent 1.2px);
+        background-size: 14px 14px;
+      }
+
+      .page-header h1 {
+        position: relative;
+        z-index: 1;
+        font-size: 2rem !important;
+        letter-spacing: -0.4px;
+      }
+
+      .page-header h1 .icon-lg {
+        position: absolute;
+        left: -70px;
+        width: 54px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        border-radius: 16px;
+        background: #fff1e7;
+        color: #f97316 !important;
+        box-shadow: 0 8px 18px rgba(249, 115, 22, 0.16);
+      }
+
+      .page-header p {
+        position: relative;
+        z-index: 1;
+        margin-top: 10px !important;
+        color: #78716c !important;
+        font-weight: 500;
+      }
+
+      .container {
+        padding-top: 0 !important;
+      }
+
+      .summary-card.waiting {
+        --card-accent: #8b5cf6;
+      }
+
+      .footer {
+        margin-left: 0 !important;
+      }
+
+      .mobile-sidebar-btn {
+        display: none;
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.95);
+        color: #ea580c;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .sidebar-backdrop {
+        display: none;
+      }
+
+      @media (max-width: 1100px) {
+        body.has-sidebar {
+          padding-left: var(--sidebar-collapsed);
+        }
+
+        body.has-sidebar .app-sidebar {
+          width: var(--sidebar-collapsed);
+        }
+
+        body.has-sidebar .sidebar-brand,
+        body.has-sidebar .link-text,
+        body.has-sidebar .sidebar-section-title {
+          display: none;
+        }
+
+        body.has-sidebar .sidebar-link {
+          justify-content: center;
+          padding: 0;
+        }
+
+        body.has-sidebar .sidebar-toggle {
+          position: absolute;
+          top: 28px;
+          right: -18px;
+        }
+
+        body.has-sidebar .app-header {
+          left: var(--sidebar-collapsed);
+          width: calc(100% - var(--sidebar-collapsed));
+        }
+      }
+
+      @media (max-width: 780px) {
+        body.has-sidebar,
+        body.sidebar-collapsed {
+          padding-left: 0;
+        }
+
+        .mobile-sidebar-btn {
+          display: inline-flex;
+        }
+
+        .app-sidebar,
+        body.has-sidebar .app-sidebar {
+          width: 280px;
+          transform: translateX(-105%);
+        }
+
+        body.sidebar-open .app-sidebar {
+          transform: translateX(0);
+        }
+
+        body.has-sidebar .app-header,
+        body.sidebar-collapsed .app-header {
+          left: 0;
+          width: 100%;
+        }
+
+        body.sidebar-open .sidebar-backdrop {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 1190;
+          background: rgba(28, 25, 23, 0.48);
+          backdrop-filter: blur(4px);
+        }
+
+        .app-header {
+          padding: 12px 16px !important;
+        }
+
+        .app-header .logo h2,
+        .user-info {
+          display: none;
+        }
+
+        .page-header > div {
+          padding: 24px 24px 24px 92px;
+        }
+
+        .page-header h1 {
+          font-size: 1.5rem !important;
+        }
+      }
+    </style>
   </head>
   <body class="role-adminQc has-sidebar">
 
-   <!-- =========================
-           SIDEBAR (เหมือน Index)
-           ========================= -->
-      <aside class="sidebar" id="sidebar">
-        <button
-          class="hamburger"
-          id="hamburgerBtn"
-          onclick="toggleMenu()"
-          aria-label="เปิด/ปิดเมนู"
-        >
-          <span class="material-symbols-outlined">menu</span>
-        </button>
+    <!-- SIDEBAR -->
+    <aside class="mini-sidebar" id="miniSidebar">
+  <div class="mini-logo">
+    <img src="/assets/icons/icon-192.png" alt="logo">
+  </div>
 
-        <div class="logo">
-          <div class="logo-circle">
-            <img src="/assets/icons/icon-192.png" alt="EABaseHub Logo" />
-          </div>
-          <div class="brand">EABaseHub</div>
-        </div>
+  <button class="mini-toggle" id="miniSidebarToggle" type="button">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
 
-        <nav class="menu" id="sidebarMenu">
-          <a class="menu-item active" href="/pages/dashboard/QcDashboard.html">
-            <span class="material-symbols-outlined menu-icon">home</span>
-            <span class="menu-text">หน้าแรก</span>
-          </a>
+  <nav class="mini-menu">
+    <a href="#" class="mini-link active" title="Dashboard">
+      <span class="material-symbols-outlined">home</span>
+      <span class="mini-text">Dashboard</span>
+    </a>
 
-          <a class="menu-item" href="/pages/Qc-claim/adminQc.html">
-            <span class="material-symbols-outlined menu-icon">fact_check</span>
-            <span class="menu-text">จัดการเคลม</span>
-          </a>
+    <a href="#" class="mini-link" title="จัดการเคลม">
+      <span class="material-symbols-outlined">assignment</span>
+      <span class="mini-text">จัดการเคลม</span>
+    </a>
 
-          <a class="menu-item" href="/pages/Qc-claim/internal-claims.html">
-            <span class="material-symbols-outlined menu-icon"
-              >edit_document</span
-            >
-            <span class="menu-text">เคลม วัตถุดิบ-สินค้า(ภายใน)</span>
-          </a>
+    <a href="#" class="mini-link" title="ตรวจสอบ">
+      <span class="material-symbols-outlined">manage_search</span>
+      <span class="mini-text">ตรวจสอบ</span>
+    </a>
 
-          <a class="menu-item" href="/pages/Qc-claim/external-claims.html">
-            <span class="material-symbols-outlined menu-icon">description</span>
-            <span class="menu-text">เคลม วัตถุดิบ-สินค้า(ภายนอก)</span>
-          </a>
+    <a href="#" class="mini-link" title="อนุมัติ">
+      <span class="material-symbols-outlined">approval</span>
+      <span class="mini-text">อนุมัติ</span>
+    </a>
 
-          <a class="menu-item" href="/pages/Qc-claim/claim-evaluation.html">
-            <span class="material-symbols-outlined menu-icon">verified</span>
-            <span class="menu-text">ผลการพิจารณา</span>
-          </a>
+    <a href="#" class="mini-link" title="รายงาน">
+      <span class="material-symbols-outlined">analytics</span>
+      <span class="mini-text">รายงาน</span>
+    </a>
+  </nav>
 
-          <a class="menu-item" href="/pages/forms/formClaim.html">
-            <span class="material-symbols-outlined menu-icon"
-              >assignment_late</span
-            >
-            <span class="menu-text">แจ้งเคลมสินค้า</span>
-          </a>
-        </nav>
+  <div class="mini-footer">
+    <button class="mini-link logout" type="button" onclick="logout()" title="ออกจากระบบ">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="mini-text">ออกจากระบบ</span>
+    </button>
+  </div>
+</aside>
 
-        <button
-          class="toggle-btn"
-          onclick="toggleSidebar()"
-          aria-label="ย่อ/ขยายเมนู"
-        >
-          <span class="material-symbols-outlined icon-white">menu</span>
-        </button>
-      </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    
+    <!-- HEADER -->
+    <header class="app-header">
+      <button class="mobile-sidebar-btn" id="mobileSidebarBtn" type="button" title="เปิดเมนู">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+
+      
+    </header>
 
     <!-- NAV Container -->
     <div id="navContainer"></div>
@@ -566,7 +1054,7 @@
 
     <!-- ⚠️ approval-document.js ต้อง load ก่อน external-claims.js -->
     <script src="/js/pages/Qc-claim/approval-document.js"></script>
-    <script src="/minipro/preview.js"></script>
+    <script src="/js/pages/Qc-claim/external-claims.js"></script>
 
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
@@ -633,5 +1121,3 @@
     </script>
   </body>
 </html>
-
-    <script src="/js/pages/Qc-claim/external-claims-sidebar.js"></script>
