@@ -13,240 +13,482 @@
     </script>
 
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
 
     <!-- Styles -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <link rel="stylesheet" href="/css/base/bassHeader.css" />
     <link rel="stylesheet" href="/css/pages/executive/executive-Approval.css" />
   </head>
-  <body class="role-executive">
-    <header class="app-header">
-      <div class="logo">
-        <div class="logo-circle">
-          <img src="/assets/icons/icon-192.png" alt="logo" />
+  <body class="role-executive has-ea-sidebar is-sidebar-collapsed">
+    <!-- EA MINI SIDEBAR -->
+    <aside class="ea-mini-sidebar" id="eaMiniSidebar" aria-label="เมนูหลัก">
+      <div class="ea-mini-brand">
+        <div class="ea-mini-logo">
+          <img src="/assets/icons/icon-192.png" alt="EABaseHub" />
         </div>
-        <h2>EABaseHub</h2>
+        <div class="ea-mini-brand-text">
+          <strong>EABaseHub</strong>
+          <span>Executive Approvals</span>
+        </div>
       </div>
-      <div class="user-box">
-        <div class="user-avatar" id="userAvatar">👤</div>
-        <div class="user-info">
-          <div class="user-name" id="userName">กำลังโหลด...</div>
+
+      <button
+        class="ea-mini-toggle"
+        id="eaMiniToggle"
+        type="button"
+        aria-label="ย่อ/ขยายเมนู"
+      >
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+
+      <nav class="ea-mini-nav">
+        <a class="ea-mini-link" href="/pages/home.html" title="หน้าหลัก">
+          <span class="material-symbols-outlined">home</span>
+          <span class="ea-mini-text">หน้าหลัก</span>
+        </a>
+        <a
+          class="ea-mini-link active"
+          href="/pages/executive/executive-Approval.html"
+          title="ขออนุมัติ"
+        >
+          <span class="material-symbols-outlined">approval_delegation</span>
+          <span class="ea-mini-text">ขออนุมัติงาน</span>
+        </a>
+        <a
+          class="ea-mini-link"
+          href="/pages/reports/reportTracker.html"
+          title="รายงาน"
+        >
+          <span class="material-symbols-outlined">bar_chart</span>
+          <span class="ea-mini-text">รายงานประจำสัปดาห์</span>
+        </a>
+        <a class="ea-mini-link" href="#" title="เคลมภายนอก">
+          <span class="material-symbols-outlined">assignment</span>
+          <span class="ea-mini-text">comingsoon</span>
+        </a>
+        <a class="ea-mini-link" href="#" title="เคลมภายใน">
+          <span class="material-symbols-outlined">manage_search</span>
+          <span class="ea-mini-text">comingsoon</span>
+        </a>
+      </nav>
+
+      <div class="ea-mini-spacer"></div>
+      <div class="ea-mini-divider"></div>
+      <button
+        class="ea-mini-link ea-mini-logout"
+        id="eaSidebarLogoutBtn"
+        type="button"
+        title="ออกจากระบบ"
+      >
+        <span class="material-symbols-outlined">logout</span>
+        <span class="ea-mini-text">Logout</span>
+      </button>
+    </aside>
+
+    <div class="ea-page-shell">
+      <header class="page-header">
+        <div class="page-header-content">
+          <div class="page-header-icon">
+            <span class="material-symbols-outlined">verified_user</span>
+          </div>
+          <div class="page-header-text">
+            <h1>ขออนุมัติงาน</h1>
+            <p>
+              รวมรายการขออนุมัติจากทุกฝ่าย • อนุมัติ/ปฏิเสธ •
+              บันทึกความเห็นผู้บริหาร
+            </p>
+          </div>
+          <div class="page-header-badge">
+            <span class="material-symbols-outlined">workspace_premium</span>
+            <span>Executive</span>
+          </div>
         </div>
-        <div class="group">
-          <button class="badge badge--message-sent" id="logoutBtn" type="button">
-            <span class="badge-icon">
-              <span class="material-symbols-outlined" style="font-size: 17px">logout</span>
-            </span>
-            ออกจากระบบ
+      </header>
+
+      <main class="container">
+        <!-- SUMMARY -->
+        <div class="qc-summary">
+          <div class="summary-card pending">
+            <div class="summary-icon">
+              <span class="material-symbols-outlined">hourglass_top</span>
+            </div>
+
+            <div class="summary-info">
+              <div class="summary-head">รออนุมัติ</div>
+              <div class="summary-num" id="sumWaiting">0</div>
+              <div class="summary-label">รายการรอผู้บริหารพิจารณา</div>
+            </div>
+          </div>
+
+          <div class="summary-card approved">
+            <div class="summary-icon">
+              <span class="material-symbols-outlined">verified</span>
+            </div>
+
+            <div class="summary-info">
+              <div class="summary-head">อนุมัติแล้ว</div>
+              <div class="summary-num" id="sumExecApproved">0</div>
+              <div class="summary-label">รายการที่อนุมัติแล้ว</div>
+            </div>
+          </div>
+
+          <div class="summary-card rejected">
+            <div class="summary-icon">
+              <span class="material-symbols-outlined">block</span>
+            </div>
+
+            <div class="summary-info">
+              <div class="summary-head">ปฏิเสธ</div>
+              <div class="summary-num" id="sumExecRejected">0</div>
+              <div class="summary-label">รายการที่ปฏิเสธ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="qc-filter-bar">
+          <div class="filter-group" style="flex: 2; min-width: 220px">
+            <span class="material-symbols-outlined filter-icon">search</span>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="ค้นหางานอนุมัติ..."
+            />
+          </div>
+
+          <div class="filter-group" style="min-width: 200px; flex: 0 0 auto">
+            <span class="material-symbols-outlined filter-icon">category</span>
+            <select id="filterScope">
+              <option value="">ทุกประเภทงาน</option>
+              <option value="temp_credit_limit">อนุมัติวงเงิน (ชั่วคราว)</option>
+              <option value="special_price">ขออนุมัติราคา (กรณีพิเศษ)</option>
+              <option value="claim">เคลมสินค้า</option>
+              <option value="promotion">โปรโมชั่น</option>
+              <option value="new_area_shop">เปิดร้านค้าในเขตใหม่</option>
+            </select>
+          </div>
+
+          <div class="filter-group" style="min-width: 160px; flex: 0 0 auto">
+            <span class="material-symbols-outlined filter-icon">approval</span>
+            <select id="filterExecStatus">
+              <option value="">ทั้งหมด</option>
+              <option value="pending">รออนุมัติ</option>
+              <option value="approved">อนุมัติแล้ว</option>
+              <option value="rejected">ปฏิเสธ</option>
+            </select>
+          </div>
+
+          <div class="filter-group" style="min-width: 150px; flex: 0 0 auto">
+            <span class="material-symbols-outlined filter-icon">event</span>
+            <input type="date" id="filterDateFrom" title="วันที่ตั้งแต่" />
+          </div>
+
+          <div class="filter-group" style="min-width: 150px; flex: 0 0 auto">
+            <span class="material-symbols-outlined filter-icon">event</span>
+            <input type="date" id="filterDateTo" title="วันที่ถึง" />
+          </div>
+
+          <button class="btn-filter-reset" type="button" onclick="resetFilters()">
+            <span class="material-symbols-outlined">restart_alt</span>
+            รีเซ็ต
+          </button>
+
+          <button
+            class="btn-export-excel"
+            type="button"
+            onclick="exportExecExcel()"
+          >
+            <span class="material-symbols-outlined">table_view</span> Excel
           </button>
         </div>
+
+        <!-- TABLE -->
+        <div class="qc-main">
+          <div class="table-wrap">
+            <table class="qc-table" id="ceoTable">
+              <thead>
+                <tr>
+                  <th>วันที่ขออนุมัติ</th>
+                  <th>ประเภทงาน</th>
+                  <th>หัวข้อ / ผู้ขอ</th>
+                  <th>รายละเอียด</th>
+                  <th>ความสำคัญ</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+
+              <tbody id="ceoTableBody">
+                <tr>
+                  <td colspan="7" class="table-loading">
+                    <span class="material-symbols-outlined spin"
+                      >progress_activity</span
+                    >
+                    กำลังโหลด...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <!-- MODAL CEO APPROVE -->
+      <div
+        class="qc-modal"
+        id="ceoModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ceoModalTitle"
+      >
+        <div class="qc-modal-box">
+          <div class="qc-modal-header">
+            <div class="qc-modal-title">
+              <span class="material-symbols-outlined">rule</span>
+              <span id="ceoModalTitle">รายละเอียดงานอนุมัติ</span>
+            </div>
+            <button
+              class="modal-close-btn"
+              type="button"
+              onclick="closeCeoModal()"
+              aria-label="ปิด"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="qc-modal-body">
+            <!-- ข้อมูลเคลม / คำขออนุมัติ -->
+            <div class="modal-section">
+              <div class="modal-section-label">
+                <span class="material-symbols-outlined">info</span>
+                ข้อมูลคำขออนุมัติ
+              </div>
+              <div class="modal-info-grid" id="ceoInfoGrid"></div>
+            </div>
+
+            <!-- ผลตรวจสอบ / รายละเอียดประกอบการตัดสินใจ -->
+            <div class="modal-section">
+              <div class="modal-section-label">
+                <span class="material-symbols-outlined">fact_check</span>
+                รายละเอียดประกอบการพิจารณา
+              </div>
+              <div class="modal-detail-box" id="ceoQcSummary">—</div>
+            </div>
+
+            <!-- การอนุมัติของ CEO -->
+            <div class="modal-section">
+              <div class="modal-section-label">
+                <span class="material-symbols-outlined">rate_review</span>
+                การอนุมัติของ CEO
+              </div>
+
+              <div class="qc-result-box">
+                <label class="qc-comment-label">ผลการพิจารณา</label>
+                <div class="decision-options">
+                  <label class="decision-pill approve-pill">
+                    <input
+                      type="radio"
+                      name="execDecision"
+                      value="approved"
+                      checked
+                    />
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 18px"
+                      >check_circle</span
+                    >
+                    <span>อนุมัติ</span>
+                  </label>
+                  <label class="decision-pill reject-pill">
+                    <input type="radio" name="execDecision" value="rejected" />
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 18px"
+                      >cancel</span
+                    >
+                    <span>ปฏิเสธ</span>
+                  </label>
+                </div>
+
+                <label class="qc-comment-label" for="execComment"
+                  >เหตุผล / เงื่อนไขเพิ่มเติม</label
+                >
+                <textarea
+                  id="execComment"
+                  rows="3"
+                  placeholder="เช่น อนุมัติ แต่ให้เคลม Supplier 50% หรือ ปฏิเสธเพราะ..."
+                ></textarea>
+
+                <label class="qc-comment-label" style="margin-top: 14px"
+                  >ลายเซ็น CEO</label
+                >
+                <div class="signature-box">
+                  <canvas id="execSignaturePad"></canvas>
+                </div>
+                <div class="signature-actions">
+                  <button
+                    type="button"
+                    class="btn-clear-signature"
+                    onclick="clearExecSignature()"
+                  >
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 16px"
+                      >restart_alt</span
+                    >
+                    ล้างลายเซ็น
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="qc-action-btns">
+            <button type="button" class="btn-cancel" onclick="closeCeoModal()">
+              ยกเลิก
+            </button>
+            <button
+              type="button"
+              class="btn-save-draft"
+              onclick="saveExecDecision()"
+            >
+              <span class="material-symbols-outlined">done_all</span>
+              บันทึกผลการพิจารณา
+            </button>
+          </div>
+        </div>
       </div>
-    </header>
 
-    <div id="navContainer"></div>
-
-    <header class="page-header">
-      <h1>📝 อนุมัติการเคลม (CEO)</h1>
-      <p>รายการที่ QC ส่งขออนุมัติ • อนุมัติ/ปฏิเสธ • บันทึกความเห็นผู้บริหาร</p>
-    </header>
-
-    <main class="container">
-      <!-- SUMMARY -->
-      <div class="qc-summary">
-        <div class="summary-card pending">
-          <div class="summary-icon">
-            <span class="material-symbols-outlined">hourglass_top</span>
-          </div>
-          <div class="summary-info">
-            <div class="summary-head">รออนุมัติ</div>
-            <div class="summary-num" id="sumWaiting">—</div>
-            <div class="summary-label">รายการที่รอ CEO พิจารณา</div>
-          </div>
-        </div>
-
-        <div class="summary-card approved">
-          <div class="summary-icon">
-            <span class="material-symbols-outlined">verified</span>
-          </div>
-          <div class="summary-info">
-            <div class="summary-head">อนุมัติแล้ว</div>
-            <div class="summary-num" id="sumExecApproved">—</div>
-            <div class="summary-label">รายการที่ CEO อนุมัติ</div>
-          </div>
-        </div>
-
-        <div class="summary-card rejected">
-          <div class="summary-icon">
-            <span class="material-symbols-outlined">block</span>
-          </div>
-          <div class="summary-info">
-            <div class="summary-head">ปฏิเสธ</div>
-            <div class="summary-num" id="sumExecRejected">—</div>
-            <div class="summary-label">รายการที่ CEO ปฏิเสธ</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- FILTER BAR -->
-      <div class="qc-filter-bar">
-        <div class="filter-group" style="flex: 2; min-width: 220px">
-          <span class="material-symbols-outlined filter-icon">search</span>
-          <input type="text" id="searchInput" placeholder="เลขเคลม / สินค้า / ลูกค้า / ผู้แจ้ง..." />
-        </div>
-        <div class="filter-group">
-          <span class="material-symbols-outlined filter-icon">calendar_month</span>
-          <input type="date" id="filterDateFrom" title="จากวันที่" />
-          <span class="filter-sep">–</span>
-          <input type="date" id="filterDateTo" title="ถึงวันที่" />
-        </div>
-        <div class="filter-group" style="min-width: 140px; flex: 0">
-          <span class="material-symbols-outlined filter-icon">category</span>
-          <select id="filterScope">
-            <option value="">Internal + External</option>
-            <option value="internal">เฉพาะเคลมภายใน</option>
-            <option value="external">เฉพาะเคลมภายนอก</option>
-          </select>
-        </div>
-        <div class="filter-group" style="min-width: 140px; flex: 0">
-          <span class="material-symbols-outlined filter-icon">approval</span>
-          <select id="filterExecStatus">
-            <option value="" selected>ทั้งหมด</option>
-            <option value="pending">รออนุมัติ</option>
-            <option value="approved">อนุมัติแล้ว</option>
-            <option value="rejected">ปฏิเสธ</option>
-          </select>
-        </div>
-        <button class="btn-filter-reset" type="button" onclick="resetFilters()">
-          <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+      <!-- LIGHTBOX (สำหรับขยายรูป) -->
+      <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <img id="lightboxImg" alt="" />
+        <button
+          class="lightbox-close"
+          type="button"
+          onclick="event.stopPropagation(); closeLightbox();"
+        >
+          ✕
         </button>
-        <button class="btn-export-excel" type="button" onclick="exportExecExcel()">
-          <span class="material-symbols-outlined">table_view</span> Excel
-        </button>
       </div>
 
-      <!-- TABLE -->
-      <div class="qc-main">
-        <div class="table-wrap">
-          <table class="qc-table" id="ceoTable">
-            <thead>
-              <tr>
-                <th>วันที่แจ้ง</th>
-                <th>ประเภทเคลม</th>
-                <th>ผู้แจ้ง / ลูกค้า</th>
-                <th>สินค้า</th>
-                <th>ผลสรุป QC</th>
-                <th>สถานะ QC / CEO</th>
-                <th>จัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="ceoTableBody">
-              <tr>
-                <td colspan="7" class="table-loading">
-                  <span class="material-symbols-outlined spin">progress_activity</span>
-                  กำลังโหลด...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- CUSTOM CONFIRM/ALERT DIALOG (สำรองไว้สำหรับ enhancement ในอนาคต) -->
+      <div
+        class="ea-dialog-overlay"
+        id="eaDialog"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="ea-dialog-box" id="eaDialogBox">
+          <div class="ea-dialog-icon" id="eaDialogIcon">
+            <span class="material-symbols-outlined">help</span>
+          </div>
+          <div class="ea-dialog-title" id="eaDialogTitle">
+            ยืนยันการดำเนินการ
+          </div>
+          <div class="ea-dialog-message" id="eaDialogMessage">
+            คุณต้องการดำเนินการต่อหรือไม่?
+          </div>
+          <div class="ea-dialog-actions" id="eaDialogActions">
+            <button
+              class="ea-dialog-btn ea-dialog-cancel"
+              type="button"
+              id="eaDialogCancelBtn"
+            >
+              ยกเลิก
+            </button>
+            <button
+              class="ea-dialog-btn ea-dialog-confirm"
+              type="button"
+              id="eaDialogConfirmBtn"
+            >
+              ยืนยัน
+            </button>
+          </div>
         </div>
       </div>
-    </main>
 
-    <!-- MODAL CEO APPROVE -->
-    <div class="qc-modal" id="ceoModal" role="dialog" aria-modal="true" aria-labelledby="ceoModalTitle">
-      <div class="qc-modal-box">
-        <div class="qc-modal-header">
-          <div class="qc-modal-title">
-            <span class="material-symbols-outlined">rule</span>
-            <span id="ceoModalTitle">รายละเอียดเคลม</span>
-          </div>
-          <button class="modal-close-btn" type="button" onclick="closeCeoModal()" aria-label="ปิด">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
+      <!-- TOAST CONTAINER -->
+      <div class="ea-toast-container" id="eaToastContainer"></div>
 
-        <div class="qc-modal-body">
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">info</span>
-              ข้อมูลเคลม
-            </div>
-            <div class="modal-info-grid" id="ceoInfoGrid"></div>
-          </div>
-
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">fact_check</span>
-              สรุปผลจาก QC
-            </div>
-            <div class="modal-detail-box" id="ceoQcSummary">—</div>
-          </div>
-
-         
-          <div class="modal-section">
-            <div class="modal-section-label">
-              <span class="material-symbols-outlined">rate_review</span>
-              การอนุมัติของ CEO
-            </div>
-
-           
-            <div class="qc-result-box">
-              <label class="qc-comment-label">ผลการพิจารณา</label>
-              <div class="decision-options">
-                <label class="decision-pill">
-                  <input type="radio" name="execDecision" value="approved" checked />
-                  <span class="material-symbols-outlined" style="font-size: 18px">check_circle</span>
-                  <span>อนุมัติ</span>
-                </label>
-                <label class="decision-pill">
-                  <input type="radio" name="execDecision" value="rejected" />
-                  <span class="material-symbols-outlined" style="font-size: 18px">cancel</span>
-                  <span>ปฏิเสธ</span>
-                </label>
-              </div>
-
-              <label class="qc-comment-label" for="execComment">เหตุผล / เงื่อนไขเพิ่มเติม</label>
-              <textarea
-                id="execComment"
-                rows="3"
-                placeholder="เช่น อนุมัติ แต่ให้เคลม Supplier 50% หรือ ปฏิเสธเพราะ..."
-              ></textarea>
-
-              <label class="qc-comment-label" style="margin-top: 14px">ลายเซ็น CEO</label>
-              <div class="signature-box">
-                <canvas id="execSignaturePad"></canvas>
-              </div>
-              <div class="signature-actions">
-                <button type="button" class="btn-clear-signature" onclick="clearExecSignature()">
-                  <span class="material-symbols-outlined" style="font-size: 16px">restart_alt</span>
-                  ล้างลายเซ็น
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="qc-action-btns">
-          <button type="button" class="btn-cancel" onclick="closeCeoModal()">
-            ยกเลิก
-          </button>
-          <button type="button" class="btn-save-draft" onclick="saveExecDecision()">
-            <span class="material-symbols-outlined">done_all</span>
-            บันทึกผลการพิจารณา
-          </button>
-        </div>
-      </div>
+      <footer class="footer">© 2026 EABaseHub | Executive Approval</footer>
     </div>
 
-    <!-- LIGHTBOX (สำหรับขยายรูป) -->
-    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
-      <img id="lightboxImg" alt="" />
-      <button class="lightbox-close" type="button" onclick="event.stopPropagation();closeLightbox()">✕</button>
-    </div>
+    <!-- Toast helper (JS เรียก showToast / window.showToast แต่ไม่มี implementation จึงเพิ่มที่นี่) -->
+    <script>
+      (function () {
+        const TYPE_META = {
+          success: { icon: "check_circle", title: "สำเร็จ" },
+          error:   { icon: "error",        title: "เกิดข้อผิดพลาด" },
+          danger:  { icon: "error",        title: "เกิดข้อผิดพลาด" },
+          warning: { icon: "warning",      title: "แจ้งเตือน" },
+          info:    { icon: "info",         title: "ข้อมูล" },
+        };
 
-    <footer class="footer">© 2026 EABaseHub | CEO Approval</footer>
+        function normalizeType(t) {
+          if (t === "danger") return "error";
+          return TYPE_META[t] ? t : "info";
+        }
+
+        function showToast(message, type = "info", opts = {}) {
+          const container = document.getElementById("eaToastContainer");
+          if (!container) {
+            console.log("[toast]", type, message);
+            return;
+          }
+
+          const t = normalizeType(type);
+          const meta = TYPE_META[t];
+          const duration = Number.isFinite(opts.duration) ? opts.duration : 3200;
+          const title = opts.title || meta.title;
+
+          const toast = document.createElement("div");
+          toast.className = `ea-toast toast-${t}`;
+          toast.innerHTML = `
+            <div class="ea-toast-icon">
+              <span class="material-symbols-outlined">${meta.icon}</span>
+            </div>
+            <div class="ea-toast-content">
+              <div class="ea-toast-title">${escapeHtml(title)}</div>
+              <div class="ea-toast-message">${escapeHtml(String(message ?? ""))}</div>
+            </div>
+            <button class="ea-toast-close" type="button" aria-label="ปิด">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          `;
+
+          const remove = () => {
+            if (!toast.isConnected) return;
+            toast.classList.add("removing");
+            setTimeout(() => toast.remove(), 280);
+          };
+
+          toast.querySelector(".ea-toast-close")?.addEventListener("click", remove);
+          container.appendChild(toast);
+
+          if (duration > 0) setTimeout(remove, duration);
+        }
+
+        function escapeHtml(v) {
+          return String(v ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+
+        window.showToast = showToast;
+      })();
+    </script>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

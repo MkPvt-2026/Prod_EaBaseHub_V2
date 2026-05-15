@@ -405,17 +405,25 @@ function buildStatusBadge(status) {
   const normalized = normalizeStatus(status);
 
   const map = {
-    pending:     { label: '⏳ รอตรวจสอบ', cls: 'submitted' },
-    in_progress: { label: '🔍 กำลังตรวจสอบ', cls: 'in-progress' },
-    approved:    { label: '✅ อนุมัติแล้ว', cls: 'approved' },
-    rejected:    { label: '❌ ปฏิเสธ', cls: 'rejected' },
-    draft:       { label: '📝 Draft', cls: 'draft' }, 
+    submitted: { label: "⏳ รอรับเรื่อง", cls: "submitted" },
+    pending: { label: "⏳ รอรับเรื่อง", cls: "submitted" },
+
+    checking: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
+    in_progress: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
+
+    draft: { label: "📝 บันทึกร่าง", cls: "draft" },
+    waiting_ceo: { label: "⏳ รออนุมัติ CEO", cls: "waiting-ceo" },
+
+    approved: { label: "✅ อนุมัติแล้ว", cls: "approved" },
+    rejected: { label: "❌ ปฏิเสธ", cls: "rejected" },
+
+    exec_approved: { label: "✅ CEO อนุมัติแล้ว", cls: "approved" },
+    exec_rejected: { label: "❌ CEO ปฏิเสธ", cls: "rejected" },
   };
 
   const s = map[normalized] || map.pending;
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
 }
-
 // =====================================================
 // 🏷️ STATUS LABEL (text-only) — ใช้ใน export
 // =====================================================
@@ -658,11 +666,13 @@ async function pickClaim(claimId) {
   const { data, error } = await supabaseClient
     .from("claims")
     .update({
-      status: "in_progress",
-      claim_scope: claimScope,
-      picked_by: user?.id || null,
-      picked_at: new Date().toISOString()
-    })
+  status: "in_progress",
+  qc_status: "checking",
+  claim_scope: claimScope,
+  picked_by: user?.id || null,
+  picked_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+})
     .eq("id", claim.id)
     .select("*");
 

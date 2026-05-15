@@ -31,8 +31,6 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
-    <!-- <link rel="stylesheet" href="/css/components/badgeButtom.css" /> -->
-    <!-- <link rel="stylesheet" href="/css/base/bassHeader.css" /> -->
     <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
   </head>
   <body class="role-adminQc">
@@ -54,12 +52,12 @@
           title="Dashboard"
         >
           <span class="material-symbols-outlined">home</span>
-          <span class="ea-text">Dashboard</span>
+          <span class="ea-text">หน้าหลัก</span>
         </a>
 
         <a href="/pages/Qc-claim/adminQc.html" class="ea-link" title="ตรวจสอบ">
           <span class="material-symbols-outlined">manage_search</span>
-          <span class="ea-text">รับเคลม</span>
+          <span class="ea-text">จัดการเคลม</span>
         </a>
 
         <a
@@ -68,18 +66,13 @@
           title="เคลมลูกค้า"
         >
           <span class="material-symbols-outlined">assignment</span>
-          <span class="ea-text">เคลมสินค้า(ภายนอก)</span>
+          <span class="ea-text">เคลมสินค้า (ภายนอก)</span>
         </a>
 
         <a href="#" class="ea-link" title="อนุมัติ">
           <span class="material-symbols-outlined">approval</span>
-          <span class="ea-text">เคลมสินค้า(ภายใน)</span>
+          <span class="ea-text">เคลมสินค้า (ภายใน)</span>
         </a>
-
-        <!-- <a href="#" class="ea-link" title="รายงาน">
-      <span class="material-symbols-outlined">analytics</span>
-      <span class="ea-text">รายงาน</span>
-    </a> -->
       </nav>
 
       <button
@@ -96,36 +89,6 @@
         <span class="ea-text">Logout</span>
       </button>
     </aside>
-
-    <!-- HEADER -->
-    <!-- <header class="app-header">
-      <div class="logo">
-        <div class="logo-circle">
-          <img src="/assets/icons/icon-192.png" alt="logo" />
-        </div>
-        <h2>EABaseHub</h2>
-      </div>
-      <div class="user-box">
-        <div class="user-avatar" id="userAvatar">👤</div>
-        <div class="user-info">
-          <div class="user-name" id="userName">กำลังโหลด...</div>
-        </div>
-        <div class="group">
-          <button class="logout-btn" id="logoutBtn" type="button">
-            <span class="badge-icon">
-              <span class="material-symbols-outlined" style="font-size: 17px"
-                >logout</span
-              >
-            </span>
-            ออกจากระบบ
-          </button>
-        </div>
-      </div>
-    </header> -->
-
-    <!-- NAV Container -->
-    <!-- <div id="navContainer"></div> -->
-    <!-- <div id="navContainer" style="display:none"></div> -->
 
     <!-- PAGE HEADER -->
     <header class="app-header">
@@ -149,20 +112,11 @@
     <main class="container">
       <!-- BREADCRUMB -->
       <nav class="breadcrumb-bar" aria-label="breadcrumb">
-        <a
-          href="/pages/dashboard/QcDashboard.html"
-          class="breadcrumb-item home"
-        >
+        <a href="/pages/dashboard/QcDashboard.html" class="breadcrumb-item home">
           <span class="material-symbols-outlined">home</span>
           <span>หน้าหลัก</span>
         </a>
-        <span class="breadcrumb-sep">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </span>
-        <a href="#" class="breadcrumb-item">
-          <span class="material-symbols-outlined">assignment</span>
-          <span>QC</span>
-        </a>
+
         <span class="breadcrumb-sep">
           <span class="material-symbols-outlined">chevron_right</span>
         </span>
@@ -286,7 +240,7 @@
         </button>
       </div>
 
-      <!-- TABLE — external: 9 คอลัมน์ (เพิ่ม "เอกสารอนุมัติ") -->
+      <!-- TABLE — external: 9 คอลัมน์ -->
       <div class="qc-main">
         <div class="table-wrap">
           <table class="qc-table" id="qcTable">
@@ -373,7 +327,7 @@
             <div class="modal-media-grid" id="modalMediaGrid"></div>
           </div>
 
-          <!-- ============ QC RESULT (อัปเกรด Grading 5 ระดับ) ============ -->
+          <!-- ============ QC RESULT ============ -->
           <div class="modal-section qc-action-section">
             <div class="modal-section-label">
               <span class="material-symbols-outlined">rate_review</span>
@@ -392,19 +346,7 @@
               </h4>
 
               <!-- ส่วนคัดแยกประเภทการเคลม -->
-              <div
-                class="qc-analysis-grid"
-                style="
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
-                  gap: 12px;
-                  margin-bottom: 20px;
-                  background: #fff7ed;
-                  padding: 15px;
-                  border-radius: 12px;
-                  border: 1px solid #fed7aa;
-                "
-              >
+              <div class="qc-analysis-grid">
                 <div class="analysis-item">
                   <label class="qc-comment-label">ประเภทสินค้าที่เคลม</label>
                   <select id="qcProductSource" class="qc-select-full">

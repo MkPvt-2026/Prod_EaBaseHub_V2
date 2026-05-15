@@ -1,9 +1,13 @@
 /* =========================================================
-   EXTERNAL CLAIMS — QC Dashboard Stylesheet (v3 — Cleaned)
+   EXTERNAL CLAIMS — QC Dashboard Stylesheet (v4)
    ----------------------------------------------------------
    Role:  adminQc  (โทนส้ม #F97316)
    Theme: Light only
    Font:  Kanit (display) + IBM Plex Sans Thai (body)
+   ----------------------------------------------------------
+   Changelog v4:
+   - FIX: @media print syntax error (.breadcrumb-bar ขาด comma)
+   - NEW: .ea-success-* (success popup modal)
    ========================================================= */
 
 
@@ -70,7 +74,6 @@ html[data-theme="dark"] {
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 12px;
-  /* --r-lg: 16px; */
   --r-xl: 20px;
   --r-pill: 999px;
 
@@ -176,7 +179,7 @@ textarea {
   width: var(--ea-side-mini);
   z-index: 9999;
   background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   padding: 22px 10px;
   display: flex;
   flex-direction: column;
@@ -192,7 +195,6 @@ body.sidebar-expanded .ea-sidebar {
   padding: 22px 14px;
 }
 
-/* Logo */
 .ea-logo {
   width: 52px;
   height: 52px;
@@ -211,7 +213,6 @@ body.sidebar-expanded .ea-sidebar {
   object-fit: contain;
 }
 
-/* Brand text — โชว์ตอน expand */
 .mini-brand-text {
   display: none;
   text-align: center;
@@ -240,7 +241,6 @@ body.sidebar-expanded .mini-brand-text {
   opacity: 0.85;
 }
 
-/* Menu container */
 .ea-menu {
   display: flex;
   flex-direction: column;
@@ -262,7 +262,6 @@ body.sidebar-expanded .mini-brand-text {
   border-radius: 2px;
 }
 
-/* Link + user button */
 .ea-link,
 .ea-user {
   height: 46px;
@@ -298,9 +297,10 @@ body.sidebar-expanded .ea-user {
 }
 
 .ea-link.active {
-  background: var(--danger-soft);
-  color: #9b3900;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+  color: #da590e;
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--r-xl);
 }
 
 .ea-link .material-symbols-outlined,
@@ -309,7 +309,6 @@ body.sidebar-expanded .ea-user {
   flex-shrink: 0;
 }
 
-/* Text label */
 .ea-text {
   display: none;
   white-space: nowrap;
@@ -323,7 +322,6 @@ body.sidebar-expanded .ea-text {
   display: inline;
 }
 
-/* Tooltip ตอน collapsed */
 body:not(.sidebar-expanded) .ea-link:hover::after,
 body:not(.sidebar-expanded) .ea-user:hover::after {
   content: attr(title);
@@ -356,7 +354,6 @@ body:not(.sidebar-expanded) .ea-user:hover::before {
   z-index: 10000;
 }
 
-/* Toggle button */
 .ea-toggle {
   position: absolute;
   top: 50%;
@@ -390,7 +387,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   transform: rotate(180deg);
 }
 
-/* User/Logout button (อยู่ล่างสุด) */
 .ea-user {
   margin-top: 12px;
   padding-top: 12px;
@@ -413,15 +409,15 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 
 
 /* =========================================================
-   4. PAGE HEADER (.app-header) — Card style
+   4. PAGE HEADER (.app-header)
    ========================================================= */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  max-width: 1400px;          /* ← เพิ่ม */
-  margin: 20px auto 0;         /* ← เปลี่ยนจาก "20px 24px 0" */
+  max-width: 1400px;
+  margin: 20px auto 0;
   padding: 18px 24px;
   background: var(--surface-1);
   border: 1px solid var(--line);
@@ -429,10 +425,15 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   box-shadow: var(--shadow-sm);
   animation: fadeSlideDown var(--t-slow) var(--ease-out) both;
   flex-wrap: wrap;
-  width: calc(100% - 48px);    /* ← เพิ่ม (48 = 24*2 ของ container) */
+  width: calc(100% - 48px);
   box-sizing: border-box;
 }
-/* ---- Left: icon + text ---- */
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .app-header-left {
   display: flex;
   align-items: center;
@@ -479,7 +480,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   line-height: 1.4;
 }
 
-/* ---- Right: date badge (static) ---- */
 .app-header-date {
   display: inline-flex;
   align-items: center;
@@ -502,6 +502,7 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   color: var(--warning);
 }
 
+
 /* =========================================================
    4.5. BREADCRUMB
    ========================================================= */
@@ -509,7 +510,7 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
   gap: 4px;
   padding: 14px 4px 0;
   font-size: 0.85rem;
@@ -540,20 +541,13 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 }
 
 .breadcrumb-item.home {
-  color: var(--role-text);
   font-weight: 600;
-}
-
-.breadcrumb-item.home .material-symbols-outlined {
-  color: var(--role-color);
 }
 
 .breadcrumb-item.current {
-  color: var(--ink-1);
+  color: var(--danger-dark);
   font-weight: 600;
   cursor: default;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
 }
 
 .breadcrumb-item.current:hover {
@@ -573,13 +567,14 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   font-size: 16px;
 }
 
+
 /* =========================================================
    5. CONTAINER
    ========================================================= */
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px 24px 64px;
+  padding: 0px 24px 64px;
   width: 100%;
   min-width: 0;
 }
@@ -774,7 +769,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   color: var(--ink-4);
 }
 
-/* Date range */
 .filter-date-range {
   display: flex;
   align-items: stretch;
@@ -828,7 +822,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   padding: 0 2px;
 }
 
-/* Reset + Export buttons */
 .btn-filter-reset,
 .btn-export-excel,
 .btn-export-csv,
@@ -905,8 +898,8 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   animation: cardRise var(--t-slow) var(--ease-out) 400ms both;
-   min-width: 0;          /* ← เพิ่ม */
-  max-width: 100%;       /* ← เพิ่ม */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .table-wrap {
@@ -921,7 +914,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   table-layout: fixed;
 }
 
-/* 9 คอลัมน์ — รวม 100% */
 .qc-table thead th:nth-child(1) { width: 9%; }
 .qc-table thead th:nth-child(2) { width: 11%; }
 .qc-table thead th:nth-child(3) { width: 10%; }
@@ -985,14 +977,12 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   border-bottom: none;
 }
 
-/* Table cell helpers */
 .cell-date {
   font-weight: 600;
   color: var(--ink-1);
   font-size: 0.85rem;
-  white-space: nowrap;        /* ← เพิ่ม ป้องกันตัดบรรทัด */
+  white-space: nowrap;
 }
-
 
 .cell-sub {
   font-size: 0.72rem;
@@ -1020,9 +1010,9 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   font-size: 0.7rem;
   font-weight: 500;
   white-space: nowrap;
-  max-width: 100%;             /* ← เพิ่ม */
-  overflow: hidden;            /* ← เพิ่ม */
-  text-overflow: ellipsis;     /* ← เพิ่ม */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cell-thumbs {
@@ -1064,7 +1054,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   font-style: italic;
 }
 
-/* Status badges */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -1085,12 +1074,11 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 .status-badge.approved    { background: var(--success-soft); color: var(--success-dark); border-color: var(--success); }
 .status-badge.rejected    { background: var(--danger-soft); color: var(--danger-dark); border-color: var(--danger); }
 
-/* Approval doc cell */
 .doc-action-group {
   display: inline-flex;
   gap: 3px;
-  flex-wrap: nowrap;           /* ← เปลี่ยนจาก wrap → nowrap */
-  align-items: center;         /* ← เพิ่ม */
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .btn-doc-view,
@@ -1136,7 +1124,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   transform: translateY(-1px);
 }
 
-/* Action button (ดู) */
 .cell-action-group {
   display: inline-flex;
   gap: 6px;
@@ -1162,7 +1149,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   box-shadow: 0 6px 14px rgba(var(--role-rgb), 0.4);
 }
 
-/* Table loading */
 .table-loading {
   text-align: center;
   padding: 40px 20px !important;
@@ -1294,7 +1280,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   flex: 1;
 }
 
-/* Modal sections */
 .modal-section {
   margin-bottom: 22px;
 }
@@ -1321,7 +1306,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   color: var(--role-color);
 }
 
-/* Info grid */
 .modal-info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1355,7 +1339,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   word-break: break-word;
 }
 
-/* Claim types */
 .modal-claim-types {
   display: flex;
   flex-wrap: wrap;
@@ -1374,7 +1357,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   font-weight: 500;
 }
 
-/* Detail box */
 .modal-detail-box {
   padding: 14px;
   background: var(--surface-2);
@@ -1387,7 +1369,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   word-break: break-word;
 }
 
-/* Media grid */
 .modal-media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -1453,7 +1434,7 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 
 
 /* =========================================================
-   10. QC RESULT BOX (ในโมดอล)
+   10. QC RESULT BOX
    ========================================================= */
 .qc-action-section {
   background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
@@ -1503,7 +1484,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   color: var(--role-color);
 }
 
-/* Analysis grid (product source + root cause) */
 .qc-analysis-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1540,7 +1520,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   box-shadow: 0 0 0 4px rgba(var(--role-rgb), 0.12);
 }
 
-/* Grading section */
 .qc-grading-section {
   display: flex;
   flex-direction: column;
@@ -1607,7 +1586,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   flex-shrink: 0;
 }
 
-/* Quantity stepper */
 .qty-stepper {
   display: inline-flex;
   align-items: center;
@@ -1664,7 +1642,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   background: var(--role-soft);
 }
 
-/* Total summary */
 .qc-total-summary {
   text-align: right;
   padding: 12px 16px;
@@ -1683,7 +1660,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   margin-left: 6px;
 }
 
-/* Form groups */
 .form-group {
   margin-bottom: 14px;
 }
@@ -1719,7 +1695,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   box-shadow: 0 0 0 4px rgba(var(--role-rgb), 0.12);
 }
 
-/* QC action buttons */
 .qc-action-btns {
   display: flex;
   gap: 10px;
@@ -1777,7 +1752,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   box-shadow: none !important;
 }
 
-/* Readonly state */
 .qc-modal.is-readonly .qc-result-box,
 .qc-modal.is-readonly .qc-analysis-grid,
 .qc-modal.is-readonly .qc-check-row {
@@ -1893,7 +1867,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   cursor: not-allowed;
 }
 
-/* Readonly state (ตอน CEO พิจารณาแล้ว) */
 .qc-modal.is-readonly .qc-signature-wrap {
   pointer-events: none;
   opacity: 0.75;
@@ -1903,6 +1876,7 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 .qc-modal.is-readonly .qc-signature-actions {
   display: none;
 }
+
 
 /* =========================================================
    11. LIGHTBOX
@@ -2237,6 +2211,222 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 
 
 /* =========================================================
+   12.5. ✅ NEW v4 — SUCCESS POPUP (.ea-success-*)
+   ========================================================= */
+.ea-success-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 25, 23, 0.6);
+  backdrop-filter: blur(10px);
+  z-index: 3100;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity var(--t-base) var(--ease-out);
+}
+
+.ea-success-overlay.open {
+  opacity: 1;
+}
+
+.ea-success-overlay.closing {
+  opacity: 0;
+}
+
+.ea-success-overlay.closing .ea-success-box {
+  transform: scale(0.92) translateY(10px);
+  opacity: 0;
+}
+
+.ea-success-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface-1);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(16, 185, 129, 0.25),
+              0 12px 32px rgba(28, 25, 23, 0.2);
+  transform: scale(0.85) translateY(20px);
+  opacity: 0;
+  transition: transform var(--t-slow) var(--ease-spring),
+              opacity var(--t-base) var(--ease-out);
+  text-align: center;
+}
+
+.ea-success-overlay.open .ea-success-box {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* ---- Icon wrapper (with animated rings) ---- */
+.ea-success-icon-wrap {
+  position: relative;
+  padding: 32px 22px 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.ea-success-icon-wrap::before,
+.ea-success-icon-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--success);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+
+.ea-success-overlay.open .ea-success-icon-wrap::before {
+  animation: ringPulse 1.4s ease-out 0.2s;
+}
+
+.ea-success-overlay.open .ea-success-icon-wrap::after {
+  animation: ringPulse 1.4s ease-out 0.5s;
+}
+
+@keyframes ringPulse {
+  0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+/* ---- Checkmark SVG ---- */
+.ea-success-checkmark {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: block;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4),
+              inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  transform: scale(0);
+}
+
+.ea-success-overlay.open .ea-success-checkmark {
+  animation: checkmarkPop 0.55s var(--ease-spring) 0.1s forwards;
+}
+
+@keyframes checkmarkPop {
+  0%   { transform: scale(0) rotate(-45deg); }
+  60%  { transform: scale(1.15) rotate(0deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.ea-success-circle {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 2;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+}
+
+.ea-success-overlay.open .ea-success-circle {
+  animation: drawCircle 0.5s ease-out 0.3s forwards;
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+.ea-success-check {
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.ea-success-overlay.open .ea-success-check {
+  animation: drawCheck 0.35s ease-out 0.5s forwards;
+}
+
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---- Body ---- */
+.ea-success-body {
+  padding: 16px 28px 8px;
+}
+
+.ea-success-title {
+  font-family: "Kanit", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ink-1);
+  margin: 0 0 8px;
+  line-height: 1.3;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: textRise 0.4s ease-out 0.6s forwards;
+}
+
+.ea-success-message {
+  font-size: 0.92rem;
+  color: var(--ink-3);
+  margin: 0;
+  line-height: 1.55;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: textRise 0.4s ease-out 0.7s forwards;
+}
+
+@keyframes textRise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Actions ---- */
+.ea-success-actions {
+  display: flex;
+  justify-content: center;
+  padding: 18px 28px 24px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: textRise 0.4s ease-out 0.85s forwards;
+}
+
+.ea-success-btn-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 36px;
+  border: none;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: #fff;
+  font-family: "Kanit", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+  min-width: 140px;
+  justify-content: center;
+}
+
+.ea-success-btn-ok:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.5);
+}
+
+.ea-success-btn-ok:active {
+  transform: translateY(0);
+}
+
+.ea-success-btn-ok .material-symbols-outlined {
+  font-size: 20px;
+}
+
+
+/* =========================================================
    13. FOOTER
    ========================================================= */
 .footer {
@@ -2245,7 +2435,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   color: var(--ink-3);
   font-size: 0.82rem;
   border-top: 1px solid var(--line);
-  background: var(--surface-1);
   margin-top: 40px;
 }
 
@@ -2253,8 +2442,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 /* =========================================================
    14. RESPONSIVE
    ========================================================= */
-
-/* Desktop ขนาดกลาง */
 @media (max-width: 1200px) {
   .qc-summary {
     grid-template-columns: repeat(3, 1fr);
@@ -2270,7 +2457,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   }
 }
 
-/* Tablet — table scroll */
 @media (max-width: 1024px) {
   .table-wrap {
     overflow-x: auto;
@@ -2283,11 +2469,9 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   }
 }
 
-
-/* ตอน sidebar ขยาย — บีบ font + spacing ให้พอดี layout เดิม */
 @media (min-width: 1024px) and (max-width: 1500px) {
   body.sidebar-expanded .container {
-    font-size: 12px;             /* base ลดจาก 14 → 12 */
+    font-size: 12px;
   }
 
   body.sidebar-expanded .qc-summary {
@@ -2375,7 +2559,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
     font-size: 0.7rem;
   }
 
-  /* header เล็กลงนิดหน่อย */
   body.sidebar-expanded .app-header {
     padding: 14px 20px;
   }
@@ -2394,7 +2577,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   }
 }
 
-/* จอแคบลงอีก (≤1200) ตอน sidebar ขยาย — บีบเพิ่ม */
 @media (max-width: 1200px) {
   body.sidebar-expanded .qc-table {
     font-size: 0.72rem;
@@ -2411,7 +2593,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
     height: 26px;
   }
 }
-
 
 @media (max-width: 900px) {
   .qc-summary {
@@ -2445,14 +2626,12 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   body,
   body.sidebar-expanded {
     padding-left: 0;
   }
 
-  /* Sidebar เลื่อนเข้า-ออก */
   .ea-sidebar {
     transform: translateX(calc(-100% - var(--ea-side-gap) * 2));
     transition: transform 0.28s ease, width 0.25s ease;
@@ -2484,7 +2663,6 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
     background: linear-gradient(135deg, #f97316, #ea580c);
   }
 
-  /* Backdrop เมื่อเปิด sidebar */
   body.sidebar-expanded::before {
     content: "";
     position: fixed;
@@ -2563,7 +2741,8 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
     flex-wrap: wrap;
   }
 
-  .ea-confirm-box {
+  .ea-confirm-box,
+  .ea-success-box {
     max-width: 100%;
     border-radius: var(--r-lg);
   }
@@ -2576,6 +2755,10 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
   .ea-confirm-btn-ok {
     width: 100%;
     justify-content: center;
+  }
+
+  .ea-success-btn-ok {
+    width: 100%;
   }
 
   .app-header-icon {
@@ -2602,12 +2785,10 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
     font-size: 14px;
   }
 
-  /* ซ่อนระดับกลาง เหลือแค่ home → current ตอนจอเล็ก */
   .breadcrumb-bar .breadcrumb-item:nth-child(3),
   .breadcrumb-bar .breadcrumb-sep:nth-child(4) {
     display: none;
   }
-
 }
 
 
@@ -2617,7 +2798,7 @@ body.sidebar-expanded .ea-toggle .material-symbols-outlined {
 @media print {
   .ea-sidebar,
   .app-header,
-  .breadcrumb-bar
+  .breadcrumb-bar,
   .qc-filter-bar,
   .qc-action-btns,
   .qc-modal-header-actions,

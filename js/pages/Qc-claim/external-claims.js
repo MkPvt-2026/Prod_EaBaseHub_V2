@@ -1,12 +1,12 @@
 // ============================================================
-// external-claims.js  (v3 — FIXED save/load draft)
+// external-claims.js  (v4 — FIXED confirm dialog + showSuccessPopup)
 // หน้า QC ตรวจสอบเคลมลูกค้า (External Claims)
 //
-// ✅ แก้ปัญหา:
-//   1) ลบ duplicate functions ที่ปนกันระหว่างเวอร์ชันเก่า/ใหม่
-//   2) Save: บันทึก mainCause + responsiblePerson + grade A/B/R/C ครบทุก field
-//   3) Load: อ่านค่าใส่กลับช่องเดิมถูกต้อง รวมถึง checkbox ติ๊กตามจำนวน
-//   4) Checkbox sync: ใช้ id ที่ถูก (qcGradeA / qcGradeB / qcGradeR / qcGradeC)
+// ✅ Changelog v4:
+//   1) FIX: แก้ HTML structure ของ showConfirmDialog (เพิ่ม .ea-confirm-actions wrapper)
+//   2) NEW: เพิ่ม showSuccessPopup() — modal กลางจอ พร้อม animation
+//   3) FIX: signature pad cleanup event listeners ให้ถูก
+//   4) IMPROVE: error handling + null checks
 // ============================================================
 
 const CLAIM_SCOPE = "external";
@@ -16,7 +16,7 @@ let filteredClaims = [];
 let currentClaim = null;
 
 // ============================================================
-// Map: qty input id → checkbox id  (FIX: ใช้ id ที่ตรงกับ HTML)
+// Map: qty input id → checkbox id
 // ============================================================
 const QTY_CHECKBOX_MAP = {
   qcGradeAQty: "qcGradeA",
@@ -38,9 +38,14 @@ function escapeHtml(value) {
 
 function normalizeStatus(claimOrStatus) {
   if (typeof claimOrStatus === "object" && claimOrStatus !== null) {
-    return claimOrStatus.qc_status || claimOrStatus.status || "pending";
+    if (claimOrStatus.qc_status) return claimOrStatus.qc_status;
+    if (claimOrStatus.picked_at) return "checking";
+    return claimOrStatus.status || "pending";
   }
+
   if (claimOrStatus === "submitted") return "pending";
+  if (claimOrStatus === "in_progress") return "checking";
+
   return claimOrStatus || "pending";
 }
 
@@ -65,7 +70,10 @@ function normalizeMediaUrls(value) {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) return parsed.filter(Boolean);
     } catch (_) {}
-    return value.split(",").map((x) => x.trim()).filter(Boolean);
+    return value
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
   }
   return [];
 }
@@ -78,7 +86,10 @@ function normalizeClaimTypes(value) {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) return parsed.filter(Boolean);
     } catch (_) {}
-    return value.split(",").map((x) => x.trim()).filter(Boolean);
+    return value
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
   }
   return [];
 }
@@ -86,7 +97,11 @@ function normalizeClaimTypes(value) {
 function getClaimNo(claim) {
   const raw =
     claim?.claim_no || claim?.claim_code || claim?.claim_id || claim?.id || "";
-  return String(raw || "").substring(0, 8).toUpperCase() || "—";
+  return (
+    String(raw || "")
+      .substring(0, 8)
+      .toUpperCase() || "—"
+  );
 }
 
 function getClaimSearchText(claim) {
@@ -124,7 +139,9 @@ async function waitForSupabase() {
 
 async function getCurrentUserId() {
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     return user?.id || null;
   } catch (_) {
     return null;
@@ -132,12 +149,8 @@ async function getCurrentUserId() {
 }
 
 // ============================================================
-// QC Form: Read / Write / Sync  (single source of truth)
+// QC Form: Read / Write / Sync
 // ============================================================
-
-/**
- * อ่านค่าทุก field จาก modal → return object พร้อม save ลง DB
- */
 function getQcFormData() {
   const comment = document.getElementById("qcComment")?.value.trim() || "";
 
@@ -151,32 +164,29 @@ function getQcFormData() {
   const rootCause =
     document.getElementById("qcClaimRootCause")?.value || "logistics";
 
-  // ✅ FIX: อ่าน mainCause + responsiblePerson (id ที่ถูกต้องใน HTML)
   const mainCause = document.getElementById("mainCause")?.value.trim() || "";
   const responsiblePerson =
     document.getElementById("responsiblePerson")?.value.trim() || "";
 
+  const signature = getQcSignatureDataUrl();
+
   return {
     comment,
-    signature, 
+    signature,
     qcResult: {
-      // ประเภทสินค้า + ต้นเหตุ
       product_source: productSource,
       claim_root_cause: rootCause,
 
-      // เกรดสินค้า
       grade_a_qty: gradeA,
       grade_b_qty: gradeB,
       grade_r_qty: gradeR,
       grade_c_qty: gradeC,
       total_qty: gradeA + gradeB + gradeR + gradeC,
 
-      // ✅ FIX: บันทึก main_cause + responsible_person
       main_cause: mainCause,
       responsible_person: responsiblePerson,
 
-      // ✅ keep legacy field name (defect_reason/responsibility) เพื่อให้
-      // เอกสาร approval-document.js (v2) ที่อ่าน field เก่ายังเห็น
+      // legacy field name (เพื่อเข้ากับ approval-document.js เดิม)
       defect_reason: mainCause,
       responsibility: responsiblePerson,
 
@@ -207,7 +217,7 @@ function updateQcTotal() {
   if (totalEl) totalEl.textContent = (a + b + r + c).toLocaleString();
 }
 
-// Trading = ซื้อมาขายไป → ห้าม Grade R (รีไซเคิลไม่ได้)
+// Trading = ซื้อมาขายไป → ห้าม Grade R
 function applyProductSourceConstraint() {
   const sourceEl = document.getElementById("qcProductSource");
   const recycleRow = document.getElementById("recycleRow");
@@ -230,38 +240,26 @@ function applyProductSourceConstraint() {
   }
 }
 
-/**
- * เติมค่ากลับเข้า form ตอนเปิด modal
- * ✅ FIX: รองรับทั้ง field ใหม่ (main_cause/responsible_person) และเก่า (defect_reason/responsibility)
- */
 function fillQcFormData(claim) {
   const res = claim?.qc_result || {};
 
-  // ประเภทสินค้า + ต้นเหตุ
   setInputValue("qcProductSource", res.product_source || "in_house");
   setInputValue("qcClaimRootCause", res.claim_root_cause || "logistics");
 
-  // Grade quantities — รองรับชื่อ field ใหม่และเก่า
   setInputValue("qcGradeAQty", res.grade_a_qty ?? 0);
   setInputValue("qcGradeBQty", res.grade_b_qty ?? 0);
   setInputValue("qcGradeRQty", res.grade_r_qty ?? res.repair_qty ?? 0);
   setInputValue("qcGradeCQty", res.grade_c_qty ?? res.scrap_qty ?? 0);
 
-  // ✅ FIX: เติม mainCause + responsiblePerson
-  setInputValue(
-    "mainCause",
-    res.main_cause ?? res.defect_reason ?? "",
-  );
+  setInputValue("mainCause", res.main_cause ?? res.defect_reason ?? "");
   setInputValue(
     "responsiblePerson",
     res.responsible_person ?? res.responsibility ?? "",
   );
 
-  // Comment
   const commentEl = document.getElementById("qcComment");
   if (commentEl) commentEl.value = claim?.qc_comment || res.comment || "";
 
-  // ✅ Sync checkbox ตามจำนวน (ใช้ map ที่ id ถูกต้อง)
   Object.entries(QTY_CHECKBOX_MAP).forEach(([qtyId, checkId]) => {
     syncQtyCheckbox(qtyId, checkId);
   });
@@ -269,13 +267,8 @@ function fillQcFormData(claim) {
   updateQcTotal();
   applyProductSourceConstraint();
 
-  // ✅ เพิ่ม: โหลดลายเซ็นกลับ
   loadQcSignatureFromUrl(claim?.qc_signature || null);
-
 }
-
-
-
 
 function stepQty(inputId, step) {
   if (currentClaim && isExecLocked(currentClaim)) {
@@ -310,10 +303,9 @@ function setQcModalReadonly(isLocked) {
   if (modal) modal.classList.toggle("is-readonly", isLocked);
 }
 
-
-
 // ============================================================
 // QC Signature Pad (canvas — base64 export)
+// ✅ v4: cleanup listeners ถูกต้อง
 // ============================================================
 const qcSignature = {
   canvas: null,
@@ -321,13 +313,30 @@ const qcSignature = {
   drawing: false,
   hasInk: false,
   lastPoint: null,
+  // เก็บ handler reference ไว้ remove ได้
+  handlers: {
+    start: null,
+    move: null,
+    end: null,
+  },
 };
 
+function teardownQcSignaturePad() {
+  // ลบ window-level listener (mouseup) ของ instance เก่าออก
+  if (qcSignature.handlers.end) {
+    window.removeEventListener("mouseup", qcSignature.handlers.end);
+  }
+  qcSignature.handlers = { start: null, move: null, end: null };
+}
+
 function initQcSignaturePad() {
+  // cleanup ก่อนเสมอ ป้องกัน listener ซ้ำ
+  teardownQcSignaturePad();
+
   const oldCanvas = document.getElementById("qcSignatureCanvas");
   if (!oldCanvas) return;
 
-  // ลบ listener เก่าด้วยการ clone (ป้องกันซ้ำตอนเปิด modal ใหม่)
+  // clone เพื่อล้าง canvas-level listeners เก่า
   const canvas = oldCanvas.cloneNode(true);
   oldCanvas.replaceWith(canvas);
 
@@ -361,6 +370,10 @@ function initQcSignaturePad() {
     qcSignature.lastPoint = null;
   };
 
+  qcSignature.handlers.start = start;
+  qcSignature.handlers.move = move;
+  qcSignature.handlers.end = end;
+
   // Mouse
   canvas.addEventListener("mousedown", start);
   canvas.addEventListener("mousemove", move);
@@ -375,6 +388,7 @@ function initQcSignaturePad() {
 
 function getPointerPos(e) {
   const canvas = qcSignature.canvas;
+  if (!canvas) return { x: 0, y: 0 };
   const rect = canvas.getBoundingClientRect();
   const point = e.touches ? e.touches[0] : e;
   return {
@@ -402,7 +416,6 @@ function resizeQcSignatureCanvas() {
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
 
-  // เก็บลายเซ็นเดิมไว้ก่อน resize
   let prev = null;
   if (qcSignature.hasInk) prev = canvas.toDataURL("image/png");
 
@@ -415,7 +428,6 @@ function resizeQcSignatureCanvas() {
   ctx.scale(dpr, dpr);
   qcSignature.ctx = ctx;
 
-  // คืนลายเซ็นกลับ (ถ้าเคยมี)
   if (prev) {
     const img = new Image();
     img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
@@ -445,12 +457,11 @@ function clearQcSignature() {
 }
 
 function getQcSignatureDataUrl() {
-  if (!qcSignature.hasInk) return null;
+  if (!qcSignature.hasInk || !qcSignature.canvas) return null;
   return qcSignature.canvas.toDataURL("image/png");
 }
 
 function loadQcSignatureFromUrl(dataUrl) {
-  // เคลียร์ก่อนเสมอ
   const canvas = qcSignature.canvas;
   const ctx = qcSignature.ctx;
   if (!canvas || !ctx) return;
@@ -474,7 +485,6 @@ function loadQcSignatureFromUrl(dataUrl) {
   img.src = dataUrl;
 }
 
-
 // ---------- Auth / Header ----------
 function setupLogout() {
   const btn = document.getElementById("logoutBtn");
@@ -495,7 +505,9 @@ async function loadCurrentUserInfo() {
     const avatarEl = document.getElementById("userAvatar");
     if (!nameEl) return;
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     if (!user) return;
 
     const { data: profile } = await supabaseClient
@@ -578,12 +590,14 @@ function updateSummaryCards() {
   const sumApproved = document.getElementById("sumApproved");
   const sumRejected = document.getElementById("sumRejected");
 
-  const pending = allClaims.filter((c) => normalizeStatus(c) === "pending").length;
+  const pending = allClaims.filter(
+    (c) => normalizeStatus(c) === "pending",
+  ).length;
   const inProgress = allClaims.filter((c) =>
     ["checking", "in_progress", "draft"].includes(normalizeStatus(c)),
   ).length;
-  const waiting = allClaims.filter((c) =>
-    normalizeStatus(c) === "waiting_ceo",
+  const waiting = allClaims.filter(
+    (c) => normalizeStatus(c) === "waiting_ceo",
   ).length;
   const approved = allClaims.filter((c) =>
     ["approved", "exec_approved"].includes(normalizeStatus(c)),
@@ -592,12 +606,12 @@ function updateSummaryCards() {
     ["rejected", "exec_rejected"].includes(normalizeStatus(c)),
   ).length;
 
-  if (sumTotal)      sumTotal.textContent = allClaims.length;
-  if (sumPending)    sumPending.textContent = pending;
+  if (sumTotal) sumTotal.textContent = allClaims.length;
+  if (sumPending) sumPending.textContent = pending;
   if (sumInProgress) sumInProgress.textContent = inProgress;
-  if (sumWaiting)    sumWaiting.textContent = waiting;
-  if (sumApproved)   sumApproved.textContent = approved;
-  if (sumRejected)   sumRejected.textContent = rejected;
+  if (sumWaiting) sumWaiting.textContent = waiting;
+  if (sumApproved) sumApproved.textContent = approved;
+  if (sumRejected) sumRejected.textContent = rejected;
 }
 
 function populateCustomerFilter() {
@@ -659,7 +673,6 @@ function setupEventListeners() {
 }
 
 function setupQcInputListeners() {
-  // Sync qty ↔ checkbox สำหรับทุก Grade
   Object.entries(QTY_CHECKBOX_MAP).forEach(([qtyId, checkId]) => {
     const qtyEl = document.getElementById(qtyId);
     if (qtyEl) {
@@ -688,7 +701,6 @@ function setupQcInputListeners() {
     }
   });
 
-  // Product source change → apply Grade R constraint
   const sourceEl = document.getElementById("qcProductSource");
   if (sourceEl) {
     sourceEl.addEventListener("change", () => {
@@ -709,7 +721,8 @@ function applyFilters() {
 
   filteredClaims = allClaims.filter((claim) => {
     if (search && !getClaimSearchText(claim).includes(search)) return false;
-    if (status && normalizeStatus(claim) !== normalizeStatus(status)) return false;
+    if (status && normalizeStatus(claim) !== normalizeStatus(status))
+      return false;
     if (dateFrom && claim.claim_date < dateFrom) return false;
     if (dateTo && claim.claim_date > dateTo) return false;
     if (dept && claim.area !== dept) return false;
@@ -740,17 +753,23 @@ function resetFilters() {
 function buildStatusBadge(status) {
   const normalized = normalizeStatus(status);
   const map = {
-    submitted: { label: "📩 ส่งแล้ว", cls: "submitted" },
-    pending: { label: "📩 ส่งแล้ว", cls: "submitted" },
+    submitted: { label: "⏳ รอรับเรื่อง", cls: "submitted" },
+    pending: { label: "⏳ รอรับเรื่อง", cls: "submitted" },
+
     checking: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
     in_progress: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
+
     draft: { label: "📝 บันทึกร่าง", cls: "draft" },
-    waiting_ceo: { label: "⏳ รอ CEO", cls: "waiting-ceo" },
+
+    waiting_ceo: { label: "⏳ รออนุมัติ CEO", cls: "waiting-ceo" },
+
     approved: { label: "✅ QC อนุมัติ", cls: "approved" },
     rejected: { label: "❌ QC ปฏิเสธ", cls: "rejected" },
+
     exec_approved: { label: "✅ CEO อนุมัติแล้ว", cls: "approved" },
     exec_rejected: { label: "❌ CEO ปฏิเสธ", cls: "rejected" },
   };
+
   const s = map[normalized] || map.pending;
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
 }
@@ -801,7 +820,10 @@ function openApprovalDocFor(claimId) {
     return;
   }
   if (typeof window.ApprovalDocument?.open !== "function") {
-    showToast("ไม่พบ approval-document.js — กรุณาเช็คการ load script", "danger");
+    showToast(
+      "ไม่พบ approval-document.js — กรุณาเช็คการ load script",
+      "danger",
+    );
     return;
   }
   window.ApprovalDocument.open(claim);
@@ -975,9 +997,7 @@ function openModal(claim) {
   const detailEl = document.getElementById("modalDetail");
   if (detailEl) detailEl.textContent = claim.detail || "—";
 
-
-
-// ✅ เพิ่ม: init signature pad ก่อน fill data (รอ modal animation)
+  // init signature pad ก่อน fill data (รอ modal animation)
   setTimeout(() => {
     initQcSignaturePad();
     fillQcFormData(claim);
@@ -1006,6 +1026,7 @@ function closeModal() {
     modal.classList.remove("is-readonly");
   }
   setQcModalReadonly(false);
+  teardownQcSignaturePad(); // ✅ cleanup เมื่อปิด modal
   currentClaim = null;
 }
 
@@ -1014,7 +1035,8 @@ function renderModalMedia(urls) {
   if (!grid) return;
 
   if (!urls || urls.length === 0) {
-    grid.innerHTML = '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>';
+    grid.innerHTML =
+      '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>';
     return;
   }
 
@@ -1046,12 +1068,18 @@ function validateQcFormBeforeSend() {
   const total = qcResult.total_qty;
 
   if (total <= 0) {
-    showToast("กรุณาระบุจำนวนสินค้าอย่างน้อย 1 ชิ้นใน Grade ใดก็ได้", "warning");
+    showToast(
+      "กรุณาระบุจำนวนสินค้าอย่างน้อย 1 ชิ้นใน Grade ใดก็ได้",
+      "warning",
+    );
     return false;
   }
 
   if (qcResult.product_source === "trading" && qcResult.grade_r_qty > 0) {
-    showToast("สินค้าซื้อมาขายไป (trading) ไม่สามารถส่งบด/หลอม (Grade R) ได้", "warning");
+    showToast(
+      "สินค้าซื้อมาขายไป (trading) ไม่สามารถส่งบด/หลอม (Grade R) ได้",
+      "warning",
+    );
     return false;
   }
 
@@ -1065,7 +1093,7 @@ async function saveQcDraft() {
     return;
   }
 
-  const { comment, signature, qcResult } = getQcFormData();   // ← เพิ่ม signature
+  const { comment, signature, qcResult } = getQcFormData();
 
   try {
     const userId = await getCurrentUserId();
@@ -1076,7 +1104,7 @@ async function saveQcDraft() {
         qc_status: "draft",
         qc_result: qcResult,
         qc_comment: comment || null,
-        qc_signature: signature,        // ← เพิ่ม
+        qc_signature: signature,
         qc_by: userId,
         updated_at: new Date().toISOString(),
       })
@@ -1087,22 +1115,106 @@ async function saveQcDraft() {
     currentClaim.qc_status = "draft";
     currentClaim.qc_result = qcResult;
     currentClaim.qc_comment = comment || null;
-    currentClaim.qc_signature = signature;    // ← เพิ่ม
+    currentClaim.qc_signature = signature;
     if (window._claims && window._claims[currentClaim.id]) {
       window._claims[currentClaim.id] = currentClaim;
     }
 
-    showToast("บันทึกร่างสำเร็จ", "success");
+    await showSuccessPopup({
+      title: "บันทึกร่างสำเร็จ",
+      message:
+        "ระบบได้บันทึกข้อมูล QC เรียบร้อยแล้ว\nคุณสามารถกลับมาแก้ไขต่อภายหลังได้",
+      buttonText: "ตกลง",
+    });
+
     await loadClaims();
   } catch (err) {
     console.error("❌ saveQcDraft error:", err);
     showToast("บันทึกร่างไม่สำเร็จ: " + (err?.message ?? err), "danger");
   }
 }
+
 // ============================================================
-// Confirm Dialog (custom modal กลางจอ — ใช้แทน window.confirm)
-// ใช้: const result = await showConfirmDialog({ ... })
-// result = { confirmed: boolean, note: string }
+// ✅ NEW v4: Success Popup — modal กลางจอ พร้อม animation
+// ============================================================
+function showSuccessPopup({
+  title = "สำเร็จ",
+  message = "ดำเนินการเรียบร้อยแล้ว",
+  buttonText = "ตกลง",
+  icon = "check_circle",
+  autoCloseMs = 0, // 0 = ไม่ auto close
+} = {}) {
+  return new Promise((resolve) => {
+    document.getElementById("ea-success-popup")?.remove();
+
+    const wrap = document.createElement("div");
+    wrap.id = "ea-success-popup";
+    wrap.className = "ea-success-overlay";
+
+    wrap.innerHTML = `
+      <div class="ea-success-box" role="dialog" aria-modal="true" aria-labelledby="eaSuccessTitle">
+        <div class="ea-success-icon-wrap">
+          <svg class="ea-success-checkmark" viewBox="0 0 52 52">
+            <circle class="ea-success-circle" cx="26" cy="26" r="24" fill="none"/>
+            <path class="ea-success-check" fill="none" d="M14 27 L22 35 L38 18"/>
+          </svg>
+        </div>
+
+        <div class="ea-success-body">
+          <h3 id="eaSuccessTitle" class="ea-success-title">${escapeHtml(title)}</h3>
+          <p class="ea-success-message">${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+        </div>
+
+        <div class="ea-success-actions">
+          <button type="button" class="ea-success-btn-ok">
+            <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+            ${escapeHtml(buttonText)}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(wrap);
+
+    const okBtn = wrap.querySelector(".ea-success-btn-ok");
+    let autoTimer = null;
+
+    function cleanup() {
+      wrap.classList.add("closing");
+      document.removeEventListener("keydown", onKey);
+      if (autoTimer) clearTimeout(autoTimer);
+      setTimeout(() => {
+        wrap.remove();
+        resolve(true);
+      }, 220);
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        cleanup();
+      }
+    }
+
+    okBtn.addEventListener("click", cleanup);
+    wrap.addEventListener("click", (e) => {
+      if (e.target === wrap) cleanup();
+    });
+    document.addEventListener("keydown", onKey);
+
+    if (autoCloseMs > 0) {
+      autoTimer = setTimeout(cleanup, autoCloseMs);
+    }
+
+    requestAnimationFrame(() => {
+      wrap.classList.add("open");
+      if (okBtn) okBtn.focus();
+    });
+  });
+}
+
+// ============================================================
+// ✅ FIXED v4: Confirm Dialog — แก้ HTML structure ที่พัง
 // ============================================================
 function showConfirmDialog({
   title = "ยืนยันการดำเนินการ",
@@ -1113,19 +1225,42 @@ function showConfirmDialog({
   confirmText = "ยืนยัน",
   cancelText = "ยกเลิก",
   icon = "forward_to_inbox",
-  variant = "primary", // "primary" | "danger"
+  variant = "primary", // "primary" | "danger" | "warning"
   showNote = true,
 } = {}) {
   return new Promise((resolve) => {
-    // remove existing
     document.getElementById("ea-confirm-dialog")?.remove();
 
     const wrap = document.createElement("div");
     wrap.id = "ea-confirm-dialog";
     wrap.className = "ea-confirm-overlay";
 
+    // ✅ FIX: รวม HTML structure ใหม่ทั้งหมดให้ถูกต้อง
+    const cancelBtnHtml = cancelText
+      ? `<button type="button" class="ea-confirm-btn-cancel">
+           <span class="material-symbols-outlined">close</span>
+           ${escapeHtml(cancelText)}
+         </button>`
+      : "";
+
+    const noteHtml = showNote
+      ? `<div class="ea-confirm-body">
+           <label for="eaConfirmNote" class="ea-confirm-label">${escapeHtml(noteLabel)}</label>
+           <textarea
+             id="eaConfirmNote"
+             class="ea-confirm-textarea"
+             placeholder="${escapeHtml(notePlaceholder)}"
+             rows="3"
+           >${escapeHtml(initialNote)}</textarea>
+           <div class="ea-confirm-hint">
+             <span class="material-symbols-outlined">keyboard</span>
+             กด <kbd>Ctrl</kbd> + <kbd>Enter</kbd> เพื่อยืนยัน  ·  <kbd>Esc</kbd> เพื่อยกเลิก
+           </div>
+         </div>`
+      : "";
+
     wrap.innerHTML = `
-      <div class="ea-confirm-box ea-confirm-${variant}" role="dialog" aria-modal="true" aria-labelledby="eaConfirmTitle">
+      <div class="ea-confirm-box ea-confirm-${escapeHtml(variant)}" role="dialog" aria-modal="true" aria-labelledby="eaConfirmTitle">
         <div class="ea-confirm-header">
           <div class="ea-confirm-icon">
             <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
@@ -1139,31 +1274,10 @@ function showConfirmDialog({
           </button>
         </div>
 
-        ${
-          showNote
-            ? `
-        <div class="ea-confirm-body">
-          <label for="eaConfirmNote" class="ea-confirm-label">${escapeHtml(noteLabel)}</label>
-          <textarea
-            id="eaConfirmNote"
-            class="ea-confirm-textarea"
-            placeholder="${escapeHtml(notePlaceholder)}"
-            rows="3"
-          >${escapeHtml(initialNote)}</textarea>
-          <div class="ea-confirm-hint">
-            <span class="material-symbols-outlined">keyboard</span>
-            กด <kbd>Ctrl</kbd> + <kbd>Enter</kbd> เพื่อยืนยัน  ·  <kbd>Esc</kbd> เพื่อยกเลิก
-          </div>
-        </div>
-        `
-            : ""
-        }
+        ${noteHtml}
 
         <div class="ea-confirm-actions">
-          <button type="button" class="ea-confirm-btn-cancel">
-            <span class="material-symbols-outlined">close</span>
-            ${escapeHtml(cancelText)}
-          </button>
+          ${cancelBtnHtml}
           <button type="button" class="ea-confirm-btn-ok">
             <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
             ${escapeHtml(confirmText)}
@@ -1207,24 +1321,25 @@ function showConfirmDialog({
     }
 
     okBtn.addEventListener("click", onConfirm);
-    cancelBtn.addEventListener("click", onCancel);
+    if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
     closeBtn.addEventListener("click", onCancel);
     wrap.addEventListener("click", (e) => {
       if (e.target === wrap) onCancel();
     });
     document.addEventListener("keydown", onKey);
 
-    // Trigger animation + focus
     requestAnimationFrame(() => {
       wrap.classList.add("open");
       if (noteEl) noteEl.focus();
-      else okBtn.focus();
+      else if (okBtn) okBtn.focus();
     });
   });
 }
+// -----------SEND TO CEO------
 
 async function sendToCEO() {
   if (!currentClaim) return;
+
   if (isExecLocked(currentClaim)) {
     showToast("CEO พิจารณาแล้ว ส่งซ้ำไม่ได้", "warning");
     return;
@@ -1232,46 +1347,71 @@ async function sendToCEO() {
 
   if (!validateQcFormBeforeSend()) return;
 
-  const { comment, signature, qcResult } = getQcFormData();   // ← เพิ่ม signature
+  const { comment, signature, qcResult } = getQcFormData();
 
-  // ✅ บังคับเซ็นก่อนส่ง CEO
   if (!signature) {
     showToast("กรุณาเซ็นชื่อก่อนส่งให้ CEO", "warning");
     return;
   }
 
-  const result = await showConfirmDialog({
-    title: "ยืนยันส่งอนุมัติ CEO",
-    message: `คุณกำลังจะส่งเคลม #${getClaimNo(currentClaim)} ให้ CEO พิจารณา\n⚠️ หลังจากกดส่งแล้วจะไม่สามารถแก้ไขข้อมูลได้อีก`,
-    confirmText: "ยืนยันส่ง",
-    cancelText: "ยกเลิก",
-    icon: "send",
-    variant: "warning",
-    showNote: false,
-  });
-
-  if (!result.confirmed) return;
-
   try {
     const userId = await getCurrentUserId();
+    const now = new Date().toISOString();
 
-    const { error } = await supabaseClient
+    const { error: claimError } = await supabaseClient
       .from("claims")
       .update({
         qc_status: "waiting_ceo",
         exec_status: "pending",
         qc_result: qcResult,
         qc_comment: comment || null,
-        qc_signature: signature,        // ← เพิ่ม
+        qc_signature: signature,
         qc_by: userId,
-        sent_to_ceo_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        sent_to_ceo_at: now,
+        updated_at: now,
       })
       .eq("id", currentClaim.id);
 
-    if (error) throw error;
+    if (claimError) throw claimError;
 
-    showToast("ส่งให้ CEO อนุมัติแล้ว", "success");
+    const { error: approvalError } = await supabaseClient
+      .from("approval_requests")
+      .upsert(
+        {
+          request_type: "claim",
+          request_title: `อนุมัติเคลมสินค้า ${
+            currentClaim.product || currentClaim.product_name || ""
+          }`,
+          request_detail:
+            currentClaim.detail ||
+            currentClaim.claim_detail ||
+            currentClaim.problem_detail ||
+            "",
+
+          source_table: "claims",
+          source_id: currentClaim.id,
+
+          request_status: "pending",
+          request_by: userId,
+          priority: "normal",
+          updated_at: now,
+        },
+        {
+          onConflict: "source_table,source_id",
+        }
+      );
+
+    if (approvalError) throw approvalError;
+
+    await showSuccessPopup({
+      title: "ส่งอนุมัติสำเร็จ",
+      message: `เคลม #${getClaimNo(
+        currentClaim
+      )} ถูกส่งให้ CEO พิจารณาแล้ว\nกรุณารอผลการอนุมัติ`,
+      buttonText: "ตกลง",
+      icon: "send",
+    });
+
     closeModal();
     await loadClaims();
   } catch (err) {
@@ -1314,12 +1454,28 @@ const ROOT_CAUSE_LABELS = {
 function buildExportRows(claims) {
   const rows = [
     [
-      "เลขเคลม", "วันที่แจ้ง", "ผู้แจ้ง", "เขต/แผนก", "ลูกค้า",
-      "สินค้า", "จำนวน", "ประเภทปัญหา", "รายละเอียด",
-      "สถานะ QC", "ผล CEO", "วันที่รับเรื่อง", "หมายเหตุ QC",
-      "ประเภทสินค้า", "ต้นเหตุ",
-      "Grade A (คืนสต็อก)", "Grade B (Outlet)", "Grade R (บด/หลอม)", "Grade C (ทิ้ง)", "รวม",
-      "สาเหตุหลัก", "ผู้รับผิดชอบ",
+      "เลขเคลม",
+      "วันที่แจ้ง",
+      "ผู้แจ้ง",
+      "เขต/แผนก",
+      "ลูกค้า",
+      "สินค้า",
+      "จำนวน",
+      "ประเภทปัญหา",
+      "รายละเอียด",
+      "สถานะ QC",
+      "ผล CEO",
+      "วันที่รับเรื่อง",
+      "หมายเหตุ QC",
+      "ประเภทสินค้า",
+      "ต้นเหตุ",
+      "Grade A (คืนสต็อก)",
+      "Grade B (Outlet)",
+      "Grade R (บด/หลอม)",
+      "Grade C (ทิ้ง)",
+      "รวม",
+      "สาเหตุหลัก",
+      "ผู้รับผิดชอบ",
     ],
   ];
 
@@ -1475,8 +1631,18 @@ function updateHeaderDate() {
   const el = document.getElementById("appHeaderDateText");
   if (!el) return;
   const months = [
-    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
   ];
   const now = new Date();
   const day = now.getDate();
@@ -1497,7 +1663,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     setupLogout();
-    updateHeaderDate(); 
+    updateHeaderDate();
 
     if (typeof protectPage === "function") {
       await protectPage(["admin", "adminQc", "adminqc"]);
@@ -1528,7 +1694,6 @@ window.saveQcDraft = saveQcDraft;
 window.sendToCEO = sendToCEO;
 window.openModal = openModal;
 window.showConfirmDialog = showConfirmDialog;
+window.showSuccessPopup = showSuccessPopup; // ✅ NEW
 
-console.log(`✅ ${CLAIM_SCOPE}-claims.js (v3) loaded`);
-
-
+console.log(`✅ ${CLAIM_SCOPE}-claims.js (v4) loaded`);
