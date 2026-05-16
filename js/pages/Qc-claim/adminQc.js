@@ -1,23 +1,28 @@
 // =====================================================
-// adminQC.js (FULL VERSION — LINE notify ENABLED ✅)
+// adminQC.js (FULL VERSION — LINE notify via shared service ✅)
 // หน้า QC Dashboard — ตรวจสอบ อนุมัติ ปฏิเสธ Export
+//
+// ⚙️  ใช้ sendLineNotify() จาก /js/services/lineNotify.js
+//     ซึ่งอ่าน URL/anonKey จาก CURRENT_SUPABASE → รองรับ Dev/Prod อัตโนมัติ
+//
+// 💡 ใช้ DYNAMIC IMPORT — ถ้า lineNotify.js โหลดไม่ได้
+//     หน้านี้จะยังใช้งานได้ (แค่ปิด LINE notify เฉพาะส่วน)
 // =====================================================
 
-// =====================================================
-// 📲 IMPORT LINE NOTIFY SERVICE
-// =====================================================
-import { sendLineNotify } from "/js/services/lineNotify.js";
-
-/** อ่าน Supabase project URL จาก supabaseClient ที่ init ไว้แล้ว */
-function getSupabaseUrl() {
-  // supabase-js v2 — มี property supabaseUrl
-  if (supabaseClient?.supabaseUrl) {
-    return supabaseClient.supabaseUrl.replace(/\/$/, '');
+// ── lazy-load sendLineNotify (จะโหลดครั้งแรกที่เรียก notifyLine) ──
+let _sendLineNotify = null;
+async function getSendLineNotify() {
+  if (_sendLineNotify) return _sendLineNotify;
+  try {
+    const mod = await import("/js/services/lineNotify.js");
+    _sendLineNotify = mod.sendLineNotify;
+    return _sendLineNotify;
+  } catch (err) {
+    console.warn("⚠️  Cannot load lineNotify.js — LINE notifications disabled", err);
+    throw err;
   }
-  // fallback — ดึงจาก rest URL
-  const restUrl = supabaseClient?.rest?.url || '';
-  return restUrl.replace(/\/rest\/v1\/?$/, '');
 }
+
 // =====================================================
 // STATE
 // =====================================================
@@ -1106,15 +1111,30 @@ async function exportCurrentClaimExcelPro() {
 }
 
 // =====================================================
-// 📲 LINE NOTIFY HELPER — ใช้ sendLineNotify ที่มีอยู่แล้ว
+// 📲 LINE NOTIFY HELPER — wrapper รอบ sendLineNotify
 // =====================================================
 /**
- * ส่งแจ้งเตือน LINE ผ่าน Edge Function (multi-event)
+ * ส่งแจ้งเตือน LINE ผ่าน Edge Function (multi-event support)
  *
- * @param {string} eventType  'claim_picked' | 'claim_approved' | 'claim_rejected' ...
- * @param {object} payload    { claim, actor, comment }
+ * @param {string} eventType  ชนิด event:
+ *   - 'claim_picked'    QC รับเรื่องแล้ว
+ *   - 'claim_approved'  อนุมัติเคลม
+ *   - 'claim_rejected'  ปฏิเสธเคลม
+ *   - 'claim_created'   (จากหน้าส่งเคลมเท่านั้น)
+ *
+ * @param {object} payload
+ *   - claim:   {object}  ข้อมูลเคลมจาก DB (required)
+ *   - actor:   {name, role}  คนที่ทำ action
+ *   - comment: {string}  หมายเหตุ QC (สำหรับ approved/rejected)
+ *
+ * @example
+ *   await notifyLine('claim_picked', {
+ *     claim: updatedClaim,
+ *     actor: { name: 'สมชาย', role: 'qc' },
+ *   });
  */
 async function notifyLine(eventType, payload) {
+  const sendLineNotify = await getSendLineNotify();
   return sendLineNotify({
     type:    eventType,
     claim:   payload.claim,
@@ -1123,33 +1143,9 @@ async function notifyLine(eventType, payload) {
   });
 }
 
-
-
-
-async function notifyLine(eventType, payload) {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('ไม่ได้ login');
-
-  const res = await fetch(LINE_CONFIG.SUPABASE_URL + LINE_CONFIG.ENDPOINT, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      type:    eventType,
-      claim:   payload.claim,
-      actor:   payload.actor   || null,
-      comment: payload.comment || '',
-    }),
-  });
-
-  const result = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(result)}`);
-  return result;
-}
-
+/**
+ * ดึงชื่อผู้ใช้ปัจจุบันสำหรับใส่ใน LINE notification
+ */
 async function getCurrentUserName() {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -1168,8 +1164,23 @@ async function getCurrentUserName() {
   }
 }
 
-// alias สำหรับโค้ดเก่าที่อาจเรียก getCurrentQcName
-const getCurrentQcName = getCurrentUserName;
+// =====================================================
+// 🌐 EXPOSE FUNCTIONS TO GLOBAL SCOPE
+// (จำเป็นเพราะใช้ type="module" แล้ว ทำให้ inline onclick="..." เรียกฟังก์ชันไม่ได้)
+// =====================================================
+window.openModal              = openModal;
+window.closeModal             = closeModal;
+window.pickClaim              = pickClaim;
+window.updateClaimStatus      = updateClaimStatus;
+window.openLightbox           = openLightbox;
+window.closeLightbox          = closeLightbox;
+window.exportPDF              = exportPDF;
+window.exportCSV              = exportCSV;
+window.exportExcel            = exportExcel;
+window.exportSingleClaimExcel = exportSingleClaimExcel;
+window.exportCurrentClaimExcelPro = exportCurrentClaimExcelPro;
+window.resetFilters           = resetFilters;
+window.applyFilters           = applyFilters;
 
 // =====================================================
 // 🔧 UTILITIES
@@ -1272,4 +1283,4 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-console.log('✅ adminQc.js loaded (LINE notify ENABLED — multi-event support)');
+console.log('✅ adminQc.js loaded (LINE notify via shared sendLineNotify)');

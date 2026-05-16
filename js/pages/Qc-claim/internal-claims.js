@@ -1,33 +1,84 @@
-// =====================================================
-// internal-claims.js
-// หน้า QC ตรวจสอบเคลมภายใน
-// =====================================================
+// ============================================================
+// internal-claims.js  (v2.0 — รวม pattern external-claims + 2 mode)
+// หน้า QC ตรวจสอบเคลมภายใน (Internal Claims)
+//
+// ✨ Features:
+//   1) ระบบ Grading (A/B/R/C) เหมือน external
+//   2) ลายเซ็น QC (canvas signature pad)
+//   3) เลือกโหมดอนุมัติได้ 2 แบบ:
+//      - "QC อนุมัติเอง"  → approve / reject แบบเดิม
+//      - "ส่ง Executive"  → สร้าง approval_requests + รออนุมัติ
+//   4) Approval Document (เมื่อ Exec ตัดสินใจแล้ว)
+//   5) Export Excel / CSV / PDF
+// ============================================================
 
-const CLAIM_SCOPE = 'internal';
+const CLAIM_SCOPE = "internal";
 
 let allClaims = [];
 let filteredClaims = [];
 let currentClaim = null;
 
+const QTY_CHECKBOX_MAP = {
+  qcGradeAQty: "qcGradeA",
+  qcGradeBQty: "qcGradeB",
+  qcGradeRQty: "qcGradeR",
+  qcGradeCQty: "qcGradeC",
+};
+
+// ---------- Utilities ----------
 function escapeHtml(value) {
-  if (value == null) return '';
-  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  if (value == null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function normalizeStatus(claimOrStatus) {
-  if (typeof claimOrStatus === 'object' && claimOrStatus !== null) {
-    return claimOrStatus.qc_status || claimOrStatus.status || 'pending';
+  if (typeof claimOrStatus === "object" && claimOrStatus !== null) {
+    if (claimOrStatus.qc_status) return claimOrStatus.qc_status;
+    if (claimOrStatus.picked_at) return "checking";
+    return claimOrStatus.status || "pending";
   }
-  if (claimOrStatus === 'submitted') return 'pending';
-  return claimOrStatus || 'pending';
+  if (claimOrStatus === "submitted") return "pending";
+  if (claimOrStatus === "in_progress") return "checking";
+  return claimOrStatus || "pending";
+}
+
+function isFinalLocked(claim) {
+  // ล็อกเมื่อ:
+  // - QC ตัดสินใจ approve/reject เองแล้ว (และไม่มี exec workflow)
+  // - หรือ Exec พิจารณาแล้ว
+  const qcStatus = normalizeStatus(claim);
+  const execStatus = claim?.exec_status || "";
+  if (["exec_approved", "exec_rejected"].includes(qcStatus)) return true;
+  if (["approved", "rejected"].includes(execStatus)) return true;
+  // QC ตัดสินใจเองแล้ว (approved/rejected โดยไม่ได้ส่ง exec)
+  if (["approved", "rejected"].includes(qcStatus) && !execStatus) return true;
+  return false;
+}
+
+function hasApprovalDocument(claim) {
+  // มีเอกสารอนุมัติเมื่อ:
+  // - Exec ตัดสินใจแล้ว, หรือ
+  // - QC ตัดสินใจเอง approve/reject แล้ว
+  if (["approved", "rejected"].includes(claim?.exec_status)) return true;
+  const qcStatus = normalizeStatus(claim);
+  if (["approved", "rejected", "exec_approved", "exec_rejected"].includes(qcStatus)) return true;
+  return false;
 }
 
 function normalizeMediaUrls(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value.filter(Boolean);
-  if (typeof value === 'string') {
-    try { const parsed = JSON.parse(value); if (Array.isArray(parsed)) return parsed.filter(Boolean); } catch (_) {}
-    return value.split(',').map(x => x.trim()).filter(Boolean);
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    } catch (_) {}
+    return value.split(",").map((x) => x.trim()).filter(Boolean);
   }
   return [];
 }
@@ -35,207 +86,634 @@ function normalizeMediaUrls(value) {
 function normalizeClaimTypes(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value.filter(Boolean);
-  if (typeof value === 'string') {
-    try { const parsed = JSON.parse(value); if (Array.isArray(parsed)) return parsed.filter(Boolean); } catch (_) {}
-    return value.split(',').map(x => x.trim()).filter(Boolean);
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    } catch (_) {}
+    return value.split(",").map((x) => x.trim()).filter(Boolean);
   }
   return [];
 }
 
 function getClaimNo(claim) {
-  const raw = claim?.claim_no || claim?.claim_code || claim?.claim_id || claim?.id || '';
-  return String(raw || '').substring(0, 8).toUpperCase() || '—';
+  const raw =
+    claim?.claim_no || claim?.claim_code || claim?.claim_id || claim?.id || "";
+  return String(raw || "").substring(0, 8).toUpperCase() || "—";
 }
 
 function getClaimSearchText(claim) {
-  return `${claim?.emp_name || ''} ${claim?.area || ''} ${claim?.customer || ''} ${claim?.product || ''} ${claim?.detail || ''} ${getClaimNo(claim)}`.toLowerCase();
+  return `${claim?.emp_name || ""} ${claim?.area || ""} ${claim?.product || ""} ${claim?.detail || ""} ${getClaimNo(claim)}`.toLowerCase();
 }
 
-function isVideo(url) { return url ? /\.(mp4|mov|avi|webm|mkv)(\?|$)/i.test(url) : false; }
+function isVideo(url) {
+  return url ? /\.(mp4|mov|avi|webm|mkv)(\?|$)/i.test(url) : false;
+}
 
 function formatDate(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return "—";
   const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return '—';
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  if (Number.isNaN(d.getTime())) return "—";
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
 function formatDateTime(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return "—";
   const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return '—';
-  return `${formatDate(dateStr)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (Number.isNaN(d.getTime())) return "—";
+  return `${formatDate(dateStr)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 async function waitForSupabase() {
   let attempts = 0;
-  while (typeof supabaseClient === 'undefined' && attempts < 50) {
-    await new Promise(resolve => setTimeout(resolve, 100));
+  while (typeof supabaseClient === "undefined" && attempts < 50) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
     attempts++;
   }
-  return typeof supabaseClient !== 'undefined';
+  return typeof supabaseClient !== "undefined";
 }
 
+async function getCurrentUserId() {
+  try {
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    return user?.id || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// ============================================================
+// QC Form
+// ============================================================
+function getQcFormData() {
+  const comment = document.getElementById("qcComment")?.value.trim() || "";
+  const gradeA = Number(document.getElementById("qcGradeAQty")?.value || 0);
+  const gradeB = Number(document.getElementById("qcGradeBQty")?.value || 0);
+  const gradeR = Number(document.getElementById("qcGradeRQty")?.value || 0);
+  const gradeC = Number(document.getElementById("qcGradeCQty")?.value || 0);
+  const productSource =
+    document.getElementById("qcProductSource")?.value || "in_house";
+  const rootCause =
+    document.getElementById("qcClaimRootCause")?.value || "production";
+  const mainCause =
+    document.getElementById("mainCause")?.value.trim() || "";
+  const responsiblePerson =
+    document.getElementById("responsiblePerson")?.value.trim() || "";
+  const signature = getQcSignatureDataUrl();
+
+  return {
+    comment,
+    signature,
+    qcResult: {
+      product_source: productSource,
+      claim_root_cause: rootCause,
+      grade_a_qty: gradeA,
+      grade_b_qty: gradeB,
+      grade_r_qty: gradeR,
+      grade_c_qty: gradeC,
+      total_qty: gradeA + gradeB + gradeR + gradeC,
+      main_cause: mainCause,
+      responsible_person: responsiblePerson,
+      defect_reason: mainCause,
+      responsibility: responsiblePerson,
+      comment,
+    },
+  };
+}
+
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value ?? "";
+}
+
+function syncQtyCheckbox(qtyId, checkId) {
+  const qtyEl = document.getElementById(qtyId);
+  const checkEl = document.getElementById(checkId);
+  if (!qtyEl || !checkEl) return;
+  checkEl.checked = Number(qtyEl.value || 0) > 0;
+}
+
+function updateQcTotal() {
+  const a = Number(document.getElementById("qcGradeAQty")?.value || 0);
+  const b = Number(document.getElementById("qcGradeBQty")?.value || 0);
+  const r = Number(document.getElementById("qcGradeRQty")?.value || 0);
+  const c = Number(document.getElementById("qcGradeCQty")?.value || 0);
+  const totalEl = document.getElementById("qcTotalQty");
+  if (totalEl) totalEl.textContent = (a + b + r + c).toLocaleString();
+}
+
+function applyProductSourceConstraint() {
+  const sourceEl = document.getElementById("qcProductSource");
+  const recycleRow = document.getElementById("recycleRow");
+  const gradeRCheck = document.getElementById("qcGradeR");
+  const gradeRQty = document.getElementById("qcGradeRQty");
+  if (!sourceEl) return;
+
+  // trading + raw_material → ไม่สามารถส่งบด/หลอม
+  const noRecycle = ["trading", "raw_material"].includes(sourceEl.value);
+  if (recycleRow) {
+    recycleRow.style.opacity = noRecycle ? "0.45" : "1";
+    recycleRow.style.pointerEvents = noRecycle ? "none" : "auto";
+    recycleRow.title = noRecycle
+      ? "ประเภทนี้ — รีไซเคิลไม่ได้"
+      : "";
+  }
+  if (noRecycle) {
+    if (gradeRQty) gradeRQty.value = 0;
+    if (gradeRCheck) gradeRCheck.checked = false;
+    updateQcTotal();
+  }
+}
+
+function fillQcFormData(claim) {
+  const res = claim?.qc_result || {};
+  setInputValue("qcProductSource", res.product_source || "in_house");
+  setInputValue("qcClaimRootCause", res.claim_root_cause || "production");
+  setInputValue("qcGradeAQty", res.grade_a_qty ?? 0);
+  setInputValue("qcGradeBQty", res.grade_b_qty ?? 0);
+  setInputValue("qcGradeRQty", res.grade_r_qty ?? res.repair_qty ?? 0);
+  setInputValue("qcGradeCQty", res.grade_c_qty ?? res.scrap_qty ?? 0);
+  setInputValue("mainCause", res.main_cause ?? res.defect_reason ?? "");
+  setInputValue(
+    "responsiblePerson",
+    res.responsible_person ?? res.responsibility ?? ""
+  );
+
+  const commentEl = document.getElementById("qcComment");
+  if (commentEl) commentEl.value = claim?.qc_comment || res.comment || "";
+
+  Object.entries(QTY_CHECKBOX_MAP).forEach(([qtyId, checkId]) => {
+    syncQtyCheckbox(qtyId, checkId);
+  });
+  updateQcTotal();
+  applyProductSourceConstraint();
+  loadQcSignatureFromUrl(claim?.qc_signature || null);
+}
+
+function stepQty(inputId, step) {
+  if (currentClaim && isFinalLocked(currentClaim)) {
+    showToast("รายการนี้ตัดสินใจแล้ว แก้ไขไม่ได้", "warning");
+    return;
+  }
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const next = Math.max(0, Number(input.value || 0) + step);
+  input.value = next;
+  const checkId = QTY_CHECKBOX_MAP[inputId];
+  if (checkId) syncQtyCheckbox(inputId, checkId);
+  updateQcTotal();
+}
+
+function setQcModalReadonly(isLocked) {
+  const selector = [
+    "#qcModal input",
+    "#qcModal select",
+    "#qcModal textarea",
+    "#qcModal .qty-stepper button",
+    "#qcModal .qc-action-btns button",
+    "#qcModal .qc-mode-card input",
+  ].join(", ");
+  document.querySelectorAll(selector).forEach((el) => {
+    el.disabled = isLocked;
+  });
+  const modal = document.getElementById("qcModal");
+  if (modal) modal.classList.toggle("is-readonly", isLocked);
+}
+
+// ============================================================
+// QC Mode Selector (self vs executive)
+// ============================================================
+function getQcApprovalMode() {
+  const el = document.querySelector('input[name="qcApprovalMode"]:checked');
+  return el?.value || "self";
+}
+
+function setQcApprovalMode(mode) {
+  const radios = document.querySelectorAll('input[name="qcApprovalMode"]');
+  radios.forEach((r) => {
+    r.checked = r.value === mode;
+  });
+  applyQcApprovalModeUI();
+}
+
+function applyQcApprovalModeUI() {
+  const mode = getQcApprovalMode();
+
+  // เปลี่ยน visual ของ mode card
+  document.querySelectorAll(".qc-mode-card").forEach((card) => {
+    card.classList.toggle("is-selected", card.dataset.mode === mode);
+  });
+
+  // แสดง/ซ่อนปุ่มตาม mode
+  document.querySelectorAll("[data-mode-target]").forEach((el) => {
+    el.hidden = el.dataset.modeTarget !== mode;
+  });
+}
+
+function setupQcApprovalModeListeners() {
+  document.querySelectorAll('input[name="qcApprovalMode"]').forEach((r) => {
+    r.addEventListener("change", () => {
+      if (currentClaim && isFinalLocked(currentClaim)) {
+        showToast("รายการนี้ตัดสินใจแล้ว เปลี่ยน mode ไม่ได้", "warning");
+        // revert
+        applyQcApprovalModeUI();
+        return;
+      }
+      applyQcApprovalModeUI();
+    });
+  });
+}
+
+// ============================================================
+// QC Signature Pad
+// ============================================================
+const qcSignature = {
+  canvas: null,
+  ctx: null,
+  drawing: false,
+  hasInk: false,
+  lastPoint: null,
+  handlers: { start: null, move: null, end: null },
+};
+
+function teardownQcSignaturePad() {
+  if (qcSignature.handlers.end) {
+    window.removeEventListener("mouseup", qcSignature.handlers.end);
+  }
+  qcSignature.handlers = { start: null, move: null, end: null };
+}
+
+function initQcSignaturePad() {
+  teardownQcSignaturePad();
+  const oldCanvas = document.getElementById("qcSignatureCanvas");
+  if (!oldCanvas) return;
+  const canvas = oldCanvas.cloneNode(true);
+  oldCanvas.replaceWith(canvas);
+
+  qcSignature.canvas = canvas;
+  qcSignature.ctx = canvas.getContext("2d");
+  qcSignature.hasInk = false;
+  qcSignature.lastPoint = null;
+
+  resizeQcSignatureCanvas();
+  updateQcSignatureUi();
+
+  const start = (e) => {
+    if (currentClaim && isFinalLocked(currentClaim)) return;
+    e.preventDefault();
+    qcSignature.drawing = true;
+    qcSignature.lastPoint = getPointerPos(e);
+  };
+  const move = (e) => {
+    if (!qcSignature.drawing) return;
+    e.preventDefault();
+    const pt = getPointerPos(e);
+    drawLine(qcSignature.lastPoint, pt);
+    qcSignature.lastPoint = pt;
+    qcSignature.hasInk = true;
+    updateQcSignatureUi();
+  };
+  const end = () => {
+    qcSignature.drawing = false;
+    qcSignature.lastPoint = null;
+  };
+
+  qcSignature.handlers.start = start;
+  qcSignature.handlers.move = move;
+  qcSignature.handlers.end = end;
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", move, { passive: false });
+  canvas.addEventListener("touchend", end);
+  canvas.addEventListener("touchcancel", end);
+}
+
+function getPointerPos(e) {
+  const canvas = qcSignature.canvas;
+  if (!canvas) return { x: 0, y: 0 };
+  const rect = canvas.getBoundingClientRect();
+  const point = e.touches ? e.touches[0] : e;
+  return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+}
+
+function drawLine(from, to) {
+  const ctx = qcSignature.ctx;
+  if (!ctx || !from || !to) return;
+  ctx.strokeStyle = "#0c4a6e";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+}
+
+function resizeQcSignatureCanvas() {
+  const canvas = qcSignature.canvas;
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  let prev = null;
+  if (qcSignature.hasInk) prev = canvas.toDataURL("image/png");
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + "px";
+  canvas.style.height = rect.height + "px";
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  qcSignature.ctx = ctx;
+
+  if (prev) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+    img.src = prev;
+  }
+}
+
+function updateQcSignatureUi() {
+  const wrap = qcSignature.canvas?.parentElement;
+  if (!wrap) return;
+  wrap.classList.toggle("has-signature", qcSignature.hasInk);
+  const clearBtn = document.querySelector(".qc-sig-btn-clear");
+  if (clearBtn) clearBtn.disabled = !qcSignature.hasInk;
+}
+
+function clearQcSignature() {
+  if (currentClaim && isFinalLocked(currentClaim)) return;
+  const canvas = qcSignature.canvas;
+  const ctx = qcSignature.ctx;
+  if (!canvas || !ctx) return;
+  const dpr = window.devicePixelRatio || 1;
+  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  qcSignature.hasInk = false;
+  updateQcSignatureUi();
+}
+
+function getQcSignatureDataUrl() {
+  if (!qcSignature.hasInk || !qcSignature.canvas) return null;
+  return qcSignature.canvas.toDataURL("image/png");
+}
+
+function loadQcSignatureFromUrl(dataUrl) {
+  const canvas = qcSignature.canvas;
+  const ctx = qcSignature.ctx;
+  if (!canvas || !ctx) return;
+  const dpr = window.devicePixelRatio || 1;
+  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  qcSignature.hasInk = false;
+  if (!dataUrl) {
+    updateQcSignatureUi();
+    return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    const rect = canvas.getBoundingClientRect();
+    ctx.drawImage(img, 0, 0, rect.width, rect.height);
+    qcSignature.hasInk = true;
+    updateQcSignatureUi();
+  };
+  img.src = dataUrl;
+}
+
+// ---------- Auth / Header ----------
 function setupLogout() {
-  const btn = document.getElementById('logoutBtn');
+  const btn = document.getElementById("logoutBtn");
   if (!btn) return;
-  btn.addEventListener('click', async () => {
-    if (typeof logout === 'function') { await logout(); return; }
+  btn.addEventListener("click", async () => {
+    if (typeof logout === "function") {
+      await logout();
+      return;
+    }
     await supabaseClient.auth.signOut();
-    window.location.href = '/index.html';
+    window.location.href = "/index.html";
   });
 }
 
 async function loadCurrentUserInfo() {
   try {
-    const nameEl = document.getElementById('userName');
-    const avatarEl = document.getElementById('userAvatar');
+    const nameEl = document.getElementById("userName");
+    const avatarEl = document.getElementById("userAvatar");
     if (!nameEl) return;
-    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     if (!user) return;
-    const { data: profile } = await supabaseClient.from('profiles').select('display_name, username, role').eq('id', user.id).single();
-    const displayName = profile?.display_name || profile?.username || user.email || 'ผู้ใช้งาน';
+
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("display_name, username, role")
+      .eq("id", user.id)
+      .single();
+
+    const displayName =
+      profile?.display_name || profile?.username || user.email || "ผู้ใช้งาน";
     nameEl.textContent = displayName;
-    if (avatarEl) avatarEl.textContent = displayName.trim().charAt(0).toUpperCase() || '👤';
-  } catch (err) { console.warn('loadCurrentUserInfo failed:', err); }
+    if (avatarEl) {
+      avatarEl.textContent =
+        displayName.trim().charAt(0).toUpperCase() || "👤";
+    }
+  } catch (err) {
+    console.warn("loadCurrentUserInfo failed:", err);
+  }
 }
 
+// ---------- Loading / Errors ----------
 function showTableLoading() {
-  const tbody = document.getElementById('qcTableBody');
+  const tbody = document.getElementById("qcTableBody");
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="7" class="table-loading"><span class="material-symbols-outlined spin">progress_activity</span>กำลังโหลด...</td></tr>`;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" class="table-loading">
+        <span class="material-symbols-outlined spin">progress_activity</span>
+        กำลังโหลด...
+      </td>
+    </tr>
+  `;
 }
 
 function showTableError(message) {
-  const tbody = document.getElementById('qcTableBody');
+  const tbody = document.getElementById("qcTableBody");
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="7" class="table-loading" style="color:#dc2626;">❌ ${escapeHtml(message)}</td></tr>`;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" class="table-loading" style="color:#dc2626;">
+        ❌ ${escapeHtml(message)}
+      </td>
+    </tr>
+  `;
 }
 
+// ---------- Load Claims ----------
 async function loadClaims() {
   try {
     showTableLoading();
     const { data, error } = await supabaseClient
-      .from('claims')
-      .select('*')
-      .eq('claim_scope', CLAIM_SCOPE)
-      .not('picked_at', 'is', null)
-      .order('picked_at', { ascending: false });
+      .from("claims")
+      .select("*")
+      .eq("claim_scope", CLAIM_SCOPE)
+      .not("picked_at", "is", null)
+      .order("picked_at", { ascending: false });
+
     if (error) throw error;
-    console.log(`${CLAIM_SCOPE} claims =`, data);
+
     allClaims = data || [];
     filteredClaims = [...allClaims];
-    populateCustomerFilter();
+
     updateSummaryCards();
     renderTable(filteredClaims);
   } catch (err) {
-    console.error('❌ loadClaims error:', err);
-    showTableError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
+    console.error("❌ loadClaims error:", err);
+    showTableError("โหลดข้อมูลไม่สำเร็จ: " + err.message);
   }
 }
 
 function updateSummaryCards() {
-  const sumTotal      = document.getElementById('sumTotal');
-  const sumPending    = document.getElementById('sumPending');
-  const sumInProgress = document.getElementById('sumInProgress');
-  const sumApproved   = document.getElementById('sumApproved');
-  const sumRejected   = document.getElementById('sumRejected');
+  const sumTotal = document.getElementById("sumTotal");
+  const sumPending = document.getElementById("sumPending");
+  const sumInProgress = document.getElementById("sumInProgress");
+  const sumWaiting = document.getElementById("sumWaiting");
+  const sumApproved = document.getElementById("sumApproved");
 
-  const pending = allClaims.filter(c => (c.qc_status || 'pending') === 'pending').length;
-
-  const checking = allClaims.filter(c =>
-    ['checking', 'in_progress'].includes(c.qc_status)
+  const pending = allClaims.filter(
+    (c) => normalizeStatus(c) === "pending"
+  ).length;
+  const inProgress = allClaims.filter((c) =>
+    ["checking", "in_progress", "draft"].includes(normalizeStatus(c))
+  ).length;
+  const waiting = allClaims.filter(
+    (c) => normalizeStatus(c) === "waiting_ceo"
+  ).length;
+  const approved = allClaims.filter((c) =>
+    ["approved", "exec_approved"].includes(normalizeStatus(c))
   ).length;
 
-  const approved = allClaims.filter(c => c.qc_status === 'approved').length;
-
-  const rejected = allClaims.filter(c => c.qc_status === 'rejected').length;
-
-  if (sumTotal) {
-    sumTotal.textContent = allClaims.length;
-  }
-
-  // หน้า internal/external = รับเรื่องแล้วทั้งหมด
-  if (sumPending) {
-    sumPending.textContent = 0;
-  }
-
-  if (sumInProgress) {
-    sumInProgress.textContent = pending + checking;
-  }
-
-  if (sumApproved) {
-    sumApproved.textContent = approved;
-  }
-
-  if (sumRejected) {
-    sumRejected.textContent = rejected;
-  }
+  if (sumTotal) sumTotal.textContent = allClaims.length;
+  if (sumPending) sumPending.textContent = pending;
+  if (sumInProgress) sumInProgress.textContent = inProgress;
+  if (sumWaiting) sumWaiting.textContent = waiting;
+  if (sumApproved) sumApproved.textContent = approved;
 }
 
-function populateCustomerFilter() {
-  const filterCustomer = document.getElementById('filterCustomer');
-  if (!filterCustomer) return;
-  const current = filterCustomer.value;
-  const customers = [...new Set(allClaims.map(c => c.customer).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'th'));
-  filterCustomer.innerHTML = `<option value="">ทุกลูกค้า</option>`;
-  customers.forEach(customer => {
-    const opt = document.createElement('option');
-    opt.value = customer; opt.textContent = customer; filterCustomer.appendChild(opt);
-  });
-  filterCustomer.value = current;
-}
-
+// ---------- Filters ----------
 function setupEventListeners() {
-  const searchInput = document.getElementById('searchInput');
+  const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     let timer;
-    searchInput.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(applyFilters, 250); });
+    searchInput.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(applyFilters, 250);
+    });
   }
-  ['filterStatus','filterDateFrom','filterDateTo','filterDept','filterCustomer'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', applyFilters);
+  ["filterStatus", "filterDateFrom", "filterDateTo", "filterDept"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("change", applyFilters);
+    }
+  );
+  const modal = document.getElementById("qcModal");
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeModal();
+      closeLightbox();
+    }
   });
-  const modal = document.getElementById('qcModal');
-  if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeLightbox(); } });
+  setupQcInputListeners();
+  setupQcApprovalModeListeners();
+}
+
+function setupQcInputListeners() {
+  Object.entries(QTY_CHECKBOX_MAP).forEach(([qtyId, checkId]) => {
+    const qtyEl = document.getElementById(qtyId);
+    if (qtyEl) {
+      qtyEl.addEventListener("input", () => {
+        syncQtyCheckbox(qtyId, checkId);
+        updateQcTotal();
+      });
+    }
+    const checkEl = document.getElementById(checkId);
+    if (checkEl && qtyEl) {
+      checkEl.addEventListener("change", () => {
+        if (currentClaim && isFinalLocked(currentClaim)) {
+          checkEl.checked = Number(qtyEl.value || 0) > 0;
+          showToast("รายการนี้ตัดสินใจแล้ว แก้ไขไม่ได้", "warning");
+          return;
+        }
+        if (checkEl.checked && Number(qtyEl.value || 0) === 0)
+          qtyEl.value = 1;
+        else if (!checkEl.checked) qtyEl.value = 0;
+        updateQcTotal();
+      });
+    }
+  });
+  const sourceEl = document.getElementById("qcProductSource");
+  if (sourceEl) {
+    sourceEl.addEventListener("change", () => {
+      if (currentClaim && isFinalLocked(currentClaim)) return;
+      applyProductSourceConstraint();
+    });
+  }
 }
 
 function applyFilters() {
-  const search = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
-  const status = document.getElementById('filterStatus')?.value || '';
-  const dateFrom = document.getElementById('filterDateFrom')?.value || '';
-  const dateTo = document.getElementById('filterDateTo')?.value || '';
-  const dept = document.getElementById('filterDept')?.value || '';
-  const customer = document.getElementById('filterCustomer')?.value || '';
-  filteredClaims = allClaims.filter(claim => {
+  const search =
+    document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
+  const status = document.getElementById("filterStatus")?.value || "";
+  const dateFrom = document.getElementById("filterDateFrom")?.value || "";
+  const dateTo = document.getElementById("filterDateTo")?.value || "";
+  const dept = document.getElementById("filterDept")?.value || "";
+
+  filteredClaims = allClaims.filter((claim) => {
     if (search && !getClaimSearchText(claim).includes(search)) return false;
-    if (status && normalizeStatus(claim) !== normalizeStatus(status)) return false;
+    if (status && normalizeStatus(claim) !== normalizeStatus(status))
+      return false;
     if (dateFrom && claim.claim_date < dateFrom) return false;
     if (dateTo && claim.claim_date > dateTo) return false;
     if (dept && claim.area !== dept) return false;
-    if (customer && claim.customer !== customer) return false;
     return true;
   });
   renderTable(filteredClaims);
 }
 
 function resetFilters() {
-  ['searchInput','filterStatus','filterDateFrom','filterDateTo','filterDept','filterCustomer'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
+  ["searchInput", "filterStatus", "filterDateFrom", "filterDateTo", "filterDept"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    }
+  );
   filteredClaims = [...allClaims];
   renderTable(filteredClaims);
 }
 
+// ---------- Render Table ----------
 function buildStatusBadge(status) {
   const normalized = normalizeStatus(status);
   const map = {
-    pending: { label: '⏳ รอตรวจสอบ', cls: 'submitted' },
-    checking: { label: '🔍 กำลังตรวจสอบ', cls: 'in-progress' },
-    in_progress: { label: '🔍 กำลังตรวจสอบ', cls: 'in-progress' },
-    approved: { label: '✅ อนุมัติแล้ว', cls: 'approved' },
-    rejected: { label: '❌ ปฏิเสธ', cls: 'rejected' },
+    submitted: { label: "⏳ รอตรวจสอบ", cls: "submitted" },
+    pending: { label: "⏳ รอตรวจสอบ", cls: "submitted" },
+    checking: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
+    in_progress: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
+    draft: { label: "📝 บันทึกร่าง", cls: "draft" },
+    waiting_ceo: { label: "⏳ รออนุมัติ Exec", cls: "waiting-ceo" },
+    approved: { label: "✅ QC อนุมัติ", cls: "approved" },
+    rejected: { label: "❌ QC ปฏิเสธ", cls: "rejected" },
+    exec_approved: { label: "✅ Exec อนุมัติแล้ว", cls: "approved" },
+    exec_rejected: { label: "❌ Exec ปฏิเสธ", cls: "rejected" },
   };
   const s = map[normalized] || map.pending;
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
@@ -243,102 +721,250 @@ function buildStatusBadge(status) {
 
 function getStatusLabel(status) {
   const normalized = normalizeStatus(status);
-  const map = { pending:'รอตรวจสอบ', checking:'กำลังตรวจสอบ', in_progress:'กำลังตรวจสอบ', approved:'อนุมัติแล้ว', rejected:'ปฏิเสธ' };
+  const map = {
+    pending: "รอตรวจสอบ",
+    checking: "กำลังตรวจสอบ",
+    in_progress: "กำลังตรวจสอบ",
+    draft: "บันทึกร่าง",
+    waiting_ceo: "รอ Exec อนุมัติ",
+    approved: "QC อนุมัติ",
+    rejected: "QC ปฏิเสธ",
+    exec_approved: "Exec อนุมัติแล้ว",
+    exec_rejected: "Exec ปฏิเสธ",
+  };
   return map[normalized] || normalized;
 }
 
 function buildThumbsHtml(urls, maxShow = 3) {
-  if (!urls || urls.length === 0) return '';
+  if (!urls || urls.length === 0) return "";
   const show = urls.slice(0, maxShow);
-  let html = show.map(url => isVideo(url) ? `<div class="cell-thumb-video">🎥</div>` : `<img class="cell-thumb" src="${escapeHtml(url)}" onerror="this.style.display='none'" alt="">`).join('');
-  if (urls.length > maxShow) html += `<div class="cell-thumb-video" style="background:#64748b;font-size:0.72rem;">+${urls.length - maxShow}</div>`;
+  let html = show
+    .map((url) =>
+      isVideo(url)
+        ? `<div class="cell-thumb-video">🎥</div>`
+        : `<img class="cell-thumb" src="${escapeHtml(url)}" onerror="this.style.display='none'" alt="">`
+    )
+    .join("");
+  if (urls.length > maxShow) {
+    html += `<div class="cell-thumb-video" style="background:#64748b;font-size:0.72rem;">+${urls.length - maxShow}</div>`;
+  }
   return html;
 }
 
+function buildApprovalDocCellHtml(claim) {
+  if (!hasApprovalDocument(claim))
+    return `<span class="cell-no-media">—</span>`;
+  const cid = escapeHtml(claim.id);
+  return `
+    <div class="doc-action-group" onclick="event.stopPropagation()">
+      <button class="btn-doc-view" type="button"
+        onclick="event.stopPropagation(); window.ApprovalDocument?.open && window.ApprovalDocument.open(window._claims['${cid}'])"
+        title="ดูเอกสารอนุมัติ">
+        <span class="material-symbols-outlined" style="font-size:0.9rem;">description</span>
+        ดู
+      </button>
+      <button class="btn-doc-download" type="button"
+        onclick="event.stopPropagation(); window.ApprovalDocument?.download && window.ApprovalDocument.download(window._claims['${cid}'])"
+        title="ดาวน์โหลด">
+        <span class="material-symbols-outlined" style="font-size:0.9rem;">download</span>
+      </button>
+      <button class="btn-doc-share" type="button"
+        onclick="event.stopPropagation(); window.ApprovalDocument?.share && window.ApprovalDocument.share(window._claims['${cid}'])"
+        title="แชร์เอกสาร">
+        <span class="material-symbols-outlined" style="font-size:0.9rem;">share</span>
+      </button>
+    </div>
+  `;
+}
+
 function renderTable(claims) {
-  const tbody = document.getElementById('qcTableBody');
+  const tbody = document.getElementById("qcTableBody");
   if (!tbody) return;
+
   if (!claims || claims.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="table-loading" style="color:#64748b;">ไม่พบรายการเคลมภายในที่รับเรื่องแล้ว</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="table-loading" style="color:#64748b;">
+          ไม่พบรายการเคลมภายในที่รับเรื่องแล้ว
+        </td>
+      </tr>
+    `;
     return;
   }
-  tbody.innerHTML = '';
-  claims.forEach(claim => {
-    const tr = document.createElement('tr');
+
+  window._claims = {};
+  claims.forEach((c) => {
+    window._claims[c.id] = c;
+  });
+
+  tbody.innerHTML = "";
+  claims.forEach((claim) => {
+    const tr = document.createElement("tr");
     tr.onclick = () => openModal(claim);
+
     const mediaUrls = normalizeMediaUrls(claim.media_urls);
     const claimTypes = normalizeClaimTypes(claim.claim_types);
-    const typesHtml = claimTypes.length ? claimTypes.map(t => `<span class="type-tag">${escapeHtml(t)}</span>`).join('') : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>';
+    const typesHtml = claimTypes.length
+      ? claimTypes
+          .map((t) => `<span class="type-tag">${escapeHtml(t)}</span>`)
+          .join("")
+      : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>';
+
     tr.innerHTML = `
-      <td><div class="cell-date">${formatDate(claim.claim_date)}</div><div class="cell-sub">${formatDateTime(claim.created_at)}</div></td>
-      <td><div style="font-weight:500;">${escapeHtml(claim.emp_name) || '—'}</div><div class="cell-sub">${escapeHtml(claim.area) || '—'}</div></td>
-      
-      <td class="cell-product"><div>${escapeHtml(claim.product) || '—'}</div><div class="cell-sub">${escapeHtml(claim.qty) || ''}</div></td>
+      <td>
+        <div class="cell-date">${formatDate(claim.claim_date)}</div>
+        <div class="cell-sub">${formatDateTime(claim.created_at)}</div>
+      </td>
+      <td>
+        <div style="font-weight:500;">${escapeHtml(claim.emp_name) || "—"}</div>
+        <div class="cell-sub">${escapeHtml(claim.area) || "—"}</div>
+      </td>
+      <td class="cell-product">
+        <div>${escapeHtml(claim.product) || "—"}</div>
+        <div class="cell-sub">
+          จำนวน: ${escapeHtml(claim.qty) || "—"}
+          ${claim.detail ? ` · ${escapeHtml(claim.detail)}` : ""}
+        </div>
+      </td>
       <td><div class="cell-types">${typesHtml}</div></td>
-      <td>${mediaUrls.length === 0 ? '<span class="cell-no-media">ไม่มีไฟล์</span>' : `<div class="cell-thumbs">${buildThumbsHtml(mediaUrls, 3)}</div>`}</td>
+      <td>
+        ${mediaUrls.length === 0
+          ? '<span class="cell-no-media">ไม่มีไฟล์</span>'
+          : `<div class="cell-thumbs">${buildThumbsHtml(mediaUrls, 3)}</div>`}
+      </td>
       <td>${buildStatusBadge(claim)}</td>
-      <td><div class="cell-action-group"><button class="btn-view" type="button" onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])"><span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>ดู</button></div></td>
+      <td onclick="event.stopPropagation()">${buildApprovalDocCellHtml(claim)}</td>
+      <td>
+        <div class="cell-action-group">
+          <button class="btn-view" type="button"
+            onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])">
+            <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
+            ดู
+          </button>
+        </div>
+      </td>
     `;
     tbody.appendChild(tr);
   });
-  window._claims = {};
-  claims.forEach(c => { window._claims[c.id] = c; });
 }
 
+// ---------- Modal ----------
 function openModal(claim) {
   if (!claim) return;
   currentClaim = claim;
-  const modal = document.getElementById('qcModal');
+
+  const modal = document.getElementById("qcModal");
   if (!modal) return;
-  modal.classList.add('open');
-  const modalTitle = document.getElementById('modalTitle');
+  modal.classList.add("open");
+
+  const locked = isFinalLocked(claim);
+  const modalTitle = document.getElementById("modalTitle");
   if (modalTitle) modalTitle.textContent = `เคลมภายใน #${getClaimNo(claim)}`;
-  const modalInfoGrid = document.getElementById('modalInfoGrid');
+
+  const modalInfoGrid = document.getElementById("modalInfoGrid");
   if (modalInfoGrid) {
     modalInfoGrid.innerHTML = `
-      <div class="info-row"><div class="info-label">ผู้แจ้ง / พนักงาน</div><div class="info-value">${escapeHtml(claim.emp_name) || '—'}</div></div>
-      <div class="info-row"><div class="info-label">แผนก / เขต</div><div class="info-value">${escapeHtml(claim.area) || '—'}</div></div>
-      <div class="info-row"><div class="info-label">ร้านค้า / ลูกค้า</div><div class="info-value">${escapeHtml(claim.customer) || '—'}</div></div>
-      <div class="info-row"><div class="info-label">วันที่แจ้งเคลม</div><div class="info-value">${formatDate(claim.claim_date)}</div></div>
-      <div class="info-row full"><div class="info-label">สินค้า</div><div class="info-value">${escapeHtml(claim.product) || '—'}</div></div>
-      <div class="info-row"><div class="info-label">จำนวน</div><div class="info-value">${escapeHtml(claim.qty) || '—'}</div></div>
-      <div class="info-row"><div class="info-label">วันที่รับเรื่อง</div><div class="info-value">${formatDateTime(claim.picked_at)}</div></div>
-      <div class="info-row"><div class="info-label">สถานะ QC</div><div class="info-value">${buildStatusBadge(claim)}</div></div>
-      ${claim.qc_comment ? `<div class="info-row full"><div class="info-label">หมายเหตุ QC</div><div class="info-value">${escapeHtml(claim.qc_comment)}</div></div>` : ''}
+      <div class="info-row">
+        <div class="info-label">ผู้แจ้ง / พนักงาน</div>
+        <div class="info-value">${escapeHtml(claim.emp_name) || "—"}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">แผนก / เขต</div>
+        <div class="info-value">${escapeHtml(claim.area) || "—"}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">วันที่แจ้งเคลม</div>
+        <div class="info-value">${formatDate(claim.claim_date)}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">วันที่รับเรื่อง</div>
+        <div class="info-value">${formatDateTime(claim.picked_at)}</div>
+      </div>
+      <div class="info-row full">
+        <div class="info-label">สินค้า / วัตถุดิบ</div>
+        <div class="info-value">${escapeHtml(claim.product) || "—"}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">จำนวน</div>
+        <div class="info-value">${escapeHtml(claim.qty) || "—"}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">เลขเคลม</div>
+        <div class="info-value" style="font-family:'IBM Plex Mono',monospace;">${getClaimNo(claim)}</div>
+      </div>
     `;
   }
-  const typesEl = document.getElementById('modalClaimTypes');
+
+  const typesEl = document.getElementById("modalClaimTypes");
   if (typesEl) {
     const claimTypes = normalizeClaimTypes(claim.claim_types);
-    typesEl.innerHTML = claimTypes.length ? claimTypes.map(t => `<span class="modal-type-tag">${escapeHtml(t)}</span>`).join('') : '<span style="color:#94a3b8;">ไม่ระบุ</span>';
+    typesEl.innerHTML = claimTypes.length
+      ? claimTypes
+          .map((t) => `<span class="modal-type-tag">${escapeHtml(t)}</span>`)
+          .join("")
+      : '<span style="color:#94a3b8;">ไม่ระบุ</span>';
   }
-  const detailEl = document.getElementById('modalDetail');
-  if (detailEl) detailEl.textContent = claim.detail || '—';
-  const commentEl = document.getElementById('qcComment');
-  if (commentEl) commentEl.value = claim.qc_comment || '';
-  const statusEl = document.getElementById('qcStatusCurrent');
-  if (statusEl) statusEl.innerHTML = `สถานะปัจจุบัน: ${buildStatusBadge(claim)}`;
+
+  const detailEl = document.getElementById("modalDetail");
+  if (detailEl) detailEl.textContent = claim.detail || "—";
+
+  setTimeout(() => {
+    initQcSignaturePad();
+    fillQcFormData(claim);
+  }, 60);
+
+  const statusEl = document.getElementById("qcStatusCurrent");
+  if (statusEl) {
+    statusEl.innerHTML = `${buildStatusBadge(claim)}`;
+    if (locked) {
+      statusEl.innerHTML += `
+        <span class="status-badge approved" style="margin-left:8px;">
+          🔒 ตัดสินใจแล้ว ดูได้อย่างเดียว
+        </span>
+      `;
+    }
+  }
+
+  // ตั้ง mode เริ่มต้น: ถ้า claim เคยส่ง exec → exec, ไม่งั้น → self
+  const initialMode =
+    claim?.exec_status || claim?.sent_to_ceo_at ? "executive" : "self";
+  setQcApprovalMode(initialMode);
+
   renderModalMedia(normalizeMediaUrls(claim.media_urls));
-  const isDecided = ['approved', 'rejected'].includes(normalizeStatus(claim));
-  document.querySelectorAll('.qc-action-btns button').forEach(btn => { btn.disabled = isDecided; });
+  setQcModalReadonly(locked);
 }
 
 function closeModal() {
-  const modal = document.getElementById('qcModal');
-  if (modal) modal.classList.remove('open');
+  const modal = document.getElementById("qcModal");
+  if (modal) {
+    modal.classList.remove("open");
+    modal.classList.remove("is-readonly");
+  }
+  setQcModalReadonly(false);
+  teardownQcSignaturePad();
   currentClaim = null;
 }
 
 function renderModalMedia(urls) {
-  const grid = document.getElementById('modalMediaGrid');
+  const grid = document.getElementById("modalMediaGrid");
   if (!grid) return;
-  if (!urls || urls.length === 0) { grid.innerHTML = '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>'; return; }
-  grid.innerHTML = '';
-  urls.forEach(url => {
-    const item = document.createElement('div'); item.className = 'media-item';
+  if (!urls || urls.length === 0) {
+    grid.innerHTML =
+      '<div class="media-no-file">ไม่มีรูปภาพหรือวิดีโอที่แนบ</div>';
+    return;
+  }
+  grid.innerHTML = "";
+  urls.forEach((url) => {
+    const item = document.createElement("div");
+    item.className = "media-item";
     if (isVideo(url)) {
-      item.innerHTML = `<div class="media-video-wrap"><video src="${escapeHtml(url)}" preload="metadata"></video><div class="media-play-icon">▶</div></div>`;
-      item.onclick = () => window.open(url, '_blank');
+      item.innerHTML = `
+        <div class="media-video-wrap">
+          <video src="${escapeHtml(url)}" preload="metadata"></video>
+          <div class="media-play-icon">▶</div>
+        </div>
+      `;
+      item.onclick = () => window.open(url, "_blank");
     } else {
       item.innerHTML = `<img src="${escapeHtml(url)}" alt="">`;
       item.onclick = () => openLightbox(url);
@@ -347,100 +973,731 @@ function renderModalMedia(urls) {
   });
 }
 
-async function updateClaimStatus(newStatus) {
+// ---------- Validation ----------
+function validateQcFormBeforeSend({ requireSignature = true } = {}) {
+  const { qcResult, signature } = getQcFormData();
+  const total = qcResult.total_qty;
+  if (total <= 0) {
+    showToast(
+      "กรุณาระบุจำนวนสินค้าอย่างน้อย 1 ชิ้นใน Grade ใดก็ได้",
+      "warning"
+    );
+    return false;
+  }
+  if (
+    ["trading", "raw_material"].includes(qcResult.product_source) &&
+    qcResult.grade_r_qty > 0
+  ) {
+    showToast("ประเภทที่เลือก ไม่สามารถส่งบด/หลอม (Grade R) ได้", "warning");
+    return false;
+  }
+  if (requireSignature && !signature) {
+    showToast("กรุณาเซ็นชื่อก่อนยืนยันผลการตรวจสอบ", "warning");
+    return false;
+  }
+  return true;
+}
+
+// ============================================================
+// บันทึกร่าง
+// ============================================================
+async function saveQcDraft() {
   if (!currentClaim) return;
-  const comment = document.getElementById('qcComment')?.value.trim() || '';
-  const label = newStatus === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ';
-  if (!confirm(`ยืนยันการ${label}เคลมนี้?`)) return;
+  if (isFinalLocked(currentClaim)) {
+    showToast("รายการนี้ตัดสินใจแล้ว บันทึกร่างไม่ได้", "warning");
+    return;
+  }
+  const { comment, signature, qcResult } = getQcFormData();
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const { error } = await supabaseClient.from('claims').update({ qc_status: newStatus, qc_comment: comment || null, qc_by: user?.id || null, updated_at: new Date().toISOString() }).eq('id', currentClaim.id);
+    const userId = await getCurrentUserId();
+    const { error } = await supabaseClient
+      .from("claims")
+      .update({
+        qc_status: "draft",
+        qc_result: qcResult,
+        qc_comment: comment || null,
+        qc_signature: signature,
+        qc_by: userId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", currentClaim.id);
+
     if (error) throw error;
-    showToast(`${label}เคลมสำเร็จ`, 'success');
-    closeModal();
+
+    currentClaim.qc_status = "draft";
+    currentClaim.qc_result = qcResult;
+    currentClaim.qc_comment = comment || null;
+    currentClaim.qc_signature = signature;
+    if (window._claims && window._claims[currentClaim.id]) {
+      window._claims[currentClaim.id] = currentClaim;
+    }
+
+    await showSuccessPopup({
+      title: "บันทึกร่างสำเร็จ",
+      message:
+        "ระบบได้บันทึกข้อมูล QC เรียบร้อยแล้ว\nคุณสามารถกลับมาแก้ไขต่อภายหลังได้",
+      buttonText: "ตกลง",
+    });
     await loadClaims();
   } catch (err) {
-    console.error('❌ updateClaimStatus error:', err);
-    showToast('บันทึกผลไม่สำเร็จ: ' + err.message, 'danger');
+    console.error("❌ saveQcDraft error:", err);
+    showToast("บันทึกร่างไม่สำเร็จ: " + (err?.message ?? err), "danger");
   }
 }
 
+// ============================================================
+// โหมด 1: QC อนุมัติ/ปฏิเสธเอง
+// ============================================================
+async function qcDecide(decision) {
+  if (!currentClaim) return;
+  if (isFinalLocked(currentClaim)) {
+    showToast("รายการนี้ตัดสินใจแล้ว", "warning");
+    return;
+  }
+  if (!["approved", "rejected"].includes(decision)) return;
+
+  if (!validateQcFormBeforeSend({ requireSignature: true })) return;
+
+  const label = decision === "approved" ? "อนุมัติ" : "ปฏิเสธ";
+  const variant = decision === "approved" ? "primary" : "danger";
+  const icon = decision === "approved" ? "check_circle" : "cancel";
+
+  const result = await showConfirmDialog({
+    title: `ยืนยันการ${label}เคลม`,
+    message: `ยืนยันการ${label}เคลมภายใน #${getClaimNo(currentClaim)} ใช่หรือไม่?\nเมื่อยืนยันแล้วจะไม่สามารถแก้ไขได้`,
+    confirmText: `ยืนยัน${label}`,
+    cancelText: "ยกเลิก",
+    icon,
+    variant,
+    noteLabel: "หมายเหตุเพิ่มเติม (ถ้ามี)",
+    notePlaceholder: "พิมพ์ข้อความ...",
+    showNote: true,
+  });
+  if (!result?.confirmed) return;
+
+  const { comment, signature, qcResult } = getQcFormData();
+  const extraNote = (result.note || "").trim();
+  const mergedComment = [comment, extraNote].filter(Boolean).join("\n— ");
+
+  try {
+    const userId = await getCurrentUserId();
+    const now = new Date().toISOString();
+
+    const { error } = await supabaseClient
+      .from("claims")
+      .update({
+        qc_status: decision, // 'approved' | 'rejected'
+        exec_status: null, // โหมดนี้ไม่ผ่าน exec
+        qc_result: qcResult,
+        qc_comment: mergedComment || null,
+        qc_signature: signature,
+        qc_by: userId,
+        qc_decided_at: now,
+        updated_at: now,
+      })
+      .eq("id", currentClaim.id);
+
+    if (error) throw error;
+
+    await showSuccessPopup({
+      title: `${label}สำเร็จ`,
+      message: `เคลม #${getClaimNo(currentClaim)} ถูก${label}โดย QC แล้ว`,
+      buttonText: "ตกลง",
+      icon,
+    });
+
+    closeModal();
+    await loadClaims();
+  } catch (err) {
+    console.error(`❌ qcDecide(${decision}) error:`, err);
+    showToast(`${label}ไม่สำเร็จ: ` + (err?.message ?? err), "danger");
+  }
+}
+
+// ============================================================
+// โหมด 2: ส่ง Executive อนุมัติ (pattern เดียวกับ external v4.1)
+// ============================================================
 async function sendToCEO() {
   if (!currentClaim) return;
-  if (!confirm('ส่งรายการนี้ให้ CEO อนุมัติใช่ไหม?')) return;
+
+  if (isFinalLocked(currentClaim)) {
+    showToast("รายการนี้ตัดสินใจแล้ว ส่งซ้ำไม่ได้", "warning");
+    return;
+  }
+
+  if (!validateQcFormBeforeSend({ requireSignature: true })) return;
+
+  const { comment, signature, qcResult } = getQcFormData();
+
+  // confirm
+  const confirmRes = await showConfirmDialog({
+    title: "ส่งอนุมัติ Executive",
+    message: `ส่งเคลม #${getClaimNo(currentClaim)} ให้ Executive พิจารณา?`,
+    confirmText: "ส่งเลย",
+    cancelText: "ยกเลิก",
+    icon: "forward_to_inbox",
+    variant: "primary",
+    noteLabel: "หมายเหตุถึง Executive",
+    notePlaceholder: "พิมพ์ข้อความ... (ไม่บังคับ)",
+    showNote: true,
+  });
+  if (!confirmRes?.confirmed) return;
+
+  // เก็บสถานะเดิมไว้ rollback
+  const prevQcStatus = currentClaim.qc_status || null;
+  const prevExecStatus = currentClaim.exec_status || null;
+
   try {
-    const { error } = await supabaseClient.from('claims').update({ qc_status: 'approved', exec_status: 'pending', updated_at: new Date().toISOString() }).eq('id', currentClaim.id);
-    if (error) throw error;
-    showToast('ส่งให้ CEO อนุมัติแล้ว', 'success');
+    const userId = await getCurrentUserId();
+    const now = new Date().toISOString();
+    const extraNote = (confirmRes.note || "").trim();
+    const mergedComment = [comment, extraNote].filter(Boolean).join("\n— ");
+
+    // ── STEP 1: อัปเดต claims ──
+    const { error: claimError } = await supabaseClient
+      .from("claims")
+      .update({
+        qc_status: "waiting_ceo",
+        exec_status: "pending",
+        qc_result: qcResult,
+        qc_comment: mergedComment || null,
+        qc_signature: signature,
+        qc_by: userId,
+        sent_to_ceo_at: now,
+        updated_at: now,
+      })
+      .eq("id", currentClaim.id);
+
+    if (claimError) {
+      throw new Error(`อัปเดตข้อมูลเคลมไม่สำเร็จ: ${claimError.message}`);
+    }
+
+    // ── STEP 2: check-then-insert/update approval_requests ──
+    const { data: existing, error: lookupError } = await supabaseClient
+      .from("approval_requests")
+      .select("id")
+      .eq("source_table", "claims")
+      .eq("source_id", currentClaim.id)
+      .maybeSingle();
+
+    if (lookupError) {
+      console.warn("[sendToCEO] lookup error:", lookupError);
+    }
+
+    const approvalPayload = {
+      request_type: "claim",
+      request_title:
+        `อนุมัติเคลมภายใน ${currentClaim.product || ""}`.trim(),
+      request_detail:
+        currentClaim.detail ||
+        currentClaim.claim_detail ||
+        currentClaim.problem_detail ||
+        "",
+      source_table: "claims",
+      source_id: currentClaim.id,
+      request_status: "pending",
+      request_by: userId,
+      priority: "normal",
+      updated_at: now,
+    };
+
+    let approvalError = null;
+    if (existing?.id) {
+      const { error } = await supabaseClient
+        .from("approval_requests")
+        .update(approvalPayload)
+        .eq("id", existing.id);
+      approvalError = error;
+    } else {
+      const { error } = await supabaseClient
+        .from("approval_requests")
+        .insert({ ...approvalPayload, created_at: now });
+      approvalError = error;
+    }
+
+    if (approvalError) {
+      console.error(
+        "[sendToCEO] approval_requests write failed, rolling back claims:",
+        approvalError
+      );
+      await supabaseClient
+        .from("claims")
+        .update({
+          qc_status: prevQcStatus || "draft",
+          exec_status: prevExecStatus,
+          updated_at: now,
+        })
+        .eq("id", currentClaim.id);
+
+      throw new Error(
+        `บันทึก approval_requests ไม่สำเร็จ: ${approvalError.message}\n\n` +
+          `ระบบได้ rollback สถานะกลับเป็น "${prevQcStatus || "draft"}" แล้ว`
+      );
+    }
+
+    await showSuccessPopup({
+      title: "ส่งอนุมัติสำเร็จ",
+      message: `เคลม #${getClaimNo(currentClaim)} ถูกส่งให้ Executive พิจารณาแล้ว\nกรุณารอผลการอนุมัติ`,
+      buttonText: "ตกลง",
+      icon: "send",
+    });
+
     closeModal();
     await loadClaims();
   } catch (err) {
-    console.error('❌ sendToCEO error:', err);
-    showToast('ส่งให้ CEO ไม่สำเร็จ: ' + err.message, 'danger');
+    console.error("❌ sendToCEO error:", err);
+    showToast("ส่งอนุมัติไม่สำเร็จ: " + (err?.message ?? err), "danger", {
+      duration: 6000,
+    });
   }
 }
 
+// ============================================================
+// Success Popup
+// ============================================================
+function showSuccessPopup({
+  title = "สำเร็จ",
+  message = "ดำเนินการเรียบร้อยแล้ว",
+  buttonText = "ตกลง",
+  icon = "check_circle",
+  autoCloseMs = 0,
+} = {}) {
+  return new Promise((resolve) => {
+    document.getElementById("ea-success-popup")?.remove();
+    const wrap = document.createElement("div");
+    wrap.id = "ea-success-popup";
+    wrap.className = "ea-success-overlay";
+    wrap.innerHTML = `
+      <div class="ea-success-box" role="dialog" aria-modal="true" aria-labelledby="eaSuccessTitle">
+        <div class="ea-success-icon-wrap">
+          <svg class="ea-success-checkmark" viewBox="0 0 52 52">
+            <circle class="ea-success-circle" cx="26" cy="26" r="24" fill="none"/>
+            <path class="ea-success-check" fill="none" d="M14 27 L22 35 L38 18"/>
+          </svg>
+        </div>
+        <div class="ea-success-body">
+          <h3 id="eaSuccessTitle" class="ea-success-title">${escapeHtml(title)}</h3>
+          <p class="ea-success-message">${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+        </div>
+        <div class="ea-success-actions">
+          <button type="button" class="ea-success-btn-ok">
+            <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+            ${escapeHtml(buttonText)}
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+
+    const okBtn = wrap.querySelector(".ea-success-btn-ok");
+    let autoTimer = null;
+    function cleanup() {
+      wrap.classList.add("closing");
+      document.removeEventListener("keydown", onKey);
+      if (autoTimer) clearTimeout(autoTimer);
+      setTimeout(() => {
+        wrap.remove();
+        resolve(true);
+      }, 220);
+    }
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        cleanup();
+      }
+    }
+    okBtn.addEventListener("click", cleanup);
+    wrap.addEventListener("click", (e) => {
+      if (e.target === wrap) cleanup();
+    });
+    document.addEventListener("keydown", onKey);
+    if (autoCloseMs > 0) autoTimer = setTimeout(cleanup, autoCloseMs);
+    requestAnimationFrame(() => {
+      wrap.classList.add("open");
+      if (okBtn) okBtn.focus();
+    });
+  });
+}
+
+// ============================================================
+// Confirm Dialog
+// ============================================================
+function showConfirmDialog({
+  title = "ยืนยันการดำเนินการ",
+  message = "ต้องการดำเนินการต่อหรือไม่?",
+  noteLabel = "หมายเหตุ / ความเห็นเพิ่มเติม",
+  notePlaceholder = "พิมพ์ข้อความ... (ไม่บังคับ)",
+  initialNote = "",
+  confirmText = "ยืนยัน",
+  cancelText = "ยกเลิก",
+  icon = "forward_to_inbox",
+  variant = "primary",
+  showNote = true,
+} = {}) {
+  return new Promise((resolve) => {
+    document.getElementById("ea-confirm-dialog")?.remove();
+    const wrap = document.createElement("div");
+    wrap.id = "ea-confirm-dialog";
+    wrap.className = "ea-confirm-overlay";
+
+    const cancelBtnHtml = cancelText
+      ? `<button type="button" class="ea-confirm-btn-cancel">
+           <span class="material-symbols-outlined">close</span>
+           ${escapeHtml(cancelText)}
+         </button>`
+      : "";
+
+    const noteHtml = showNote
+      ? `<div class="ea-confirm-body">
+           <label for="eaConfirmNote" class="ea-confirm-label">${escapeHtml(noteLabel)}</label>
+           <textarea id="eaConfirmNote" class="ea-confirm-textarea"
+             placeholder="${escapeHtml(notePlaceholder)}" rows="3">${escapeHtml(initialNote)}</textarea>
+           <div class="ea-confirm-hint">
+             <span class="material-symbols-outlined">keyboard</span>
+             กด <kbd>Ctrl</kbd> + <kbd>Enter</kbd> เพื่อยืนยัน  ·  <kbd>Esc</kbd> เพื่อยกเลิก
+           </div>
+         </div>`
+      : "";
+
+    wrap.innerHTML = `
+      <div class="ea-confirm-box ea-confirm-${escapeHtml(variant)}" role="dialog" aria-modal="true" aria-labelledby="eaConfirmTitle">
+        <div class="ea-confirm-header">
+          <div class="ea-confirm-icon">
+            <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+          </div>
+          <div class="ea-confirm-title-wrap">
+            <h3 id="eaConfirmTitle" class="ea-confirm-title">${escapeHtml(title)}</h3>
+            <p class="ea-confirm-message">${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+          </div>
+          <button type="button" class="ea-confirm-close" aria-label="ปิด">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        ${noteHtml}
+        <div class="ea-confirm-actions">
+          ${cancelBtnHtml}
+          <button type="button" class="ea-confirm-btn-ok">
+            <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+            ${escapeHtml(confirmText)}
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+
+    const noteEl = wrap.querySelector("#eaConfirmNote");
+    const okBtn = wrap.querySelector(".ea-confirm-btn-ok");
+    const cancelBtn = wrap.querySelector(".ea-confirm-btn-cancel");
+    const closeBtn = wrap.querySelector(".ea-confirm-close");
+
+    function cleanup(result) {
+      wrap.classList.add("closing");
+      document.removeEventListener("keydown", onKey);
+      setTimeout(() => {
+        wrap.remove();
+        resolve(result);
+      }, 180);
+    }
+    function onConfirm() {
+      cleanup({ confirmed: true, note: (noteEl?.value || "").trim() });
+    }
+    function onCancel() {
+      cleanup({ confirmed: false, note: "" });
+    }
+    function onKey(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCancel();
+      } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        onConfirm();
+      }
+    }
+
+    okBtn.addEventListener("click", onConfirm);
+    if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
+    closeBtn.addEventListener("click", onCancel);
+    wrap.addEventListener("click", (e) => {
+      if (e.target === wrap) onCancel();
+    });
+    document.addEventListener("keydown", onKey);
+    requestAnimationFrame(() => {
+      wrap.classList.add("open");
+      if (noteEl) noteEl.focus();
+      else if (okBtn) okBtn.focus();
+    });
+  });
+}
+
+// ---------- Lightbox ----------
 function openLightbox(url) {
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lightboxImg');
-  if (!lb || !img) { window.open(url, '_blank'); return; }
-  img.src = url; lb.classList.add('open');
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  if (!lb || !img) {
+    window.open(url, "_blank");
+    return;
+  }
+  img.src = url;
+  lb.classList.add("open");
 }
 
 function closeLightbox() {
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lightboxImg');
-  if (lb) lb.classList.remove('open');
-  if (img) img.src = '';
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  if (lb) lb.classList.remove("open");
+  if (img) img.src = "";
+}
+
+// ---------- Export ----------
+const PRODUCT_SOURCE_LABELS = {
+  in_house: "ผลิตเอง",
+  trading: "ซื้อมาขายไป",
+  raw_material: "วัตถุดิบ",
+};
+const ROOT_CAUSE_LABELS = {
+  production: "ผลิต/โรงงาน",
+  storage: "การจัดเก็บ",
+  handling: "การหยิบ-จับ",
+  machine: "เครื่องจักร",
+  supplier: "วัตถุดิบ Supplier",
+};
+
+function buildExportRows(claims) {
+  const rows = [
+    [
+      "เลขเคลม",
+      "วันที่แจ้ง",
+      "ผู้แจ้ง",
+      "แผนก/เขต",
+      "สินค้า/วัตถุดิบ",
+      "จำนวน",
+      "ประเภทปัญหา",
+      "รายละเอียด",
+      "สถานะ QC",
+      "ผล Exec",
+      "วันที่รับเรื่อง",
+      "หมายเหตุ QC",
+      "ประเภทสินค้า",
+      "ต้นเหตุ",
+      "Grade A (คืนสต็อก)",
+      "Grade B (Outlet)",
+      "Grade R (บด/หลอม)",
+      "Grade C (ทิ้ง)",
+      "รวม",
+      "สาเหตุหลัก",
+      "ผู้รับผิดชอบ",
+    ],
+  ];
+
+  claims.forEach((c) => {
+    const r = c.qc_result || {};
+    const total =
+      Number(r.grade_a_qty || 0) +
+      Number(r.grade_b_qty || 0) +
+      Number(r.grade_r_qty || r.repair_qty || 0) +
+      Number(r.grade_c_qty || r.scrap_qty || 0);
+
+    rows.push([
+      getClaimNo(c),
+      formatDate(c.claim_date),
+      c.emp_name || "",
+      c.area || "",
+      c.product || "",
+      c.qty || "",
+      normalizeClaimTypes(c.claim_types).join(", "),
+      c.detail || "",
+      getStatusLabel(c),
+      c.exec_status || "",
+      formatDateTime(c.picked_at),
+      c.qc_comment || r.comment || "",
+      PRODUCT_SOURCE_LABELS[r.product_source] || "",
+      ROOT_CAUSE_LABELS[r.claim_root_cause] || "",
+      r.grade_a_qty ?? 0,
+      r.grade_b_qty ?? 0,
+      r.grade_r_qty ?? r.repair_qty ?? 0,
+      r.grade_c_qty ?? r.scrap_qty ?? 0,
+      total,
+      r.main_cause ?? r.defect_reason ?? "",
+      r.responsible_person ?? r.responsibility ?? "",
+    ]);
+  });
+
+  return rows;
+}
+
+function exportExcelAll() {
+  if (!filteredClaims || filteredClaims.length === 0) {
+    showToast("ไม่มีข้อมูลสำหรับ Export", "warning");
+    return;
+  }
+  const rows = buildExportRows(filteredClaims);
+  if (typeof XLSX !== "undefined") {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "InternalClaims");
+    XLSX.writeFile(
+      wb,
+      `${CLAIM_SCOPE}_claims_${new Date().toISOString().slice(0, 10)}.xlsx`
+    );
+    showToast("ดาวน์โหลด Excel สำเร็จ", "success");
+    return;
+  }
+  exportRowsAsCsv(
+    rows,
+    `${CLAIM_SCOPE}_claims_${new Date().toISOString().slice(0, 10)}.csv`
+  );
+}
+
+function exportRowsAsCsv(rows, filename) {
+  const csv =
+    "\uFEFF" +
+    rows
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("ดาวน์โหลด CSV สำเร็จ", "success");
 }
 
 function exportExcel() {
-  if (!filteredClaims || filteredClaims.length === 0) { showToast('ไม่มีข้อมูลสำหรับ Export', 'warning'); return; }
-  const rows = [['เลขเคลม','วันที่แจ้ง','ผู้แจ้ง','เขต/แผนก','ลูกค้า','สินค้า','จำนวน','ประเภทปัญหา','รายละเอียด','สถานะ QC','วันที่รับเรื่อง','หมายเหตุ QC']];
-  filteredClaims.forEach(c => rows.push([getClaimNo(c), formatDate(c.claim_date), c.emp_name || '', c.area || '', c.customer || '', c.product || '', c.qty || '', normalizeClaimTypes(c.claim_types).join(', '), c.detail || '', getStatusLabel(c), formatDateTime(c.picked_at), c.qc_comment || '']));
-  if (typeof XLSX !== 'undefined') {
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Claims');
-    XLSX.writeFile(wb, `${CLAIM_SCOPE}_claims_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    showToast('ดาวน์โหลด Excel สำเร็จ', 'success');
+  exportExcelAll();
+}
+
+function exportClaimCSV() {
+  if (!currentClaim) {
+    showToast("ยังไม่ได้เลือกเคลม", "warning");
     return;
   }
-  const csv = '\uFEFF' + rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `${CLAIM_SCOPE}_claims_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('ดาวน์โหลด CSV สำเร็จ', 'success');
+  const rows = buildExportRows([currentClaim]);
+  exportRowsAsCsv(rows, `${CLAIM_SCOPE}_${getClaimNo(currentClaim)}.csv`);
 }
 
-function showToast(message, type = 'success') {
-  const old = document.getElementById('ea-toast'); if (old) old.remove();
-  const colorMap = { success:'#10b981', danger:'#ef4444', warning:'#f59e0b', info:'#3b82f6' };
-  const toast = document.createElement('div');
-  toast.id = 'ea-toast';
-  toast.style.cssText = `position:fixed;bottom:28px;right:28px;z-index:99999;background:${colorMap[type] || colorMap.success};color:#fff;padding:12px 18px;border-radius:12px;font-family:"Kanit",sans-serif;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.18);`;
+function exportCSV() {
+  exportClaimCSV();
+}
+
+function exportPDF() {
+  if (!currentClaim) {
+    showToast("ยังไม่ได้เลือกเคลม", "warning");
+    return;
+  }
+  if (typeof window.ApprovalDocument?.download === "function") {
+    window.ApprovalDocument.download(currentClaim);
+  } else {
+    window.print();
+  }
+}
+
+// ---------- Toast ----------
+function showToast(message, type = "success", opts = {}) {
+  if (typeof window.showToast === "function" && window.showToast !== showToast) {
+    return window.showToast(message, type, opts);
+  }
+
+  const old = document.getElementById("ea-toast");
+  if (old) old.remove();
+
+  const colorMap = {
+    success: "#10b981",
+    danger: "#ef4444",
+    error: "#ef4444",
+    warning: "#f59e0b",
+    info: "#0ea5e9",
+  };
+
+  const duration = Number.isFinite(opts.duration) ? opts.duration : 3000;
+  const toast = document.createElement("div");
+  toast.id = "ea-toast";
+  toast.style.cssText = `
+    position:fixed; bottom:28px; right:28px; z-index:99999;
+    background:${colorMap[type] || colorMap.success};
+    color:#fff; padding:12px 18px; border-radius:12px;
+    font-family:"Kanit",sans-serif; font-size:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    max-width:420px; white-space:pre-wrap;
+  `;
   toast.textContent = message;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(() => toast.remove(), duration);
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+// ---------- Header Date ----------
+function updateHeaderDate() {
+  const el = document.getElementById("appHeaderDateText");
+  if (!el) return;
+  const months = [
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
+  ];
+  const now = new Date();
+  el.textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear() + 543}`;
+}
+
+// ---------- Init ----------
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     console.log(`🚀 ${CLAIM_SCOPE}-claims init start`);
+
     const ready = await waitForSupabase();
-    if (!ready) { alert('ไม่สามารถเชื่อมต่อ Supabase ได้'); return; }
+    if (!ready) {
+      alert("ไม่สามารถเชื่อมต่อ Supabase ได้");
+      return;
+    }
+
     setupLogout();
-    if (typeof protectPage === 'function') await protectPage(['admin', 'adminQc', 'adminqc']);
+    updateHeaderDate();
+
+    if (typeof protectPage === "function") {
+      await protectPage(["admin", "adminQc", "adminqc"]);
+    }
+
     await loadCurrentUserInfo();
     await loadClaims();
     setupEventListeners();
+    applyQcApprovalModeUI(); // ตั้งค่า UI mode เริ่มต้น
+
     console.log(`✅ ${CLAIM_SCOPE}-claims init done`);
   } catch (err) {
     console.error(`❌ ${CLAIM_SCOPE} init error:`, err);
-    showTableError('โหลดหน้าไม่สำเร็จ: ' + err.message);
+    showTableError("โหลดหน้าไม่สำเร็จ: " + (err?.message ?? err));
   }
 });
 
-console.log(`✅ ${CLAIM_SCOPE}-claims.js loaded`);
+// expose for onclick handlers
+window.clearQcSignature = clearQcSignature;
+window.stepQty = stepQty;
+window.resetFilters = resetFilters;
+window.exportExcel = exportExcel;
+window.exportCSV = exportCSV;
+window.exportPDF = exportPDF;
+window.closeModal = closeModal;
+window.closeLightbox = closeLightbox;
+window.saveQcDraft = saveQcDraft;
+window.qcDecide = qcDecide;
+window.sendToCEO = sendToCEO;
+window.openModal = openModal;
+window.showConfirmDialog = showConfirmDialog;
+window.showSuccessPopup = showSuccessPopup;
+
+console.log(`✅ ${CLAIM_SCOPE}-claims.js (v2.0) loaded`);
