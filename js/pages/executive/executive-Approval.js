@@ -195,9 +195,18 @@ function getClaimNo(c) {
 }
 
 function getApprovalDocNo(row) {
-  const year = new Date(row?.approved_at || row?.exec_at || Date.now()).getFullYear();
-  const prefix = normalizeApprovalType(row?.request_type || "claim").toUpperCase().replace(/[^A-Z0-9]/g, "-");
-  return `APP-${year}-${prefix}-${getClaimNo(row)}`;
+  const year = new Date(row?.approved_at || row?.exec_at || row?.created_at || Date.now()).getFullYear();
+  const claimNo = getClaimNo(row);
+  const type = normalizeApprovalType(row?.request_type || "claim");
+
+  // เคลม → ใช้รูปแบบเดียวกับเอกสาร QC (APP-YYYY-XXXXXXXX)
+  if (type === "claim") {
+    return `APP-${year}-${claimNo}`;
+  }
+
+  // งานอื่น ๆ คงรูปแบบเดิม APP-YYYY-{TYPE}-XXXXXXXX
+  const prefix = type.toUpperCase().replace(/[^A-Z0-9]/g, "-");
+  return `APP-${year}-${prefix}-${claimNo}`;
 }
 
 function normalizeMediaUrls(value) {
@@ -613,15 +622,15 @@ function renderExecTable(list) {
             </span>
           </td>
 
-          <td>
-            <div class="cell-strong">${escapeHtml(getApprovalTitle(item))}</div>
+          <td class="cell-title">
+            <div class="cell-strong cell-clamp-1" title="${escapeHtml(getApprovalTitle(item))}">${escapeHtml(getApprovalTitle(item))}</div>
             <div class="cell-sub">ผู้ขอ: ${escapeHtml(getRequesterText(item))}</div>
           </td>
 
           <td class="cell-product">
-            <div class="cell-strong">${escapeHtml(getApprovalDetail(item))}</div>
+            <div class="cell-strong cell-clamp-2" title="${escapeHtml(getApprovalDetail(item))}">${escapeHtml(getApprovalDetail(item))}</div>
             <div class="cell-sub">
-              ${amount !== "—" && amount ? `วงเงิน/มูลค่า: ${escapeHtml(formatMoney(amount))}` : `อ้างอิง: ${escapeHtml(val(item.source_table, "-"))} / ${escapeHtml(val(item.source_id, "-"))}`}
+              ${amount !== "—" && amount ? `วงเงิน/มูลค่า: ${escapeHtml(formatMoney(amount))}` : `เลขที่: ${escapeHtml(getApprovalDocNo(item))}`}
             </div>
           </td>
 
@@ -1440,6 +1449,25 @@ function buildApprovalDocumentHtml(row, approverName) {
 async function openApprovalDocument(row) {
   if (!row) return;
 
+  // ✅ เคลมสินค้า → ใช้ template เดียวกับหน้า QC (approval-document.js)
+  // เพื่อให้เอกสารทุกหน้าในระบบมีรูปแบบเดียวกัน
+  const type = normalizeApprovalType(row?.request_type);
+  const externalOpen = window.ApprovalDocument?.open;
+  if (
+    type === "claim" &&
+    typeof externalOpen === "function" &&
+    externalOpen !== openApprovalDocument
+  ) {
+    try {
+      await externalOpen(row);
+      return;
+    } catch (e) {
+      console.warn("[CEO] ApprovalDocument.open failed, fallback to internal builder:", e);
+      // fallthrough → ใช้ generic builder
+    }
+  }
+
+  // งานประเภทอื่น (วงเงิน/ราคา/โปรโมชั่น/เปิดเขต) → ใช้ generic template เดิม
   const win = window.open("", "_blank");
   if (!win) {
     alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup ก่อนเปิดเอกสาร");
@@ -1469,6 +1497,23 @@ async function openApprovalDocument(row) {
 
 function downloadApprovalDocument(row) {
   if (!row) return;
+
+  // ✅ เคลมสินค้า → delegate ไป approval-document.js (template เดียวกับ QC)
+  const type = normalizeApprovalType(row?.request_type);
+  const externalDownload = window.ApprovalDocument?.download;
+  if (
+    type === "claim" &&
+    typeof externalDownload === "function" &&
+    externalDownload !== downloadApprovalDocument
+  ) {
+    try {
+      externalDownload(row);
+      return;
+    } catch (e) {
+      console.warn("[CEO] ApprovalDocument.download failed, fallback to internal:", e);
+    }
+  }
+
   const win = window.open("", "_blank");
   if (!win) {
     alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup");
@@ -1504,6 +1549,23 @@ function downloadApprovalDocument(row) {
 
 async function shareApprovalDocument(row) {
   if (!row) return;
+
+  // ✅ เคลมสินค้า → delegate ไป approval-document.js
+  const type = normalizeApprovalType(row?.request_type);
+  const externalShare = window.ApprovalDocument?.share;
+  if (
+    type === "claim" &&
+    typeof externalShare === "function" &&
+    externalShare !== shareApprovalDocument
+  ) {
+    try {
+      await externalShare(row);
+      return;
+    } catch (e) {
+      console.warn("[CEO] ApprovalDocument.share failed, fallback to internal:", e);
+    }
+  }
+
   try {
     const approverName = await getApproverName(row.exec_by || row.approved_by).catch(() => null);
     const html = buildApprovalDocumentHtml(row, approverName);
@@ -1744,6 +1806,32 @@ function injectExecutiveApprovalStyles() {
   const style = document.createElement("style");
   style.id = "executive-approval-extra-styles";
   style.textContent = `
+    /* ===== Cell clamp (ตัดข้อความให้พอดี + tooltip ดูเต็มได้) ===== */
+    .qc-table .cell-title,
+    .qc-table .cell-product {
+      max-width: 280px;
+    }
+
+    .cell-clamp-1,
+    .cell-clamp-2 {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+      line-height: 1.45;
+    }
+
+    .cell-clamp-1 {
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+    }
+
+    .cell-clamp-2 {
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+    }
+
     .scope-pill {
       display: inline-flex;
       align-items: center;

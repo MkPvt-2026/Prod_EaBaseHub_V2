@@ -1,14 +1,24 @@
 <!doctype html>
-<html lang="th" data-theme="dark">
+<html lang="th" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EABaseHub | Executive Approvals</title>
 
+    <!--
+      Theme bootstrap:
+      - Default = "light" (สว่าง)
+      - ถ้า user เคยกด toggle เป็น "dark" → จะถูกเก็บใน localStorage แล้ว
+        และ script ด้านล่างจะอ่านมาใช้ทับค่า default
+    -->
     <script>
       (function () {
-        const t = localStorage.getItem("ea-theme");
-        if (t) document.documentElement.setAttribute("data-theme", t);
+        try {
+          const saved = localStorage.getItem("ea-theme");
+          if (saved === "dark" || saved === "light") {
+            document.documentElement.setAttribute("data-theme", saved);
+          }
+        } catch (_) {}
       })();
     </script>
 
@@ -82,6 +92,18 @@
 
       <div class="ea-mini-spacer"></div>
       <div class="ea-mini-divider"></div>
+
+      <!-- ปุ่มสลับ Theme (Light / Dark) -->
+      <button
+        class="ea-mini-link ea-theme-toggle"
+        id="eaThemeToggleBtn"
+        type="button"
+        title="สลับโหมดสว่าง/มืด"
+      >
+        <span class="material-symbols-outlined" id="eaThemeToggleIcon">dark_mode</span>
+        <span class="ea-mini-text" id="eaThemeToggleText">โหมดมืด</span>
+      </button>
+
       <button
         class="ea-mini-link ea-mini-logout"
         id="eaSidebarLogoutBtn"
@@ -490,6 +512,49 @@
       })();
     </script>
 
+    <!-- Theme toggle controller (Light ↔ Dark) -->
+    <script>
+      (function () {
+        const STORAGE_KEY = "ea-theme";
+        const root = document.documentElement;
+        const btn = document.getElementById("eaThemeToggleBtn");
+        const iconEl = document.getElementById("eaThemeToggleIcon");
+        const textEl = document.getElementById("eaThemeToggleText");
+
+        function applyTheme(theme) {
+          root.setAttribute("data-theme", theme);
+          try {
+            localStorage.setItem(STORAGE_KEY, theme);
+          } catch (_) {}
+          updateButton(theme);
+        }
+
+        function updateButton(theme) {
+          // ในธีม "light" → ปุ่มจะแสดง "ไปธีมมืด" (icon: ดวงจันทร์)
+          // ในธีม "dark"  → ปุ่มจะแสดง "ไปธีมสว่าง" (icon: ดวงอาทิตย์)
+          if (!iconEl || !textEl) return;
+          if (theme === "dark") {
+            iconEl.textContent = "light_mode";
+            textEl.textContent = "โหมดสว่าง";
+            btn?.setAttribute("title", "สลับเป็นโหมดสว่าง");
+          } else {
+            iconEl.textContent = "dark_mode";
+            textEl.textContent = "โหมดมืด";
+            btn?.setAttribute("title", "สลับเป็นโหมดมืด");
+          }
+        }
+
+        // sync button label with current theme on load
+        const currentTheme = root.getAttribute("data-theme") || "light";
+        updateButton(currentTheme);
+
+        btn?.addEventListener("click", function () {
+          const now = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          applyTheme(now);
+        });
+      })();
+    </script>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/core/supabaseClient.js"></script>
@@ -497,9 +562,16 @@
     <script src="/js/core/userService.js"></script>
     <script src="/js/core/auth.js"></script>
 
-    <script src="/js/pages/executive/executive-Approval.js"></script>
+    <!-- shared approval document template (ใช้ร่วมกับหน้า QC) -->
+    <!-- ⚠️ ต้องโหลดก่อน executive-Approval.js เพื่อให้ window.ApprovalDocument พร้อมใช้งาน -->
     <script src="/js/pages/Qc-claim/approval-document.js"></script>
+
+    <script src="/js/pages/executive/executive-Approval.js"></script>
     <script src="/js/core/themeToggle.js"></script>
     <script src="/js/services/nav-service.js"></script>
   </body>
 </html>
+
+
+
+
