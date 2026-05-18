@@ -1,201 +1,273 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="dark">
+<html lang="th" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EABaseHub | Claims QC</title>
 
-  <!-- ป้องกัน flash: อ่านค่าก่อน render -->
   <script>
-    (function(){ var t=localStorage.getItem('ea-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();
+    (function () {
+      document.documentElement.setAttribute("data-theme", "light");
+      localStorage.setItem("ea-theme", "light");
+    })();
   </script>
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="/css/base/role-colors.css">   
-  <link rel="stylesheet" href="/css/base/bass-layout.css"/>
-  <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css">
+  <link rel="stylesheet" href="/css/base/role-colors.css" />
+  <link rel="stylesheet" href="/css/base/bass-layout.css" />
+  <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css" />
 </head>
-<body class="role-adminQc">
 
-  <!-- ── HEADER ── -->
-  <header class="app-header">
-    <div class="logo">
-      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
-      <h2>EABaseHub</h2>
+<body class="role-adminQc">
+  <!-- SIDEBAR: ให้ตรงกับ CSS v3 -->
+  <aside class="ea-sidebar" aria-label="เมนูหลัก">
+    <div class="ea-logo">
+      <img src="/assets/icons/icon-192.png" alt="EABaseHub" />
     </div>
-    <div class="user-box">
-      <div class="user-avatar" id="userAvatar">👤</div>
-      <div class="user-info">
+
+    <div class="mini-brand-text">
+      <strong>EABaseHub</strong>
+      <span>Claims QC</span>
+    </div>
+
+    <nav class="ea-menu">
+      <a class="ea-link" href="/pages/adminQc/dashboard.html" title="Dashboard">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="ea-text">Dashboard</span>
+      </a>
+      <a class="ea-link active" href="/pages/Qc-claim/adminQc.html" title="Claims QC">
+        <span class="material-symbols-outlined">manage_search</span>
+        <span class="ea-text">Claims QC</span>
+      </a>
+      <a class="ea-link" href="/pages/Qc-claim/internal-claims.html" title="เคลมภายใน">
+        <span class="material-symbols-outlined">factory</span>
+        <span class="ea-text">เคลมภายใน</span>
+      </a>
+      <a class="ea-link" href="/pages/Qc-claim/external-claims.html" title="เคลมลูกค้า">
+        <span class="material-symbols-outlined">storefront</span>
+        <span class="ea-text">เคลมลูกค้า</span>
+      </a>
+    </nav>
+
+    <button class="ea-user" id="logoutBtn" type="button" title="ออกจากระบบ">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="ea-text">ออกจากระบบ</span>
+    </button>
+
+    <button class="ea-toggle" type="button" aria-label="ย่อ/ขยายเมนู" onclick="document.body.classList.toggle('sidebar-expanded')">
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+  </aside>
+
+  <div class="page-shell">
+    <!-- HEADER: ห่อไว้ใน page-shell เพื่อไม่โดน CSS legacy hide -->
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="app-header-icon">
+          <span class="material-symbols-outlined">inventory_2</span>
+        </div>
+        <div class="app-header-text">
+          <h1>ระบบจัดการสินค้าส่งเคลม</h1>
+          <p>ตรวจสอบ • รับเรื่อง • อนุมัติ/ปฏิเสธ • Export รายงาน</p>
+        </div>
+      </div>
+
+      <div class="app-header-date">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span id="appHeaderDateText">—</span>
+      </div>
+
+      <div class="app-header-user">
+        <div class="user-avatar" id="userAvatar">👤</div>
         <div class="user-name" id="userName">กำลังโหลด...</div>
       </div>
+    </header>
 
-      <div class="group">
-  <button class="badge badge--message-sent" id="logoutBtn" type="button">
-    <span class="badge-icon"><span class="material-symbols-outlined" style="font-size:17px">logout</span></span>
-    ออกจากระบบ
-  </button>
+    <main class="container">
+      <div class="breadcrumb-bar">
+        <a class="breadcrumb-item home" href="/pages/adminQc/dashboard.html">
+          <span class="material-symbols-outlined">home</span> หน้าหลัก
+        </a>
+        <span class="breadcrumb-sep"><span class="material-symbols-outlined">chevron_right</span></span>
+        <span class="breadcrumb-item current">
+          <span class="material-symbols-outlined">manage_search</span> Claims QC
+        </span>
       </div>
-    </div>
-  </header>
-  
 
-  <!-- NAV Container -->
-  <div id="navContainer"></div>
-
-  <!-- ── PAGE HEADER ── -->
-  <header class="page-header">
-    <h1>ระบบจัดการสินค้าส่งเคลม</h1>
-    <p>ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
-  </header>
-
-  <!-- ── MAIN ── -->
-  <main class="container">
-    
-    <!-- SUMMARY CARDS -->
-    <div class="qc-summary">
-      <div class="summary-card total">
-        <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
-        <div class="summary-info">
-          <div class="summary-head">ทั้งหมด</div>
-          <div class="summary-num" id="sumTotal">—</div>
-          <div class="summary-label">รายการเคลมในระบบ</div>
+      <!-- SUMMARY CARDS: เพิ่ม data-filter ให้ JS คลิกกรองได้ -->
+      <section class="qc-summary" aria-label="สรุปรายการเคลม">
+        <div class="summary-card total" data-filter="all" role="button" tabindex="0">
+          <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
+          <div class="summary-info">
+            <div class="summary-head">ทั้งหมด</div>
+            <div class="summary-num" id="sumTotal">—</div>
+            <div class="summary-label">รายการเคลมในระบบ</div>
+          </div>
         </div>
-      </div>
 
-      <div class="summary-card pending">
-        <div class="summary-icon"><span class="material-symbols-outlined">pending_actions</span></div>
-        <div class="summary-info">
-          <div class="summary-head">รอรับเรื่อง</div>
-          <div class="summary-num" id="sumPending">—</div>
-          <div class="summary-label">สถานะ submitted / pending</div>
+        <div class="summary-card pending" data-filter="pending" role="button" tabindex="0">
+          <div class="summary-icon"><span class="material-symbols-outlined">pending_actions</span></div>
+          <div class="summary-info">
+            <div class="summary-head">รอรับเรื่อง</div>
+            <div class="summary-num" id="sumPending">—</div>
+            <div class="summary-label">ยังไม่มีผู้รับเรื่อง</div>
+          </div>
         </div>
-      </div>
 
-      <div class="summary-card in-progress">
-        <div class="summary-icon"><span class="material-symbols-outlined">manage_search</span></div>
-        <div class="summary-info">
-          <div class="summary-head">กำลังตรวจสอบ</div>
-          <div class="summary-num" id="sumInProgress">—</div>
-          <div class="summary-label">QC รับเรื่องแล้ว</div>
+        <div class="summary-card in-progress" data-filter="in-progress" role="button" tabindex="0">
+          <div class="summary-icon"><span class="material-symbols-outlined">manage_search</span></div>
+          <div class="summary-info">
+            <div class="summary-head">กำลังตรวจสอบ</div>
+            <div class="summary-num" id="sumInProgress">—</div>
+            <div class="summary-label">QC รับเรื่องแล้ว</div>
+          </div>
         </div>
-      </div>
 
-      <div class="summary-card approved">
-        <div class="summary-icon"><span class="material-symbols-outlined">check_circle</span></div>
-        <div class="summary-info">
-          <div class="summary-head">อนุมัติแล้ว</div>
-          <div class="summary-num" id="sumApproved">—</div>
-          <div class="summary-label">ผ่านการพิจารณา</div>
+        <div class="summary-card approved" data-filter="approved" role="button" tabindex="0">
+          <div class="summary-icon"><span class="material-symbols-outlined">check_circle</span></div>
+          <div class="summary-info">
+            <div class="summary-head">อนุมัติแล้ว</div>
+            <div class="summary-num" id="sumApproved">—</div>
+            <div class="summary-label">ผ่านการพิจารณา</div>
+          </div>
         </div>
-      </div>
 
-      <div class="summary-card rejected">
-        <div class="summary-icon"><span class="material-symbols-outlined">cancel</span></div>
-        <div class="summary-info">
-          <div class="summary-head">ปฏิเสธ</div>
-          <div class="summary-num" id="sumRejected">—</div>
-          <div class="summary-label">ไม่ผ่านการพิจารณา</div>
+        <div class="summary-card rejected" data-filter="rejected" role="button" tabindex="0">
+          <div class="summary-icon"><span class="material-symbols-outlined">cancel</span></div>
+          <div class="summary-info">
+            <div class="summary-head">ปฏิเสธ</div>
+            <div class="summary-num" id="sumRejected">—</div>
+            <div class="summary-label">ไม่ผ่านการพิจารณา</div>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- FILTER BAR -->
-    <div class="qc-filter-bar">
-      <div class="filter-group" style="flex:2;min-width:220px;">
-        <span class="material-symbols-outlined filter-icon">search</span>
-        <input type="text" id="searchInput" placeholder="ค้นหาสินค้า / ร้านค้า / พนักงาน...">
-      </div>
-      <div class="filter-group">
-        <span class="material-symbols-outlined filter-icon">calendar_month</span>
-        <input type="date" id="filterDateFrom" title="จากวันที่">
-        <span class="filter-sep">–</span>
-        <input type="date" id="filterDateTo" title="ถึงวันที่">
-      </div>
-      <div class="filter-group" style="min-width:140px;flex:0;">
-        <span class="material-symbols-outlined filter-icon">flag</span>
-        <select id="filterStatus">
-          <option value="">ทุกสถานะ</option>
-          <option value="submitted">รอรับเรื่อง</option>
-          <option value="in_progress">กำลังตรวจสอบ</option>
-          <option value="approved">อนุมัติแล้ว</option>
-          <option value="rejected">ปฏิเสธ</option>
-        </select>
-      </div>
-      <button class="btn-filter-reset" onclick="resetFilters()">
-        <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
-      </button>
-      <button class="btn-export-excel" onclick="exportExcel()">
-        <span class="material-symbols-outlined">table_view</span> Excel
-      </button>
-    </div>
+      <!-- FILTER BAR: เพิ่ม scope/pick-state/refresh ให้ตรงกับ JS -->
+      <section class="qc-filter-bar" aria-label="ตัวกรองรายการเคลม">
+        <div class="filter-group" style="flex: 2; min-width: 240px;">
+          <span class="material-symbols-outlined filter-icon">search</span>
+          <input type="text" id="searchInput" placeholder="ค้นหาสินค้า / ร้านค้า / พนักงาน / เลขเคลม..." />
+        </div>
 
-    <!-- TABLE -->
-    <div class="qc-main">
-      <div class="table-wrap">
-        <table class="qc-table" id="qcTable">
-          <thead>
-            <tr>
-              <th>วันที่</th>
-              <th>พนักงาน / เขต</th>
-              <th>ร้านค้า</th>
-              <th>สินค้า</th>
-              <th>ประเภทปัญหา</th>
-              <th>ไฟล์</th>
-              <th>สถานะ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="qcTableBody">
-            <tr>
-              <td colspan="8" class="table-loading">
-                <span class="material-symbols-outlined spin">progress_activity</span>
-                กำลังโหลด...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+        <div class="filter-segment" aria-label="ประเภทเคลม">
+          <button type="button" class="is-active" data-scope="">
+            <span class="material-symbols-outlined">apps</span> ทั้งหมด
+          </button>
+          <button type="button" data-scope="internal">
+            <span class="material-symbols-outlined">factory</span> ภายใน
+          </button>
+          <button type="button" data-scope="external">
+            <span class="material-symbols-outlined">storefront</span> ลูกค้า
+          </button>
+        </div>
 
-  </main>
+        <div class="filter-segment" aria-label="สถานะรับเรื่อง">
+          <button type="button" class="is-active" data-pick-state="all">ทั้งหมด</button>
+          <button type="button" data-pick-state="pending">รอรับ</button>
+          <button type="button" data-pick-state="picked">รับแล้ว</button>
+        </div>
 
-  <!-- ── MODAL ── -->
+        <div class="filter-date-range">
+          <div class="date-field">
+            <label class="date-label" for="filterDateFrom">
+              <span class="material-symbols-outlined">event</span> จากวันที่
+            </label>
+            <input type="date" id="filterDateFrom" />
+          </div>
+          <span class="date-arrow">→</span>
+          <div class="date-field">
+            <label class="date-label" for="filterDateTo">
+              <span class="material-symbols-outlined">event_available</span> ถึงวันที่
+            </label>
+            <input type="date" id="filterDateTo" />
+          </div>
+        </div>
+
+        <div class="filter-group" style="min-width: 170px; flex: 0 0 170px;">
+          <span class="material-symbols-outlined filter-icon">flag</span>
+          <select id="filterStatus">
+            <option value="">ทุกสถานะ</option>
+            <option value="pending">รอรับเรื่อง</option>
+            <option value="checking">กำลังตรวจสอบ</option>
+            <option value="waiting_ceo">รออนุมัติ CEO</option>
+            <option value="approved">อนุมัติแล้ว</option>
+            <option value="rejected">ปฏิเสธ</option>
+          </select>
+        </div>
+
+        <button class="btn-refresh" id="btnRefresh" type="button">
+          <span class="material-symbols-outlined">refresh</span> โหลดใหม่
+        </button>
+        <button class="btn-filter-reset" type="button" onclick="resetFilters()">
+          <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+        </button>
+        <button class="btn-export-excel" type="button" onclick="exportExcel()">
+          <span class="material-symbols-outlined">table_view</span> Excel
+        </button>
+      </section>
+
+      <section class="qc-main">
+        <div class="qc-result-count" id="resultCount">แสดง <strong>0</strong> จาก <strong>0</strong> รายการ</div>
+        <div class="table-wrap">
+          <table class="qc-table" id="qcTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="claim_date">วันที่</th>
+                <th>พนักงาน / เขต</th>
+                <th>ร้านค้า</th>
+                <th>สินค้า</th>
+                <th>ประเภทปัญหา</th>
+                <th>ไฟล์</th>
+                <th class="sortable" data-sort="qc_status">สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="qcTableBody">
+              <tr>
+                <td colspan="8" class="table-loading">
+                  <span class="material-symbols-outlined spin">progress_activity</span>
+                  กำลังโหลด...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
   <div class="qc-modal" id="qcModal">
     <div class="qc-modal-box">
-
       <div class="qc-modal-header">
         <div class="qc-modal-title">
           <span class="material-symbols-outlined">manage_search</span>
           <span id="modalTitle">รายละเอียดเคลม</span>
         </div>
         <div class="qc-modal-header-actions">
-          <button class="btn-export-pdf" onclick="exportPDF()">
+          <button class="btn-export-pdf" type="button" onclick="exportPDF()">
             <span class="material-symbols-outlined">picture_as_pdf</span> PDF
           </button>
-          <button class="btn-export-csv" onclick="exportCSV()">
-    <span class="material-symbols-outlined">table_view</span> CSV
-  </button>
-
-  <button class="btn-export-excel" onclick="exportExcel()">
-    <span class="material-symbols-outlined">grid_on</span> Excel
-  </button>
-          <button class="modal-close-btn" onclick="closeModal()">
+          <button class="btn-export-csv" type="button" onclick="exportCSV()">
+            <span class="material-symbols-outlined">table_view</span> CSV
+          </button>
+          <button class="btn-export-excel" type="button" onclick="exportExcel()">
+            <span class="material-symbols-outlined">grid_on</span> Excel
+          </button>
+          <button class="modal-close-btn" type="button" onclick="closeModal()">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
       </div>
 
       <div class="qc-modal-body">
-
         <div class="modal-section">
           <div class="modal-info-grid" id="modalInfoGrid"></div>
         </div>
@@ -228,42 +300,34 @@
           <div class="qc-status-current" id="qcStatusCurrent"></div>
           <textarea id="qcComment" rows="3" placeholder="หมายเหตุ / ความเห็น QC (ถ้ามี)..."></textarea>
           <div class="qc-action-btns">
-            <button class="btn-approve" onclick="updateClaimStatus('approved')">
+            <button class="btn-approve" type="button" onclick="updateClaimStatus('approved')">
               <span class="material-symbols-outlined">check_circle</span> อนุมัติ
             </button>
-            <button class="btn-reject" onclick="updateClaimStatus('rejected')">
+            <button class="btn-reject" type="button" onclick="updateClaimStatus('rejected')">
               <span class="material-symbols-outlined">cancel</span> ปฏิเสธ
             </button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- ── LIGHTBOX ── -->
+  <!-- LIGHTBOX -->
   <div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <img id="lightboxImg" src="" alt="">
-    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightboxImg" src="" alt="preview" />
+    <button class="lightbox-close" type="button" onclick="event.stopPropagation(); closeLightbox()">✕</button>
   </div>
 
   <footer class="footer">© 2026 EABaseHub | ระบบจัดการเคลมสินค้า</footer>
 
-  <!-- ── SCRIPTS ── -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/userService.js"></script>
   <script src="/js/core/auth.js"></script>
-
-  <script src="/js/core/confirm-dialog.js"></script>
-
-  <script type="module" src="/js/pages/Qc-claim/"></script>
   <script src="/js/core/splash.js"></script>
-  
   <script src="/js/core/loadingSplash.js"></script>
-  <script src="/js/core/themeToggle.js"></script>
   <script src="/js/services/nav-service.js"></script>
-
+  <script src="/js/pages/Qc-claim/adminQc.js"></script>
 </body>
 </html>
