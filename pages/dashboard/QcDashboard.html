@@ -1,13 +1,10 @@
 <!doctype html>
 <html lang="th">
   <head>
-    <!-- =========================
-         BASIC META
-         ========================= -->
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0"
     />
     <meta name="theme-color" content="#F97316" />
     <meta name="description" content="EABaseHub - QC Dashboard" />
@@ -16,7 +13,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
       rel="stylesheet"
@@ -38,456 +34,438 @@
       href="/assets/icons/icon-192.png"
     />
 
-    <!-- ใช้โครงสร้างเดียวกับ Index -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <link rel="stylesheet" href="/css/index.css" />
-
-    <!-- ตามด้วย QC Dashboard CSS (override เฉพาะ main-content) -->
     <link rel="stylesheet" href="/css/pages/dashboard/QcDashboard.css" />
+    <link rel="stylesheet" href="/css/pages/Qc-claim/internal-claims.css" />
   </head>
 
   <body class="role-adminQc">
-    <div class="layout">
-      <!-- =========================
-           SIDEBAR (เหมือน Index)
-           ========================= -->
-      <aside class="sidebar" id="sidebar">
-        <button
-          class="hamburger"
-          id="hamburgerBtn"
-          onclick="toggleMenu()"
-          aria-label="เปิด/ปิดเมนู"
+    <!-- =========================
+         ✨ NEW SIDEBAR (floating แบบ internal-claims)
+         ใช้สีส้มเดิม role-adminQc
+         ========================= -->
+    <aside class="ea-sidebar" id="eaSidebar">
+      <div class="ea-logo">
+        <img src="/assets/icons/icon-192.png" alt="EABaseHub Logo" />
+      </div>
+
+      <div class="mini-brand-text">
+        <strong>EABaseHub</strong>
+        <span>Claim System</span>
+      </div>
+
+      <nav class="ea-menu">
+        <a
+          href="/pages/dashboard/QcDashboard.html"
+          class="ea-link active"
+          title="หน้าหลัก"
         >
-          <span class="material-symbols-outlined">menu</span>
-        </button>
+          <span class="material-symbols-outlined">home</span>
+          <span class="ea-text">หน้าหลัก</span>
+        </a>
 
-        <div class="logo">
-          <div class="logo-circle">
-            <img src="/assets/icons/icon-192.png" alt="EABaseHub Logo" />
-          </div>
-          <div class="brand">EABaseHub</div>
-        </div>
-
-        <nav class="menu" id="sidebarMenu">
-          <a class="menu-item active" href="/pages/dashboard/QcDashboard.html">
-            <span class="material-symbols-outlined menu-icon">home</span>
-            <span class="menu-text">หน้าแรก</span>
-          </a>
-
-          <a class="menu-item" href="/pages/Qc-claim/adminQc.html">
-            <span class="material-symbols-outlined menu-icon">fact_check</span>
-            <span class="menu-text">จัดการเคลม</span>
-          </a>
-
-          <a class="menu-item" href="/pages/Qc-claim/internal-claims.html">
-            <span class="material-symbols-outlined menu-icon"
-              >edit_document</span
-            >
-            <span class="menu-text">เคลม วัตถุดิบ-สินค้า(ภายใน)</span>
-          </a>
-
-          <a class="menu-item" href="/pages/Qc-claim/external-claims.html">
-            <span class="material-symbols-outlined menu-icon">description</span>
-            <span class="menu-text">เคลม วัตถุดิบ-สินค้า(ภายนอก)</span>
-          </a>
-
-          <!-- <a class="menu-item" href="/pages/Qc-claim/claim-evaluation.html">
-            <span class="material-symbols-outlined menu-icon">verified</span>
-            <span class="menu-text">ผลการพิจารณา</span>
-          </a> -->
-
-          <!-- <a class="menu-item" href="/pages/forms/formClaim.html">
-            <span class="material-symbols-outlined menu-icon"
-              >assignment_late</span
-            >
-            <span class="menu-text">แจ้งเคลมสินค้า</span>
-          </a>
-        </nav> -->
-
-        <button
-          class="toggle-btn"
-          onclick="toggleSidebar()"
-          aria-label="ย่อ/ขยายเมนู"
+        <a
+          href="/pages/Qc-claim/adminQc.html"
+          class="ea-link"
+          title="จัดการเคลม"
         >
-          <span class="material-symbols-outlined icon-white">menu</span>
-        </button>
-      </aside>
+          <span class="material-symbols-outlined">manage_search</span>
+          <span class="ea-text">จัดการเคลม</span>
+        </a>
 
-      <!-- =========================
-           MAIN CONTENT
-           ========================= -->
-      <main class="content">
-        <div class="content-layout">
-          <!-- ── ซ้าย: เนื้อหา QC Dashboard ── -->
-          <div class="main-content">
-            <!-- HEADER -->
-            <header class="header">
-              <div class="header-left">
-                <h2>
-                  <span
-                    class="material-symbols-outlined"
-                    style="
-                      font-size: 22px;
-                      vertical-align: -4px;
-                      color: var(--role-color);
-                    "
-                    >verified</span
-                  >
-                  QC Dashboard
-                </h2>
-                <p class="subtext">
-                  ระบบจัดการสินค้าส่งเคลม · ตรวจสอบ • อนุมัติ • บันทึกผล •
-                  Export
-                </p>
-              </div>
+        <a
+          href="/pages/Qc-claim/internal-claims.html"
+          class="ea-link"
+          title="เคลมสินค้า(ภายใน)"
+        >
+          <span class="material-symbols-outlined">factory</span>
+          <span class="ea-text">เคลมสินค้า(ภายใน)</span>
+        </a>
 
-              <div class="header-right">
-                <span id="currentDate" class="qc-date-chip">—</span>
-                <button class="logout-btn" onclick="logout()">
-                  <span
-                    class="material-symbols-outlined"
-                    style="font-size: 16px; vertical-align: middle"
-                    >logout</span
-                  >
-                  ออกจากระบบ
-                </button>
-              </div>
-            </header>
+        <a
+          href="/pages/Qc-claim/external-claims.html"
+          class="ea-link"
+          title="เคลมสินค้า(ภายนอก)"
+        >
+          <span class="material-symbols-outlined">assignment</span>
+          <span class="ea-text">เคลมสินค้า(ภายนอก)</span>
+        </a>
+      </nav>
 
-            <!-- ===== KPI CARDS =====
-     หมายเหตุ: เพิ่ม
-       - role="button" + tabindex="0" → คลิกได้ + กด Enter ได้
-       - data-href → ปลายทางเมื่อคลิก
-       - .qc-kpi-card--clickable → cursor:pointer + hover effect
-       - id="kpi-pending" + class .qc-has-new (เติม/ลบจาก JS) → กระพริบเตือน
--->
-            <section class="qc-kpi-grid">
-              <a
-                class="qc-kpi-card qc-kpi-card--clickable"
-                id="kpi-total"
-                href="/pages/admin/adminQc.html"
-                aria-label="ดูเคลมเดือนนี้"
+      <!-- Toggle button (แท่งยาวๆ ขอบขวา) -->
+      <button
+        class="ea-toggle"
+        id="eaSidebarToggle"
+        type="button"
+        aria-label="ย่อ/ขยาย sidebar"
+        onclick="toggleEaSidebar()"
+      >
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+
+      <!-- ✨ ปุ่ม Logout (อยู่ล่างสุดของ sidebar) -->
+      <button
+        class="ea-user"
+        id="logoutBtn"
+        type="button"
+        title="Logout"
+        onclick="logout()"
+      >
+        <span class="material-symbols-outlined">logout</span>
+        <span class="ea-text">Logout</span>
+      </button>
+    </aside>
+
+    <!-- =========================
+         MAIN CONTENT
+         ========================= -->
+    <main class="content">
+      <div class="content-layout">
+        <!-- ── ซ้าย: เนื้อหา QC Dashboard ── -->
+        <div class="main-content">
+          <!-- HEADER -->
+          <header class="header">
+            <div class="header-left">
+              <h2>
+                <span
+                  class="material-symbols-outlined"
+                  style="
+                    font-size: 22px;
+                    vertical-align: -4px;
+                    color: var(--role-color);
+                  "
+                  >verified</span
+                >
+                QC Dashboard
+              </h2>
+              <p class="subtext">
+                ระบบจัดการสินค้าส่งเคลม · ตรวจสอบ • อนุมัติ • บันทึกผล •
+                Export
+              </p>
+            </div>
+
+            <div class="header-right">
+              <span id="currentDate" class="qc-date-chip">—</span>
+              <!-- ✅ ลบปุ่ม Logout จาก header — ย้ายไปไว้ที่ sidebar แล้ว -->
+            </div>
+          </header>
+
+          <!-- ===== KPI CARDS ===== -->
+          <section class="qc-kpi-grid">
+            <a
+              class="qc-kpi-card qc-kpi-card--clickable"
+              id="kpi-total"
+              href="/pages/Qc-claim/adminQc.html?view=all"
+              aria-label="ดูเคลมเดือนนี้"
+            >
+              <span class="material-symbols-outlined qc-kpi-icon"
+                >inventory_2</span
               >
-                <span class="material-symbols-outlined qc-kpi-icon"
-                  >inventory_2</span
-                >
-                <span class="qc-kpi-label">จำนวนเคลม (เดือนนี้)</span>
-                <span class="qc-kpi-val">—</span>
-                <span class="qc-kpi-sub">กำลังโหลด...</span>
-                <span class="qc-kpi-arrow material-symbols-outlined"
-                  >arrow_forward</span
-                >
-              </a>
-
-              <a
-                class="qc-kpi-card qc-kpi-card--clickable"
-                id="kpi-fail"
-                href="/pages/Qc-claim/adminQc.html"
-                aria-label="ดูรายการที่อยู่ระหว่างดำเนินการ"
+              <span class="qc-kpi-label">จำนวนเคลม (เดือนนี้)</span>
+              <span class="qc-kpi-val">—</span>
+              <span class="qc-kpi-sub">กำลังโหลด...</span>
+              <span class="qc-kpi-arrow material-symbols-outlined"
+                >arrow_forward</span
               >
-                <span class="material-symbols-outlined qc-kpi-icon"
-                  >autorenew</span
-                >
-                <span class="qc-kpi-label">อยู่ในระหว่างดำเนินการ</span>
-                <span class="qc-kpi-val fail">—</span>
-                <span class="qc-kpi-sub">—</span>
-                <span class="qc-kpi-arrow material-symbols-outlined"
-                  >arrow_forward</span
-                >
-              </a>
+            </a>
 
-              <a
-                class="qc-kpi-card qc-kpi-card--clickable"
-                id="kpi-pass"
-                href="/pages/admin/adminQc.html?status=approved"
-                aria-label="ดูรายการที่ผ่านการตรวจสอบ"
+            <a
+              class="qc-kpi-card qc-kpi-card--clickable"
+              id="kpi-fail"
+              href="/pages/Qc-claim/adminQc.html?view=in_progress"
+              aria-label="ดูรายการที่อยู่ระหว่างดำเนินการ"
+            >
+              <span class="material-symbols-outlined qc-kpi-icon"
+                >autorenew</span
               >
-                <span class="material-symbols-outlined qc-kpi-icon"
-                  >check_circle</span
-                >
-                <span class="qc-kpi-label">ผ่านการตรวจสอบ</span>
-                <span class="qc-kpi-val pass">—</span>
-                <span class="qc-kpi-sub">—</span>
-                <span class="qc-kpi-arrow material-symbols-outlined"
-                  >arrow_forward</span
-                >
-              </a>
-
-              <a
-                class="qc-kpi-card qc-kpi-card--clickable qc-kpi-card--alert"
-                id="kpi-pending"
-                href="/pages/Qc-claim/adminQc.html"
-                aria-label="ดูเคลมใหม่ที่รอตรวจ"
+              <span class="qc-kpi-label">อยู่ในระหว่างดำเนินการ</span>
+              <span class="qc-kpi-val fail">—</span>
+              <span class="qc-kpi-sub">—</span>
+              <span class="qc-kpi-arrow material-symbols-outlined"
+                >arrow_forward</span
               >
-                <span class="material-symbols-outlined qc-kpi-icon"
-                  >notifications_active</span
-                >
-                <span class="qc-kpi-label">แจ้งเคลมใหม่</span>
-                <span class="qc-kpi-val warn">—</span>
-                <span class="qc-kpi-sub">—</span>
-                <span class="qc-kpi-badge" id="kpiPendingBadge" hidden>0</span>
-                <span class="qc-kpi-arrow material-symbols-outlined"
-                  >arrow_forward</span
-                >
-              </a>
-            </section>
+            </a>
 
-            <!-- ===== PIE + SUMMARY ===== -->
-            <section class="qc-row2">
-              <div class="qc-card">
-                <div class="qc-card-title">
-                  <span class="qc-card-title-dot"></span>สถานะ Pass / Fail /
-                  รอดำเนินการ
-                </div>
-                <div class="qc-pie-wrap">
-                  <div class="qc-pie-chart-wrap">
-                    <canvas id="pfPieChart"></canvas>
-                    <div class="qc-pie-center-label">
-                      <span class="qc-pie-center-num" id="pieCenterNum">—</span>
-                      <span class="qc-pie-center-sub">รายการ</span>
-                    </div>
-                  </div>
-                  <div class="qc-pf-legend" id="pfLegend">
-                    <div class="qc-legend-item">
-                      <div class="qc-legend-left">
-                        <span class="qc-dot qc-dot-pass"></span>
-                        <span class="qc-legend-label">กำลังโหลด...</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <a
+              class="qc-kpi-card qc-kpi-card--clickable"
+              id="kpi-pass"
+              href="/pages/Qc-claim/adminQc.html?status=approved"
+              aria-label="ดูรายการที่ผ่านการตรวจสอบ"
+            >
+              <span class="material-symbols-outlined qc-kpi-icon"
+                >check_circle</span
+              >
+              <span class="qc-kpi-label">ผ่านการตรวจสอบ</span>
+              <span class="qc-kpi-val pass">—</span>
+              <span class="qc-kpi-sub">—</span>
+              <span class="qc-kpi-arrow material-symbols-outlined"
+                >arrow_forward</span
+              >
+            </a>
 
-              <div class="qc-card">
-                <div class="qc-card-title">
-                  <span class="qc-card-title-dot"></span>สรุปประเภทปัญหา
-                </div>
-                <div id="claimSummary">
-                  <div class="qc-sum-row">
-                    <span
-                      class="qc-sum-label"
-                      style="color: var(--text-muted); font-size: 12px"
-                      >กำลังโหลด...</span
-                    >
-                  </div>
-                </div>
-              </div>
-            </section>
+            <a
+              class="qc-kpi-card qc-kpi-card--clickable qc-kpi-card--alert"
+              id="kpi-pending"
+              href="/pages/Qc-claim/adminQc.html?view=pending"
+              aria-label="ดูเคลมใหม่ที่ยังไม่กดรับ"
+            >
+              <span class="material-symbols-outlined qc-kpi-icon"
+                >notifications_active</span
+              >
+              <span class="qc-kpi-label">เคลมใหม่ยังไม่รับ</span>
+              <span class="qc-kpi-val warn">—</span>
+              <span class="qc-kpi-sub">—</span>
+              <span class="qc-kpi-badge" id="kpiPendingBadge" hidden>0</span>
+              <span class="qc-kpi-arrow material-symbols-outlined"
+                >arrow_forward</span
+              >
+            </a>
+          </section>
 
-            <!-- ===== TOP PRODUCTS ===== -->
-            <section class="qc-card">
+          <!-- ===== PIE + SUMMARY ===== -->
+          <section class="qc-row2">
+            <div class="qc-card">
               <div class="qc-card-title">
-                <span class="qc-card-title-dot"></span>สินค้าที่เคลมบ่อย (Top 8)
+                <span class="qc-card-title-dot"></span>สถานะ Pass / Fail /
+                รอดำเนินการ
+              </div>
+              <div class="qc-pie-wrap">
+                <div class="qc-pie-chart-wrap">
+                  <canvas id="pfPieChart"></canvas>
+                  <div class="qc-pie-center-label">
+                    <span class="qc-pie-center-num" id="pieCenterNum">—</span>
+                    <span class="qc-pie-center-sub">รายการ</span>
+                  </div>
+                </div>
+                <div class="qc-pf-legend" id="pfLegend">
+                  <div class="qc-legend-item">
+                    <div class="qc-legend-left">
+                      <span class="qc-dot qc-dot-pass"></span>
+                      <span class="qc-legend-label">กำลังโหลด...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="qc-card">
+              <div class="qc-card-title">
+                <span class="qc-card-title-dot"></span>สรุปประเภทปัญหา
+              </div>
+              <div id="claimSummary">
+                <div class="qc-sum-row">
+                  <span
+                    class="qc-sum-label"
+                    style="color: var(--text-muted); font-size: 12px"
+                    >กำลังโหลด...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== TOP PRODUCTS ===== -->
+          <section class="qc-card">
+            <div class="qc-card-title">
+              <span class="qc-card-title-dot"></span>สินค้าที่เคลมบ่อย (Top 8)
+            </div>
+            <div class="qc-chart-legend">
+              <span
+                ><span class="qc-legend-sq" style="background: #10b981"></span
+                >อนุมัติ</span
+              >
+              <span
+                ><span class="qc-legend-sq" style="background: #ef4444"></span
+                >ปฏิเสธ</span
+              >
+              <span
+                ><span class="qc-legend-sq" style="background: #f59e0b"></span
+                >รอตรวจสอบ</span
+              >
+            </div>
+            <div class="qc-chart-wrap qc-chart-wrap--tall">
+              <canvas id="topProductChart"></canvas>
+            </div>
+          </section>
+
+          <!-- ===== TREND + RECENT ===== -->
+          <section class="qc-row3">
+            <div class="qc-card">
+              <div class="qc-card-title">
+                <span class="qc-card-title-dot"></span>แนวโน้มเคลมรายเดือน (6
+                เดือน)
               </div>
               <div class="qc-chart-legend">
                 <span
                   ><span class="qc-legend-sq" style="background: #10b981"></span
-                  >อนุมัติ</span
+                  >Pass</span
                 >
                 <span
                   ><span class="qc-legend-sq" style="background: #ef4444"></span
-                  >ปฏิเสธ</span
-                >
-                <span
-                  ><span class="qc-legend-sq" style="background: #f59e0b"></span
-                  >รอตรวจสอบ</span
+                  >Fail</span
                 >
               </div>
-              <div class="qc-chart-wrap qc-chart-wrap--tall">
-                <canvas id="topProductChart"></canvas>
+              <div class="qc-chart-wrap">
+                <canvas id="trendChart"></canvas>
               </div>
-            </section>
+            </div>
 
-
-            
-
-            <!-- ===== TREND + RECENT ===== -->
-            <section class="qc-row3">
-              <div class="qc-card">
-                <div class="qc-card-title">
-                  <span class="qc-card-title-dot"></span>แนวโน้มเคลมรายเดือน (6
-                  เดือน)
-                </div>
-                <div class="qc-chart-legend">
-                  <span
-                    ><span
-                      class="qc-legend-sq"
-                      style="background: #10b981"
-                    ></span
-                    >Pass</span
-                  >
-                  <span
-                    ><span
-                      class="qc-legend-sq"
-                      style="background: #ef4444"
-                    ></span
-                    >Fail</span
-                  >
-                </div>
-                <div class="qc-chart-wrap">
-                  <canvas id="trendChart"></canvas>
+            <div class="qc-card">
+              <div class="qc-card-title">
+                <span class="qc-card-title-dot"></span>เคลมล่าสุด
+              </div>
+              <div class="qc-claim-list" id="claimList">
+                <div
+                  style="
+                    color: var(--text-muted);
+                    font-size: 12.5px;
+                    padding: 10px 0;
+                  "
+                >
+                  ⏳ กำลังโหลด...
                 </div>
               </div>
+            </div>
+          </section>
 
-              <div class="qc-card">
-                <div class="qc-card-title">
-                  <span class="qc-card-title-dot"></span>เคลมล่าสุด
-                </div>
-                <div class="qc-claim-list" id="claimList">
-                  <div
-                    style="
-                      color: var(--text-muted);
-                      font-size: 12.5px;
-                      padding: 10px 0;
-                    "
-                  >
-                    ⏳ กำลังโหลด...
-                  </div>
-                </div>
+          <!-- ===== TABLE ===== -->
+          <!-- <section class="qc-card qc-table-card">
+            <div class="qc-card-header-row">
+              <div class="qc-card-title">
+                <span class="qc-card-title-dot"></span>รายการเคลมสินค้า
               </div>
-            </section>
-
-            <!-- ===== TABLE ===== -->
-            <section class="qc-card qc-table-card">
-              <div class="qc-card-header-row">
-                <div class="qc-card-title">
-                  <span class="qc-card-title-dot"></span>รายการเคลมสินค้า
-                </div>
-                <div class="qc-filter-wrap">
-                  <select id="filterStatus">
-                    <option value="">ทุกสถานะ</option>
-                    <option value="pass">Pass (อนุมัติ)</option>
-                    <option value="fail">Fail (ปฏิเสธ)</option>
-                    <option value="pending">รอตรวจ</option>
-                  </select>
-                  <a class="qc-btn-goto-qc" href="/pages/Qc-claim/adminQc.html">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                    จัดการเคลม
-                  </a>
-                </div>
+              <div class="qc-filter-wrap">
+                <select id="filterStatus">
+                  <option value="">ทุกสถานะ</option>
+                  <option value="pass">Pass (อนุมัติ)</option>
+                  <option value="fail">Fail (ปฏิเสธ)</option>
+                  <option value="pending">รอตรวจ</option>
+                </select>
+                <a class="qc-btn-goto-qc" href="/pages/Qc-claim/adminQc.html">
+                  <span class="material-symbols-outlined">open_in_new</span>
+                  จัดการเคลม
+                </a>
               </div>
-              <div class="qc-tbl-scroll">
-                <table class="qc-data-table">
-                  <thead>
-                    <tr>
-                      <th>รหัส</th>
-                      <th>สินค้า</th>
-                      <th>วันที่เคลม</th>
-                      <th class="text-right">จำนวน</th>
-                      <th>ผลตรวจ</th>
-                      <th>สถานะ</th>
-                      <th>พนักงาน</th>
-                    </tr>
-                  </thead>
-                  <tbody id="productTable">
-                    <tr>
-                      <td
-                        colspan="7"
-                        style="
-                          text-align: center;
-                          padding: 36px;
-                          color: var(--text-muted);
-                        "
-                      >
-                        ⏳ กำลังโหลดข้อมูล...
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
-          <!-- /.main-content -->
+            </div>
+            <div class="qc-tbl-scroll">
+              <table class="qc-data-table">
+                <thead>
+                  <tr>
+                    <th>รหัส</th>
+                    <th>สินค้า</th>
+                    <th>วันที่เคลม</th>
+                    <th class="text-right">จำนวน</th>
+                    <th>ผลตรวจ</th>
+                    <th>สถานะ</th>
+                    <th>พนักงาน</th>
+                  </tr>
+                </thead>
+                <tbody id="productTable">
+                  <tr>
+                    <td
+                      colspan="7"
+                      style="
+                        text-align: center;
+                        padding: 36px;
+                        color: var(--text-muted);
+                      "
+                    >
+                      ⏳ กำลังโหลดข้อมูล...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section> -->
 
-          <!-- ── ขวา: User Panel + Calendar (เหมือน Index) ── -->
-          <div class="right-column">
-            <aside class="right-panel">
-              <!-- PROFILE CARD -->
-              <div class="user-card">
-                <div class="avatar-wrapper">
-                  <img
-                    id="profileImage"
-                    src="/assets/img/default-avatar.jpg"
-                    alt="Profile"
-                  />
-                  <div class="avatar-edit-icon">
-                    <span class="material-symbols-outlined">photo_camera</span>
-                  </div>
-                  <input
-                    type="file"
-                    id="uploadAvatar"
-                    hidden
-                    accept="image/*"
-                  />
-                </div>
-                <div class="user-info">
-                  <h4 id="displayName">Loading...</h4>
-                  <p id="userEmail">email@example.com</p>
-                  <span id="userRole">QC Admin</span>
-                </div>
-              </div>
 
-              <!-- ปุ่มลัด -->
-              <button
-                class="btn-ea btn-adminqc"
-                onclick="location.href = '/pages/Qc-claim/'"
-              >
-                <span class="btn-text">จัดการเคลม</span>
-                <span class="material-symbols-outlined icon">fact_check</span>
-              </button>
 
-              <!-- <button class="btn-ea btn-manager" onclick="location.href='/pages/index.html'">
-                <span class="btn-text">กลับหน้าแรก</span>
-                <span class="material-symbols-outlined icon">home</span>
-              </button> -->
-
-              <!-- CALENDAR CARD -->
-              <div class="calendar-card">
-                <div class="calendar-header">
-                  <h4 id="calendarTitle">กำลังโหลด...</h4>
-                  <div class="calendar-nav">
-                    <button onclick="prevMonth()" aria-label="เดือนก่อนหน้า">
-                      <span
-                        class="material-symbols-outlined"
-                        style="font-size: 16px"
-                        >chevron_left</span
-                      >
-                    </button>
-                    <button onclick="nextMonth()" aria-label="เดือนถัดไป">
-                      <span
-                        class="material-symbols-outlined"
-                        style="font-size: 16px"
-                        >chevron_right</span
-                      >
-                    </button>
-                  </div>
-                </div>
-                <div class="calendar-grid" id="calendarGrid"></div>
-              </div>
-
-              <!-- Mini Stats -->
-              <div class="qc-mini-stats">
-                <div class="qc-mini-stat">
-                  <span class="material-symbols-outlined">trending_up</span>
-                  <div>
-                    <div class="qc-mini-stat-label">Pass Rate</div>
-                    <div class="qc-mini-stat-val" id="miniPassRate">—%</div>
-                  </div>
-                </div>
-                <div class="qc-mini-stat">
-                  <span class="material-symbols-outlined">schedule</span>
-                  <div>
-                    <div class="qc-mini-stat-label">เฉลี่ย/วัน</div>
-                    <div class="qc-mini-stat-val" id="miniAvgPerDay">—</div>
-                  </div>
-                </div>
-              </div>
-            </aside>
-          </div>
         </div>
-        <!-- /.content-layout -->
-      </main>
-    </div>
+        <!-- /.main-content -->
+
+        <!-- ── ขวา: User Panel + Calendar ── -->
+        <div class="right-column">
+          <aside class="right-panel">
+            <!-- PROFILE CARD -->
+            <div class="user-card">
+              <div class="avatar-wrapper">
+                <img
+                  id="profileImage"
+                  src="/assets/img/default-avatar.jpg"
+                  alt="Profile"
+                />
+                <div class="avatar-edit-icon">
+                  <span class="material-symbols-outlined">photo_camera</span>
+                </div>
+                <input
+                  type="file"
+                  id="uploadAvatar"
+                  hidden
+                  accept="image/*"
+                />
+              </div>
+              <div class="user-info">
+                <h4 id="displayName">Loading...</h4>
+                <p id="userEmail">email@example.com</p>
+                <span id="userRole">QC Admin</span>
+              </div>
+            </div>
+
+            <!-- ปุ่มลัด -->
+            <button
+              class="btn-ea btn-adminqc"
+              onclick="location.href = '/pages/Qc-claim/adminQc.html'"
+            >
+              <span class="btn-text">จัดการเคลม</span>
+              <span class="material-symbols-outlined icon">fact_check</span>
+            </button>
+
+            <!-- CALENDAR CARD -->
+            <div class="calendar-card">
+              <div class="calendar-header">
+                <h4 id="calendarTitle">กำลังโหลด...</h4>
+                <div class="calendar-nav">
+                  <button onclick="prevMonth()" aria-label="เดือนก่อนหน้า">
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 16px"
+                      >chevron_left</span
+                    >
+                  </button>
+                  <button onclick="nextMonth()" aria-label="เดือนถัดไป">
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 16px"
+                      >chevron_right</span
+                    >
+                  </button>
+                </div>
+              </div>
+              <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <!-- Mini Stats -->
+            <div class="qc-mini-stats">
+              <div class="qc-mini-stat">
+                <span class="material-symbols-outlined">trending_up</span>
+                <div>
+                  <div class="qc-mini-stat-label">Pass Rate</div>
+                  <div class="qc-mini-stat-val" id="miniPassRate">—%</div>
+                </div>
+              </div>
+              <div class="qc-mini-stat">
+                <span class="material-symbols-outlined">schedule</span>
+                <div>
+                  <div class="qc-mini-stat-label">เฉลี่ย/วัน</div>
+                  <div class="qc-mini-stat-val" id="miniAvgPerDay">—</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
 
     <!-- LOADING OVERLAY -->
     <div
@@ -522,33 +500,26 @@
     </div>
 
     <!-- =========================
-         JAVASCRIPT
+         JAVASCRIPT — sidebar toggle
          ========================= -->
     <script>
-      // SIDEBAR — ย่อทุกครั้งที่โหลด
-      window.addEventListener("load", () => {
-        document.getElementById("sidebar")?.classList.add("collapsed");
-      });
+      // ✨ NEW: toggle ea-sidebar
+      function toggleEaSidebar() {
+        document.body.classList.toggle("sidebar-expanded");
+      }
 
-      // CLOSE MENU ON OUTSIDE CLICK (Mobile)
+      // ปิด sidebar ถ้าคลิกนอกพื้นที่ (mobile)
       document.addEventListener("click", (e) => {
-        const sidebar = document.getElementById("sidebar");
-        const menu = document.getElementById("sidebarMenu");
-        const hamburger = document.getElementById("hamburgerBtn");
-        if (window.innerWidth <= 767 && menu?.classList.contains("show")) {
-          if (!sidebar.contains(e.target)) {
-            menu.classList.remove("show");
-            hamburger?.setAttribute("aria-expanded", "false");
-          }
+        const sidebar = document.getElementById("eaSidebar");
+        if (
+          window.innerWidth <= 768 &&
+          document.body.classList.contains("sidebar-expanded") &&
+          sidebar &&
+          !sidebar.contains(e.target)
+        ) {
+          document.body.classList.remove("sidebar-expanded");
         }
       });
-
-      function toggleMenu() {
-        document.querySelector(".menu")?.classList.toggle("show");
-      }
-      function toggleSidebar() {
-        document.getElementById("sidebar")?.classList.toggle("collapsed");
-      }
     </script>
 
     <!-- LIBRARIES -->
@@ -561,7 +532,7 @@
     <script src="/js/core/auth.js"></script>
     <script src="/js/pages/auth/role-theme.js"></script>
 
-    <!-- PAGE SCRIPT (รวม QcDashboard + ส่วน Index ที่จำเป็น) -->
+    <!-- PAGE SCRIPT -->
     <script src="/js/pages/dashboard/QcDashboard.js"></script>
 
     <script src="/js/core/splash.js"></script>

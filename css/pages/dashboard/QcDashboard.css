@@ -1,17 +1,37 @@
 /* ============================================================
-   QcDashboard.css (V2 — Hybrid)
+   QcDashboard.css (V4 — NEW SIDEBAR แบบ floating)
    ────────────────────────────────────────────────────────────
-   ใช้คู่กับ index.css (sidebar + right-panel ของ Index)
-   เพิ่มเฉพาะส่วน "เนื้อหากลาง" ของ QC Dashboard
-   - prefix .qc-* ทั้งหมดเพื่อไม่ชน class ของ Index
-   - ผูกสีกับ var(--role-color), var(--role-soft) → adminQc = ส้ม
+   ✨ Changelog V4:
+   - ✅ เพิ่ม .ea-sidebar (floating sidebar แบบ internal-claims)
+   - ✅ ปุ่ม Logout ย้ายมาอยู่ล่างสุดของ sidebar (ใช้ .ea-user)
+   - ✅ ใช้สีส้มเดิม role-adminQc (#f97316)
+   - ✅ ซ่อน sidebar เก่า (.sidebar จาก index.css)
+   - ✅ ปรับ layout ให้เนื้อหา shift ตาม sidebar width
+
+   📑 TABLE OF CONTENTS:
+     1. PAGE-LEVEL VARS
+     2. ⭐ NEW SIDEBAR (.ea-sidebar)
+     3. LAYOUT OVERRIDE (ซ่อน sidebar เก่า + shift content)
+     4. HEADER ENHANCE
+     5. KPI GRID
+     6. CARD BASE
+     7. ROW 2 (PIE + SUMMARY)
+     8. ROW 3 (TREND + RECENT)
+     9. STATUS BADGE
+    10. TABLE
+    11. MINI STATS
+    12. KPI CLICKABLE + ALERT
+    13. COMPARISON CARD
+    14. GAUGE CHART
+    15. RESPONSIVE
+    16. PRINT
 ============================================================ */
 
+
 /* ============================================================
-   PAGE-LEVEL VARS (เสริมจาก index.css)
+   1. PAGE-LEVEL VARS
 ============================================================ */
 :root {
-  /* Semantic — UX standard */
   --qc-pass:        #10b981;
   --qc-pass-dark:   #059669;
   --qc-pass-bg:     rgba(16, 185, 129, 0.10);
@@ -28,32 +48,319 @@
   --qc-warn-border: rgba(245, 158, 11, 0.22);
 
   --qc-info:        #3b82f6;
-
   --qc-mono:        'IBM Plex Mono', 'Kanit', monospace;
+
+  /* ⭐ EA-SIDEBAR TOKENS — โทนส้ม (adminQc) */
+  --ea-side-mini: 84px;
+  --ea-side-full: 240px;
+  --ea-side-gap: 18px;
+  --ea-side-bg: #ce5200;
+  --ea-side-bg-2: #f97316;
+  --ea-side-hover: rgba(255, 255, 255, 0.14);
+  --ea-side-active: #eb6e25;
+  --ea-side-text: #fde6d3;
 }
 
+
 /* ============================================================
-   HEADER ENHANCE
+   2. ⭐ NEW SIDEBAR (.ea-sidebar) — floating แบบ internal-claims
+   ใช้สีส้มเดิม role-adminQc
+============================================================ */
+.ea-sidebar {
+  position: fixed;
+  top: var(--ea-side-gap);
+  bottom: var(--ea-side-gap);
+  left: var(--ea-side-gap);
+  width: var(--ea-side-mini);
+  z-index: 9999;
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  border-radius: 20px;
+  padding: 22px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+  transition: width 0.25s ease, align-items 0.25s ease, padding 0.25s ease;
+  overflow: visible;
+  font-family: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
+}
+
+body.sidebar-expanded .ea-sidebar {
+  width: var(--ea-side-full);
+  align-items: stretch;
+  padding: 22px 14px;
+}
+
+/* Logo (กลม) */
+.ea-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.ea-logo img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+/* Brand text (โผล่ตอน expanded) */
+.mini-brand-text {
+  display: none;
+  text-align: center;
+  color: #fff;
+  margin-bottom: 18px;
+  padding: 0 6px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+body.sidebar-expanded .mini-brand-text { display: block; }
+
+.mini-brand-text strong {
+  display: block;
+  font-family: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.mini-brand-text span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+/* Menu container */
+.ea-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.ea-menu::-webkit-scrollbar { width: 4px; }
+.ea-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+/* Menu items + user (logout) */
+ .ea-link,
+.ea-user {
+  height: 46px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+  position: relative;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+
+
+body.sidebar-expanded .ea-link,
+body.sidebar-expanded .ea-user {
+  justify-content: flex-start;
+  padding: 0 14px;
+}
+
+.ea-link:hover,
+.ea-user:hover {
+  background: var(--ea-side-hover);
+  color: #fff;
+}
+
+.ea-link.active {
+  background: rgba(255, 255, 255, 0.6);
+  color: #da590e;
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.ea-link .material-symbols-outlined,
+.ea-user .material-symbols-outlined {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.ea-text {
+  display: none;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.sidebar-expanded .ea-text { display: inline; }
+
+/* Tooltip ตอน collapsed */
+body:not(.sidebar-expanded) .ea-link:hover::after,
+body:not(.sidebar-expanded) .ea-user:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1c1917;
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  z-index: 10000;
+}
+
+body:not(.sidebar-expanded) .ea-link:hover::before,
+body:not(.sidebar-expanded) .ea-user:hover::before {
+  content: "";
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #1c1917;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Toggle button (แท่งยาวๆ ขอบขวา) */
+.ea-toggle {
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 64px;
+  border-radius: 11px;
+  border: 1.5px solid #fff;
+  background: linear-gradient(180deg, #ffb921, #eb9525);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(235, 110, 37, 0.4);
+  transition: box-shadow 0.25s ease;
+  padding: 0;
+  z-index: 20;
+}
+
+.ea-toggle:hover { box-shadow: 0 10px 26px rgba(235, 110, 37, 0.55); }
+
+.ea-toggle .material-symbols-outlined {
+  font-size: 16px;
+  transition: transform 0.25s ease;
+}
+
+body.sidebar-expanded .ea-toggle .material-symbols-outlined {
+  transform: rotate(180deg);
+}
+
+/* ✨ Logout button — อยู่ล่างสุด */
+.ea-user {
+  margin-top: 12px;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+
+.ea-user::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ea-user:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fff;
+}
+
+
+/* ============================================================
+   3. ⭐ LAYOUT OVERRIDE — ซ่อน sidebar เก่า + shift content
+============================================================ */
+
+/* ซ่อน sidebar เดิมจาก index.css */
+.layout > .sidebar,
+body > .layout .sidebar:not(.ea-sidebar) {
+  display: none !important;
+}
+
+/* ปรับ layout ให้ shift ตาม ea-sidebar */
+body {
+  padding-left: calc(var(--ea-side-mini) + var(--ea-side-gap) * 2);
+  transition: padding-left 0.25s ease;
+}
+
+body.sidebar-expanded {
+  padding-left: calc(var(--ea-side-full) + var(--ea-side-gap) * 2);
+}
+
+/* ถ้ามี .layout wrapper อยู่ — ลบ margin/padding ภายในที่อาจชนกัน */
+.layout {
+  display: block;
+  width: 100%;
+}
+
+/* Content ใช้พื้นที่เต็มหลัง shift */
+.content {
+  width: 100%;
+  padding: 16px 20px;
+}
+
+
+/* ============================================================
+   4. HEADER ENHANCE
 ============================================================ */
 .header h2 .material-symbols-outlined {
-  color: var(--role-color);
+  color: var(--role-color, #f97316);
 }
 
 .qc-date-chip {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  background: var(--role-soft);
-  color: var(--role-text);
-  border: 1px solid var(--role-border);
+  background: var(--role-soft, #ffedd5);
+  color: var(--role-text, #9a3412);
+  border: 1px solid var(--role-border, #fed7aa);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
 
+
 /* ============================================================
-   KPI GRID
+   5. KPI GRID
 ============================================================ */
 .qc-kpi-grid {
   display: grid;
@@ -64,16 +371,18 @@
 
 .qc-kpi-card {
   position: relative;
-  background: var(--bg-surface);
-  border: var(--border);
-  border-radius: var(--radius-md);
+  background: var(--bg-surface, #ffffff);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-md, 12px);
   padding: 18px 18px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   overflow: hidden;
-  box-shadow: var(--shadow-xs);
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: transform var(--transition, 0.2s ease),
+              box-shadow var(--transition, 0.2s ease),
+              border-color var(--transition, 0.2s ease);
 }
 
 .qc-kpi-card::before {
@@ -83,14 +392,14 @@
   left: -32px;
   width: 96px;
   height: 96px;
-  background: radial-gradient(circle, rgba(var(--role-rgb), 0.08), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--role-rgb, 249, 115, 22), 0.08), transparent 70%);
   pointer-events: none;
 }
 
 .qc-kpi-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--role-border);
+  box-shadow: var(--shadow-md, 0 6px 16px rgba(249, 115, 22, 0.14));
+  border-color: var(--role-border, #fed7aa);
 }
 
 .qc-kpi-icon {
@@ -99,9 +408,10 @@
   right: 14px;
   font-size: 22px !important;
   opacity: 0.18;
-  color: var(--role-color);
+  color: var(--role-color, #f97316);
   transition: all 0.3s ease;
 }
+
 .qc-kpi-card:hover .qc-kpi-icon {
   opacity: 0.4;
   transform: scale(1.1) rotate(-5deg);
@@ -109,7 +419,7 @@
 
 .qc-kpi-label {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
@@ -117,7 +427,7 @@
 .qc-kpi-val {
   font-size: 1.7rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
   line-height: 1.1;
   font-family: var(--qc-mono);
   letter-spacing: -0.01em;
@@ -128,27 +438,28 @@
 
 .qc-kpi-sub {
   font-size: 11.5px;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
 }
 
+
 /* ============================================================
-   CARD (เนื้อหาของ QC)
+   6. CARD BASE
 ============================================================ */
 .qc-card {
-  background: var(--bg-surface);
-  border: var(--border);
-  border-radius: var(--radius-md);
+  background: var(--bg-surface, #ffffff);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-md, 12px);
   padding: 20px;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow var(--transition);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: box-shadow var(--transition, 0.2s ease);
   margin-bottom: 16px;
 }
-.qc-card:hover { box-shadow: var(--shadow-sm); }
+.qc-card:hover { box-shadow: var(--shadow-sm, 0 4px 10px rgba(249, 115, 22, 0.10)); }
 
 .qc-card-title {
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #374151);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   margin-bottom: 16px;
@@ -161,8 +472,8 @@
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--role-color);
-  box-shadow: 0 0 0 4px var(--role-soft);
+  background: var(--role-color, #f97316);
+  box-shadow: 0 0 0 4px var(--role-soft, #ffedd5);
   flex-shrink: 0;
 }
 
@@ -176,8 +487,9 @@
 }
 .qc-card-header-row .qc-card-title { margin-bottom: 0; }
 
+
 /* ============================================================
-   ROW 2 — PIE + SUMMARY
+   7. ROW 2 — PIE + SUMMARY
 ============================================================ */
 .qc-row2 {
   display: grid;
@@ -198,7 +510,7 @@
   width: 150px;
   height: 150px;
   flex-shrink: 0;
-  filter: drop-shadow(0 4px 12px rgba(var(--role-rgb), 0.12));
+  filter: drop-shadow(0 4px 12px rgba(var(--role-rgb, 249, 115, 22), 0.12));
 }
 
 .qc-pie-center-label {
@@ -213,12 +525,12 @@
 .qc-pie-center-num {
   font-size: 1.45rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
   font-family: var(--qc-mono);
 }
 .qc-pie-center-sub {
   font-size: 10.5px;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
   margin-top: 2px;
 }
 
@@ -235,12 +547,12 @@
   justify-content: space-between;
   gap: 10px;
   padding: 7px 11px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-main);
-  transition: all var(--transition);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-main, #fff7ed);
+  transition: all var(--transition, 0.2s ease);
 }
 .qc-legend-item:hover {
-  background: var(--role-soft);
+  background: var(--role-soft, #ffedd5);
   transform: translateX(2px);
 }
 
@@ -258,42 +570,27 @@
 
 .qc-legend-label {
   font-size: 12.5px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #374151);
   font-weight: 500;
 }
 .qc-legend-count {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
   font-family: var(--qc-mono);
 }
 
-.qc-legend-bar {
-  height: 4px;
-  border-radius: 999px;
-  background: var(--bg-main);
-  margin-top: -4px;
-  overflow: hidden;
-}
-.qc-legend-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.6s ease;
-}
-
-/* ============================================================
-   SUMMARY — claim type
-============================================================ */
+/* SUMMARY — claim type */
 .qc-sum-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  border-radius: var(--radius-sm, 10px);
+  transition: all var(--transition, 0.2s ease);
 }
 .qc-sum-row:hover {
-  background: var(--role-soft);
+  background: var(--role-soft, #ffedd5);
   transform: translateX(2px);
 }
 .qc-sum-row-inner {
@@ -305,7 +602,7 @@
 }
 .qc-sum-label {
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -313,7 +610,7 @@
 }
 .qc-sum-bar {
   height: 3px;
-  background: var(--bg-main);
+  background: var(--bg-main, #fff7ed);
   border-radius: 999px;
   overflow: hidden;
   margin-top: 4px;
@@ -321,13 +618,13 @@
 .qc-sum-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--role-color), var(--role-hover));
+  background: linear-gradient(90deg, var(--role-color, #f97316), var(--role-hover, #ea580c));
   transition: width 0.6s ease;
 }
 .qc-sum-val {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
   font-family: var(--qc-mono);
   margin-left: 14px;
 }
@@ -337,22 +634,23 @@
   align-items: center;
   padding: 12px 12px 0;
   margin-top: 8px;
-  border-top: 1px dashed var(--gray-200);
+  border-top: 1px dashed var(--gray-200, #e5e7eb);
 }
 .qc-sum-total-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
 }
 .qc-sum-total-val {
   font-size: 14px;
   font-weight: 700;
-  color: var(--role-color);
+  color: var(--role-color, #f97316);
   font-family: var(--qc-mono);
 }
 
+
 /* ============================================================
-   ROW 3 — TREND + RECENT
+   8. ROW 3 — TREND + RECENT
 ============================================================ */
 .qc-row3 {
   display: grid;
@@ -373,7 +671,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11.5px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #374151);
   font-weight: 500;
 }
 .qc-legend-sq {
@@ -390,9 +688,7 @@
 }
 .qc-chart-wrap--tall { height: 320px; }
 
-/* ============================================================
-   RECENT CLAIMS LIST
-============================================================ */
+/* RECENT CLAIMS LIST */
 .qc-claim-list {
   display: flex;
   flex-direction: column;
@@ -403,7 +699,7 @@
 }
 .qc-claim-list::-webkit-scrollbar { width: 6px; }
 .qc-claim-list::-webkit-scrollbar-thumb {
-  background: rgba(var(--role-rgb), 0.2);
+  background: rgba(var(--role-rgb, 249, 115, 22), 0.2);
   border-radius: 999px;
 }
 
@@ -412,29 +708,30 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 10px);
   gap: 10px;
-  transition: all var(--transition);
+  transition: all var(--transition, 0.2s ease);
 }
 .qc-claim-row:hover {
-  background: var(--role-soft);
+  background: var(--role-soft, #ffedd5);
   transform: translateX(3px);
 }
 
 .qc-claim-id {
   font-size: 11.5px;
   font-family: var(--qc-mono);
-  color: var(--role-color);
+  color: var(--role-color, #f97316);
   font-weight: 700;
   margin-bottom: 2px;
 }
 .qc-claim-meta {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
 }
 
+
 /* ============================================================
-   STATUS BADGE
+   9. STATUS BADGE
 ============================================================ */
 .qc-status-badge {
   display: inline-flex;
@@ -462,8 +759,9 @@
   border: 1px solid var(--qc-warn-border);
 }
 
+
 /* ============================================================
-   TABLE
+   10. TABLE
 ============================================================ */
 .qc-table-card { padding: 20px; }
 
@@ -476,19 +774,19 @@
 
 #filterStatus {
   padding: 8px 14px;
-  border: var(--border);
-  border-radius: var(--radius-sm);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-sm, 10px);
   font-family: 'Kanit', sans-serif;
   font-size: 12.5px;
-  background: var(--bg-surface);
-  color: var(--text-primary);
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #111827);
   cursor: pointer;
   outline: none;
-  transition: all var(--transition);
+  transition: all var(--transition, 0.2s ease);
 }
 #filterStatus:focus {
-  border-color: var(--role-color);
-  box-shadow: 0 0 0 3px var(--role-soft);
+  border-color: var(--role-color, #f97316);
+  box-shadow: 0 0 0 3px var(--role-soft, #ffedd5);
 }
 
 .qc-btn-goto-qc {
@@ -496,21 +794,21 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, var(--role-color), var(--role-hover));
+  background: linear-gradient(135deg, var(--role-color, #f97316), var(--role-hover, #ea580c));
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 10px);
   font-size: 12.5px;
   font-weight: 500;
   font-family: 'Kanit', sans-serif;
   cursor: pointer;
   text-decoration: none;
-  transition: all var(--transition);
-  box-shadow: 0 4px 10px rgba(var(--role-rgb), 0.25);
+  transition: all var(--transition, 0.2s ease);
+  box-shadow: 0 4px 10px rgba(var(--role-rgb, 249, 115, 22), 0.25);
 }
 .qc-btn-goto-qc:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(var(--role-rgb), 0.35);
+  box-shadow: 0 6px 14px rgba(var(--role-rgb, 249, 115, 22), 0.35);
 }
 .qc-btn-goto-qc .material-symbols-outlined {
   font-size: 16px !important;
@@ -519,8 +817,8 @@
 
 .qc-tbl-scroll {
   overflow-x: auto;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--gray-200, #e5e7eb);
 }
 
 .qc-data-table {
@@ -530,35 +828,35 @@
   font-size: 13px;
   min-width: 580px;
 }
-.qc-data-table thead tr { background: var(--bg-main); }
+.qc-data-table thead tr { background: var(--bg-main, #fff7ed); }
 .qc-data-table th {
   padding: 12px 14px;
   text-align: left;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
 }
 .qc-data-table th.text-right,
 .qc-data-table td.text-right { text-align: right; }
-.qc-data-table tbody tr { transition: background var(--transition); }
+.qc-data-table tbody tr { transition: background var(--transition, 0.2s ease); }
 .qc-data-table tbody tr:not(:last-child) td {
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--gray-100, #f3f4f6);
 }
-.qc-data-table tbody tr:hover { background: var(--role-soft); }
+.qc-data-table tbody tr:hover { background: var(--role-soft, #ffedd5); }
 .qc-data-table td { padding: 12px 14px; vertical-align: middle; }
 
 .qc-td-id {
   font-family: var(--qc-mono);
   font-size: 11.5px;
-  color: var(--role-color);
+  color: var(--role-color, #f97316);
   font-weight: 700;
 }
-.qc-td-product { font-weight: 500; color: var(--text-primary); }
-.qc-td-date { font-family: var(--qc-mono); font-size: 11.5px; color: var(--text-muted); }
-.qc-td-emp { font-size: 11.5px; color: var(--text-muted); }
+.qc-td-product { font-weight: 500; color: var(--text-primary, #111827); }
+.qc-td-date { font-family: var(--qc-mono); font-size: 11.5px; color: var(--text-muted, #6b7280); }
+.qc-td-emp { font-size: 11.5px; color: var(--text-muted, #6b7280); }
 
 .qc-score-wrap {
   display: flex;
@@ -572,7 +870,7 @@
 .qc-score-bar {
   height: 5px;
   border-radius: 999px;
-  background: var(--gray-100);
+  background: var(--gray-100, #f3f4f6);
   overflow: hidden;
   width: 70px;
 }
@@ -582,8 +880,9 @@
   transition: width 0.6s ease;
 }
 
+
 /* ============================================================
-   MINI STATS (Right Panel)
+   11. MINI STATS (Right Panel)
 ============================================================ */
 .qc-mini-stats {
   display: flex;
@@ -595,23 +894,23 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: var(--bg-surface);
-  border: var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
-  transition: all var(--transition);
+  background: var(--bg-surface, #ffffff);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: all var(--transition, 0.2s ease);
 }
 .qc-mini-stat:hover {
-  border-color: var(--role-border);
+  border-color: var(--role-border, #fed7aa);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm, 0 4px 10px rgba(249, 115, 22, 0.10));
 }
 .qc-mini-stat .material-symbols-outlined {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-sm);
-  background: var(--role-soft);
-  color: var(--role-color);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--role-soft, #ffedd5);
+  color: var(--role-color, #f97316);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -620,27 +919,20 @@
 }
 .qc-mini-stat-label {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
 }
 .qc-mini-stat-val {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
   font-family: var(--qc-mono);
   margin-top: 2px;
 }
 
 
 /* ============================================================
-   KPI CARDS — CLICKABLE + ALERT ANIMATION
-   ────────────────────────────────────────────────────────────
-   เพิ่มเติมจาก QcDashboard.css เดิม
-   - .qc-kpi-card--clickable → กดได้
-   - .qc-kpi-card--alert.qc-has-new → กระพริบเตือน
-   เพิ่มต่อท้ายไฟล์ /css/pages/dashboard/QcDashboard.css
+   12. KPI CARDS — CLICKABLE + ALERT
 ============================================================ */
-
-/* ── ทำให้ <a> ดูเหมือนการ์ด ── */
 a.qc-kpi-card,
 a.qc-kpi-card:visited {
   text-decoration: none;
@@ -648,30 +940,29 @@ a.qc-kpi-card:visited {
   display: flex;
 }
 
-/* ── Clickable cursor + hover ── */
 .qc-kpi-card--clickable {
   cursor: pointer;
   user-select: none;
 }
 .qc-kpi-card--clickable:hover {
-  border-color: var(--role-color);
+  border-color: var(--role-color, #f97316);
 }
 .qc-kpi-card--clickable:active {
   transform: translateY(-1px) scale(0.99);
 }
 .qc-kpi-card--clickable:focus-visible {
   outline: none;
-  border-color: var(--role-color);
-  box-shadow: 0 0 0 3px var(--role-soft), var(--shadow-md);
+  border-color: var(--role-color, #f97316);
+  box-shadow: 0 0 0 3px var(--role-soft, #ffedd5),
+              var(--shadow-md, 0 6px 16px rgba(249, 115, 22, 0.14));
 }
 
-/* ── ลูกศรมุมขวาล่าง โผล่ตอน hover ── */
 .qc-kpi-arrow {
   position: absolute;
   bottom: 12px;
   right: 14px;
   font-size: 18px !important;
-  color: var(--role-color);
+  color: var(--role-color, #f97316);
   opacity: 0;
   transform: translateX(-4px);
   transition: all 0.25s ease;
@@ -682,12 +973,6 @@ a.qc-kpi-card:visited {
   transform: translateX(0);
 }
 
-/* ============================================================
-   🔔 ALERT MODE — กระพริบตอนมีเคลมใหม่
-   เพิ่ม class .qc-has-new จาก JS เพื่อเปิดเอฟเฟกต์
-============================================================ */
-
-/* การ์ดเปลี่ยนพื้นหลัง + เส้นขอบเป็น warn */
 .qc-kpi-card--alert.qc-has-new {
   background: linear-gradient(135deg, #fff7ed, #fef3c7);
   border-color: var(--qc-warn);
@@ -696,7 +981,6 @@ a.qc-kpi-card:visited {
   overflow: visible;
 }
 
-/* เปลี่ยนสีไอคอน */
 .qc-kpi-card--alert.qc-has-new .qc-kpi-icon {
   opacity: 0.55;
   color: var(--qc-warn-dark);
@@ -704,13 +988,11 @@ a.qc-kpi-card:visited {
   transform-origin: top center;
 }
 
-/* เปลี่ยนสีตัวเลข + กะพริบจาง */
 .qc-kpi-card--alert.qc-has-new .qc-kpi-val {
   color: var(--qc-warn-dark) !important;
   animation: qcNumberFlash 2s ease-in-out infinite;
 }
 
-/* Ripple ขอบรอบการ์ด */
 .qc-kpi-card--alert.qc-has-new::after {
   content: '';
   position: absolute;
@@ -722,7 +1004,6 @@ a.qc-kpi-card:visited {
   opacity: 0;
 }
 
-/* Badge ตัวเลข มุมขวาบน */
 .qc-kpi-badge {
   position: absolute;
   top: -8px;
@@ -750,7 +1031,6 @@ a.qc-kpi-card:visited {
              qcBadgePulse 1.8s ease-in-out infinite 0.5s;
 }
 
-/* หยุด animation ตอน hover (ให้ user อ่านง่าย) */
 .qc-kpi-card--alert.qc-has-new:hover,
 .qc-kpi-card--alert.qc-has-new:hover .qc-kpi-icon,
 .qc-kpi-card--alert.qc-has-new:hover .qc-kpi-val,
@@ -760,8 +1040,183 @@ a.qc-kpi-card:visited {
 }
 
 
+/* ============================================================
+   13. COMPARISON CARD
+============================================================ */
+.cmp-card {
+  padding: 18px;
+}
+
+.cmp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cmp-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary, #111827);
+}
+
+.cmp-header h3::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: var(--role-color, #f97316);
+  border-radius: 2px;
+}
+
+.cmp-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cmp-controls label {
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+}
+
+.cmp-controls select {
+  padding: 6px 10px;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 8px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 12.5px;
+  background: #fff;
+  cursor: pointer;
+  color: var(--text-primary, #111827);
+  outline: none;
+  transition: all var(--transition, 0.2s ease);
+}
+
+.cmp-controls select:focus {
+  border-color: var(--role-color, #f97316);
+  box-shadow: 0 0 0 3px var(--role-soft, #ffedd5);
+}
+
+.cmp-period-info {
+  font-size: 11.5px;
+  color: var(--text-muted, #6b7280);
+  font-family: var(--qc-mono);
+  margin-bottom: 12px;
+}
+
+.cmp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cmp-kpi {
+  background: var(--bg-main, #f9fafb);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  transition: all var(--transition, 0.2s ease);
+}
+
+.cmp-kpi:hover {
+  border-color: var(--role-border, #fed7aa);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
+.cmp-kpi--span2 { grid-column: span 2; }
+
+.cmp-kpi-label {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  font-weight: 500;
+}
+
+.cmp-kpi-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  line-height: 1;
+  font-family: var(--qc-mono);
+}
+
+.cmp-kpi-val.pass { color: var(--qc-pass-dark); }
+.cmp-kpi-val.fail { color: var(--qc-fail-dark); }
+.cmp-kpi-val.warn { color: var(--qc-warn-dark); }
+
+.cmp-kpi-delta {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.cmp-kpi-delta.up   { color: var(--qc-pass-dark); }
+.cmp-kpi-delta.down { color: var(--qc-fail-dark); }
+.cmp-kpi-delta.flat { color: var(--text-muted, #9ca3af); }
+
+.cmp-kpi-prev {
+  font-size: 10.5px;
+  color: var(--text-muted, #9ca3af);
+}
+
+.cmp-chart-wrap {
+  position: relative;
+  height: 220px;
+}
 
 
+/* ============================================================
+   14. GAUGE CHART
+============================================================ */
+.qc-gauge-wrap {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.qc-gauge-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  min-width: 220px;
+}
+
+.qc-gauge-legend-row {
+  display: grid;
+  grid-template-columns: 10px 36px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-secondary, #374151);
+}
+
+.qc-gauge-legend-row strong {
+  font-family: var(--qc-mono);
+  font-size: 14px;
+  color: var(--text-primary, #111827);
+}
+
+.qc-gauge-dot {
+  width: 6px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-block;
+}
 
 
 /* ============================================================
@@ -813,40 +1268,72 @@ a.qc-kpi-card:visited {
   }
 }
 
-/* ── เคารพการตั้งค่า reduce motion ── */
-@media (prefers-reduced-motion: reduce) {
-  .qc-kpi-card--alert.qc-has-new,
-  .qc-kpi-card--alert.qc-has-new .qc-kpi-icon,
-  .qc-kpi-card--alert.qc-has-new .qc-kpi-val,
-  .qc-kpi-card--alert.qc-has-new::after,
-  .qc-kpi-badge {
-    animation: none !important;
-  }
-}
-
-/* ── Responsive: ปรับ badge ให้พอดีจอเล็ก ── */
-@media (max-width: 479px) {
-  .qc-kpi-badge {
-    top: -6px;
-    right: -6px;
-    min-width: 20px;
-    height: 20px;
-    font-size: 10px;
-  }
-  .qc-kpi-arrow { display: none; }
-}
 
 /* ============================================================
-   RESPONSIVE
+   15. RESPONSIVE
 ============================================================ */
 @media (min-width: 768px) and (max-width: 1199px) {
   .qc-kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .qc-kpi-val { font-size: 1.45rem; }
   .qc-row2 { gap: 12px; }
   .qc-row3 { gap: 12px; }
+  .cmp-kpi-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 767px) {
+  /* Mobile: sidebar overlay mode */
+  body,
+  body.sidebar-expanded {
+    padding-left: 0;
+  }
+
+  .ea-sidebar {
+    transform: translateX(calc(-100% - var(--ea-side-gap) * 2));
+    transition: transform 0.28s ease, width 0.25s ease;
+  }
+
+  body.sidebar-expanded .ea-sidebar {
+    transform: translateX(0);
+    width: 260px;
+    align-items: stretch;
+  }
+
+  body.sidebar-expanded .mini-brand-text,
+  body.sidebar-expanded .ea-text {
+    display: inline;
+  }
+
+  body.sidebar-expanded .mini-brand-text {
+    display: block;
+  }
+
+  body.sidebar-expanded .ea-link,
+  body.sidebar-expanded .ea-user {
+    justify-content: flex-start;
+    padding: 0 14px;
+  }
+
+  .ea-toggle {
+    right: -22px;
+    background: linear-gradient(135deg, var(--role-color, #f97316), var(--role-hover, #ea580c));
+  }
+
+  body.sidebar-expanded::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 25, 23, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    animation: eaFade 0.2s ease;
+  }
+
+  @keyframes eaFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Content adjust */
   .qc-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .qc-kpi-card { padding: 14px 14px 12px; }
   .qc-kpi-val { font-size: 1.3rem; }
@@ -871,28 +1358,58 @@ a.qc-kpi-card:visited {
   .qc-card-header-row { flex-direction: column; align-items: stretch; }
   .qc-filter-wrap { width: 100%; }
   #filterStatus { flex: 1; }
+
+  .cmp-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .cmp-kpi--span2 { grid-column: span 2; }
+  .cmp-header { flex-direction: column; align-items: stretch; }
+  .cmp-controls { justify-content: space-between; }
+
+  .qc-gauge-wrap { grid-template-columns: 1fr; }
+  .qc-gauge-chart-wrap { min-width: 0; }
 }
 
 @media (max-width: 479px) {
   .qc-kpi-grid { grid-template-columns: 1fr 1fr; }
   .qc-data-table { font-size: 12px; min-width: 520px; }
+  .qc-kpi-badge {
+    top: -6px; right: -6px;
+    min-width: 20px; height: 20px;
+    font-size: 10px;
+  }
+  .qc-kpi-arrow { display: none; }
+  .cmp-kpi-grid { grid-template-columns: 1fr; }
+  .cmp-kpi--span2 { grid-column: span 1; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .qc-kpi-card--alert.qc-has-new,
+  .qc-kpi-card--alert.qc-has-new .qc-kpi-icon,
+  .qc-kpi-card--alert.qc-has-new .qc-kpi-val,
+  .qc-kpi-card--alert.qc-has-new::after,
+  .qc-kpi-badge {
+    animation: none !important;
+  }
+}
+
+
 /* ============================================================
-   PRINT
+   16. PRINT
 ============================================================ */
 @media print {
-  .sidebar,
+  .ea-sidebar,
   .right-column,
   .header-right,
   .qc-filter-wrap,
-  .qc-btn-goto-qc {
+  .qc-btn-goto-qc,
+  .cmp-controls {
     display: none !important;
   }
+  body, body.sidebar-expanded { padding-left: 0 !important; }
   .content { padding: 0; }
   .content-layout { display: block; }
   .qc-card,
-  .qc-kpi-card {
+  .qc-kpi-card,
+  .cmp-card {
     box-shadow: none !important;
     border: 1px solid #ccc !important;
     page-break-inside: avoid;
@@ -900,9 +1417,2018 @@ a.qc-kpi-card:visited {
 }
 
 /* ============================================================
-   GAUGE CHART — replace donut style
+   ✅ BALANCE FIX — QC Dashboard layout/tablet/notebook
+   วางท้ายไฟล์เพื่อ override index.css และค่าก่อนหน้า
+============================================================ */
+html {
+  background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+}
+
+body.role-adminQc {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.content {
+  box-sizing: border-box;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 18px 28px;
+}
+
+.content-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 256px;
+  gap: 16px;
+  align-items: start;
+}
+
+.main-content,
+.right-column {
+  min-width: 0;
+}
+
+.header,
+.right-panel,
+.user-card,
+.calendar-card,
+.qc-card,
+.qc-kpi-card,
+.btn-ea {
+  border-radius: 18px;
+}
+
+.header {
+  min-height: 86px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top left, rgba(249,115,22,.10), transparent 42%),
+    #ffffff;
+  border: 1px solid rgba(249,115,22,.14);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.header h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.header .subtext {
+  margin: 0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.qc-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.qc-kpi-card {
+  min-height: 94px;
+  padding: 16px 16px 14px;
+}
+
+.qc-kpi-card--alert.qc-has-new {
+  background:
+    linear-gradient(135deg, rgba(245,158,11,.16), rgba(255,247,237,.96)),
+    #fff;
+  border-color: rgba(245, 158, 11, .38);
+}
+
+.qc-kpi-badge {
+  top: 10px;
+  right: 10px;
+}
+
+.qc-row2 {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 14px;
+}
+
+.qc-row2 .qc-card {
+  min-height: 235px;
+}
+
+.qc-pie-wrap {
+  min-height: 165px;
+  justify-content: center;
+}
+
+.qc-pie-chart-wrap {
+  width: 160px;
+  height: 160px;
+}
+
+.qc-gauge-legend-row,
+.qc-legend-item {
+  min-height: 34px;
+}
+
+.qc-chart-wrap--tall {
+  height: 280px;
+}
+
+.right-column {
+  position: sticky;
+  top: 18px;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.user-card,
+.calendar-card,
+.qc-mini-stat {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-ea {
+  min-height: 48px;
+  justify-content: center;
+}
+
+/* iPad / notebook แคบ: ลดความอึดอัด แต่ยังคง sidebar + right panel */
+@media (min-width: 900px) and (max-width: 1220px) {
+  .content {
+    max-width: 1120px;
+    padding: 14px 14px 24px;
+  }
+
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) 238px;
+    gap: 14px;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(4, minmax(132px, 1fr));
+    gap: 10px;
+  }
+
+  .qc-kpi-card {
+    padding: 14px 14px 12px;
+    min-height: 88px;
+  }
+
+  .qc-kpi-label,
+  .qc-kpi-sub {
+    font-size: 11px;
+  }
+
+  .qc-kpi-val {
+    font-size: 1.45rem;
+  }
+
+  .qc-row2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .qc-pie-wrap {
+    gap: 14px;
+  }
+
+  .qc-pie-chart-wrap {
+    width: 138px;
+    height: 138px;
+  }
+}
+
+/* Tablet แนวตั้ง: เอา right panel ลงล่าง เพื่อไม่ให้กราฟ/การ์ดบีบ */
+@media (min-width: 768px) and (max-width: 899px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .right-column {
+    position: static;
+  }
+
+  .right-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qc-row2,
+  .qc-row3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .content {
+    padding: 12px;
+  }
+
+  .content-layout {
+    display: block;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .right-column {
+    position: static;
+  }
+
+  .right-panel {
+    margin-top: 14px;
+  }
+}
+
+
+.qc-row2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.qc-summary-donut-layout,
+.qc-pie-wrap {
+  min-height: 210px;
+}
+
+.qc-status-bars,
+.qc-summary-legend {
+  width: 100%;
+}
+
+.qc-status-bar-row {
+  margin-bottom: 16px;
+}
+
+.qc-status-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  margin-bottom: 7px;
+}
+
+.qc-status-track {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.qc-status-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.qc-status-total,
+.qc-summary-total {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 14px;
+  margin-top: 14px;
+  font-weight: 700;
+}
+
+.qc-summary-donut-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.qc-summary-chart-wrap {
+  position: relative;
+  height: 190px;
+}
+
+.qc-summary-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.qc-summary-center strong {
+  font-size: 28px;
+}
+
+.qc-summary-center span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.qc-summary-legend-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12.5px;
+  margin-bottom: 12px;
+}
+
+.qc-summary-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.qc-summary-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qc-summary-legend-row em {
+  font-style: normal;
+  color: #64748b;
+}
+
+.ea-toggle {
+  height: 76px;
+  right: -12px;
+  border-radius: 999px;
+}
+
+@media (max-width: 1180px) {
+  .qc-summary-donut-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.ea-link .material-symbols-outlined,
+.ea-user .material-symbols-outlined,
+.ea-toggle .material-symbols-outlined {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* active menu */
+.ea-link.active .material-symbols-outlined {
+  color: #ea580c !important;
+}
+
+/* menu text */
+.ea-link .ea-text,
+.ea-user .ea-text {
+  /* color: #ffffff; */
+}
+
+/* hover */
+.ea-link:hover,
+.ea-user:hover {
+  color: #ffffff;
+}
+
+.ea-sidebar {
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+}
+
+.ea-link {
+  margin-bottom: 6px;
+}
+
+.ea-link.active {
+  background: #ffffff;
+  color: #ea580c;
+  box-shadow: 0 10px 22px rgba(255,255,255,0.25);
+}
+
+
+
+.qc-data-table tbody tr {
+  position: relative;
+}
+
+.qc-data-table tbody tr::before {
+  content: "";
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.qc-row-pending {
+  background: linear-gradient(90deg, rgba(245,158,11,.12), #fff 45%);
+}
+
+.qc-row-progress {
+  background: linear-gradient(90deg, rgba(59,130,246,.12), #fff 45%);
+}
+
+.qc-row-pass {
+  background: linear-gradient(90deg, rgba(16,185,129,.12), #fff 45%);
+}
+
+.qc-row-fail {
+  background: linear-gradient(90deg, rgba(239,68,68,.12), #fff 45%);
+}
+
+.qc-row-pending::before { background: #f59e0b; }
+.qc-row-progress::before { background: #3b82f6; }
+.qc-row-pass::before { background: #10b981; }
+.qc-row-fail::before { background: #ef4444; }
+
+.qc-sb-progress {
+  background: rgba(59,130,246,.10);
+  color: #2563eb;
+  border: 1px solid rgba(59,130,246,.24);
+}
+
+.qc-status-badge {
+  gap: 5px;
+}
+
+.qc-status-icon {
+  font-size: 15px !important;
+}
+/* ============================================================
+   ✅ RESPONSIVE KEEP LAYOUT — Tablet / Notebook / Desktop
+   เป้าหมาย: ย่อขนาดตามหน้าจอ โดยไม่เปลี่ยน Layout เดิม
+   - 768px ขึ้นไป: คง layout เดิมไว้เสมอ
+     main + right panel อยู่ข้างกัน, KPI 4 ใบ, row2 2 คอลัมน์, row3 2 คอลัมน์
+   - มือถือเท่านั้น (<768px): ค่อยเปลี่ยนเป็นแนวตั้ง
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+canvas,
+svg,
+table {
+  max-width: 100%;
+}
+
+/* ---------- DESKTOP / NOTEBOOK / TABLET: keep original layout ---------- */
+@media (min-width: 768px) {
+  :root {
+    --ea-side-gap: clamp(10px, 1.1vw, 18px);
+    --ea-side-mini: clamp(62px, 5.2vw, 84px);
+    --ea-side-full: clamp(188px, 17vw, 240px);
+  }
+
+  body.role-adminQc,
+  body {
+    padding-left: calc(var(--ea-side-mini) + (var(--ea-side-gap) * 2)) !important;
+    overflow-x: hidden !important;
+  }
+
+  body.sidebar-expanded {
+    padding-left: calc(var(--ea-side-full) + (var(--ea-side-gap) * 2)) !important;
+  }
+
+  .ea-sidebar {
+    top: var(--ea-side-gap) !important;
+    bottom: var(--ea-side-gap) !important;
+    left: var(--ea-side-gap) !important;
+    width: var(--ea-side-mini) !important;
+    padding: clamp(14px, 1.4vw, 22px) clamp(7px, .8vw, 10px) !important;
+    border-radius: clamp(16px, 1.6vw, 20px) !important;
+  }
+
+  body.sidebar-expanded .ea-sidebar {
+    width: var(--ea-side-full) !important;
+    padding-inline: clamp(10px, 1vw, 14px) !important;
+  }
+
+  .ea-logo {
+    width: clamp(42px, 4vw, 52px) !important;
+    height: clamp(42px, 4vw, 52px) !important;
+  }
+
+  .ea-logo img {
+    width: clamp(28px, 3vw, 36px) !important;
+    height: clamp(28px, 3vw, 36px) !important;
+  }
+
+  .ea-link,
+  .ea-user {
+    height: clamp(38px, 3.6vw, 46px) !important;
+    border-radius: clamp(12px, 1.3vw, 16px) !important;
+  }
+
+  .ea-link .material-symbols-outlined,
+  .ea-user .material-symbols-outlined {
+    font-size: clamp(19px, 1.9vw, 22px) !important;
+  }
+
+  .ea-toggle {
+    width: clamp(18px, 1.6vw, 22px) !important;
+    height: clamp(54px, 5.2vw, 76px) !important;
+    right: clamp(-12px, -1vw, -9px) !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: min(1280px, calc(100vw - var(--ea-side-mini) - (var(--ea-side-gap) * 2) - 18px)) !important;
+    margin-inline: auto !important;
+    padding: clamp(10px, 1.25vw, 18px) clamp(10px, 1.25vw, 18px) clamp(18px, 2vw, 28px) !important;
+  }
+
+  body.sidebar-expanded .content {
+    max-width: min(1280px, calc(100vw - var(--ea-side-full) - (var(--ea-side-gap) * 2) - 18px)) !important;
+  }
+
+  .content-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) clamp(206px, 19vw, 256px) !important;
+    gap: clamp(10px, 1.2vw, 16px) !important;
+    align-items: start !important;
+  }
+
+  .main-content,
+  .right-column,
+  .right-panel,
+  .qc-card,
+  .qc-kpi-card,
+  .header {
+    min-width: 0 !important;
+  }
+
+  .right-column {
+    position: sticky !important;
+    top: clamp(10px, 1.2vw, 18px) !important;
+  }
+
+  .right-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(8px, 1vw, 14px) !important;
+  }
+
+  .header {
+    min-height: clamp(70px, 7vw, 86px) !important;
+    padding: clamp(14px, 1.7vw, 22px) !important;
+    gap: clamp(8px, 1vw, 14px) !important;
+  }
+
+  .header h2 {
+    font-size: clamp(15px, 1.45vw, 18px) !important;
+  }
+
+  .header .subtext {
+    font-size: clamp(10.5px, 1vw, 12.5px) !important;
+  }
+
+  .qc-date-chip {
+    font-size: clamp(10.5px, .95vw, 12px) !important;
+    padding: clamp(5px, .55vw, 6px) clamp(8px, .9vw, 12px) !important;
+  }
+
+  /* คง 4 การ์ด ไม่ให้ตัดเป็น 2 คอลัมน์บน tablet/notebook */
+  .qc-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: clamp(8px, 1vw, 12px) !important;
+  }
+
+  .qc-kpi-card {
+    min-height: clamp(74px, 7.2vw, 94px) !important;
+    padding: clamp(10px, 1.15vw, 16px) !important;
+    gap: clamp(3px, .45vw, 6px) !important;
+  }
+
+  .qc-kpi-label,
+  .qc-kpi-sub {
+    font-size: clamp(9.5px, .9vw, 12px) !important;
+    line-height: 1.25 !important;
+  }
+
+  .qc-kpi-val {
+    font-size: clamp(1.05rem, 2vw, 1.7rem) !important;
+  }
+
+  .qc-kpi-icon {
+    top: clamp(8px, 1vw, 14px) !important;
+    right: clamp(8px, 1vw, 14px) !important;
+    font-size: clamp(16px, 1.7vw, 22px) !important;
+  }
+
+  /* คง row2 เป็น 2 ช่อง */
+  .qc-row2 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr) !important;
+    gap: clamp(10px, 1.1vw, 14px) !important;
+  }
+
+  /* คง row3 เป็น 2 ช่อง */
+  .qc-row3 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) !important;
+    gap: clamp(10px, 1.1vw, 14px) !important;
+  }
+
+  .qc-card {
+    padding: clamp(14px, 1.45vw, 20px) !important;
+    margin-bottom: clamp(10px, 1.1vw, 16px) !important;
+  }
+
+  .qc-card-title {
+    font-size: clamp(10.5px, .98vw, 12.5px) !important;
+    margin-bottom: clamp(10px, 1.1vw, 16px) !important;
+  }
+
+  .qc-pie-wrap {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: clamp(12px, 1.6vw, 22px) !important;
+    min-height: clamp(140px, 15vw, 210px) !important;
+  }
+
+  .qc-pie-chart-wrap {
+    width: clamp(112px, 12.5vw, 160px) !important;
+    height: clamp(112px, 12.5vw, 160px) !important;
+  }
+
+  .qc-pie-center-num {
+    font-size: clamp(1.05rem, 1.7vw, 1.45rem) !important;
+  }
+
+  .qc-legend-item,
+  .qc-sum-row,
+  .qc-claim-row {
+    padding: clamp(6px, .8vw, 10px) clamp(7px, .95vw, 12px) !important;
+  }
+
+  .qc-legend-label,
+  .qc-legend-count,
+  .qc-sum-label,
+  .qc-sum-val,
+  .qc-claim-meta {
+    font-size: clamp(10px, .95vw, 13px) !important;
+  }
+
+  .qc-chart-wrap {
+    height: clamp(160px, 17vw, 200px) !important;
+  }
+
+  .qc-chart-wrap--tall {
+    height: clamp(220px, 25vw, 320px) !important;
+  }
+
+  .qc-data-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    font-size: clamp(10px, .92vw, 13px) !important;
+  }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    padding: clamp(7px, .82vw, 12px) clamp(6px, .9vw, 14px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .qc-data-table th:nth-child(1),
+  .qc-data-table td:nth-child(1) { width: 13%; }
+  .qc-data-table th:nth-child(2),
+  .qc-data-table td:nth-child(2) { width: 25%; }
+  .qc-data-table th:nth-child(3),
+  .qc-data-table td:nth-child(3) { width: 14%; }
+  .qc-data-table th:nth-child(4),
+  .qc-data-table td:nth-child(4) { width: 9%; }
+  .qc-data-table th:nth-child(5),
+  .qc-data-table td:nth-child(5) { width: 13%; }
+  .qc-data-table th:nth-child(6),
+  .qc-data-table td:nth-child(6) { width: 13%; }
+  .qc-data-table th:nth-child(7),
+  .qc-data-table td:nth-child(7) { width: 13%; }
+
+  .qc-tbl-scroll {
+    overflow-x: hidden !important;
+  }
+
+  .user-card,
+  .calendar-card,
+  .qc-mini-stat,
+  .btn-ea {
+    padding: clamp(10px, 1.15vw, 16px) !important;
+  }
+
+  .user-info h4 {
+    font-size: clamp(12px, 1.2vw, 15px) !important;
+  }
+
+  .user-info p,
+  .user-info span,
+  .calendar-card,
+  .qc-mini-stat-label {
+    font-size: clamp(10px, .9vw, 12px) !important;
+  }
+
+  .calendar-grid {
+    gap: clamp(2px, .35vw, 6px) !important;
+  }
+
+  .calendar-day,
+  .calendar-date {
+    font-size: clamp(9px, .82vw, 12px) !important;
+  }
+}
+
+/* ---------- NOTEBOOK แคบมาก / TABLET แนวนอน: ลดขนาด แต่ไม่เปลี่ยน layout ---------- */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) clamp(190px, 20vw, 220px) !important;
+  }
+
+  .qc-row2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  .qc-row3 {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, .9fr) !important;
+  }
+
+  .qc-summary-donut-layout {
+    grid-template-columns: clamp(120px, 15vw, 170px) minmax(0, 1fr) !important;
+    gap: clamp(10px, 1.2vw, 16px) !important;
+  }
+
+  .qc-summary-chart-wrap {
+    height: clamp(120px, 14vw, 160px) !important;
+  }
+}
+
+/* ---------- TABLET แนวตั้ง: ย่อทุกอย่าง แต่ยังคง layout เดิม ---------- */
+@media (min-width: 768px) and (max-width: 899px) {
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) 176px !important;
+    gap: 9px !important;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .qc-kpi-card {
+    min-height: 70px !important;
+    padding: 9px !important;
+  }
+
+  .qc-kpi-label,
+  .qc-kpi-sub {
+    font-size: 9px !important;
+  }
+
+  .qc-kpi-val {
+    font-size: 1rem !important;
+  }
+
+  .qc-row2,
+  .qc-row3 {
+    gap: 9px !important;
+  }
+
+  .qc-card {
+    padding: 11px !important;
+  }
+
+  .qc-pie-wrap {
+    gap: 8px !important;
+  }
+
+  .qc-pie-chart-wrap {
+    width: 96px !important;
+    height: 96px !important;
+  }
+
+  .qc-chart-wrap--tall {
+    height: 210px !important;
+  }
+
+  .qc-chart-wrap {
+    height: 150px !important;
+  }
+
+  .qc-data-table {
+    font-size: 9px !important;
+  }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    padding: 6px 4px !important;
+  }
+
+  .right-panel {
+    gap: 8px !important;
+  }
+
+  .avatar-wrapper img,
+  #profileImage {/* ============================================================
+   QcDashboard.css (V4 — NEW SIDEBAR แบบ floating)
+   ────────────────────────────────────────────────────────────
+   ✨ Changelog V4:
+   - ✅ เพิ่ม .ea-sidebar (floating sidebar แบบ internal-claims)
+   - ✅ ปุ่ม Logout ย้ายมาอยู่ล่างสุดของ sidebar (ใช้ .ea-user)
+   - ✅ ใช้สีส้มเดิม role-adminQc (#f97316)
+   - ✅ ซ่อน sidebar เก่า (.sidebar จาก index.css)
+   - ✅ ปรับ layout ให้เนื้อหา shift ตาม sidebar width
+
+   📑 TABLE OF CONTENTS:
+     1. PAGE-LEVEL VARS
+     2. ⭐ NEW SIDEBAR (.ea-sidebar)
+     3. LAYOUT OVERRIDE (ซ่อน sidebar เก่า + shift content)
+     4. HEADER ENHANCE
+     5. KPI GRID
+     6. CARD BASE
+     7. ROW 2 (PIE + SUMMARY)
+     8. ROW 3 (TREND + RECENT)
+     9. STATUS BADGE
+    10. TABLE
+    11. MINI STATS
+    12. KPI CLICKABLE + ALERT
+    13. COMPARISON CARD
+    14. GAUGE CHART
+    15. RESPONSIVE
+    16. PRINT
 ============================================================ */
 
+
+/* ============================================================
+   1. PAGE-LEVEL VARS
+============================================================ */
+:root {
+  --qc-pass:        #10b981;
+  --qc-pass-dark:   #059669;
+  --qc-pass-bg:     rgba(16, 185, 129, 0.10);
+  --qc-pass-border: rgba(16, 185, 129, 0.22);
+
+  --qc-fail:        #ef4444;
+  --qc-fail-dark:   #dc2626;
+  --qc-fail-bg:     rgba(239, 68, 68, 0.10);
+  --qc-fail-border: rgba(239, 68, 68, 0.22);
+
+  --qc-warn:        #f59e0b;
+  --qc-warn-dark:   #b45309;
+  --qc-warn-bg:     rgba(245, 158, 11, 0.10);
+  --qc-warn-border: rgba(245, 158, 11, 0.22);
+
+  --qc-info:        #3b82f6;
+  --qc-mono:        'IBM Plex Mono', 'Kanit', monospace;
+
+  /* ⭐ EA-SIDEBAR TOKENS — โทนส้ม (adminQc) */
+  --ea-side-mini: 84px;
+  --ea-side-full: 240px;
+  --ea-side-gap: 18px;
+  --ea-side-bg: #ce5200;
+  --ea-side-bg-2: #f97316;
+  --ea-side-hover: rgba(255, 255, 255, 0.14);
+  --ea-side-active: #eb6e25;
+  --ea-side-text: #fde6d3;
+}
+
+
+/* ============================================================
+   2. ⭐ NEW SIDEBAR (.ea-sidebar) — floating แบบ internal-claims
+   ใช้สีส้มเดิม role-adminQc
+============================================================ */
+.ea-sidebar {
+  position: fixed;
+  top: var(--ea-side-gap);
+  bottom: var(--ea-side-gap);
+  left: var(--ea-side-gap);
+  width: var(--ea-side-mini);
+  z-index: 9999;
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  border-radius: 20px;
+  padding: 22px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+  transition: width 0.25s ease, align-items 0.25s ease, padding 0.25s ease;
+  overflow: visible;
+  font-family: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
+}
+
+body.sidebar-expanded .ea-sidebar {
+  width: var(--ea-side-full);
+  align-items: stretch;
+  padding: 22px 14px;
+}
+
+/* Logo (กลม) */
+.ea-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.ea-logo img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+/* Brand text (โผล่ตอน expanded) */
+.mini-brand-text {
+  display: none;
+  text-align: center;
+  color: #fff;
+  margin-bottom: 18px;
+  padding: 0 6px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+body.sidebar-expanded .mini-brand-text { display: block; }
+
+.mini-brand-text strong {
+  display: block;
+  font-family: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.mini-brand-text span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+/* Menu container */
+.ea-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.ea-menu::-webkit-scrollbar { width: 4px; }
+.ea-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+/* Menu items + user (logout) */
+ .ea-link,
+.ea-user {
+  height: 46px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+  position: relative;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+
+
+body.sidebar-expanded .ea-link,
+body.sidebar-expanded .ea-user {
+  justify-content: flex-start;
+  padding: 0 14px;
+}
+
+.ea-link:hover,
+.ea-user:hover {
+  background: var(--ea-side-hover);
+  color: #fff;
+}
+
+.ea-link.active {
+  background: rgba(255, 255, 255, 0.6);
+  color: #da590e;
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.ea-link .material-symbols-outlined,
+.ea-user .material-symbols-outlined {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.ea-text {
+  display: none;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.sidebar-expanded .ea-text { display: inline; }
+
+/* Tooltip ตอน collapsed */
+body:not(.sidebar-expanded) .ea-link:hover::after,
+body:not(.sidebar-expanded) .ea-user:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1c1917;
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  z-index: 10000;
+}
+
+body:not(.sidebar-expanded) .ea-link:hover::before,
+body:not(.sidebar-expanded) .ea-user:hover::before {
+  content: "";
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #1c1917;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Toggle button (แท่งยาวๆ ขอบขวา) */
+.ea-toggle {
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 64px;
+  border-radius: 11px;
+  border: 1.5px solid #fff;
+  background: linear-gradient(180deg, #ffb921, #eb9525);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(235, 110, 37, 0.4);
+  transition: box-shadow 0.25s ease;
+  padding: 0;
+  z-index: 20;
+}
+
+.ea-toggle:hover { box-shadow: 0 10px 26px rgba(235, 110, 37, 0.55); }
+
+.ea-toggle .material-symbols-outlined {
+  font-size: 16px;
+  transition: transform 0.25s ease;
+}
+
+body.sidebar-expanded .ea-toggle .material-symbols-outlined {
+  transform: rotate(180deg);
+}
+
+/* ✨ Logout button — อยู่ล่างสุด */
+.ea-user {
+  margin-top: 12px;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+
+.ea-user::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ea-user:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fff;
+}
+
+
+/* ============================================================
+   3. ⭐ LAYOUT OVERRIDE — ซ่อน sidebar เก่า + shift content
+============================================================ */
+
+/* ซ่อน sidebar เดิมจาก index.css */
+.layout > .sidebar,
+body > .layout .sidebar:not(.ea-sidebar) {
+  display: none !important;
+}
+
+/* ปรับ layout ให้ shift ตาม ea-sidebar */
+body {
+  padding-left: calc(var(--ea-side-mini) + var(--ea-side-gap) * 2);
+  transition: padding-left 0.25s ease;
+}
+
+body.sidebar-expanded {
+  padding-left: calc(var(--ea-side-full) + var(--ea-side-gap) * 2);
+}
+
+/* ถ้ามี .layout wrapper อยู่ — ลบ margin/padding ภายในที่อาจชนกัน */
+.layout {
+  display: block;
+  width: 100%;
+}
+
+/* Content ใช้พื้นที่เต็มหลัง shift */
+.content {
+  width: 100%;
+  padding: 16px 20px;
+}
+
+
+/* ============================================================
+   4. HEADER ENHANCE
+============================================================ */
+.header h2 .material-symbols-outlined {
+  color: var(--role-color, #f97316);
+}
+
+.qc-date-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--role-soft, #ffedd5);
+  color: var(--role-text, #9a3412);
+  border: 1px solid var(--role-border, #fed7aa);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   5. KPI GRID
+============================================================ */
+.qc-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.qc-kpi-card {
+  position: relative;
+  background: var(--bg-surface, #ffffff);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-md, 12px);
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: transform var(--transition, 0.2s ease),
+              box-shadow var(--transition, 0.2s ease),
+              border-color var(--transition, 0.2s ease);
+}
+
+.qc-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -32px;
+  left: -32px;
+  width: 96px;
+  height: 96px;
+  background: radial-gradient(circle, rgba(var(--role-rgb, 249, 115, 22), 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.qc-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md, 0 6px 16px rgba(249, 115, 22, 0.14));
+  border-color: var(--role-border, #fed7aa);
+}
+
+.qc-kpi-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 22px !important;
+  opacity: 0.18;
+  color: var(--role-color, #f97316);
+  transition: all 0.3s ease;
+}
+
+.qc-kpi-card:hover .qc-kpi-icon {
+  opacity: 0.4;
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.qc-kpi-label {
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.qc-kpi-val {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  line-height: 1.1;
+  font-family: var(--qc-mono);
+  letter-spacing: -0.01em;
+}
+.qc-kpi-val.pass { color: var(--qc-pass-dark); }
+.qc-kpi-val.fail { color: var(--qc-fail-dark); }
+.qc-kpi-val.warn { color: var(--qc-warn-dark); }
+
+.qc-kpi-sub {
+  font-size: 11.5px;
+  color: var(--text-muted, #6b7280);
+}
+
+
+/* ============================================================
+   6. CARD BASE
+============================================================ */
+.qc-card {
+  background: var(--bg-surface, #ffffff);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-md, 12px);
+  padding: 20px;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: box-shadow var(--transition, 0.2s ease);
+  margin-bottom: 16px;
+}
+.qc-card:hover { box-shadow: var(--shadow-sm, 0 4px 10px rgba(249, 115, 22, 0.10)); }
+
+.qc-card-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary, #374151);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qc-card-title-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--role-color, #f97316);
+  box-shadow: 0 0 0 4px var(--role-soft, #ffedd5);
+  flex-shrink: 0;
+}
+
+.qc-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.qc-card-header-row .qc-card-title { margin-bottom: 0; }
+
+
+/* ============================================================
+   7. ROW 2 — PIE + SUMMARY
+============================================================ */
+.qc-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.qc-row2 .qc-card { margin-bottom: 0; }
+
+.qc-pie-wrap {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.qc-pie-chart-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 12px rgba(var(--role-rgb, 249, 115, 22), 0.12));
+}
+
+.qc-pie-center-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.qc-pie-center-num {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  font-family: var(--qc-mono);
+}
+.qc-pie-center-sub {
+  font-size: 10.5px;
+  color: var(--text-muted, #6b7280);
+  margin-top: 2px;
+}
+
+.qc-pf-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.qc-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 11px;
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-main, #fff7ed);
+  transition: all var(--transition, 0.2s ease);
+}
+.qc-legend-item:hover {
+  background: var(--role-soft, #ffedd5);
+  transform: translateX(2px);
+}
+
+.qc-legend-left { display: flex; align-items: center; gap: 8px; }
+
+.qc-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.qc-dot-pass { background: var(--qc-pass); }
+.qc-dot-fail { background: var(--qc-fail); }
+.qc-dot-pend { background: var(--qc-warn); }
+
+.qc-legend-label {
+  font-size: 12.5px;
+  color: var(--text-secondary, #374151);
+  font-weight: 500;
+}
+.qc-legend-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  font-family: var(--qc-mono);
+}
+
+/* SUMMARY — claim type */
+.qc-sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 10px);
+  transition: all var(--transition, 0.2s ease);
+}
+.qc-sum-row:hover {
+  background: var(--role-soft, #ffedd5);
+  transform: translateX(2px);
+}
+.qc-sum-row-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.qc-sum-label {
+  font-size: 13px;
+  color: var(--text-primary, #111827);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qc-sum-bar {
+  height: 3px;
+  background: var(--bg-main, #fff7ed);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.qc-sum-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--role-color, #f97316), var(--role-hover, #ea580c));
+  transition: width 0.6s ease;
+}
+.qc-sum-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  font-family: var(--qc-mono);
+  margin-left: 14px;
+}
+.qc-sum-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 12px 0;
+  margin-top: 8px;
+  border-top: 1px dashed var(--gray-200, #e5e7eb);
+}
+.qc-sum-total-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+.qc-sum-total-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--role-color, #f97316);
+  font-family: var(--qc-mono);
+}
+
+
+/* ============================================================
+   8. ROW 3 — TREND + RECENT
+============================================================ */
+.qc-row3 {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.qc-row3 .qc-card { margin-bottom: 0; }
+
+.qc-chart-legend {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.qc-chart-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-secondary, #374151);
+  font-weight: 500;
+}
+.qc-legend-sq {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.qc-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+.qc-chart-wrap--tall { height: 320px; }
+
+/* RECENT CLAIMS LIST */
+.qc-claim-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.qc-claim-list::-webkit-scrollbar { width: 6px; }
+.qc-claim-list::-webkit-scrollbar-thumb {
+  background: rgba(var(--role-rgb, 249, 115, 22), 0.2);
+  border-radius: 999px;
+}
+
+.qc-claim-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 10px);
+  gap: 10px;
+  transition: all var(--transition, 0.2s ease);
+}
+.qc-claim-row:hover {
+  background: var(--role-soft, #ffedd5);
+  transform: translateX(3px);
+}
+
+.qc-claim-id {
+  font-size: 11.5px;
+  font-family: var(--qc-mono);
+  color: var(--role-color, #f97316);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.qc-claim-meta {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+}
+
+
+/* ============================================================
+   9. STATUS BADGE
+============================================================ */
+.qc-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.qc-sb-pass {
+  background: var(--qc-pass-bg);
+  color: var(--qc-pass-dark);
+  border: 1px solid var(--qc-pass-border);
+}
+.qc-sb-fail {
+  background: var(--qc-fail-bg);
+  color: var(--qc-fail-dark);
+  border: 1px solid var(--qc-fail-border);
+}
+.qc-sb-pending {
+  background: var(--qc-warn-bg);
+  color: var(--qc-warn-dark);
+  border: 1px solid var(--qc-warn-border);
+}
+
+
+/* ============================================================
+   10. TABLE
+============================================================ */
+.qc-table-card { padding: 20px; }
+
+.qc-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#filterStatus {
+  padding: 8px 14px;
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-sm, 10px);
+  font-family: 'Kanit', sans-serif;
+  font-size: 12.5px;
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #111827);
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition, 0.2s ease);
+}
+#filterStatus:focus {
+  border-color: var(--role-color, #f97316);
+  box-shadow: 0 0 0 3px var(--role-soft, #ffedd5);
+}
+
+.qc-btn-goto-qc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--role-color, #f97316), var(--role-hover, #ea580c));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm, 10px);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'Kanit', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition, 0.2s ease);
+  box-shadow: 0 4px 10px rgba(var(--role-rgb, 249, 115, 22), 0.25);
+}
+.qc-btn-goto-qc:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(var(--role-rgb, 249, 115, 22), 0.35);
+}
+.qc-btn-goto-qc .material-symbols-outlined {
+  font-size: 16px !important;
+  color: #fff;
+}
+
+.qc-tbl-scroll {
+  overflow-x: auto;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--gray-200, #e5e7eb);
+}
+
+.qc-data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  min-width: 580px;
+}
+.qc-data-table thead tr { background: var(--bg-main, #fff7ed); }
+.qc-data-table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+.qc-data-table th.text-right,
+.qc-data-table td.text-right { text-align: right; }
+.qc-data-table tbody tr { transition: background var(--transition, 0.2s ease); }
+.qc-data-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid var(--gray-100, #f3f4f6);
+}
+.qc-data-table tbody tr:hover { background: var(--role-soft, #ffedd5); }
+.qc-data-table td { padding: 12px 14px; vertical-align: middle; }
+
+.qc-td-id {
+  font-family: var(--qc-mono);
+  font-size: 11.5px;
+  color: var(--role-color, #f97316);
+  font-weight: 700;
+}
+.qc-td-product { font-weight: 500; color: var(--text-primary, #111827); }
+.qc-td-date { font-family: var(--qc-mono); font-size: 11.5px; color: var(--text-muted, #6b7280); }
+.qc-td-emp { font-size: 11.5px; color: var(--text-muted, #6b7280); }
+
+.qc-score-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.qc-score-label {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.qc-score-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--gray-100, #f3f4f6);
+  overflow: hidden;
+  width: 70px;
+}
+.qc-score-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+
+/* ============================================================
+   11. MINI STATS (Right Panel)
+============================================================ */
+.qc-mini-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.qc-mini-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-surface, #ffffff);
+  border: var(--border, 1px solid #ffedd5);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: all var(--transition, 0.2s ease);
+}
+.qc-mini-stat:hover {
+  border-color: var(--role-border, #fed7aa);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm, 0 4px 10px rgba(249, 115, 22, 0.10));
+}
+.qc-mini-stat .material-symbols-outlined {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm, 10px);
+  background: var(--role-soft, #ffedd5);
+  color: var(--role-color, #f97316);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px !important;
+  flex-shrink: 0;
+}
+.qc-mini-stat-label {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+}
+.qc-mini-stat-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  font-family: var(--qc-mono);
+  margin-top: 2px;
+}
+
+
+/* ============================================================
+   12. KPI CARDS — CLICKABLE + ALERT
+============================================================ */
+a.qc-kpi-card,
+a.qc-kpi-card:visited {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+}
+
+.qc-kpi-card--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+.qc-kpi-card--clickable:hover {
+  border-color: var(--role-color, #f97316);
+}
+.qc-kpi-card--clickable:active {
+  transform: translateY(-1px) scale(0.99);
+}
+.qc-kpi-card--clickable:focus-visible {
+  outline: none;
+  border-color: var(--role-color, #f97316);
+  box-shadow: 0 0 0 3px var(--role-soft, #ffedd5),
+              var(--shadow-md, 0 6px 16px rgba(249, 115, 22, 0.14));
+}
+
+.qc-kpi-arrow {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  font-size: 18px !important;
+  color: var(--role-color, #f97316);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+.qc-kpi-card--clickable:hover .qc-kpi-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.qc-kpi-card--alert.qc-has-new {
+  background: linear-gradient(135deg, #fff7ed, #fef3c7);
+  border-color: var(--qc-warn);
+  animation: qcCardPulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: visible;
+}
+
+.qc-kpi-card--alert.qc-has-new .qc-kpi-icon {
+  opacity: 0.55;
+  color: var(--qc-warn-dark);
+  animation: qcBellShake 1.6s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+.qc-kpi-card--alert.qc-has-new .qc-kpi-val {
+  color: var(--qc-warn-dark) !important;
+  animation: qcNumberFlash 2s ease-in-out infinite;
+}
+
+.qc-kpi-card--alert.qc-has-new::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid var(--qc-warn);
+  animation: qcRipple 2s ease-out infinite;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.qc-kpi-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  background: var(--qc-fail);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--qc-mono);
+  border-radius: 11px;
+  border: 2px solid #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+.qc-kpi-card--alert.qc-has-new .qc-kpi-badge[hidden] { display: none !important; }
+.qc-kpi-card--alert.qc-has-new .qc-kpi-badge:not([hidden]) {
+  display: inline-flex;
+  animation: qcBadgeBounce 0.5s ease-out,
+             qcBadgePulse 1.8s ease-in-out infinite 0.5s;
+}
+
+.qc-kpi-card--alert.qc-has-new:hover,
+.qc-kpi-card--alert.qc-has-new:hover .qc-kpi-icon,
+.qc-kpi-card--alert.qc-has-new:hover .qc-kpi-val,
+.qc-kpi-card--alert.qc-has-new:hover .qc-kpi-badge,
+.qc-kpi-card--alert.qc-has-new:hover::after {
+  animation-play-state: paused;
+}
+
+
+/* ============================================================
+   13. COMPARISON CARD
+============================================================ */
+.cmp-card {
+  padding: 18px;
+}
+
+.cmp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cmp-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary, #111827);
+}
+
+.cmp-header h3::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: var(--role-color, #f97316);
+  border-radius: 2px;
+}
+
+.cmp-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cmp-controls label {
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+}
+
+.cmp-controls select {
+  padding: 6px 10px;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 8px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 12.5px;
+  background: #fff;
+  cursor: pointer;
+  color: var(--text-primary, #111827);
+  outline: none;
+  transition: all var(--transition, 0.2s ease);
+}
+
+.cmp-controls select:focus {
+  border-color: var(--role-color, #f97316);
+  box-shadow: 0 0 0 3px var(--role-soft, #ffedd5);
+}
+
+.cmp-period-info {
+  font-size: 11.5px;
+  color: var(--text-muted, #6b7280);
+  font-family: var(--qc-mono);
+  margin-bottom: 12px;
+}
+
+.cmp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cmp-kpi {
+  background: var(--bg-main, #f9fafb);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  transition: all var(--transition, 0.2s ease);
+}
+
+.cmp-kpi:hover {
+  border-color: var(--role-border, #fed7aa);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
+.cmp-kpi--span2 { grid-column: span 2; }
+
+.cmp-kpi-label {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  font-weight: 500;
+}
+
+.cmp-kpi-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  line-height: 1;
+  font-family: var(--qc-mono);
+}
+
+.cmp-kpi-val.pass { color: var(--qc-pass-dark); }
+.cmp-kpi-val.fail { color: var(--qc-fail-dark); }
+.cmp-kpi-val.warn { color: var(--qc-warn-dark); }
+
+.cmp-kpi-delta {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.cmp-kpi-delta.up   { color: var(--qc-pass-dark); }
+.cmp-kpi-delta.down { color: var(--qc-fail-dark); }
+.cmp-kpi-delta.flat { color: var(--text-muted, #9ca3af); }
+
+.cmp-kpi-prev {
+  font-size: 10.5px;
+  color: var(--text-muted, #9ca3af);
+}
+
+.cmp-chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+
+/* ============================================================
+   14. GAUGE CHART
+============================================================ */
 .qc-gauge-wrap {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -917,50 +3443,19 @@ a.qc-kpi-card:visited {
   min-width: 220px;
 }
 
-.qc-gauge-center-label {
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  transform: translateX(-50%);
-  text-align: center;
-  pointer-events: none;
-}
-
-.qc-gauge-center-num {
-  display: block;
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-family: var(--qc-mono);
-  line-height: 1;
-}
-
-.qc-gauge-center-sub {
-  display: block;
-  margin-top: 4px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.qc-gauge-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .qc-gauge-legend-row {
   display: grid;
   grid-template-columns: 10px 36px 1fr;
   align-items: center;
   gap: 10px;
   font-size: 12.5px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #374151);
 }
 
 .qc-gauge-legend-row strong {
   font-family: var(--qc-mono);
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--text-primary, #111827);
 }
 
 .qc-gauge-dot {
@@ -970,14 +3465,1323 @@ a.qc-kpi-card:visited {
   display: inline-block;
 }
 
-@media (max-width: 768px) {
-  .qc-gauge-wrap {
-    grid-template-columns: 1fr;
-  }
 
-  .qc-gauge-chart-wrap {
-    min-width: 0;
+/* ============================================================
+   KEYFRAMES
+============================================================ */
+@keyframes qcCardPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.20);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(245, 158, 11, 0.45);
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes qcBellShake {
+  0%, 50%, 100% { transform: rotate(0deg) scale(1); }
+  10% { transform: rotate(-12deg) scale(1.05); }
+  20% { transform: rotate(10deg)  scale(1.05); }
+  30% { transform: rotate(-8deg)  scale(1.05); }
+  40% { transform: rotate(6deg)   scale(1.05); }
+}
+
+@keyframes qcNumberFlash {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+@keyframes qcRipple {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(1.06); opacity: 0; }
+}
+
+@keyframes qcBadgeBounce {
+  0%   { transform: scale(0);   opacity: 0; }
+  60%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes qcBadgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
   }
 }
 
 
+/* ============================================================
+   15. RESPONSIVE
+============================================================ */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .qc-kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .qc-kpi-val { font-size: 1.45rem; }
+  .qc-row2 { gap: 12px; }
+  .qc-row3 { gap: 12px; }
+  .cmp-kpi-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 767px) {
+  /* Mobile: sidebar overlay mode */
+  body,
+  body.sidebar-expanded {
+    padding-left: 0;
+  }
+
+  .ea-sidebar {
+    transform: translateX(calc(-100% - var(--ea-side-gap) * 2));
+    transition: transform 0.28s ease, width 0.25s ease;
+  }
+
+  body.sidebar-expanded .ea-sidebar {
+    transform: translateX(0);
+    width: 260px;
+    align-items: stretch;
+  }
+
+  body.sidebar-expanded .mini-brand-text,
+  body.sidebar-expanded .ea-text {
+    display: inline;
+  }
+
+  body.sidebar-expanded .mini-brand-text {
+    display: block;
+  }
+
+  body.sidebar-expanded .ea-link,
+  body.sidebar-expanded .ea-user {
+    justify-content: flex-start;
+    padding: 0 14px;
+  }
+
+  .ea-toggle {
+    right: -22px;
+    background: linear-gradient(135deg, var(--role-color, #f97316), var(--role-hover, #ea580c));
+  }
+
+  body.sidebar-expanded::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 25, 23, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    animation: eaFade 0.2s ease;
+  }
+
+  @keyframes eaFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Content adjust */
+  .qc-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .qc-kpi-card { padding: 14px 14px 12px; }
+  .qc-kpi-val { font-size: 1.3rem; }
+  .qc-kpi-icon { font-size: 18px !important; top: 10px; right: 10px; }
+
+  .qc-row2 { grid-template-columns: 1fr; gap: 12px; }
+  .qc-row3 { grid-template-columns: 1fr; gap: 12px; }
+
+  .qc-pie-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .qc-pie-chart-wrap { align-self: center; }
+
+  .qc-card { padding: 16px; }
+  .qc-table-card { padding: 16px; }
+
+  .header h2 { font-size: 16px; }
+  .qc-date-chip { display: none; }
+
+  .qc-card-header-row { flex-direction: column; align-items: stretch; }
+  .qc-filter-wrap { width: 100%; }
+  #filterStatus { flex: 1; }
+
+  .cmp-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .cmp-kpi--span2 { grid-column: span 2; }
+  .cmp-header { flex-direction: column; align-items: stretch; }
+  .cmp-controls { justify-content: space-between; }
+
+  .qc-gauge-wrap { grid-template-columns: 1fr; }
+  .qc-gauge-chart-wrap { min-width: 0; }
+}
+
+@media (max-width: 479px) {
+  .qc-kpi-grid { grid-template-columns: 1fr 1fr; }
+  .qc-data-table { font-size: 12px; min-width: 520px; }
+  .qc-kpi-badge {
+    top: -6px; right: -6px;
+    min-width: 20px; height: 20px;
+    font-size: 10px;
+  }
+  .qc-kpi-arrow { display: none; }
+  .cmp-kpi-grid { grid-template-columns: 1fr; }
+  .cmp-kpi--span2 { grid-column: span 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qc-kpi-card--alert.qc-has-new,
+  .qc-kpi-card--alert.qc-has-new .qc-kpi-icon,
+  .qc-kpi-card--alert.qc-has-new .qc-kpi-val,
+  .qc-kpi-card--alert.qc-has-new::after,
+  .qc-kpi-badge {
+    animation: none !important;
+  }
+}
+
+
+/* ============================================================
+   16. PRINT
+============================================================ */
+@media print {
+  .ea-sidebar,
+  .right-column,
+  .header-right,
+  .qc-filter-wrap,
+  .qc-btn-goto-qc,
+  .cmp-controls {
+    display: none !important;
+  }
+  body, body.sidebar-expanded { padding-left: 0 !important; }
+  .content { padding: 0; }
+  .content-layout { display: block; }
+  .qc-card,
+  .qc-kpi-card,
+  .cmp-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* ============================================================
+   ✅ BALANCE FIX — QC Dashboard layout/tablet/notebook
+   วางท้ายไฟล์เพื่อ override index.css และค่าก่อนหน้า
+============================================================ */
+html {
+  background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+}
+
+body.role-adminQc {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.content {
+  box-sizing: border-box;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 18px 28px;
+}
+
+.content-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 256px;
+  gap: 16px;
+  align-items: start;
+}
+
+.main-content,
+.right-column {
+  min-width: 0;
+}
+
+.header,
+.right-panel,
+.user-card,
+.calendar-card,
+.qc-card,
+.qc-kpi-card,
+.btn-ea {
+  border-radius: 18px;
+}
+
+.header {
+  min-height: 86px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top left, rgba(249,115,22,.10), transparent 42%),
+    #ffffff;
+  border: 1px solid rgba(249,115,22,.14);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.header h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.header .subtext {
+  margin: 0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.qc-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.qc-kpi-card {
+  min-height: 94px;
+  padding: 16px 16px 14px;
+}
+
+.qc-kpi-card--alert.qc-has-new {
+  background:
+    linear-gradient(135deg, rgba(245,158,11,.16), rgba(255,247,237,.96)),
+    #fff;
+  border-color: rgba(245, 158, 11, .38);
+}
+
+.qc-kpi-badge {
+  top: 10px;
+  right: 10px;
+}
+
+.qc-row2 {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 14px;
+}
+
+.qc-row2 .qc-card {
+  min-height: 235px;
+}
+
+.qc-pie-wrap {
+  min-height: 165px;
+  justify-content: center;
+}
+
+.qc-pie-chart-wrap {
+  width: 160px;
+  height: 160px;
+}
+
+.qc-gauge-legend-row,
+.qc-legend-item {
+  min-height: 34px;
+}
+
+.qc-chart-wrap--tall {
+  height: 280px;
+}
+
+.right-column {
+  position: sticky;
+  top: 18px;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.user-card,
+.calendar-card,
+.qc-mini-stat {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-ea {
+  min-height: 48px;
+  justify-content: center;
+}
+
+/* iPad / notebook แคบ: ลดความอึดอัด แต่ยังคง sidebar + right panel */
+@media (min-width: 900px) and (max-width: 1220px) {
+  .content {
+    max-width: 1120px;
+    padding: 14px 14px 24px;
+  }
+
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) 238px;
+    gap: 14px;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(4, minmax(132px, 1fr));
+    gap: 10px;
+  }
+
+  .qc-kpi-card {
+    padding: 14px 14px 12px;
+    min-height: 88px;
+  }
+
+  .qc-kpi-label,
+  .qc-kpi-sub {
+    font-size: 11px;
+  }
+
+  .qc-kpi-val {
+    font-size: 1.45rem;
+  }
+
+  .qc-row2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .qc-pie-wrap {
+    gap: 14px;
+  }
+
+  .qc-pie-chart-wrap {
+    width: 138px;
+    height: 138px;
+  }
+}
+
+/* Tablet แนวตั้ง: เอา right panel ลงล่าง เพื่อไม่ให้กราฟ/การ์ดบีบ */
+@media (min-width: 768px) and (max-width: 899px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .right-column {
+    position: static;
+  }
+
+  .right-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qc-row2,
+  .qc-row3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .content {
+    padding: 12px;
+  }
+
+  .content-layout {
+    display: block;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .right-column {
+    position: static;
+  }
+
+  .right-panel {
+    margin-top: 14px;
+  }
+}
+
+
+.qc-row2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.qc-summary-donut-layout,
+.qc-pie-wrap {
+  min-height: 210px;
+}
+
+.qc-status-bars,
+.qc-summary-legend {
+  width: 100%;
+}
+
+.qc-status-bar-row {
+  margin-bottom: 16px;
+}
+
+.qc-status-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  margin-bottom: 7px;
+}
+
+.qc-status-track {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.qc-status-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.qc-status-total,
+.qc-summary-total {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 14px;
+  margin-top: 14px;
+  font-weight: 700;
+}
+
+.qc-summary-donut-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.qc-summary-chart-wrap {
+  position: relative;
+  height: 190px;
+}
+
+.qc-summary-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.qc-summary-center strong {
+  font-size: 28px;
+}
+
+.qc-summary-center span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.qc-summary-legend-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12.5px;
+  margin-bottom: 12px;
+}
+
+.qc-summary-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.qc-summary-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qc-summary-legend-row em {
+  font-style: normal;
+  color: #64748b;
+}
+
+.ea-toggle {
+  height: 76px;
+  right: -12px;
+  border-radius: 999px;
+}
+
+@media (max-width: 1180px) {
+  .qc-summary-donut-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.ea-link .material-symbols-outlined,
+.ea-user .material-symbols-outlined,
+.ea-toggle .material-symbols-outlined {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* active menu */
+.ea-link.active .material-symbols-outlined {
+  color: #ea580c !important;
+}
+
+/* menu text */
+.ea-link .ea-text,
+.ea-user .ea-text {
+  /* color: #ffffff; */
+}
+
+/* hover */
+.ea-link:hover,
+.ea-user:hover {
+  color: #ffffff;
+}
+
+.ea-sidebar {
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+}
+
+.ea-link {
+  margin-bottom: 6px;
+}
+
+.ea-link.active {
+  background: #ffffff;
+  color: #ea580c;
+  box-shadow: 0 10px 22px rgba(255,255,255,0.25);
+}
+
+
+
+.qc-data-table tbody tr {
+  position: relative;
+}
+
+.qc-data-table tbody tr::before {
+  content: "";
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.qc-row-pending {
+  background: linear-gradient(90deg, rgba(245,158,11,.12), #fff 45%);
+}
+
+.qc-row-progress {
+  background: linear-gradient(90deg, rgba(59,130,246,.12), #fff 45%);
+}
+
+.qc-row-pass {
+  background: linear-gradient(90deg, rgba(16,185,129,.12), #fff 45%);
+}
+
+.qc-row-fail {
+  background: linear-gradient(90deg, rgba(239,68,68,.12), #fff 45%);
+}
+
+.qc-row-pending::before { background: #f59e0b; }
+.qc-row-progress::before { background: #3b82f6; }
+.qc-row-pass::before { background: #10b981; }
+.qc-row-fail::before { background: #ef4444; }
+
+.qc-sb-progress {
+  background: rgba(59,130,246,.10);
+  color: #2563eb;
+  border: 1px solid rgba(59,130,246,.24);
+}
+
+.qc-status-badge {
+  gap: 5px;
+}
+
+.qc-status-icon {
+  font-size: 15px !important;
+}
+
+
+/* ============================================================
+   ✅ RESPONSIVE แบบเดียวกับไฟล์ Internal Claims
+   เป้าหมาย: Tablet / Notebook / Desktop ให้ “ย่อขนาด” แต่ยังคง Layout เดิม
+   - 768px ขึ้นไป: ไม่ย้าย right panel ลงล่าง, KPI ยัง 4 ใบ, row2/row3 ยังอยู่คู่กัน
+   - ต่ำกว่า 768px เท่านั้น: เปลี่ยนเป็น mobile layout
+============================================================ */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+body.role-adminQc {
+  min-height: 100vh;
+  padding-left: calc(var(--ea-side-mini) + var(--ea-side-gap) * 2);
+  transition: padding-left 0.25s ease;
+}
+
+body.sidebar-expanded {
+  padding-left: calc(var(--ea-side-full) + var(--ea-side-gap) * 2);
+}
+
+img,
+canvas,
+svg,
+table { max-width: 100%; }
+
+.content {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 18px 24px 64px;
+  min-width: 0;
+}
+
+.content-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 256px;
+  gap: 16px;
+  align-items: start;
+}
+
+.main-content,
+.right-column,
+.right-panel,
+.qc-card,
+.qc-kpi-card,
+.header { min-width: 0; }
+
+.right-column {
+  position: sticky;
+  top: 18px;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.qc-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.qc-row2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 14px;
+}
+
+.qc-row3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.qc-tbl-scroll {
+  width: 100%;
+  overflow-x: hidden !important;
+}
+
+.qc-data-table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.qc-data-table th,
+.qc-data-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qc-data-table th:nth-child(1),
+.qc-data-table td:nth-child(1) { width: 13%; }
+.qc-data-table th:nth-child(2),
+.qc-data-table td:nth-child(2) { width: 25%; }
+.qc-data-table th:nth-child(3),
+.qc-data-table td:nth-child(3) { width: 14%; }
+.qc-data-table th:nth-child(4),
+.qc-data-table td:nth-child(4) { width: 9%; }
+.qc-data-table th:nth-child(5),
+.qc-data-table td:nth-child(5) { width: 13%; }
+.qc-data-table th:nth-child(6),
+.qc-data-table td:nth-child(6) { width: 13%; }
+.qc-data-table th:nth-child(7),
+.qc-data-table td:nth-child(7) { width: 13%; }
+
+/* จอไม่เกิน 1200px: ย่อ spacing/font เหมือนไฟล์ตัวอย่าง แต่ไม่เปลี่ยน layout */
+@media (max-width: 1200px) {
+  .content {
+    max-width: 1180px;
+    padding: 14px 16px 48px;
+  }
+
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) 238px;
+    gap: 14px;
+  }
+
+  .qc-kpi-grid { gap: 10px; }
+
+  .qc-kpi-card {
+    min-height: 88px;
+    padding: 14px 14px 12px;
+  }
+
+  .qc-kpi-label,
+  .qc-kpi-sub { font-size: 11px; }
+
+  .qc-kpi-val { font-size: 1.45rem; }
+
+  .qc-card { padding: 16px; }
+
+  .qc-card-title { font-size: 11.5px; }
+
+  .qc-pie-wrap { gap: 14px; }
+
+  .qc-pie-chart-wrap {
+    width: 138px;
+    height: 138px;
+  }
+
+  .qc-chart-wrap--tall { height: 260px; }
+  .qc-chart-wrap { height: 180px; }
+
+  .qc-data-table { font-size: 0.72rem; }
+  .qc-data-table th,
+  .qc-data-table td { padding: 8px 5px; }
+
+  .qc-status-badge { font-size: 10px; padding: 3px 8px; }
+}
+
+/* 1024–1500px ตอน Sidebar ขยาย: ลดขนาดเพิ่มแบบไฟล์ Internal Claims */
+@media (min-width: 1024px) and (max-width: 1500px) {
+  body.sidebar-expanded .content { font-size: 12px; }
+  body.sidebar-expanded .content-layout {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 12px;
+  }
+
+  body.sidebar-expanded .qc-kpi-grid { gap: 8px; }
+  body.sidebar-expanded .qc-kpi-card {
+    min-height: 78px;
+    padding: 11px;
+  }
+  body.sidebar-expanded .qc-kpi-label,
+  body.sidebar-expanded .qc-kpi-sub { font-size: 10px; }
+  body.sidebar-expanded .qc-kpi-val { font-size: 1.18rem; }
+
+  body.sidebar-expanded .header {
+    min-height: 70px;
+    padding: 14px 18px;
+  }
+  body.sidebar-expanded .header h2 { font-size: 15px; }
+  body.sidebar-expanded .header .subtext { font-size: 11px; }
+
+  body.sidebar-expanded .qc-card { padding: 12px; }
+  body.sidebar-expanded .qc-card-title { font-size: 10.5px; }
+  body.sidebar-expanded .qc-pie-chart-wrap { width: 118px; height: 118px; }
+  body.sidebar-expanded .qc-chart-wrap--tall { height: 230px; }
+  body.sidebar-expanded .qc-chart-wrap { height: 155px; }
+
+  body.sidebar-expanded .qc-data-table { font-size: 0.68rem; }
+  body.sidebar-expanded .qc-data-table th,
+  body.sidebar-expanded .qc-data-table td { padding: 7px 4px; }
+
+  body.sidebar-expanded .right-panel { gap: 10px; }
+  body.sidebar-expanded .user-card,
+  body.sidebar-expanded .calendar-card,
+  body.sidebar-expanded .qc-mini-stat { padding: 11px; }
+}
+
+/* Tablet / iPad แนวนอน: ย่อทุกอย่าง แต่ยังคง Layout เดิม */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --ea-side-gap: 12px;
+    --ea-side-mini: 70px;
+    --ea-side-full: 210px;
+  }
+
+  body.role-adminQc,
+  body {
+    padding-left: calc(var(--ea-side-mini) + var(--ea-side-gap) * 2) !important;
+  }
+
+  body.sidebar-expanded {
+    padding-left: calc(var(--ea-side-full) + var(--ea-side-gap) * 2) !important;
+  }
+
+  .ea-sidebar {
+    top: var(--ea-side-gap);
+    bottom: var(--ea-side-gap);
+    left: var(--ea-side-gap);
+    width: var(--ea-side-mini);
+    padding: 16px 8px;
+  }
+
+  body.sidebar-expanded .ea-sidebar { width: var(--ea-side-full); }
+
+  .ea-logo { width: 46px; height: 46px; }
+  .ea-logo img { width: 31px; height: 31px; }
+  .ea-link,
+  .ea-user { height: 40px; }
+
+  .content {
+    max-width: 100%;
+    padding: 12px 12px 40px;
+  }
+
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 10px;
+  }
+
+  .qc-row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .qc-row3 { grid-template-columns: minmax(0, 1.45fr) minmax(0, .9fr); gap: 10px; }
+
+  .header {
+    min-height: 68px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .header h2 { font-size: 15px; }
+  .header .subtext { font-size: 10.5px; }
+  .qc-date-chip { font-size: 10px; padding: 5px 8px; }
+
+  .qc-kpi-grid { gap: 8px; }
+  .qc-kpi-card {
+    min-height: 74px;
+    padding: 10px;
+  }
+  .qc-kpi-label,
+  .qc-kpi-sub { font-size: 9.5px; line-height: 1.25; }
+  .qc-kpi-val { font-size: 1.05rem; }
+  .qc-kpi-icon { font-size: 16px !important; top: 8px; right: 8px; }
+
+  .qc-card {
+    padding: 11px;
+    margin-bottom: 10px;
+  }
+  .qc-card-title {
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+
+  .qc-pie-wrap { gap: 8px; }
+  .qc-pie-chart-wrap { width: 98px; height: 98px; }
+  .qc-pie-center-num { font-size: 1.05rem; }
+  .qc-pie-center-sub { font-size: 9px; }
+
+  .qc-legend-item,
+  .qc-sum-row,
+  .qc-claim-row { padding: 6px 7px; }
+  .qc-legend-label,
+  .qc-legend-count,
+  .qc-sum-label,
+  .qc-sum-val,
+  .qc-claim-meta { font-size: 9.5px; }
+
+  .qc-chart-wrap--tall { height: 210px; }
+  .qc-chart-wrap { height: 150px; }
+
+  .qc-data-table { font-size: 9px; }
+  .qc-data-table th,
+  .qc-data-table td { padding: 6px 4px; }
+
+  .right-column { top: 12px; }
+  .right-panel { gap: 8px; }
+  .user-card,
+  .calendar-card,
+  .qc-mini-stat,
+  .btn-ea { padding: 10px !important; }
+  .avatar-wrapper img,
+  #profileImage { width: 54px !important; height: 54px !important; }
+  .user-info h4 { font-size: 12px; }
+  .user-info p,
+  .user-info span,
+  .calendar-card,
+  .qc-mini-stat-label { font-size: 10px; }
+  .calendar-grid { gap: 2px; }
+  .calendar-day,
+  .calendar-date { font-size: 9px; }
+  .btn-ea { min-height: 40px; }
+}
+
+/* Tablet แนวตั้งช่วงแคบมาก: ยังไม่ย้าย layout แค่บีบ right panel ลง */
+@media (min-width: 768px) and (max-width: 899px) {
+  .content-layout {
+    grid-template-columns: minmax(0, 1fr) 176px !important;
+    gap: 9px !important;
+  }
+
+  .qc-pie-chart-wrap { width: 92px !important; height: 92px !important; }
+  .qc-chart-wrap--tall { height: 200px !important; }
+  .qc-chart-wrap { height: 140px !important; }
+
+  .calendar-header h4 { font-size: 11px; }
+  .qc-mini-stat .material-symbols-outlined {
+    width: 30px;
+    height: 30px;
+    font-size: 17px !important;
+  }
+}
+
+/* Mobile เท่านั้น: อนุญาตให้เปลี่ยน layout เพื่อไม่ล้นจอ */
+@media (max-width: 767px) {
+  body,
+  body.sidebar-expanded { padding-left: 0 !important; }
+
+  .ea-sidebar {
+    transform: translateX(calc(-100% - var(--ea-side-gap) * 2));
+    transition: transform 0.28s ease, width 0.25s ease;
+  }
+
+  body.sidebar-expanded .ea-sidebar {
+    transform: translateX(0);
+    width: 260px;
+    align-items: stretch;
+  }
+
+  body.sidebar-expanded .mini-brand-text,
+  body.sidebar-expanded .ea-text { display: inline; }
+  body.sidebar-expanded .mini-brand-text { display: block; }
+
+  body.sidebar-expanded .ea-link,
+  body.sidebar-expanded .ea-user {
+    justify-content: flex-start;
+    padding: 0 14px;
+  }
+
+  .ea-toggle { right: -22px; }
+
+  body.sidebar-expanded::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 25, 23, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+  }
+
+  .content {
+    max-width: 100% !important;
+    padding: 12px !important;
+  }
+
+  .content-layout,
+  .qc-row2,
+  .qc-row3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .right-column { position: static !important; }
+  .qc-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  .qc-tbl-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .qc-data-table {
+    min-width: 580px !important;
+    table-layout: auto !important;
+    font-size: 12px !important;
+  }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    white-space: nowrap !important;
+    padding: 9px 10px !important;
+  }
+}
+
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  .btn-ea {
+    min-height: 40px !important;
+  }
+}
+
+/* ---------- MOBILE เท่านั้น: อนุญาตให้เปลี่ยน layout เพื่อไม่ล้นจอ ---------- */
+@media (max-width: 767px) {
+  .content {
+    max-width: 100% !important;
+    padding: 12px !important;
+  }
+
+  .content-layout,
+  .qc-row2,
+  .qc-row3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .right-column {
+    position: static !important;
+  }
+}
+
+
+/* FIX: keep layout but fit tablet/notebook */
+@media (min-width: 768px) and (max-width: 1280px) {
+  body.role-adminQc {
+    padding-left: calc(var(--ea-side-mini) + 14px) !important;
+    overflow-x: hidden !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 14px 14px 24px !important;
+    box-sizing: border-box !important;
+  }
+
+  .content-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 210px !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .main-content,
+  .right-column {
+    min-width: 0 !important;
+  }
+
+  .right-column {
+    width: 210px !important;
+  }
+
+  .qc-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .qc-row2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .qc-row3 {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.85fr) !important;
+    gap: 10px !important;
+  }
+
+  .header,
+  .qc-card,
+  .qc-kpi-card,
+  .user-card,
+  .calendar-card,
+  .qc-mini-stat {
+    padding: 12px !important;
+  }
+
+  .qc-kpi-val {
+    font-size: 1.25rem !important;
+  }
+
+  .qc-chart-wrap--tall {
+    height: 230px !important;
+  }
+
+  .qc-pie-chart-wrap {
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .qc-data-table {
+    font-size: 11px !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    padding: 8px 6px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* =====================================================
+   STEP 1: FIX TABLE COLUMN — ไม่ให้คอลัมน์เบียด / ไม่ตกช่อง
+===================================================== */
+
+@media (min-width: 768px) and (max-width: 1280px) {
+  .qc-table-card {
+    overflow: hidden !important;
+  }
+
+  .qc-tbl-scroll {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+
+  .qc-data-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    font-size: 10.5px !important;
+  }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    padding: 8px 6px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    vertical-align: middle !important;
+  }
+
+  .qc-data-table th:nth-child(1),
+  .qc-data-table td:nth-child(1) {
+    width: 11% !important;
+  }
+
+  .qc-data-table th:nth-child(2),
+  .qc-data-table td:nth-child(2) {
+    width: 25% !important;
+  }
+
+  .qc-data-table th:nth-child(3),
+  .qc-data-table td:nth-child(3) {
+    width: 14% !important;
+  }
+
+  .qc-data-table th:nth-child(4),
+  .qc-data-table td:nth-child(4) {
+    width: 9% !important;
+    text-align: center !important;
+  }
+
+  .qc-data-table th:nth-child(5),
+  .qc-data-table td:nth-child(5) {
+    width: 12% !important;
+  }
+
+  .qc-data-table th:nth-child(6),
+  .qc-data-table td:nth-child(6) {
+    width: 14% !important;
+  }
+
+  .qc-data-table th:nth-child(7),
+  .qc-data-table td:nth-child(7) {
+    width: 15% !important;
+  }
+
+  .qc-status-badge {
+    max-width: 100% !important;
+    font-size: 10px !important;
+    padding: 4px 7px !important;
+  }
+
+  .qc-score-bar {
+    width: 44px !important;
+  }
+}
+
+
+/* STEP 1.1 แก้ช่องว่างหน้าแถวตาราง ทำให้คอลัมน์ตรงหัวตาราง */
+/* @media (min-width: 768px) and (max-width: 1280px) { */
+  /* .qc-data-table tbody td:first-child {
+    display: none !important;
+  } */
+
+/* STEP 1.2: เอารหัสกลับมา + จัดคอลัมน์ให้ตรง */
+@media (min-width: 768px) and (max-width: 1280px) {
+  .qc-data-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    font-size: 10.5px !important;
+  }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    padding: 8px 6px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .qc-data-table th:nth-child(1),
+  .qc-data-table td:nth-child(1) {
+    width: 13% !important;
+  }
+
+  .qc-data-table th:nth-child(2),
+  .qc-data-table td:nth-child(2) {
+    width: 26% !important;
+  }
+
+  .qc-data-table th:nth-child(3),
+  .qc-data-table td:nth-child(3) {
+    width: 14% !important;
+  }
+
+  .qc-data-table th:nth-child(4),
+  .qc-data-table td:nth-child(4) {
+    width: 9% !important;
+    text-align: center !important;
+  }
+
+  .qc-data-table th:nth-child(5),
+  .qc-data-table td:nth-child(5) {
+    width: 11% !important;
+  }
+
+  .qc-data-table th:nth-child(6),
+  .qc-data-table td:nth-child(6) {
+    width: 13% !important;
+  }
+
+  .qc-data-table th:nth-child(7),
+  .qc-data-table td:nth-child(7) {
+    width: 14% !important;
+  }
+}
+
+  .qc-data-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .qc-data-table th:nth-child(1) { width: 12% !important; }
+  .qc-data-table th:nth-child(2) { width: 24% !important; }
+  .qc-data-table th:nth-child(3) { width: 14% !important; }
+  .qc-data-table th:nth-child(4) { width: 9% !important; }
+  .qc-data-table th:nth-child(5) { width: 13% !important; }
+  .qc-data-table th:nth-child(6) { width: 13% !important; }
+  .qc-data-table th:nth-child(7) { width: 15% !important; }
+
+  .qc-data-table th,
+  .qc-data-table td {
+    padding: 8px 7px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  

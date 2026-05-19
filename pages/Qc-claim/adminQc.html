@@ -23,10 +23,12 @@
   <link rel="stylesheet" href="/css/base/role-colors.css" />
   <link rel="stylesheet" href="/css/base/bass-layout.css" />
   <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css" />
+  
 </head>
 
 <body class="role-adminQc">
-  <!-- SIDEBAR: ให้ตรงกับ CSS v3 -->
+
+  <!-- ===== SIDEBAR ===== -->
   <aside class="ea-sidebar" aria-label="เมนูหลัก">
     <div class="ea-logo">
       <img src="/assets/icons/icon-192.png" alt="EABaseHub" />
@@ -38,21 +40,21 @@
     </div>
 
     <nav class="ea-menu">
-      <a class="ea-link" href="/pages/adminQc/dashboard.html" title="Dashboard">
+      <a class="ea-link" href="/pages/dashboard/QcDashboard.html" title="Dashboard">
         <span class="material-symbols-outlined">dashboard</span>
-        <span class="ea-text">Dashboard</span>
+        <span class="ea-text">หน้าหลัก</span>
       </a>
       <a class="ea-link active" href="/pages/Qc-claim/adminQc.html" title="Claims QC">
         <span class="material-symbols-outlined">manage_search</span>
-        <span class="ea-text">Claims QC</span>
+        <span class="ea-text">จัดการเคลม</span>
       </a>
       <a class="ea-link" href="/pages/Qc-claim/internal-claims.html" title="เคลมภายใน">
         <span class="material-symbols-outlined">factory</span>
-        <span class="ea-text">เคลมภายใน</span>
+        <span class="ea-text">เคลมสินค้า(ภายใน)</span>
       </a>
       <a class="ea-link" href="/pages/Qc-claim/external-claims.html" title="เคลมลูกค้า">
         <span class="material-symbols-outlined">storefront</span>
-        <span class="ea-text">เคลมลูกค้า</span>
+        <span class="ea-text">เคลมสินค้า(ภายนอก)</span>
       </a>
     </nav>
 
@@ -61,13 +63,14 @@
       <span class="ea-text">ออกจากระบบ</span>
     </button>
 
-    <button class="ea-toggle" type="button" aria-label="ย่อ/ขยายเมนู" onclick="document.body.classList.toggle('sidebar-expanded')">
+    <button class="ea-toggle" type="button" aria-label="ย่อ/ขยายเมนู">
       <span class="material-symbols-outlined">chevron_right</span>
     </button>
   </aside>
 
+  <!-- ===== PAGE SHELL ===== -->
   <div class="page-shell">
-    <!-- HEADER: ห่อไว้ใน page-shell เพื่อไม่โดน CSS legacy hide -->
+
     <header class="app-header">
       <div class="app-header-left">
         <div class="app-header-icon">
@@ -91,8 +94,10 @@
     </header>
 
     <main class="container">
+
+      <!-- BREADCRUMB -->
       <div class="breadcrumb-bar">
-        <a class="breadcrumb-item home" href="/pages/adminQc/dashboard.html">
+        <a class="breadcrumb-item home" href="/pages/dashboard/QcDashboard.html">
           <span class="material-symbols-outlined">home</span> หน้าหลัก
         </a>
         <span class="breadcrumb-sep"><span class="material-symbols-outlined">chevron_right</span></span>
@@ -101,7 +106,7 @@
         </span>
       </div>
 
-      <!-- SUMMARY CARDS: เพิ่ม data-filter ให้ JS คลิกกรองได้ -->
+      <!-- SUMMARY CARDS -->
       <section class="qc-summary" aria-label="สรุปรายการเคลม">
         <div class="summary-card total" data-filter="all" role="button" tabindex="0">
           <div class="summary-icon"><span class="material-symbols-outlined">inventory_2</span></div>
@@ -149,11 +154,12 @@
         </div>
       </section>
 
-      <!-- FILTER BAR: เพิ่ม scope/pick-state/refresh ให้ตรงกับ JS -->
+      <!-- FILTER BAR -->
       <section class="qc-filter-bar" aria-label="ตัวกรองรายการเคลม">
         <div class="filter-group" style="flex: 2; min-width: 240px;">
           <span class="material-symbols-outlined filter-icon">search</span>
-          <input type="text" id="searchInput" placeholder="ค้นหาสินค้า / ร้านค้า / พนักงาน / เลขเคลม..." />
+          <input type="text" id="searchInput"
+            placeholder="ค้นหาสินค้า / ร้านค้า / พนักงาน / เลขเคลม..." />
         </div>
 
         <div class="filter-segment" aria-label="ประเภทเคลม">
@@ -213,19 +219,22 @@
         </button>
       </section>
 
+      <!-- TABLE -->
       <section class="qc-main">
-        <div class="qc-result-count" id="resultCount">แสดง <strong>0</strong> จาก <strong>0</strong> รายการ</div>
+        <div class="qc-result-count" id="resultCount">
+          แสดง <strong>0</strong> จาก <strong>0</strong> รายการ
+        </div>
         <div class="table-wrap">
           <table class="qc-table" id="qcTable">
             <thead>
               <tr>
-                <th class="sortable" data-sort="claim_date">วันที่</th>
+                <th class="sortable" data-sort="claim_date">วันที่<span class="sort-arrow">↑</span></th>
                 <th>พนักงาน / เขต</th>
                 <th>ร้านค้า</th>
                 <th>สินค้า</th>
                 <th>ประเภทปัญหา</th>
                 <th>ไฟล์</th>
-                <th class="sortable" data-sort="qc_status">สถานะ</th>
+                <th class="sortable" data-sort="qc_status">สถานะ<span class="sort-arrow">↑</span></th>
                 <th>จัดการ</th>
               </tr>
             </thead>
@@ -240,12 +249,15 @@
           </table>
         </div>
       </section>
-    </main>
-  </div>
 
-  <!-- MODAL -->
-  <div class="qc-modal" id="qcModal">
+    </main>
+  </div><!-- /.page-shell -->
+
+  <!-- ===== MODAL ===== -->
+  <div class="qc-modal" id="qcModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="qc-modal-box">
+
+      <!-- Modal Header -->
       <div class="qc-modal-header">
         <div class="qc-modal-title">
           <span class="material-symbols-outlined">manage_search</span>
@@ -261,24 +273,30 @@
           <button class="btn-export-excel" type="button" onclick="exportExcel()">
             <span class="material-symbols-outlined">grid_on</span> Excel
           </button>
-          <button class="modal-close-btn" type="button" onclick="closeModal()">
+          <button class="modal-close-btn" type="button" onclick="closeModal()" aria-label="ปิด">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
       </div>
 
+      <!-- Modal Body -->
       <div class="qc-modal-body">
+
+        <!-- Info grid -->
         <div class="modal-section">
           <div class="modal-info-grid" id="modalInfoGrid"></div>
         </div>
 
+        <!-- Claim types -->
         <div class="modal-section">
           <div class="modal-section-label">
             <span class="material-symbols-outlined">warning</span> ประเภทปัญหา
           </div>
-          <div class="modal-claim-types" id="modalClaimTypes"></div>
+          <!-- ID ต้องตรงกับ JS: modalTypes -->
+          <div class="modal-claim-types" id="modalTypes"></div>
         </div>
 
+        <!-- Detail -->
         <div class="modal-section">
           <div class="modal-section-label">
             <span class="material-symbols-outlined">notes</span> รายละเอียด
@@ -286,40 +304,56 @@
           <div class="modal-detail-box" id="modalDetail">—</div>
         </div>
 
+        <!-- Media gallery -->
         <div class="modal-section">
           <div class="modal-section-label">
             <span class="material-symbols-outlined">photo_library</span> รูปภาพ / วิดีโอ
           </div>
-          <div class="modal-media-grid" id="modalMediaGrid"></div>
+          <!-- ID ต้องตรงกับ JS: modalGallery -->
+          <div class="modal-media-grid" id="modalGallery"></div>
         </div>
 
-        <div class="modal-section qc-action-section">
+        <!-- QC Action section (สำหรับ role ที่มีสิทธิ์อนุมัติ) -->
+        <div class="modal-section qc-action-section" id="qcActionSection">
           <div class="modal-section-label">
             <span class="material-symbols-outlined">rate_review</span> ผลการพิจารณา QC
           </div>
-          <div class="qc-status-current" id="qcStatusCurrent"></div>
-          <textarea id="qcComment" rows="3" placeholder="หมายเหตุ / ความเห็น QC (ถ้ามี)..."></textarea>
+          <div class="qc-status-current" id="qcStatusCurrent">
+            <span class="material-symbols-outlined">info</span>
+            <span id="qcStatusText">—</span>
+          </div>
+          <textarea id="qcComment" rows="3"
+            placeholder="หมายเหตุ / ความเห็น QC (ถ้ามี)..."></textarea>
           <div class="qc-action-btns">
-            <button class="btn-approve" type="button" onclick="updateClaimStatus('approved')">
+            <button class="btn-pick-modal" id="btnPickClaim" type="button"
+              onclick="pickClaimFromModal()">
+              <span class="material-symbols-outlined">how_to_reg</span> รับเรื่อง
+            </button>
+            <button class="btn-approve" id="btnApprove" type="button"
+              onclick="updateClaimStatus('approved')">
               <span class="material-symbols-outlined">check_circle</span> อนุมัติ
             </button>
-            <button class="btn-reject" type="button" onclick="updateClaimStatus('rejected')">
+            <button class="btn-reject" id="btnReject" type="button"
+              onclick="updateClaimStatus('rejected')">
               <span class="material-symbols-outlined">cancel</span> ปฏิเสธ
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- LIGHTBOX -->
+      </div><!-- /.qc-modal-body -->
+    </div><!-- /.qc-modal-box -->
+  </div><!-- /#qcModal -->
+
+  <!-- ===== LIGHTBOX ===== -->
   <div class="lightbox" id="lightbox" onclick="closeLightbox()">
     <img id="lightboxImg" src="" alt="preview" />
-    <button class="lightbox-close" type="button" onclick="event.stopPropagation(); closeLightbox()">✕</button>
+    <button class="lightbox-close" type="button"
+      onclick="event.stopPropagation(); closeLightbox()">✕</button>
   </div>
 
   <footer class="footer">© 2026 EABaseHub | ระบบจัดการเคลมสินค้า</footer>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/roleConfig.js"></script>
