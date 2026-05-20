@@ -632,11 +632,11 @@ function buildStatusBadge(status) {
     checking: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
     in_progress: { label: "🔍 กำลังตรวจสอบ", cls: "in-progress" },
     draft: { label: "📝 บันทึกร่าง", cls: "draft" },
-    waiting_ceo: { label: "⏳ รออนุมัติ CEO", cls: "waiting-ceo" },
+    waiting_ceo: { label: "⏳ รออนุมัติ", cls: "waiting-ceo" },
     approved: { label: "✅ QC อนุมัติ", cls: "approved" },
     rejected: { label: "❌ QC ปฏิเสธ", cls: "rejected" },
-    exec_approved: { label: "✅ CEO อนุมัติแล้ว", cls: "approved" },
-    exec_rejected: { label: "❌ CEO ปฏิเสธ", cls: "rejected" },
+    exec_approved: { label: "✅ อนุมัติแล้ว", cls: "approved" },
+    exec_rejected: { label: "❌ ปฏิเสธ", cls: "rejected" },
   };
   const s = map[normalized] || map.pending;
   return `<span class="status-badge ${s.cls}">${s.label}</span>`;
@@ -646,9 +646,9 @@ function getStatusLabel(status) {
   const normalized = normalizeStatus(status);
   const map = {
     pending: "ส่งแล้ว", checking: "กำลังตรวจสอบ", in_progress: "กำลังตรวจสอบ",
-    draft: "บันทึกร่าง", waiting_ceo: "รอ CEO อนุมัติ",
+    draft: "บันทึกร่าง", waiting_ceo: "รออนุมัติ",
     approved: "QC อนุมัติ", rejected: "QC ปฏิเสธ",
-    exec_approved: "CEO อนุมัติแล้ว", exec_rejected: "CEO ปฏิเสธ",
+    exec_approved: "อนุมัติแล้ว", exec_rejected: "ปฏิเสธ",
   };
   return map[normalized] || normalized;
 }
@@ -761,13 +761,7 @@ function renderTable(claims) {
       <td>${buildStatusBadge(claim)}</td>
       <td onclick="event.stopPropagation()">${buildApprovalDocCellHtml(claim)}</td>
       <td>
-        <div class="cell-action-group">
-          <button class="btn-view" type="button"
-            onclick="event.stopPropagation(); openModal(window._claims['${claim.id}'])">
-            <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
-            ดู
-          </button>
-        </div>
+        
       </td>
     `;
     tbody.appendChild(tr);
@@ -843,7 +837,7 @@ function openModal(claim) {
     if (locked) {
       statusEl.innerHTML += `
         <span class="status-badge approved" style="margin-left:8px;">
-          🔒 CEO พิจารณาแล้ว ดูได้อย่างเดียว
+          🔒 Executive พิจารณาแล้ว ดูได้อย่างเดียว
         </span>
       `;
     }
@@ -1102,7 +1096,7 @@ async function sendToCEO() {
   if (!currentClaim) return;
 
   if (isExecLocked(currentClaim)) {
-    showToast("CEO พิจารณาแล้ว ส่งซ้ำไม่ได้", "warning");
+    showToast("Executive พิจารณาแล้ว ส่งซ้ำไม่ได้", "warning");
     return;
   }
 
@@ -1111,7 +1105,7 @@ async function sendToCEO() {
   const { comment, signature, qcResult } = getQcFormData();
 
   if (!signature) {
-    showToast("กรุณาเซ็นชื่อก่อนส่งให้ CEO", "warning");
+    showToast("กรุณาเซ็นชื่อก่อนส่งให้ Executive", "warning");
     return;
   }
 
@@ -1212,7 +1206,7 @@ async function sendToCEO() {
     // ─── สำเร็จ ทั้ง 2 step ───
     await showSuccessPopup({
       title: "ส่งอนุมัติสำเร็จ",
-      message: `เคลม #${getClaimNo(currentClaim)} ถูกส่งให้ CEO พิจารณาแล้ว\nกรุณารอผลการอนุมัติ`,
+      message: `เคลม #${getClaimNo(currentClaim)} ถูกส่งให้ Executive พิจารณาแล้ว\nกรุณารอผลการอนุมัติ`,
       buttonText: "ตกลง",
       icon: "send",
     });
