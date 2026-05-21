@@ -38,16 +38,17 @@ let realtimeChannel = null;
 function getEffectiveStatus(claim) {
   const raw = (claim?.qc_status || claim?.status || '').toLowerCase();
 
+  if (raw === 'draft') return 'draft';
+
   if (raw === 'approved') return 'approved';
   if (raw === 'rejected') return 'rejected';
 
-  if (['checking', 'in_progress', 'reviewing', 'draft', 'waiting_ceo'].includes(raw)) {
+  if (['checking', 'in_progress', 'reviewing', 'waiting_ceo'].includes(raw)) {
     return 'in_progress';
   }
 
   return 'pending';
 }
-
 /* =================================================
    🆕 NEW CLAIM HELPER
    นับเฉพาะ “ยังไม่กดรับเคลม”
@@ -183,7 +184,12 @@ async function loadDashboardData() {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    allClaims = data || [];
+    allClaims = (data || []).filter((c) => {
+  const status = String(c.status || "").toLowerCase();
+  const qcStatus = String(c.qc_status || "").toLowerCase();
+
+  return status !== "draft" && qcStatus !== "draft";
+});
 
     console.log(`📦 โหลด claims ทั้งหมด: ${allClaims.length} รายการ`);
     console.log('📊 status breakdown:', summarizeStatuses(allClaims));
@@ -307,16 +313,26 @@ function setupClaimsRealtime() {
     loadDashboardData().catch((err) => console.error('reload error:', err));
 
     if (!isFirstLoad && payload?.eventType === 'INSERT') {
-      if (isUnpickedNewClaim(payload.new || {})) {
+      const newClaim = payload.new || {};
+      const status = String(newClaim.status || '').toLowerCase();
+      const qcStatus = String(newClaim.qc_status || '').toLowerCase();
+
+      const isDraft = status === 'draft' || qcStatus === 'draft';
+
+      if (!isDraft && isUnpickedNewClaim(newClaim)) {
         playAlertSound();
-        showQcToast(`🔔 เคลมใหม่: ${payload.new?.product || 'ไม่ระบุชื่อสินค้า'}`);
+        showQcToast(`🔔 เคลมใหม่: ${newClaim.product || 'ไม่ระบุชื่อสินค้า'}`);
       }
     }
   };
 
   realtimeChannel = supabaseClient
     .channel('qc-dashboard-claims')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'claims' }, handleChange)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'claims' },
+      handleChange
+    )
     .subscribe(() => {
       setTimeout(() => {
         isFirstLoad = false;

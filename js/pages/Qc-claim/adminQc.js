@@ -416,7 +416,14 @@ async function loadClaims() {
 
     if (error) throw error;
 
-    allClaims = data || [];
+    // ✅ กัน Draft ไม่ให้หลุดเข้า QC
+    allClaims = (data || []).filter((c) => {
+      const status = String(c.status || "").toLowerCase();
+      const qcStatus = String(c.qc_status || "").toLowerCase();
+
+      return status !== "draft" && qcStatus !== "draft";
+    });
+
     populateCustomerOptions();
     updateSummaryCards();
     applyFilters();
@@ -510,6 +517,9 @@ function applyFilters() {
   const { search, status, customer, dateFrom, dateTo, scope, pickState } = filterState;
 
   filteredClaims = allClaims.filter((c) => {
+
+    // ❌ ไม่แสดง draft ในหน้า QC
+if ((c.status || "").toLowerCase() === "draft") return false;
     if (search && !getClaimSearchText(c).includes(search)) return false;
 
     if (status) {
@@ -920,19 +930,62 @@ async function _doPickClaim(id) {
     const sb = getSupabase();
     if (!sb) throw new Error("Supabase client ไม่พร้อม");
 
+    const pickedTime = new Date().toISOString();
+
     const { error } = await sb
       .from("claims")
       .update({
-        picked_at:  new Date().toISOString(),
-        qc_status:  "checking",
+        picked_at: pickedTime,
+        qc_status: "checking",
       })
       .eq("id", id);
 
     if (error) throw error;
 
-    showSuccessPopup("รับเรื่องเรียบร้อย", "รายการถูกย้ายไปสถานะกำลังตรวจสอบแล้ว");
+    // ✅ หา claim ล่าสุด
+    const { data: pickedClaim, error: fetchErr } = await sb
+  .from("claims")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+if (fetchErr) throw fetchErr;
+
+    // ✅ ส่ง LINE Notify
+    try {
+      const sendLineNotify = await getSendLineNotify();
+
+      await sendLineNotify({
+  type: "claim_picked",
+  claim: {
+    ...pickedClaim,
+    picked_at: pickedTime,
+    qc_status: "checking",
+  },
+  actor: {
+    name:
+      document.getElementById("userName")?.textContent?.trim() ||
+      window.currentUser?.display_name ||
+      "QC",
+    role: "QC",
+  },
+  comment: "QC รับเรื่องแล้ว",
+});
+
+
+      console.log("✅ LINE sent");
+    } catch (lineErr) {
+      console.error("❌ LINE ERROR:", lineErr);
+    }
+
+    showSuccessPopup(
+      "รับเรื่องเรียบร้อย",
+      "รายการถูกย้ายไปสถานะกำลังตรวจสอบแล้ว"
+    );
+
     closeModal();
     await loadClaims();
+
   } catch (err) {
     alert("รับเรื่องไม่สำเร็จ: " + err.message);
   }

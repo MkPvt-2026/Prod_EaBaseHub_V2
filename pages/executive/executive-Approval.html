@@ -117,23 +117,41 @@
 
     <div class="ea-page-shell">
       <header class="page-header">
-        <div class="page-header-content">
-          <div class="page-header-icon">
-            <span class="material-symbols-outlined">verified_user</span>
-          </div>
-          <div class="page-header-text">
-            <h1>ขออนุมัติงาน</h1>
-            <p>
-              รวมรายการขออนุมัติจากทุกฝ่าย • อนุมัติ/ปฏิเสธ •
-              บันทึกความเห็นผู้บริหาร
-            </p>
-          </div>
-          <div class="page-header-badge">
-            <span class="material-symbols-outlined">workspace_premium</span>
-            <span>Executive</span>
-          </div>
-        </div>
-      </header>
+
+  <div class="page-header-content">
+    <div class="page-header-icon">
+      <span class="material-symbols-outlined">verified_user</span>
+    </div>
+
+    <div class="page-header-text">
+      <h1>ขออนุมัติงาน</h1>
+      <p>
+        รวมรายการขออนุมัติจากทุกฝ่าย • อนุมัติ/ปฏิเสธ •
+        บันทึกความเห็นผู้บริหาร
+      </p>
+    </div>
+
+    <div class="page-header-badge">
+      <span class="material-symbols-outlined">workspace_premium</span>
+      <span>Executive</span>
+    </div>
+  </div>
+
+  <div class="page-header-right">
+
+    <div class="app-header-date">
+      <span class="material-symbols-outlined">calendar_month</span>
+      <span id="appHeaderDateText">—</span>
+    </div>
+
+    <div class="app-header-user">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-name" id="userName">กำลังโหลด...</div>
+    </div>
+
+  </div>
+
+</header>
 
       <main class="container">
         <!-- SUMMARY -->
@@ -568,7 +586,7 @@
 
     <script src="/js/pages/executive/executive-Approval.js"></script>
     <script src="/js/core/themeToggle.js"></script>
-    <script src="/js/services/nav-service.js"></script>
+    <!-- <script src="/js/services/nav-service.js"></script> -->
   </body>
 </html>
 

@@ -1019,6 +1019,67 @@ function openCeoModal(row) {
   });
 }
 
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  initExecutiveHeader();
+});
+
+function initExecutiveHeader() {
+  renderHeaderDate();
+  renderHeaderUser();
+}
+
+function renderHeaderDate() {
+  const el = document.getElementById("appHeaderDateText");
+  if (!el) return;
+
+  const now = new Date();
+
+  el.textContent = now.toLocaleDateString("th-TH", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+
+
+async function renderHeaderUser() {
+  const nameEl = document.getElementById("userName");
+  const avatarEl = document.getElementById("userAvatar");
+
+  if (!nameEl || !avatarEl) return;
+
+  try {
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+
+    const name =
+      user?.user_metadata?.display_name ||
+      user?.user_metadata?.full_name ||
+      user?.email?.split("@")[0] ||
+      "Executive";
+
+    nameEl.textContent = name;
+
+    avatarEl.textContent = name.charAt(0).toUpperCase();
+
+  } catch (err) {
+    console.error("โหลดข้อมูลผู้ใช้ไม่สำเร็จ", err);
+
+    nameEl.textContent = "Executive";
+    avatarEl.textContent = "E";
+  }
+}
+
+
+
+
+
 async function openCeoModalByApprovalId(rowId) {
   const row = _ceoClaimsCache.get(rowId);
   if (!row) return;
@@ -1163,20 +1224,24 @@ async function saveExecDecision() {
     // 1) ถ้ามี approval_requests linked → อัปเดต approval_requests
     if (approvalRequestId) {
       const { data: updatedApproval, error: approvalError } = await supabaseClient
-        .from("approval_requests")
-        .update({
-          request_status: decision,
-          approval_comment: comment || null,
-          approval_signature: signatureData,
-          approved_by: user?.id || null,
-          approved_at: now,
-          updated_at: now,
-        })
-        .eq("id", approvalRequestId)
-        .select()
-        .single();
+  .from("approval_requests")
+  .update({
+    request_status: decision,
+    approval_comment: comment || null,
+    approval_signature: signatureData,
+    approved_by: user?.id || null,
+    approved_at: now,
+    updated_at: now,
+  })
+  .eq("id", approvalRequestId)
+  .select()
+  .maybeSingle();
 
-      if (approvalError) throw approvalError;
+if (approvalError) throw approvalError;
+
+if (!updatedApproval) {
+  throw new Error("อัปเดต approval_requests ไม่สำเร็จ: ไม่พบรายการ หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
+}
 
       finalDocumentRow = {
         ...finalDocumentRow,
@@ -1200,13 +1265,17 @@ async function saveExecDecision() {
       const claimId = isLegacyClaim ? currentExecClaim.id : currentExecClaim.id;
 
       const { data: updatedClaim, error: claimError } = await supabaseClient
-        .from("claims")
-        .update(updatePayload)
-        .eq("id", claimId)
-        .select()
-        .single();
+  .from("claims")
+  .update(updatePayload)
+  .eq("id", claimId)
+  .select()
+  .maybeSingle();
 
-      if (claimError) throw claimError;
+if (claimError) throw claimError;
+
+if (!updatedClaim) {
+  throw new Error("อัปเดต claims ไม่สำเร็จ: ไม่พบเคลม หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
+}
 
       finalDocumentRow = {
         ...finalDocumentRow,
