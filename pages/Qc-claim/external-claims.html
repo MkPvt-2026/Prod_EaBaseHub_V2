@@ -54,16 +54,16 @@
         <span class="ea-text">หน้าหลัก</span>
       </a>
       <a class="ea-link" href="/pages/Qc-claim/adminQc.html" title="Claims QC">
-        <span class="material-symbols-outlined">manage_search</span>
+        <span class="material-symbols-outlined">fact_check</span>
         <span class="ea-text">จัดการเคลม</span>
       </a>
-      <a class="ea-link" href="/pages/Qc-claim/internal-claims.html" title="เคลมภายใน">
-        <span class="material-symbols-outlined">factory</span>
-        <span class="ea-text">เคลม วัตถุดิบ-สินค้า(ภายใน)</span>
-      </a>
       <a class="ea-link active" href="/pages/Qc-claim/external-claims.html" title="เคลมลูกค้า">
-        <span class="material-symbols-outlined">storefront</span>
-        <span class="ea-text">เคลม วัตถุดิบ-สินค้า(ภายนอก)</span>
+        <span class="material-symbols-outlined">assignment_return</span>
+        <span class="ea-text">เคลม-ภายนอก</span>
+      </a>
+      <a class="ea-link" href="/UnderDev.html" title="เคลมภายใน">
+        <span class="material-symbols-outlined">inventory_2</span>
+        <span class="ea-text">เคลม-ภายใน</span>
       </a>
     </nav>
 
@@ -101,6 +101,14 @@
         <span class="material-symbols-outlined">calendar_month</span>
         <span id="appHeaderDateText">—</span>
       </div>
+
+
+      <div class="app-header-user">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-name" id="userName">กำลังโหลด...</div>
+      </div>
+
+      
     </header>
 
     <!-- MAIN -->
@@ -179,61 +187,73 @@
         </div>
       </div>
 
-      <!-- FILTER BAR -->
-      <div class="qc-filter-bar">
-        <div class="filter-group" style="flex: 2; min-width: 220px">
-          <span class="material-symbols-outlined filter-icon">search</span>
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="ค้นหาสินค้า / ลูกค้า / พนักงาน..."
-          />
-        </div>
+<!-- FILTER BAR -->
 
-        <div class="filter-group filter-date-range">
-          <div class="date-field">
-            <label for="filterDateFrom" class="date-label">
-              <span class="material-symbols-outlined">calendar_month</span>
-              จากวันที่
-            </label>
-            <input type="date" id="filterDateFrom" />
-          </div>
+<div class="filter-card">
+<div class="qc-filter-compact">
+  <div class="filter-search-box">
+    <span class="material-symbols-outlined">search</span>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="ค้นหาสินค้า / ลูกค้า / พนักงาน..."
+    />
+  </div>
 
-          <span class="date-arrow">→</span>
+  <button class="btn-advance-filter" type="button" onclick="toggleAdvanceFilter()">
+    <span class="material-symbols-outlined">tune</span>
+    Advance Filter
+  </button>
+</div>
+</div>
 
-          <div class="date-field">
-            <label for="filterDateTo" class="date-label">
-              <span class="material-symbols-outlined">event_available</span>
-              ถึงวันที่
-            </label>
-            <input type="date" id="filterDateTo" />
-          </div>
-        </div>
 
-        <div class="filter-group" style="min-width: 160px; flex: 0">
-          <span class="material-symbols-outlined filter-icon">storefront</span>
-          <select id="filterCustomer">
-            <option value="">ทุกลูกค้า</option>
-          </select>
-        </div>
+ 
 
-        <div class="filter-group" style="min-width: 140px; flex: 0">
-          <span class="material-symbols-outlined filter-icon">flag</span>
-          <select id="filterStatus">
-            <option value="">ทุกสถานะ</option>
-            <option value="submitted">รอรับเรื่อง</option>
-            <option value="in_progress">กำลังตรวจสอบ</option>
-            <option value="approved">อนุมัติแล้ว</option>
-            <option value="rejected">ปฏิเสธ</option>
-          </select>
-        </div>
-        <button class="btn-filter-reset" onclick="resetFilters()">
-          <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
-        </button>
-        <button class="btn-export-excel" onclick="exportExcel()">
-          <span class="material-symbols-outlined">table_view</span> Excel
-        </button>
-      </div>
+<!-- ADVANCE FILTER PANEL -->
+ 
+<div class="advance-filter-panel" id="advanceFilterPanel">
+  <div class="advance-filter-grid">
+    <div class="filter-field">
+      <label>จากวันที่</label>
+      <input type="date" id="filterDateFrom" />
+    </div>
+
+    <div class="filter-field">
+      <label>ถึงวันที่</label>
+      <input type="date" id="filterDateTo" />
+    </div>
+
+    <div class="filter-field">
+      <label>ลูกค้า</label>
+      <select id="filterCustomer">
+        <option value="">ทุกลูกค้า</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label>สถานะ</label>
+      <select id="filterStatus">
+        <option value="">ทุกสถานะ</option>
+        <option value="submitted">รอรับเรื่อง</option>
+        <option value="in_progress">กำลังตรวจสอบ</option>
+        <option value="approved">อนุมัติแล้ว</option>
+        <option value="rejected">ปฏิเสธ</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="advance-filter-actions">
+    <button class="btn-filter-reset" onclick="resetFilters()">
+      <span class="material-symbols-outlined">restart_alt</span> รีเซ็ต
+    </button>
+
+    <button class="btn-export-excel" onclick="exportExcel()">
+      <span class="material-symbols-outlined">table_view</span> Excel
+    </button>
+  </div>
+</div>
+
 
       <!-- TABLE — external: 9 คอลัมน์ -->
       <div class="qc-main">
@@ -248,8 +268,8 @@
                 <th>ประเภทปัญหา</th>
                 <th>ไฟล์</th>
                 <th>สถานะ</th>
-                <th>เอกสารอนุมัติ</th>
-                <!-- <th>จัดการ</th> -->
+                <!-- <th>เอกสารอนุมัติ</th> -->
+                <th>จัดการ</th>
               </tr>
             </thead>
             <tbody id="qcTableBody">

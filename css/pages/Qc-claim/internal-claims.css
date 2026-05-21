@@ -283,7 +283,7 @@ body.sidebar-expanded .ea-user {
 }
 
 .ea-link.active {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--surface-1);
   color: var(--role-dark);
   box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
   border-radius: var(--r-xl);

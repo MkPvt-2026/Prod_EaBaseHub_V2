@@ -532,6 +532,11 @@ function populateCustomerFilter() {
   });
   filterCustomer.value = current;
 }
+function toggleAdvanceFilter() {
+  const panel = document.getElementById("advanceFilterPanel");
+  if (!panel) return;
+  panel.classList.toggle("show");
+}
 
 // ---------- Filters ----------
 function setupEventListeners() {

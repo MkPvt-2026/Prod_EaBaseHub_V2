@@ -1,6 +1,15 @@
 // =====================================================
-// adminQc.js (v3.2 — Bug-fixed & polished)
+// adminQc.js (v3.4 — Sync กับ HTML & CSS จริง)
 // หน้า QC Dashboard กลาง — ตรวจสอบ รับเรื่อง Export
+//
+// Changes from v3.3:
+//  • เพิ่ม toggleAdvanceFilter() (HTML เรียกใช้)
+//  • ผูก event filterCustomer + populate dropdown อัตโนมัติ
+//  • ลบ class .sort-arrow ใน HTML ออกตอน update (กัน ↑/↓ ทับ CSS)
+//  • supabase fallback: หาได้ทั้ง window.supabaseClient และ scope global
+//  • Modal Approve/Reject ทำงานได้ผ่าน dialog (ไม่ต้องมีปุ่มใน HTML)
+//  • Export ใน modal header → export เฉพาะ claim ปัจจุบัน (single row)
+//  • Guard ทุก element ก่อนใช้ (HTML จริงไม่มี btnApprove/btnReject/qcComment)
 // =====================================================
 
 // ── lazy-load sendLineNotify ──────────────────────────
@@ -12,7 +21,7 @@ async function getSendLineNotify() {
     _sendLineNotify = mod.sendLineNotify;
     return _sendLineNotify;
   } catch (err) {
-    console.warn("⚠️  lineNotify.js ไม่พบ — LINE notifications disabled", err);
+    console.warn("⚠️  lineNotify.js ไม่พบ — LINE notifications disabled");
     throw err;
   }
 }
@@ -27,6 +36,7 @@ let sortDir        = "desc";
 const filterState = {
   search:    "",
   status:    "",
+  customer:  "",
   dateFrom:  "",
   dateTo:    "",
   scope:     "",
@@ -45,19 +55,24 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/**
- * คืนค่า status ที่ normalize แล้ว
- * รับได้ทั้ง object (claim) หรือ string (status raw)
- */
+/** escape ค่าที่จะใส่ลงใน JS string literal ภายใน inline onclick */
+function escapeJsString(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r");
+}
+
 function normalizeStatus(claimOrStatus) {
   if (claimOrStatus && typeof claimOrStatus === "object") {
     const c = claimOrStatus;
-    // exec_status ที่ final ให้ใช้ก่อน
     if (c.exec_status === "approved") return "exec_approved";
     if (c.exec_status === "rejected") return "exec_rejected";
     return c.qc_status || c.status || "pending";
   }
-  // string
   const s = String(claimOrStatus || "");
   if (s === "submitted")   return "pending";
   if (s === "in_progress") return "checking";
@@ -121,26 +136,27 @@ function formatDateTime(ts) {
   return `${formatDate(ts)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+/** หา supabaseClient — รองรับทั้ง window.supabaseClient และ global script-scope */
+function getSupabase() {
+  if (typeof window !== "undefined" && window.supabaseClient) return window.supabaseClient;
+  if (typeof supabaseClient !== "undefined") return supabaseClient;
+  return null;
+}
+
 async function waitForSupabase(timeoutMs = 5000) {
   const start = Date.now();
-  while (typeof supabaseClient === "undefined") {
+  while (!getSupabase()) {
     if (Date.now() - start > timeoutMs) return false;
     await new Promise((r) => setTimeout(r, 100));
   }
   return true;
 }
 
-/**
- * ระบุ scope ของ claim (internal / external)
- * ใช้ claim_scope field ก่อน — ถ้าไม่มีค่อย infer จาก customer
- */
 function getClaimScope(claim) {
   if (!claim) return "external";
   const scopeField = (claim.claim_scope || "").trim().toLowerCase();
   if (scopeField === "internal") return "internal";
   if (scopeField === "external") return "external";
-
-  // ไม่มี claim_scope — infer จาก customer
   const customer = String(claim.customer || "").trim();
   if (!customer) return "internal";
   return "external";
@@ -168,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadClaims();
     setupEventListeners();
 
-    console.log("✅ adminQc v3.2 ready");
+    console.log("✅ adminQc v3.4 ready");
   } catch (err) {
     console.error("❌ Init error:", err);
     showTableError("เกิดข้อผิดพลาดตอนเริ่มต้น: " + err.message);
@@ -195,7 +211,8 @@ function setupLogout() {
   if (!btn) return;
   btn.addEventListener("click", async () => {
     if (typeof logout === "function") { await logout(); return; }
-    await supabaseClient.auth.signOut();
+    const sb = getSupabase();
+    if (sb) await sb.auth.signOut();
     window.location.href = "/index.html";
   });
 }
@@ -225,6 +242,15 @@ function setupEventListeners() {
     });
   }
 
+  // Customer select
+  const customerEl = document.getElementById("filterCustomer");
+  if (customerEl) {
+    customerEl.addEventListener("change", () => {
+      filterState.customer = customerEl.value;
+      applyFilters();
+    });
+  }
+
   // Date range
   ["filterDateFrom", "filterDateTo"].forEach((id) => {
     const el = document.getElementById(id);
@@ -236,7 +262,7 @@ function setupEventListeners() {
     }
   });
 
-  // Scope segment
+  // Scope segment (ถ้ามีในอนาคต)
   document.querySelectorAll("[data-scope]").forEach((btn) => {
     btn.addEventListener("click", () => {
       filterState.scope = btn.dataset.scope;
@@ -245,7 +271,7 @@ function setupEventListeners() {
     });
   });
 
-  // Pick-state segment
+  // Pick-state segment (ถ้ามีในอนาคต)
   document.querySelectorAll("[data-pick-state]").forEach((btn) => {
     btn.addEventListener("click", () => {
       filterState.pickState = btn.dataset.pickState;
@@ -278,7 +304,7 @@ function setupEventListeners() {
     });
   });
 
-  // Refresh button
+  // Refresh button (optional)
   const btnRefresh = document.getElementById("btnRefresh");
   if (btnRefresh) {
     btnRefresh.addEventListener("click", async () => {
@@ -298,7 +324,7 @@ function setupEventListeners() {
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeModal(); closeLightbox(); }
+    if (e.key === "Escape") { closeModal(); closeLightbox(); closeAdvanceFilter(); }
   });
 }
 
@@ -314,11 +340,21 @@ function updateSortIndicators() {
     if (th.dataset.sort === sortKey) {
       th.classList.add(sortDir === "asc" ? "sort-asc" : "sort-desc");
     }
+    // ลบ ↑/↓ ที่ hard-code ใน HTML ออก เพื่อให้ใช้ CSS pseudo จัดการเองในอนาคต
+    const arrow = th.querySelector(".sort-arrow");
+    if (arrow) {
+      if (th.dataset.sort === sortKey) {
+        arrow.textContent = sortDir === "asc" ? "↑" : "↓";
+        arrow.style.opacity = "1";
+      } else {
+        arrow.textContent = "↕";
+        arrow.style.opacity = "0.35";
+      }
+    }
   });
 }
 
 function handleSummaryCardClick(filter, cardEl) {
-  // Reset relevant filters
   filterState.pickState = "all";
   filterState.status    = "";
 
@@ -336,7 +372,7 @@ function handleSummaryCardClick(filter, cardEl) {
     case "rejected":
       filterState.status = "rejected";
       break;
-    default: /* "all" — already reset above */ break;
+    default: break;
   }
 
   const statusEl = document.getElementById("filterStatus");
@@ -352,12 +388,28 @@ function handleSummaryCardClick(filter, cardEl) {
   applyFilters();
 }
 
+// ── Advance Filter Panel Toggle ──────────────────────
+
+function toggleAdvanceFilter() {
+  const panel = document.getElementById("advanceFilterPanel");
+  if (!panel) return;
+  panel.classList.toggle("show");
+}
+
+function closeAdvanceFilter() {
+  const panel = document.getElementById("advanceFilterPanel");
+  if (panel) panel.classList.remove("show");
+}
+
 // ── Data Loading ──────────────────────────────────────
 
 async function loadClaims() {
   try {
     showTableLoading();
-    const { data, error } = await supabaseClient
+    const sb = getSupabase();
+    if (!sb) throw new Error("Supabase client ไม่พร้อม");
+
+    const { data, error } = await sb
       .from("claims")
       .select("*")
       .order("created_at", { ascending: false });
@@ -365,6 +417,7 @@ async function loadClaims() {
     if (error) throw error;
 
     allClaims = data || [];
+    populateCustomerOptions();
     updateSummaryCards();
     applyFilters();
   } catch (err) {
@@ -373,16 +426,35 @@ async function loadClaims() {
   }
 }
 
+function populateCustomerOptions() {
+  const sel = document.getElementById("filterCustomer");
+  if (!sel) return;
+
+  // unique customers (เก็บค่าเดิมที่เลือกไว้)
+  const current = sel.value;
+  const customers = Array.from(new Set(
+    allClaims
+      .map((c) => (c.customer || "").trim())
+      .filter(Boolean)
+  )).sort((a, b) => a.localeCompare(b, "th"));
+
+  sel.innerHTML = '<option value="">ทุกลูกค้า</option>' +
+    customers.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+
+  if (current && customers.includes(current)) sel.value = current;
+}
+
 async function loadCurrentUserInfo() {
   try {
     const nameEl   = document.getElementById("userName");
     const avatarEl = document.getElementById("userAvatar");
-    if (!nameEl || typeof supabaseClient === "undefined") return;
+    const sb = getSupabase();
+    if (!nameEl || !sb) return;
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
 
-    const { data: profile } = await supabaseClient
+    const { data: profile } = await sb
       .from("profiles")
       .select("display_name, username, role")
       .eq("id", user.id)
@@ -435,7 +507,7 @@ function updateSummaryCards() {
 // ── Filtering & Sorting ───────────────────────────────
 
 function applyFilters() {
-  const { search, status, dateFrom, dateTo, scope, pickState } = filterState;
+  const { search, status, customer, dateFrom, dateTo, scope, pickState } = filterState;
 
   filteredClaims = allClaims.filter((c) => {
     if (search && !getClaimSearchText(c).includes(search)) return false;
@@ -446,6 +518,8 @@ function applyFilters() {
       if (status === "rejected" && !["rejected","exec_rejected"].includes(ns)) return false;
       if (!["approved","rejected"].includes(status) && ns !== status) return false;
     }
+
+    if (customer && String(c.customer || "").trim() !== customer) return false;
 
     if (dateFrom && c.claim_date && c.claim_date < dateFrom) return false;
     if (dateTo   && c.claim_date && c.claim_date > dateTo)   return false;
@@ -477,10 +551,13 @@ function sortClaims(claims) {
     if (sortKey === "qc_status") {
       va = STATUS_ORDER[normalizeStatus(a)] ?? 99;
       vb = STATUS_ORDER[normalizeStatus(b)] ?? 99;
-    } else {
-      va = a.claim_date || a.created_at || "";
-      vb = b.claim_date || b.created_at || "";
+      if (va !== vb) return sortDir === "asc" ? va - vb : vb - va;
+      const da = a.claim_date || a.created_at || "";
+      const db = b.claim_date || b.created_at || "";
+      return String(db).localeCompare(String(da));
     }
+    va = a.claim_date || a.created_at || "";
+    vb = b.claim_date || b.created_at || "";
     if (va < vb) return sortDir === "asc" ? -1 : 1;
     if (va > vb) return sortDir === "asc" ?  1 : -1;
     return 0;
@@ -497,12 +574,13 @@ function updateResultCount() {
 function resetFilters() {
   filterState.search    = "";
   filterState.status    = "";
+  filterState.customer  = "";
   filterState.dateFrom  = "";
   filterState.dateTo    = "";
   filterState.scope     = "";
   filterState.pickState = "all";
 
-  ["searchInput","filterStatus","filterDateFrom","filterDateTo"].forEach((id) => {
+  ["searchInput","filterStatus","filterCustomer","filterDateFrom","filterDateTo"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
@@ -602,7 +680,7 @@ function renderTable(claims) {
     return;
   }
 
-  // Register claims globally for onclick access
+  // Register claims globally for onclick access (reset every render)
   window._claims = {};
   claims.forEach((c) => { window._claims[c.id] = c; });
 
@@ -611,7 +689,7 @@ function renderTable(claims) {
   claims.forEach((claim) => {
     const tr = document.createElement("tr");
     tr.className = getStatusRowClass(claim);
-    tr.onclick = () => openModal(claim);
+    tr.addEventListener("click", () => openModal(claim));
 
     const mediaUrls  = normalizeMediaUrls(claim.media_urls);
     const claimTypes = normalizeClaimTypes(claim.claim_types);
@@ -623,6 +701,8 @@ function renderTable(claims) {
     const customerLabel = claim.customer && String(claim.customer).trim()
       ? escapeHtml(claim.customer)
       : '<span class="cell-muted">— (ภายใน)</span>';
+
+    const idJs = escapeJsString(claim.id);
 
     tr.innerHTML = `
       <td>
@@ -651,12 +731,12 @@ function renderTable(claims) {
       <td>
         <div class="cell-action-group">
           <button class="btn-view" type="button"
-            onclick="event.stopPropagation(); openModal(window._claims['${escapeHtml(claim.id)}'])">
+            onclick="event.stopPropagation(); openModal(window._claims['${idJs}'])">
             <span class="material-symbols-outlined">open_in_new</span> ข้อมูล
           </button>
           ${!claim.picked_at ? `
             <button class="btn-pick" type="button"
-              onclick="event.stopPropagation(); pickClaim('${escapeHtml(claim.id)}')">
+              onclick="event.stopPropagation(); pickClaim('${idJs}')">
               <span class="material-symbols-outlined">how_to_reg</span> รับเรื่อง
             </button>` : ""}
         </div>
@@ -676,11 +756,9 @@ function openModal(claim) {
   if (!modal) return;
   modal.classList.add("open");
 
-  // Title
   const titleEl = document.getElementById("modalTitle");
   if (titleEl) titleEl.textContent = `เคลม #${getClaimNo(claim)}`;
 
-  // Info grid
   const infoGrid = document.getElementById("modalInfoGrid");
   if (infoGrid) {
     infoGrid.innerHTML = `
@@ -697,7 +775,6 @@ function openModal(claim) {
     `;
   }
 
-  // Claim types — ID: modalTypes (ตรงกับ HTML)
   const typesEl = document.getElementById("modalTypes");
   if (typesEl) {
     const types = normalizeClaimTypes(claim.claim_types);
@@ -706,15 +783,12 @@ function openModal(claim) {
       : '<span class="cell-muted">—</span>';
   }
 
-  // Detail
   const detailEl = document.getElementById("modalDetail");
   if (detailEl) detailEl.textContent = claim.detail || "—";
 
-  // Gallery — ID: modalGallery (ตรงกับ HTML)
   const galleryEl = document.getElementById("modalGallery");
   if (galleryEl) renderModalGallery(galleryEl, normalizeMediaUrls(claim.media_urls));
 
-  // QC action area
   updateModalActionState(claim);
 }
 
@@ -724,50 +798,47 @@ function renderModalGallery(container, urls) {
     return;
   }
   container.innerHTML = urls.map((url, i) => {
-    const safe = escapeHtml(url);
+    const safeAttr = escapeHtml(url);
+    const safeJs   = escapeJsString(url);
     if (isVideo(url)) {
       return `<div class="media-item">
-        <video controls preload="none" src="${safe}" style="width:100%;height:100%;object-fit:cover"></video>
+        <video controls preload="none" src="${safeAttr}" style="width:100%;height:100%;object-fit:cover"></video>
       </div>`;
     }
-    return `<div class="media-item" onclick="openLightbox('${safe}')">
-      <img src="${safe}" alt="ไฟล์แนบ ${i + 1}" loading="lazy"
+    return `<div class="media-item" onclick="openLightbox('${safeJs}')">
+      <img src="${safeAttr}" alt="ไฟล์แนบ ${i + 1}" loading="lazy"
         onerror="this.parentElement.style.display='none'" />
     </div>`;
   }).join("");
 }
 
 function updateModalActionState(claim) {
-  const btnPick    = document.getElementById("btnPickClaim");
+  // Modal Pick button (อยู่ใน header)
+  const btnPick = document.getElementById("btnPickClaim");
+  const isPicked = !!claim.picked_at;
+  if (btnPick) btnPick.style.display = isPicked ? "none" : "inline-flex";
+
+  // Element เหล่านี้อาจไม่มีใน HTML (ถูก comment ออก) — guard ทุกตัว
   const btnApprove = document.getElementById("btnApprove");
   const btnReject  = document.getElementById("btnReject");
   const commentEl  = document.getElementById("qcComment");
   const statusText = document.getElementById("qcStatusText");
+  const section    = document.getElementById("qcActionSection");
 
   const ns      = normalizeStatus(claim);
   const isFinal = ["approved","rejected","exec_approved","exec_rejected"].includes(ns);
-  const isPicked = !!claim.picked_at;
 
-  // Show/hide pick button
-  if (btnPick)    btnPick.style.display = isPicked ? "none" : "inline-flex";
-
-  // Approve/reject only after picked, not yet final
   if (btnApprove) btnApprove.disabled = !isPicked || isFinal;
   if (btnReject)  btnReject.disabled  = !isPicked || isFinal;
 
-  // Comment field read-only if final
   if (commentEl) {
     commentEl.value = claim.qc_comment || "";
     commentEl.readOnly = isFinal;
     commentEl.style.background = isFinal ? "var(--surface-2)" : "";
   }
 
-  // Current status text
   if (statusText) statusText.innerHTML = buildStatusBadge(claim);
-
-  // Mark section as readonly
-  const section = document.getElementById("qcActionSection");
-  if (section) section.classList.toggle("is-readonly", isFinal);
+  if (section)    section.classList.toggle("is-readonly", isFinal);
 }
 
 function closeModal() {
@@ -820,7 +891,6 @@ function showTableError(message) {
 
 // ── Claim Actions ─────────────────────────────────────
 
-/** รับเรื่องจากปุ่มในตาราง */
 async function pickClaim(id) {
   if (!id) return;
   const confirmed = await showConfirmDialog({
@@ -833,7 +903,6 @@ async function pickClaim(id) {
   await _doPickClaim(id);
 }
 
-/** รับเรื่องจากปุ่มใน modal */
 async function pickClaimFromModal() {
   if (!currentClaim?.id) return;
   const confirmed = await showConfirmDialog({
@@ -848,7 +917,10 @@ async function pickClaimFromModal() {
 
 async function _doPickClaim(id) {
   try {
-    const { error } = await supabaseClient
+    const sb = getSupabase();
+    if (!sb) throw new Error("Supabase client ไม่พร้อม");
+
+    const { error } = await sb
       .from("claims")
       .update({
         picked_at:  new Date().toISOString(),
@@ -881,13 +953,15 @@ async function updateClaimStatus(status) {
   });
   if (!result) return;
 
-  // อ่าน comment จาก dialog หรือ textarea ใน modal
   const note = (typeof result === "object" ? result.note : null)
     || document.getElementById("qcComment")?.value?.trim()
     || null;
 
   try {
-    const { error } = await supabaseClient
+    const sb = getSupabase();
+    if (!sb) throw new Error("Supabase client ไม่พร้อม");
+
+    const { error } = await sb
       .from("claims")
       .update({
         qc_status:      status,
@@ -899,11 +973,10 @@ async function updateClaimStatus(status) {
 
     if (error) throw error;
 
-    // LINE Notify (optional — ไม่ block ถ้าไม่มี)
     try {
       const sendLineNotify = await getSendLineNotify();
       await sendLineNotify({ claim: currentClaim, status, note: note || "" });
-    } catch (_) { /* ไม่ต้องแสดง error */ }
+    } catch (_) { /* silent */ }
 
     showSuccessPopup(
       "บันทึกผลเรียบร้อย",
@@ -936,36 +1009,56 @@ function showConfirmDialog({
     wrap.id = "ea-confirm-dialog";
     wrap.className = "ea-confirm-overlay";
 
+    // ใช้ class ที่ตรงกับ CSS v4.0
     wrap.innerHTML = `
       <div class="ea-confirm-box ea-confirm-${escapeHtml(variant)}" role="dialog" aria-modal="true">
-        <div class="ea-confirm-icon">
-          <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+        <div class="ea-confirm-header">
+          <div class="ea-confirm-icon">
+            <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+          </div>
+          <div class="ea-confirm-title-wrap">
+            <h3 class="ea-confirm-title">${escapeHtml(title)}</h3>
+            <p class="ea-confirm-message">${escapeHtml(message)}</p>
+          </div>
+          <button type="button" class="ea-confirm-close" aria-label="ปิด">
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
-        <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(message)}</p>
         ${showNote ? `
-          <label class="ea-confirm-note-label">${escapeHtml(noteLabel)}</label>
-          <textarea class="ea-confirm-note" rows="3" placeholder="${escapeHtml(notePlaceholder)}"></textarea>
+          <div class="ea-confirm-body">
+            <label class="ea-confirm-label">${escapeHtml(noteLabel)}</label>
+            <textarea class="ea-confirm-textarea" rows="3" placeholder="${escapeHtml(notePlaceholder)}"></textarea>
+          </div>
         ` : ""}
         <div class="ea-confirm-actions">
-          <button type="button" class="ea-confirm-cancel">${escapeHtml(cancelText)}</button>
-          <button type="button" class="ea-confirm-ok">${escapeHtml(confirmText)}</button>
+          <button type="button" class="ea-confirm-btn-cancel">
+            <span class="material-symbols-outlined">close</span>${escapeHtml(cancelText)}
+          </button>
+          <button type="button" class="ea-confirm-btn-ok">
+            <span class="material-symbols-outlined">check</span>${escapeHtml(confirmText)}
+          </button>
         </div>
       </div>`;
 
     document.body.appendChild(wrap);
+    // trigger open class for transition
+    requestAnimationFrame(() => wrap.classList.add("open"));
 
-    const close = (result) => { wrap.remove(); resolve(result); };
+    const close = (result) => {
+      wrap.classList.add("closing");
+      wrap.classList.remove("open");
+      setTimeout(() => { wrap.remove(); resolve(result); }, 200);
+    };
 
-    wrap.querySelector(".ea-confirm-cancel").onclick = () => close(false);
-    wrap.querySelector(".ea-confirm-ok").onclick = () => {
-      const note = wrap.querySelector(".ea-confirm-note")?.value?.trim() || "";
+    wrap.querySelector(".ea-confirm-btn-cancel").onclick = () => close(false);
+    wrap.querySelector(".ea-confirm-close").onclick     = () => close(false);
+    wrap.querySelector(".ea-confirm-btn-ok").onclick = () => {
+      const note = wrap.querySelector(".ea-confirm-textarea")?.value?.trim() || "";
       close(showNote ? { ok: true, note } : true);
     };
     wrap.addEventListener("click", (e) => { if (e.target === wrap) close(false); });
 
-    // Focus ok button
-    setTimeout(() => wrap.querySelector(".ea-confirm-ok")?.focus(), 50);
+    setTimeout(() => wrap.querySelector(".ea-confirm-btn-ok")?.focus(), 50);
   });
 }
 
@@ -975,23 +1068,49 @@ function showSuccessPopup(title, message = "") {
   const wrap = document.createElement("div");
   wrap.id = "ea-success-popup";
   wrap.className = "ea-success-overlay";
+
+  // ใช้ structure ที่ตรงกับ CSS v4.0
   wrap.innerHTML = `
-    <div class="ea-success-box">
-      <div class="ea-success-icon">
-        <span class="material-symbols-outlined">check_circle</span>
+    <div class="ea-success-box" role="dialog" aria-modal="true">
+      <div class="ea-success-icon-wrap">
+        <div class="ea-success-checkmark">
+          <svg viewBox="0 0 60 60" width="100%" height="100%">
+            <circle class="ea-success-circle" cx="30" cy="30" r="24" fill="none"/>
+            <path class="ea-success-check" d="M18 31 L27 40 L43 22" fill="none"/>
+          </svg>
+        </div>
       </div>
-      <h3>${escapeHtml(title)}</h3>
-      ${message ? `<p>${escapeHtml(message)}</p>` : ""}
+      <div class="ea-success-body">
+        <h3 class="ea-success-title">${escapeHtml(title)}</h3>
+        ${message ? `<p class="ea-success-message">${escapeHtml(message)}</p>` : ""}
+      </div>
+      <div class="ea-success-actions">
+        <button type="button" class="ea-success-btn-ok">
+          <span class="material-symbols-outlined">done</span>ตกลง
+        </button>
+      </div>
     </div>`;
 
   document.body.appendChild(wrap);
-  setTimeout(() => wrap.remove(), 1800);
+  requestAnimationFrame(() => wrap.classList.add("open"));
+
+  const close = () => {
+    wrap.classList.add("closing");
+    wrap.classList.remove("open");
+    setTimeout(() => wrap.remove(), 250);
+  };
+
+  wrap.querySelector(".ea-success-btn-ok").onclick = close;
+  wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
+
+  // auto-close
+  setTimeout(close, 2400);
 }
 
 // ── Export ────────────────────────────────────────────
 
-function getExportRows() {
-  return filteredClaims.map((c) => ({
+function _rowFromClaim(c) {
+  return {
     เลขเคลม:       getClaimNo(c),
     วันที่:         formatDate(c.claim_date),
     พนักงาน:       c.emp_name || "",
@@ -1002,7 +1121,18 @@ function getExportRows() {
     ประเภทปัญหา:   normalizeClaimTypes(c.claim_types).join(", "),
     สถานะ:          getStatusLabel(c),
     ความเห็น:       c.qc_comment || "",
-  }));
+  };
+}
+
+/** ถ้า modal เปิดอยู่ → export เฉพาะ claim นั้น  ไม่งั้น → export ทั้งตาราง */
+function getExportRows() {
+  if (currentClaim) return [_rowFromClaim(currentClaim)];
+  return filteredClaims.map(_rowFromClaim);
+}
+
+function csvCell(val) {
+  const s = String(val ?? "");
+  return `"${s.replace(/"/g, '""')}"`;
 }
 
 function exportCSV() {
@@ -1011,23 +1141,28 @@ function exportCSV() {
 
   const header = Object.keys(rows[0]);
   const csv = [
-    header.join(","),
-    ...rows.map((r) =>
-      header.map((h) => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(",")
-    ),
-  ].join("\n");
+    header.map(csvCell).join(","),
+    ...rows.map((r) => header.map((h) => csvCell(r[h])).join(",")),
+  ].join("\r\n");
 
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `claims-qc-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
 }
 
 function exportExcel() {
   const rows = getExportRows();
   if (!rows.length) { alert("ไม่มีข้อมูลสำหรับ export"); return; }
+
+  if (typeof XLSX === "undefined") {
+    alert("ไลบรารี XLSX ยังโหลดไม่เสร็จ — กรุณารอสักครู่แล้วลองใหม่");
+    return;
+  }
 
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -1038,3 +1173,17 @@ function exportExcel() {
 function exportPDF() {
   window.print();
 }
+
+// ── Expose to window (สำหรับ inline onclick ใน HTML) ──
+window.openModal           = openModal;
+window.closeModal          = closeModal;
+window.openLightbox        = openLightbox;
+window.closeLightbox       = closeLightbox;
+window.pickClaim           = pickClaim;
+window.pickClaimFromModal  = pickClaimFromModal;
+window.updateClaimStatus   = updateClaimStatus;
+window.resetFilters        = resetFilters;
+window.exportCSV           = exportCSV;
+window.exportExcel         = exportExcel;
+window.exportPDF           = exportPDF;
+window.toggleAdvanceFilter = toggleAdvanceFilter;

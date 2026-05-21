@@ -40,6 +40,13 @@
   --role-border: #fed7aa;
   --role-text:   #9a3412;
   --role-rgb:    249, 115, 22;
+
+  /* Radii */
+  --r-sm:   8px;
+  --r-md:   12px;
+  --r-lg:   16px;
+  --r-xl:   20px;
+  --r-pill: 999px;
 }
 
 /* ============================================================
@@ -146,6 +153,7 @@ body.sidebar-expanded .mini-brand-text { display: block; }
 .ea-menu {
   display: flex;
   flex-direction: column;
+  margin-top: 20px;
   gap: 4px;
   width: 100%;
   flex: 1;
@@ -167,6 +175,7 @@ body.sidebar-expanded .mini-brand-text { display: block; }
   height: 44px;
   border-radius: 14px;
   border: none;
+  
   background: transparent;
   color: #fff;
   display: flex;
@@ -195,10 +204,10 @@ body.sidebar-expanded .ea-user {
 .ea-user:hover  { background: rgba(239,68,68,0.18); }
 
 .ea-link.active {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.76); 
   color: #ea580c;
-  box-shadow: 0 8px 20px rgba(255,255,255,0.22);
-  border-radius: 16px;
+  box-shadow: 0 8px 8px rgba(255,255,255,0.22);
+  border-radius: var(--r-pill);
 }
 
 .ea-link .material-symbols-outlined,
@@ -235,7 +244,7 @@ body:not(.sidebar-expanded) .ea-user:hover::after {
   color: #fff;
   padding: 7px 12px;
   border-radius: 10px;
-  font-size: 0.76rem;
+  font-size: 0.46rem;
   font-weight: 500;
   white-space: nowrap;
   box-shadow: 0 8px 18px rgba(0,0,0,0.22);
