@@ -796,7 +796,7 @@ body {
 /* tab active */
 .tab-btn.active{
   height: 62px;
-  background: linear-gradient(180deg,var(--manager),var(--manager-hover));
+  background: linear-gradient(180deg,var(#60a5fa) 50%,var(#021c3b) 100%);
   color: #ffffff;
   border-color: transparent;
   /* box-shadow: 0 10px 24px rgba(37,99,235,.22); */
@@ -2190,11 +2190,7 @@ tr:hover td { background: var(--surface-soft); }
 
 /* active */
 .tab-btn.active{
-  background: linear-gradient(
-    180deg,
-    var(--manager) 0%,
-    var(--manager-hover) 100%
-  );
+  background: #60a5fa;
 
   color: #ffffff;
 
@@ -2690,7 +2686,7 @@ body{
 .tab-btn.active{
   height:48px;
   color:#fff;
-  background:linear-gradient(180deg,var(--manager) 0%,var(--manager-hover) 100%);
+  background:linear-gradient(180deg,var(#60a5fa) 50%,var(#021c3b) 100%);
   border-color:transparent;
   z-index:5;
   margin-left: 5px;
