@@ -6,7 +6,6 @@
 // 3) claim                  = เคลมสินค้า
 // 4) promotion              = โปรโมชั่น
 // 5) new_area_shop          = เปิดร้านค้าในเขตใหม่
-// เพิ่มประเภทใหม่ในอนาคตได้ที่ APPROVAL_TYPE_META
 
 const APPROVAL_TYPE_META = {
   temp_credit_limit: {
@@ -72,7 +71,6 @@ const APPROVAL_STATUS_META = {
   },
 };
 
-// เคลมเก่า (legacy) ที่ยังไม่ได้สร้าง approval_requests แต่ส่งหา CEO ผ่าน qc_status
 const CEO_VISIBLE_QC_STATUSES = [
   "waiting_ceo",
   "exec_approved",
@@ -88,6 +86,7 @@ let currentExecClaim = null;
 const _ceoClaimsCache = new Map();
 const _approverNameCache = new Map();
 
+/* ---------- UTILS ---------- */
 function formatDate(d) {
   if (!d || d === "—") return "—";
   try {
@@ -161,7 +160,6 @@ function getApprovalTypeMeta(type) {
   );
 }
 
-// แปลง qc_status ของเคลมเก่า → request_status สำหรับ approval_requests
 function mapQcStatusToRequestStatus(qcStatus) {
   const s = String(qcStatus || "").toLowerCase();
   if (s === "exec_approved" || s === "approved") return "approved";
@@ -171,10 +169,7 @@ function mapQcStatusToRequestStatus(qcStatus) {
 
 function getApprovalStatus(row) {
   if (row?.request_status) return row.request_status;
-  if (row?.exec_status) {
-    // exec_status เป็นค่าเดียวกับ request_status อยู่แล้ว (approved/rejected) ใน claims
-    return row.exec_status;
-  }
+  if (row?.exec_status) return row.exec_status;
   if (row?.qc_status) return mapQcStatusToRequestStatus(row.qc_status);
   return "pending";
 }
@@ -185,26 +180,17 @@ function getApprovalStatusMeta(row) {
 
 function getClaimNo(c) {
   const raw =
-    c?.claim_no ||
-    c?.claim_code ||
-    c?.claim_id ||
-    c?.source_id ||
-    c?.id ||
-    "";
+    c?.claim_no || c?.claim_code || c?.claim_id || c?.source_id || c?.id || "";
   return String(raw).substring(0, 8).toUpperCase() || "—";
 }
 
 function getApprovalDocNo(row) {
-  const year = new Date(row?.approved_at || row?.exec_at || row?.created_at || Date.now()).getFullYear();
+  const year = new Date(
+    row?.approved_at || row?.exec_at || row?.created_at || Date.now()
+  ).getFullYear();
   const claimNo = getClaimNo(row);
   const type = normalizeApprovalType(row?.request_type || "claim");
-
-  // เคลม → ใช้รูปแบบเดียวกับเอกสาร QC (APP-YYYY-XXXXXXXX)
-  if (type === "claim") {
-    return `APP-${year}-${claimNo}`;
-  }
-
-  // งานอื่น ๆ คงรูปแบบเดิม APP-YYYY-{TYPE}-XXXXXXXX
+  if (type === "claim") return `APP-${year}-${claimNo}`;
   const prefix = type.toUpperCase().replace(/[^A-Z0-9]/g, "-");
   return `APP-${year}-${prefix}-${claimNo}`;
 }
@@ -217,10 +203,7 @@ function normalizeMediaUrls(value) {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) return parsed.filter(Boolean);
     } catch (_) {}
-    return value
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean);
+    return value.split(",").map((x) => x.trim()).filter(Boolean);
   }
   return [];
 }
@@ -248,7 +231,6 @@ async function getApproverName(userId) {
       .select("display_name")
       .eq("id", userId)
       .maybeSingle();
-
     if (error) throw error;
 
     const name = data?.display_name?.trim();
@@ -261,10 +243,7 @@ async function getApproverName(userId) {
   }
 
   try {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (user?.id === userId && user.email) {
       const fallback = user.email.split("@")[0];
       _approverNameCache.set(userId, fallback);
@@ -279,11 +258,7 @@ function getQcResult(claim) {
   const raw = claim?.qc_result;
   if (!raw) return {};
   if (typeof raw === "string") {
-    try {
-      return JSON.parse(raw) || {};
-    } catch (_) {
-      return {};
-    }
+    try { return JSON.parse(raw) || {}; } catch (_) { return {}; }
   }
   return raw;
 }
@@ -298,46 +273,20 @@ function getGradeRows(qc) {
   ];
 }
 
-function getGradeSummary(qc) {
-  return (
-    getGradeRows(qc)
-      .filter(([, , qty]) => Number(qty || 0) > 0)
-      .map(([grade, label, qty]) => `${grade}: ${qty} (${label})`)
-      .join(" | ") || "ไม่ระบุ"
-  );
-}
-
 function getClaimTotalQty(claim) {
   const qc = getQcResult(claim);
-  const totalFromQc = getGradeRows(qc).reduce(
-    (sum, [, , qty]) => sum + Number(qty || 0),
-    0
-  );
+  const totalFromQc = getGradeRows(qc).reduce((s, [, , q]) => s + Number(q || 0), 0);
   return totalFromQc || Number(claim?.qty || claim?.quantity || claim?.claim_qty || 0);
 }
 
-function buildStatusBadge(row) {
-  return getApprovalStatusMeta(row).badge;
-}
-
-function getExecText(row) {
-  return getApprovalStatusMeta(row).label;
-}
-
-function isFinalized(row) {
-  const status = getApprovalStatus(row);
-  return ["approved", "rejected"].includes(status);
-}
+function buildStatusBadge(row) { return getApprovalStatusMeta(row).badge; }
+function getExecText(row) { return getApprovalStatusMeta(row).label; }
+function isFinalized(row) { return ["approved", "rejected"].includes(getApprovalStatus(row)); }
 
 function getRequesterText(row) {
   return val(
-    row?.requester_name,
-    row?.request_by_name,
-    row?.created_by_name,
-    row?.emp_name,
-    row?.request_by,
-    row?.created_by,
-    "—"
+    row?.requester_name, row?.request_by_name, row?.created_by_name,
+    row?.emp_name, row?.request_by, row?.created_by, "—"
   );
 }
 
@@ -351,12 +300,8 @@ function getApprovalTitle(row) {
 
 function getApprovalDetail(row) {
   return val(
-    row?.request_detail,
-    row?.detail,
-    row?.claim_detail,
-    row?.problem_detail,
-    row?.description,
-    "—"
+    row?.request_detail, row?.detail, row?.claim_detail,
+    row?.problem_detail, row?.description, "—"
   );
 }
 
@@ -364,33 +309,15 @@ function getApprovalAmount(row) {
   return val(row?.amount, row?.total_amount, row?.credit_amount, row?.price_amount, "");
 }
 
-function getApprovalId(row) {
-  return row?.approval_request_id || row?.approval_id || row?.id;
-}
+function getSignatureValue(row) { return row?.exec_signature || row?.approval_signature || ""; }
+function getApprovalCommentValue(row) { return row?.exec_comment || row?.approval_comment || ""; }
 
-function getApprovalRequestId(row) {
-  return row?.approval_request_id || row?.approval_id || (row?.source_table ? row?.id : null);
-}
-
-function getSignatureValue(row) {
-  return row?.exec_signature || row?.approval_signature || "";
-}
-
-function getApprovalCommentValue(row) {
-  return row?.exec_comment || row?.approval_comment || "";
-}
-
-// ---------- LEGACY CLAIM ADAPTER ----------
-// แปลง claim row (ตารางเก่า) → shape ที่หน้านี้ใช้ร่วมกับ approval_requests
 function adaptLegacyClaimRow(claim) {
   const requestStatus = mapQcStatusToRequestStatus(claim.qc_status || claim.exec_status);
   return {
-    // ใช้ id ของ claim เป็น id หลักของ row นี้ (เพื่อให้ cache + open modal ทำงานได้)
     id: claim.id,
-    // ไม่มี approval_requests แยก → บังคับเป็น null เพื่อบ่งบอกว่าเป็น legacy
     approval_request_id: null,
     _legacy_claim: true,
-
     request_type: "claim",
     request_title:
       claim.request_title ||
@@ -399,16 +326,10 @@ function adaptLegacyClaimRow(claim) {
     request_status: requestStatus,
     priority: claim.priority || "normal",
     amount: claim.amount || claim.total_amount || null,
-
     requester_name: getRequesterText(claim),
-
     source_table: "claims",
     source_id: claim.id,
-
-    // คงไว้ทุกฟิลด์เดิมเพื่อ build UI เคลม
     ...claim,
-
-    // ถ้าเคลมมีลายเซ็น/คอมเมนต์ exec ไว้แล้ว ให้ผูกกับ key ของ approval_requests ด้วย
     approval_comment: claim.exec_comment || claim.approval_comment || null,
     approval_signature: claim.exec_signature || claim.approval_signature || null,
     approved_by: claim.exec_by || claim.approved_by || null,
@@ -417,8 +338,12 @@ function adaptLegacyClaimRow(claim) {
   };
 }
 
+/* ================================================================
+   LOAD DATA
+================================================================ */
 async function loadExecClaims() {
   const tbody = document.getElementById("ceoTableBody");
+  const cardList = document.getElementById("ceoCardList");
 
   if (tbody) {
     tbody.innerHTML = `
@@ -429,15 +354,20 @@ async function loadExecClaims() {
         </td>
       </tr>`;
   }
+  if (cardList) {
+    cardList.innerHTML = `
+      <div class="table-loading" style="text-align:center;color:var(--muted);padding:30px 0;">
+        <span class="material-symbols-outlined spin">progress_activity</span>
+        กำลังโหลด...
+      </div>`;
+  }
 
   try {
-    // 1) ดึง approval_requests ทั้งหมด
     const approvalQuery = supabaseClient
       .from("approval_requests")
       .select("*")
       .order("created_at", { ascending: false });
 
-    // 2) ดึง claims ที่ส่งให้ CEO (qc_status อยู่ในกลุ่มที่ CEO เห็น)
     const claimsQuery = supabaseClient
       .from("claims")
       .select("*")
@@ -446,12 +376,9 @@ async function loadExecClaims() {
 
     const [approvalRes, claimsRes] = await Promise.all([approvalQuery, claimsQuery]);
 
-    // approval_requests error → fatal
     if (approvalRes.error) throw approvalRes.error;
-
     const approvalRows = approvalRes.data || [];
 
-    // claims error → ไม่ fatal (อาจไม่มีตารางในบาง env) แค่ warn
     let claimRows = [];
     if (claimsRes.error) {
       console.warn("[CEO] load legacy claims failed:", claimsRes.error.message || claimsRes.error);
@@ -459,7 +386,6 @@ async function loadExecClaims() {
       claimRows = claimsRes.data || [];
     }
 
-    // 3) Dedupe: claim ที่มี approval_requests แล้ว (source_table=claims, source_id=claim.id) ไม่ต้องเพิ่มอีก
     const linkedClaimIds = new Set(
       approvalRows
         .filter((r) => r.source_table === "claims" && r.source_id)
@@ -470,7 +396,6 @@ async function loadExecClaims() {
       .filter((c) => !linkedClaimIds.has(String(c.id)))
       .map(adaptLegacyClaimRow);
 
-    // 4) Merge แล้วเรียงตามวันที่ล่าสุดก่อน
     const merged = [...approvalRows, ...legacyOnlyClaims].sort((a, b) => {
       const da = new Date(a.created_at || 0).getTime();
       const db = new Date(b.created_at || 0).getTime();
@@ -490,11 +415,20 @@ async function loadExecClaims() {
           </td>
         </tr>`;
     }
+    if (cardList) {
+      cardList.innerHTML = `
+        <div class="table-loading" style="color:var(--danger);text-align:center;padding:24px;">
+          โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(err.message || err)}
+        </div>`;
+    }
   }
 }
 
+/* ================================================================
+   SUMMARY + PULSE ALERT
+================================================================ */
 function updateExecSummary() {
-  const wait = allExecClaims.filter((c) => getApprovalStatus(c) === "pending").length;
+  const wait     = allExecClaims.filter((c) => getApprovalStatus(c) === "pending").length;
   const approved = allExecClaims.filter((c) => getApprovalStatus(c) === "approved").length;
   const rejected = allExecClaims.filter((c) => getApprovalStatus(c) === "rejected").length;
 
@@ -505,8 +439,22 @@ function updateExecSummary() {
   if (w) w.textContent = wait;
   if (a) a.textContent = approved;
   if (r) r.textContent = rejected;
+
+  // ✨ Toggle pulse alert ที่การ์ดรออนุมัติ
+  const pendingCard = document.getElementById("cardPending");
+  if (pendingCard) {
+    pendingCard.classList.toggle("has-alert", wait > 0);
+    if (wait > 0) {
+      pendingCard.setAttribute("aria-label", `มี ${wait} รายการรออนุมัติ`);
+    } else {
+      pendingCard.removeAttribute("aria-label");
+    }
+  }
 }
 
+/* ================================================================
+   FILTERS
+================================================================ */
 function applyFilters() {
   const search = document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
   const type = document.getElementById("filterScope")?.value || "";
@@ -521,7 +469,6 @@ function applyFilters() {
 
     if (type && rowType !== type) return false;
     if (status && rowStatus !== status) return false;
-
     if (dateFrom && rowDate && rowDate < dateFrom) return false;
     if (dateTo && rowDate && rowDate > dateTo) return false;
 
@@ -540,14 +487,13 @@ function applyFilters() {
         ${row.customer || ""}
         ${row.customer_name || ""}
       `.toLowerCase();
-
       if (!text.includes(search)) return false;
     }
-
     return true;
   });
 
   renderExecTable(filteredExecClaims);
+  renderExecCardList(filteredExecClaims);
 }
 
 function resetFilters() {
@@ -558,31 +504,24 @@ function resetFilters() {
     filterDateFrom: "",
     filterDateTo: "",
   };
-
   Object.entries(defaults).forEach(([id, value]) => {
     const el = document.getElementById(id);
     if (el) el.value = value;
   });
-
   applyFilters();
 }
 
 function hydrateApprovalTypeFilter() {
   const select = document.getElementById("filterScope");
   if (!select) return;
-
   const currentValue = select.value || "";
-  select.innerHTML = `
-    <option value="">ทุกประเภทงาน</option>
-    <option value="temp_credit_limit">อนุมัติวงเงิน (ชั่วคราว)</option>
-    <option value="special_price">ขออนุมัติราคา (กรณีพิเศษ)</option>
-    <option value="claim">เคลมสินค้า</option>
-    <option value="promotion">โปรโมชั่น</option>
-    <option value="new_area_shop">เปิดร้านค้าในเขตใหม่</option>
-  `;
+  // ปล่อยให้ HTML จัดการ options เริ่มต้น — แค่คงค่าที่เลือกไว้
   select.value = currentValue;
 }
 
+/* ================================================================
+   RENDER TABLE (desktop)
+================================================================ */
 function renderExecTable(list) {
   const tbody = document.getElementById("ceoTableBody");
   if (!tbody) return;
@@ -603,7 +542,6 @@ function renderExecTable(list) {
   tbody.innerHTML = list
     .map((item) => {
       _ceoClaimsCache.set(item.id, item);
-
       const type = normalizeApprovalType(item.request_type);
       const meta = getApprovalTypeMeta(type);
       const amount = getApprovalAmount(item);
@@ -614,45 +552,102 @@ function renderExecTable(list) {
             <div class="cell-date">${formatDate(item.created_at)}</div>
             <div class="cell-sub">${formatDateTime(item.created_at)}</div>
           </td>
-
           <td>
             <span class="scope-pill ${escapeHtml(meta.className)}">
               <span class="material-symbols-outlined" style="font-size:14px;">${escapeHtml(meta.icon)}</span>
               ${escapeHtml(meta.shortLabel)}
             </span>
           </td>
-
           <td class="cell-title">
             <div class="cell-strong cell-clamp-1" title="${escapeHtml(getApprovalTitle(item))}">${escapeHtml(getApprovalTitle(item))}</div>
             <div class="cell-sub">ผู้ขอ: ${escapeHtml(getRequesterText(item))}</div>
           </td>
-
           <td class="cell-product">
             <div class="cell-strong cell-clamp-2" title="${escapeHtml(getApprovalDetail(item))}">${escapeHtml(getApprovalDetail(item))}</div>
             <div class="cell-sub">
               ${amount !== "—" && amount ? `วงเงิน/มูลค่า: ${escapeHtml(formatMoney(amount))}` : `เลขที่: ${escapeHtml(getApprovalDocNo(item))}`}
             </div>
           </td>
-
           <td>
             <div class="cell-strong">${escapeHtml(item.priority || "normal")}</div>
             <div class="cell-sub">ประเภท: ${escapeHtml(meta.label)}</div>
           </td>
-
           <td>${buildStatusBadge(item)}</td>
-
           <td>
             <button class="btn-view" type="button" onclick="openCeoModalByApprovalId('${escapeHtml(item.id)}')">
               <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
               ดู/อนุมัติ
             </button>
           </td>
-        </tr>
-      `;
+        </tr>`;
     })
     .join("");
 }
 
+/* ================================================================
+   RENDER CARD LIST (mobile)
+================================================================ */
+function renderExecCardList(list) {
+  const wrap = document.getElementById("ceoCardList");
+  if (!wrap) return;
+
+  if (!list || list.length === 0) {
+    wrap.innerHTML = `
+      <div class="table-loading" style="color:var(--muted);text-align:center;padding:30px 12px;">
+        <span class="material-symbols-outlined" style="font-size:32px;opacity:.5;">inbox</span>
+        <div style="margin-top:8px;">ไม่มีรายการอนุมัติตามเงื่อนไขที่เลือก</div>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = list
+    .map((item) => {
+      // ใส่ลง cache เผื่อเปิด modal จาก card list ก่อน
+      _ceoClaimsCache.set(item.id, item);
+
+      const type = normalizeApprovalType(item.request_type);
+      const meta = getApprovalTypeMeta(type);
+      const amount = getApprovalAmount(item);
+
+      return `
+        <div class="qc-card-item">
+          <div class="qc-card-row">
+            <span class="scope-pill ${escapeHtml(meta.className)}">
+              <span class="material-symbols-outlined" style="font-size:14px;">${escapeHtml(meta.icon)}</span>
+              ${escapeHtml(meta.shortLabel)}
+            </span>
+            ${buildStatusBadge(item)}
+          </div>
+
+          <div class="qc-card-title">${escapeHtml(getApprovalTitle(item))}</div>
+
+          <div class="qc-card-detail">${escapeHtml(getApprovalDetail(item))}</div>
+
+          <div class="qc-card-meta">
+            <span><strong>${escapeHtml(formatDateTime(item.created_at))}</strong></span>
+            <span>ผู้ขอ: ${escapeHtml(getRequesterText(item))}</span>
+            ${
+              amount !== "—" && amount
+                ? `<span>มูลค่า: ${escapeHtml(formatMoney(amount))}</span>`
+                : `<span>เลขที่: ${escapeHtml(getApprovalDocNo(item))}</span>`
+            }
+          </div>
+
+          <div class="qc-card-foot">
+            <span style="font-size:12px;color:var(--muted);">${escapeHtml(meta.label)}</span>
+            <button class="btn-view" type="button" onclick="openCeoModalByApprovalId('${escapeHtml(item.id)}')">
+              <span class="material-symbols-outlined" style="font-size:1rem;">open_in_new</span>
+              ดู/อนุมัติ
+            </button>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+/* ================================================================
+   MODAL — extra sections + media
+================================================================ */
 function ensureExecutiveSections() {
   const modalBody = document.querySelector("#ceoModal .qc-modal-body");
   if (!modalBody) return;
@@ -678,7 +673,6 @@ function ensureExecutiveSections() {
     if (footer) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "btn-filter-reset";
       btn.id = "approvalDocumentPreviewBtn";
       btn.innerHTML = `<span class="material-symbols-outlined">description</span> ดูเอกสารอนุมัติ`;
       btn.addEventListener("click", () => {
@@ -711,7 +705,6 @@ function renderMediaSection(row) {
             <img src="${safeAttr}" alt="เอกสารแนบ ${idx + 1}" onerror="this.parentElement.style.display='none'">
           </button>`;
       }
-
       return `
         <a class="media-file" href="${safeAttr}" target="_blank" rel="noopener noreferrer">
           <span class="material-symbols-outlined">attach_file</span>
@@ -733,11 +726,8 @@ function setApprovalFormState(row) {
   const finalStatus = getApprovalStatus(row);
 
   document.querySelectorAll("input[name='execDecision']").forEach((radio) => {
-    if (done) {
-      radio.checked = radio.value === finalStatus;
-    } else {
-      radio.checked = false;
-    }
+    if (done) radio.checked = radio.value === finalStatus;
+    else radio.checked = false;
     radio.disabled = done;
   });
 
@@ -810,7 +800,6 @@ function buildGenericDetailHtml(row) {
   return `
     <div class="document-block">
       <div class="doc-headline">${escapeHtml(typeMeta.label)}</div>
-
       <div class="qc-detail-grid">
         <div class="qc-detail-card">
           <div class="qc-detail-label">
@@ -819,7 +808,6 @@ function buildGenericDetailHtml(row) {
           </div>
           <div class="qc-detail-value">${escapeHtml(typeMeta.label)}</div>
         </div>
-
         <div class="qc-detail-card">
           <div class="qc-detail-label">
             <span class="material-symbols-outlined">payments</span>
@@ -827,7 +815,6 @@ function buildGenericDetailHtml(row) {
           </div>
           <div class="qc-detail-value">${escapeHtml(amount !== "—" && amount ? formatMoney(amount) : "—")}</div>
         </div>
-
         <div class="qc-detail-card">
           <div class="qc-detail-label">
             <span class="material-symbols-outlined">priority_high</span>
@@ -835,7 +822,6 @@ function buildGenericDetailHtml(row) {
           </div>
           <div class="qc-detail-value">${escapeHtml(row.priority || "normal")}</div>
         </div>
-
         <div class="qc-detail-card">
           <div class="qc-detail-label">
             <span class="material-symbols-outlined">hourglass_top</span>
@@ -843,7 +829,6 @@ function buildGenericDetailHtml(row) {
           </div>
           <div class="qc-detail-value">${escapeHtml(getExecText(row))}</div>
         </div>
-
         <div class="qc-detail-card full">
           <div class="qc-detail-label">
             <span class="material-symbols-outlined">description</span>
@@ -903,10 +888,8 @@ function buildClaimInfoGrid(claim) {
 
 function buildClaimQcDetailHtml(claim) {
   const qc = getQcResult(claim);
-
   const gradeRows = getGradeRows(qc)
-    .map(
-      ([grade, label, qty]) => `
+    .map(([grade, label, qty]) => `
         <tr>
           <td>
             <label class="modal-check">
@@ -916,49 +899,31 @@ function buildClaimQcDetailHtml(claim) {
           </td>
           <td>${escapeHtml(label)}</td>
           <td style="text-align:right;">${Number(qty || 0).toLocaleString()}</td>
-        </tr>`
-    )
+        </tr>`)
     .join("");
-
-  const defectReason = qc.defect_reason || "-";
-  const responsibility = qc.responsibility || "-";
-  const qcComment = String(val(claim.qc_comment, qc.comment, "-"));
 
   return `
     <div class="document-block">
       <div class="doc-headline">สรุปผลตรวจ QC เพื่อประกอบการอนุมัติ</div>
       <table class="qc-doc-table">
         <thead>
-          <tr>
-            <th>เกรด</th>
-            <th>คำอธิบาย</th>
-            <th style="text-align:right;">จำนวน</th>
-          </tr>
+          <tr><th>เกรด</th><th>คำอธิบาย</th><th style="text-align:right;">จำนวน</th></tr>
         </thead>
         <tbody>${gradeRows}</tbody>
       </table>
 
       <div class="qc-detail-grid">
         <div class="qc-detail-card">
-          <div class="qc-detail-label">
-            <span class="material-symbols-outlined">error</span>
-            สาเหตุหลัก
-          </div>
-          <div class="qc-detail-value">${escapeHtml(defectReason)}</div>
+          <div class="qc-detail-label"><span class="material-symbols-outlined">error</span>สาเหตุหลัก</div>
+          <div class="qc-detail-value">${escapeHtml(qc.defect_reason || "-")}</div>
         </div>
         <div class="qc-detail-card">
-          <div class="qc-detail-label">
-            <span class="material-symbols-outlined">badge</span>
-            ผู้รับผิดชอบ
-          </div>
-          <div class="qc-detail-value">${escapeHtml(responsibility)}</div>
+          <div class="qc-detail-label"><span class="material-symbols-outlined">badge</span>ผู้รับผิดชอบ</div>
+          <div class="qc-detail-value">${escapeHtml(qc.responsibility || "-")}</div>
         </div>
         <div class="qc-detail-card full">
-          <div class="qc-detail-label">
-            <span class="material-symbols-outlined">comment</span>
-            ความเห็น QC
-          </div>
-          <div class="qc-detail-value">${escapeHtml(qcComment)}</div>
+          <div class="qc-detail-label"><span class="material-symbols-outlined">comment</span>ความเห็น QC</div>
+          <div class="qc-detail-value">${escapeHtml(String(val(claim.qc_comment, qc.comment, "-")))}</div>
         </div>
       </div>
     </div>
@@ -990,18 +955,12 @@ function openCeoModal(row) {
 
   const info = document.getElementById("ceoInfoGrid");
   if (info) {
-    info.innerHTML =
-      type === "claim"
-        ? buildClaimInfoGrid(row)
-        : buildGenericInfoGrid(row);
+    info.innerHTML = type === "claim" ? buildClaimInfoGrid(row) : buildGenericInfoGrid(row);
   }
 
   const sumBox = document.getElementById("ceoQcSummary");
   if (sumBox) {
-    sumBox.innerHTML =
-      type === "claim"
-        ? buildClaimQcDetailHtml(row)
-        : buildGenericDetailHtml(row);
+    sumBox.innerHTML = type === "claim" ? buildClaimQcDetailHtml(row) : buildGenericDetailHtml(row);
   }
 
   renderMediaSection(row);
@@ -1009,7 +968,6 @@ function openCeoModal(row) {
 
   requestAnimationFrame(() => {
     initExecSignaturePad();
-
     const savedSignature = getSignatureValue(row);
     if (savedSignature && isFinalized(row)) {
       drawSavedSignature(savedSignature);
@@ -1019,9 +977,9 @@ function openCeoModal(row) {
   });
 }
 
-
-
-
+/* ================================================================
+   HEADER (date + user)
+================================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   initExecutiveHeader();
 });
@@ -1034,9 +992,7 @@ function initExecutiveHeader() {
 function renderHeaderDate() {
   const el = document.getElementById("appHeaderDateText");
   if (!el) return;
-
   const now = new Date();
-
   el.textContent = now.toLocaleDateString("th-TH", {
     weekday: "long",
     day: "numeric",
@@ -1045,55 +1001,41 @@ function renderHeaderDate() {
   });
 }
 
-
-
 async function renderHeaderUser() {
   const nameEl = document.getElementById("userName");
   const avatarEl = document.getElementById("userAvatar");
-
   if (!nameEl || !avatarEl) return;
 
   try {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
+    const { data: { user } } = await supabaseClient.auth.getUser();
     const name =
       user?.user_metadata?.display_name ||
       user?.user_metadata?.full_name ||
       user?.email?.split("@")[0] ||
       "Executive";
-
     nameEl.textContent = name;
-
     avatarEl.textContent = name.charAt(0).toUpperCase();
-
   } catch (err) {
     console.error("โหลดข้อมูลผู้ใช้ไม่สำเร็จ", err);
-
     nameEl.textContent = "Executive";
     avatarEl.textContent = "E";
   }
 }
 
-
-
-
-
+/* ================================================================
+   OPEN MODAL BY ID
+================================================================ */
 async function openCeoModalByApprovalId(rowId) {
   const row = _ceoClaimsCache.get(rowId);
   if (!row) return;
 
   const type = normalizeApprovalType(row.request_type);
 
-  // --- LEGACY CLAIM (ไม่มี approval_requests) ---
   if (row._legacy_claim) {
-    // adaptLegacyClaimRow ใส่ทุกฟิลด์ของ claims ไว้แล้ว — ส่งเข้า modal ได้เลย
     openCeoModal(row);
     return;
   }
 
-  // --- APPROVAL_REQUESTS ที่ลิงก์กับ claims ---
   if (type === "claim" && row.source_table === "claims" && row.source_id) {
     const { data: claim, error } = await supabaseClient
       .from("claims")
@@ -1129,11 +1071,7 @@ async function openCeoModalByApprovalId(rowId) {
     return;
   }
 
-  // --- งานประเภทอื่น: ใช้ข้อมูลจาก approval_requests ตรง ๆ ---
-  openCeoModal({
-    ...row,
-    approval_request_id: row.id,
-  });
+  openCeoModal({ ...row, approval_request_id: row.id });
 }
 
 function closeCeoModal() {
@@ -1150,6 +1088,9 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/* ================================================================
+   SAVE DECISION
+================================================================ */
 async function saveExecDecision() {
   if (!currentExecClaim) return;
 
@@ -1159,14 +1100,12 @@ async function saveExecDecision() {
   }
 
   const decisionEl = document.querySelector("input[name='execDecision']:checked");
-
   if (!decisionEl) {
     alert("กรุณาเลือกผลการพิจารณา (อนุมัติ / ปฏิเสธ)");
     return;
   }
 
   const decision = decisionEl.value;
-
   if (!["approved", "rejected"].includes(decision)) {
     alert("ค่าผลการพิจารณาไม่ถูกต้อง");
     return;
@@ -1200,10 +1139,7 @@ async function saveExecDecision() {
   }
 
   try {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
+    const { data: { user } } = await supabaseClient.auth.getUser();
     const now = new Date().toISOString();
     const approvalRequestId = currentExecClaim.approval_request_id || null;
     const type = normalizeApprovalType(currentExecClaim.request_type);
@@ -1221,27 +1157,25 @@ async function saveExecDecision() {
       approved_at: now,
     };
 
-    // 1) ถ้ามี approval_requests linked → อัปเดต approval_requests
     if (approvalRequestId) {
       const { data: updatedApproval, error: approvalError } = await supabaseClient
-  .from("approval_requests")
-  .update({
-    request_status: decision,
-    approval_comment: comment || null,
-    approval_signature: signatureData,
-    approved_by: user?.id || null,
-    approved_at: now,
-    updated_at: now,
-  })
-  .eq("id", approvalRequestId)
-  .select()
-  .maybeSingle();
+        .from("approval_requests")
+        .update({
+          request_status: decision,
+          approval_comment: comment || null,
+          approval_signature: signatureData,
+          approved_by: user?.id || null,
+          approved_at: now,
+          updated_at: now,
+        })
+        .eq("id", approvalRequestId)
+        .select()
+        .maybeSingle();
 
-if (approvalError) throw approvalError;
-
-if (!updatedApproval) {
-  throw new Error("อัปเดต approval_requests ไม่สำเร็จ: ไม่พบรายการ หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
-}
+      if (approvalError) throw approvalError;
+      if (!updatedApproval) {
+        throw new Error("อัปเดต approval_requests ไม่สำเร็จ: ไม่พบรายการ หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
+      }
 
       finalDocumentRow = {
         ...finalDocumentRow,
@@ -1250,7 +1184,6 @@ if (!updatedApproval) {
       };
     }
 
-    // 2) ถ้าเป็นเคลมสินค้า (ทั้ง legacy และที่ link กับ approval_requests) → sync claims
     if (type === "claim" && currentExecClaim.id) {
       const updatePayload = {
         exec_status: decision,
@@ -1265,17 +1198,16 @@ if (!updatedApproval) {
       const claimId = isLegacyClaim ? currentExecClaim.id : currentExecClaim.id;
 
       const { data: updatedClaim, error: claimError } = await supabaseClient
-  .from("claims")
-  .update(updatePayload)
-  .eq("id", claimId)
-  .select()
-  .maybeSingle();
+        .from("claims")
+        .update(updatePayload)
+        .eq("id", claimId)
+        .select()
+        .maybeSingle();
 
-if (claimError) throw claimError;
-
-if (!updatedClaim) {
-  throw new Error("อัปเดต claims ไม่สำเร็จ: ไม่พบเคลม หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
-}
+      if (claimError) throw claimError;
+      if (!updatedClaim) {
+        throw new Error("อัปเดต claims ไม่สำเร็จ: ไม่พบเคลม หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
+      }
 
       finalDocumentRow = {
         ...finalDocumentRow,
@@ -1285,12 +1217,15 @@ if (!updatedClaim) {
       };
     }
 
-    // หาก legacy เคลมที่ไม่มี approval_requests และเคสที่ไม่ใช่ claim → แจ้ง dev ว่าไม่มีปลายทางจะบันทึก
     if (!approvalRequestId && type !== "claim") {
       console.warn("[CEO] No approval_request_id and not a claim — nothing was written.");
     }
 
-    alert("✅ บันทึกผลการพิจารณาเรียบร้อย");
+    if (typeof showToast === "function") {
+      showToast("บันทึกผลการพิจารณาเรียบร้อย", "success");
+    } else {
+      alert("✅ บันทึกผลการพิจารณาเรียบร้อย");
+    }
 
     openApprovalDocument(finalDocumentRow);
     closeCeoModal();
@@ -1306,6 +1241,9 @@ if (!updatedClaim) {
   }
 }
 
+/* ================================================================
+   APPROVAL DOCUMENT (claim + generic)
+================================================================ */
 function buildClaimApprovalDocumentHtml(claim, approverName) {
   const qc = getQcResult(claim);
   const docNo = getApprovalDocNo(claim);
@@ -1314,8 +1252,7 @@ function buildClaimApprovalDocumentHtml(claim, approverName) {
   const finalApprover = approverName && approverName.trim() ? approverName.trim() : "CEO / Executive";
 
   const gradeRows = getGradeRows(qc)
-    .map(
-      ([grade, label, qty]) => `
+    .map(([grade, label, qty]) => `
     <tr>
       <td>
         <label class="pdf-check">
@@ -1325,8 +1262,7 @@ function buildClaimApprovalDocumentHtml(claim, approverName) {
       </td>
       <td>${escapeHtml(label)}</td>
       <td class="num">${Number(qty || 0).toLocaleString()}</td>
-    </tr>`
-    )
+    </tr>`)
     .join("");
 
   return buildDocumentShell({
@@ -1436,14 +1372,9 @@ function buildDocumentShell({ docNo, title, subtitle, statusText, statusClass, m
     html, body { margin: 0; padding: 0; }
     body {
       font-family: "Kanit", "Sarabun", Tahoma, sans-serif;
-      color: #0f172a;
-      background: #e2e8f0;
-      font-size: 11.5px;
-      line-height: 1.4;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-      min-height: 100vh;
-      padding: 20px 0 40px;
+      color: #0f172a; background: #e2e8f0; font-size: 11.5px; line-height: 1.4;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      min-height: 100vh; padding: 20px 0 40px;
     }
     .doc { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; padding: 10mm; box-shadow:0 1px 3px rgba(15,23,42,.1),0 10px 40px rgba(15,23,42,.15); border-radius:2px; position:relative; }
     .top { display:flex; justify-content:space-between; gap:12px; border-bottom:2.5px solid #7c3aed; padding-bottom:8px; margin-bottom:10px;}
@@ -1484,7 +1415,6 @@ function buildDocumentShell({ docNo, title, subtitle, statusText, statusClass, m
   <div class="actions">
     <button onclick="window.print()">🖨️ พิมพ์ / Save PDF</button>
   </div>
-
   <div class="doc">
     <div class="top">
       <div class="brand">
@@ -1497,9 +1427,7 @@ function buildDocumentShell({ docNo, title, subtitle, statusText, statusClass, m
         <span class="status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</span>
       </div>
     </div>
-
     ${mainHtml}
-
     <div class="footer">
       <span>Generated by EABaseHub</span>
       <span>${escapeHtml(docNo)}</span>
@@ -1518,8 +1446,6 @@ function buildApprovalDocumentHtml(row, approverName) {
 async function openApprovalDocument(row) {
   if (!row) return;
 
-  // ✅ เคลมสินค้า → ใช้ template เดียวกับหน้า QC (approval-document.js)
-  // เพื่อให้เอกสารทุกหน้าในระบบมีรูปแบบเดียวกัน
   const type = normalizeApprovalType(row?.request_type);
   const externalOpen = window.ApprovalDocument?.open;
   if (
@@ -1532,11 +1458,9 @@ async function openApprovalDocument(row) {
       return;
     } catch (e) {
       console.warn("[CEO] ApprovalDocument.open failed, fallback to internal builder:", e);
-      // fallthrough → ใช้ generic builder
     }
   }
 
-  // งานประเภทอื่น (วงเงิน/ราคา/โปรโมชั่น/เปิดเขต) → ใช้ generic template เดิม
   const win = window.open("", "_blank");
   if (!win) {
     alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup ก่อนเปิดเอกสาร");
@@ -1566,8 +1490,6 @@ async function openApprovalDocument(row) {
 
 function downloadApprovalDocument(row) {
   if (!row) return;
-
-  // ✅ เคลมสินค้า → delegate ไป approval-document.js (template เดียวกับ QC)
   const type = normalizeApprovalType(row?.request_type);
   const externalDownload = window.ApprovalDocument?.download;
   if (
@@ -1575,19 +1497,12 @@ function downloadApprovalDocument(row) {
     typeof externalDownload === "function" &&
     externalDownload !== downloadApprovalDocument
   ) {
-    try {
-      externalDownload(row);
-      return;
-    } catch (e) {
-      console.warn("[CEO] ApprovalDocument.download failed, fallback to internal:", e);
-    }
+    try { externalDownload(row); return; }
+    catch (e) { console.warn("[CEO] ApprovalDocument.download failed, fallback:", e); }
   }
 
   const win = window.open("", "_blank");
-  if (!win) {
-    alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup");
-    return;
-  }
+  if (!win) { alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup"); return; }
 
   win.document.open();
   win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Preparing...</title></head><body style="font-family:Kanit, Arial, sans-serif;">⏳ กำลังเตรียมเอกสาร...</body></html>`);
@@ -1603,11 +1518,7 @@ function downloadApprovalDocument(row) {
         win.document.close();
         win.focus();
         setTimeout(() => {
-          try {
-            win.print();
-          } catch (e) {
-            console.warn("[CEO] print failed:", e);
-          }
+          try { win.print(); } catch (e) { console.warn("[CEO] print failed:", e); }
         }, 700);
       } catch (e) {
         console.error("[CEO] downloadApprovalDocument error:", e);
@@ -1618,8 +1529,6 @@ function downloadApprovalDocument(row) {
 
 async function shareApprovalDocument(row) {
   if (!row) return;
-
-  // ✅ เคลมสินค้า → delegate ไป approval-document.js
   const type = normalizeApprovalType(row?.request_type);
   const externalShare = window.ApprovalDocument?.share;
   if (
@@ -1627,12 +1536,8 @@ async function shareApprovalDocument(row) {
     typeof externalShare === "function" &&
     externalShare !== shareApprovalDocument
   ) {
-    try {
-      await externalShare(row);
-      return;
-    } catch (e) {
-      console.warn("[CEO] ApprovalDocument.share failed, fallback to internal:", e);
-    }
+    try { await externalShare(row); return; }
+    catch (e) { console.warn("[CEO] ApprovalDocument.share failed, fallback:", e); }
   }
 
   try {
@@ -1665,6 +1570,9 @@ async function shareApprovalDocument(row) {
   }
 }
 
+/* ================================================================
+   EXPORT EXCEL (CSV)
+================================================================ */
 function exportExecExcel() {
   if (!filteredExecClaims || filteredExecClaims.length === 0) {
     alert("ไม่มีข้อมูลที่จะ export");
@@ -1672,23 +1580,14 @@ function exportExecExcel() {
   }
 
   const headers = [
-    "เลขอ้างอิง",
-    "วันที่ส่งคำขอ",
-    "ประเภทงาน",
-    "หัวข้อ",
-    "รายละเอียด",
-    "ผู้ขอ",
-    "มูลค่า/วงเงิน",
-    "ความเร่งด่วน",
-    "สถานะ",
-    "ความเห็นผู้บริหาร",
-    "วันที่อนุมัติ/ปฏิเสธ",
+    "เลขอ้างอิง", "วันที่ส่งคำขอ", "ประเภทงาน", "หัวข้อ", "รายละเอียด",
+    "ผู้ขอ", "มูลค่า/วงเงิน", "ความเร่งด่วน", "สถานะ",
+    "ความเห็นผู้บริหาร", "วันที่อนุมัติ/ปฏิเสธ",
   ];
 
   const rows = filteredExecClaims.map((row) => {
     const typeMeta = getApprovalTypeMeta(row.request_type);
     const amount = getApprovalAmount(row);
-
     return [
       getApprovalDocNo(row),
       formatDateTime(row.created_at),
@@ -1729,6 +1628,9 @@ function exportExecExcel() {
   URL.revokeObjectURL(url);
 }
 
+/* ================================================================
+   LIGHTBOX
+================================================================ */
 function openLightbox(src) {
   const lb = document.getElementById("lightbox");
   const img = document.getElementById("lightboxImg");
@@ -1744,7 +1646,9 @@ function closeLightbox() {
   if (img) img.src = "";
 }
 
-// Signature pad
+/* ================================================================
+   SIGNATURE PAD
+================================================================ */
 let _sigCtx = null;
 let _sigDrawing = false;
 let _sigHasInk = false;
@@ -1774,15 +1678,9 @@ function initExecSignaturePad() {
   const getPos = (e) => {
     const r = canvas.getBoundingClientRect();
     if (e.touches && e.touches[0]) {
-      return {
-        x: e.touches[0].clientX - r.left,
-        y: e.touches[0].clientY - r.top,
-      };
+      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
     }
-    return {
-      x: e.clientX - r.left,
-      y: e.clientY - r.top,
-    };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
   const start = (e) => {
@@ -1803,9 +1701,7 @@ function initExecSignaturePad() {
     _sigHasInk = true;
   };
 
-  const end = () => {
-    _sigDrawing = false;
-  };
+  const end = () => { _sigDrawing = false; };
 
   canvas.addEventListener("mousedown", start);
   canvas.addEventListener("mousemove", move);
@@ -1819,10 +1715,8 @@ function initExecSignaturePad() {
 
 function clearExecSignature(force = false) {
   if (!force && isFinalized(currentExecClaim)) return;
-
   const canvas = document.getElementById("execSignaturePad");
   if (!canvas) return;
-
   const ctx = canvas.getContext("2d");
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1834,10 +1728,8 @@ function clearExecSignature(force = false) {
 function drawSavedSignature(signatureData) {
   const canvas = document.getElementById("execSignaturePad");
   if (!canvas || !signatureData) return;
-
   const ctx = canvas.getContext("2d");
   const img = new Image();
-
   img.onload = () => {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1845,332 +1737,21 @@ function drawSavedSignature(signatureData) {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     ctx.restore();
   };
-
-  img.onerror = () => {
-    console.warn("[CEO] failed to load saved signature image");
-  };
-
+  img.onerror = () => console.warn("[CEO] failed to load saved signature image");
   img.src = signatureData;
 }
 
-function hasExecSignature() {
-  return _sigHasInk;
-}
+function hasExecSignature() { return _sigHasInk; }
 
 function getExecSignatureData() {
   const canvas = document.getElementById("execSignaturePad");
   if (!canvas) return null;
-
-  try {
-    return canvas.toDataURL("image/png");
-  } catch (e) {
-    console.error("[CEO] canvas.toDataURL failed:", e);
-    return null;
-  }
+  try { return canvas.toDataURL("image/png"); }
+  catch (e) { console.error("[CEO] canvas.toDataURL failed:", e); return null; }
 }
-
-function injectExecutiveApprovalStyles() {
-  if (document.getElementById("executive-approval-extra-styles")) return;
-
-  const style = document.createElement("style");
-  style.id = "executive-approval-extra-styles";
-  style.textContent = `
-    /* ===== Cell clamp (ตัดข้อความให้พอดี + tooltip ดูเต็มได้) ===== */
-    .qc-table .cell-title,
-    .qc-table .cell-product {
-      max-width: 280px;
-    }
-
-    .cell-clamp-1,
-    .cell-clamp-2 {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      word-break: break-word;
-      line-height: 1.45;
-    }
-
-    .cell-clamp-1 {
-      -webkit-line-clamp: 1;
-      line-clamp: 1;
-    }
-
-    .cell-clamp-2 {
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-    }
-
-    .scope-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .scope-pill.type-credit {
-      background: rgba(124, 58, 237, .12);
-      color: var(--ceo-main);
-    }
-
-    .scope-pill.type-price {
-      background: rgba(245, 158, 11, .14);
-      color: #92400e;
-    }
-
-    .scope-pill.type-claim {
-      background: rgba(59, 130, 246, .13);
-      color: #1e40af;
-    }
-
-    .scope-pill.type-promotion {
-      background: rgba(236, 72, 153, .13);
-      color: #9d174d;
-    }
-
-    .scope-pill.type-shop {
-      background: rgba(22, 163, 74, .13);
-      color: #166534;
-    }
-
-    .scope-pill.type-other {
-      background: var(--bg-soft);
-      color: var(--text);
-    }
-
-    .ceo-media-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 10px;
-    }
-
-    .media-thumb,
-    .media-file {
-      min-height: 92px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: var(--bg-soft);
-      overflow: hidden;
-      cursor: pointer;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      gap: 6px;
-      font-family: inherit;
-      font-size: 13px;
-      padding: 6px;
-      transition: border-color .15s ease, transform .15s ease;
-    }
-
-    .media-thumb:hover,
-    .media-file:hover {
-      border-color: var(--ceo-light);
-      transform: translateY(-1px);
-    }
-
-    .media-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .document-block {
-      display: grid;
-      gap: 12px;
-    }
-
-    .doc-headline {
-      font-weight: 700;
-      color: var(--text-strong);
-    }
-
-    .qc-doc-table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 12px;
-    }
-
-    .qc-doc-table th,
-    .qc-doc-table td {
-      border: 1px solid var(--border);
-      padding: 9px 10px;
-      font-size: 13px;
-    }
-
-    .qc-doc-table th {
-      background: var(--ceo-soft);
-      color: var(--ceo-main);
-      text-align: left;
-    }
-
-    .modal-check {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-    }
-
-    .modal-check input {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--ceo-main);
-    }
-
-    .qc-detail-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .qc-detail-card {
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      transition: border-color .15s ease, background .15s ease;
-    }
-
-    .qc-detail-card.full {
-      grid-column: 1 / -1;
-    }
-
-    .qc-detail-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .qc-detail-label .material-symbols-outlined {
-      font-size: 16px;
-      color: var(--ceo-main);
-    }
-
-    [data-theme="dark"] .qc-detail-label .material-symbols-outlined {
-      color: var(--ceo-light);
-    }
-
-    .qc-detail-value {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-strong);
-      line-height: 1.6;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    @media (max-width: 600px) {
-      .qc-detail-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  injectExecutiveApprovalStyles();
-  hydrateApprovalTypeFilter();
-
-  const ready = await waitForSupabase();
-  if (!ready) {
-    alert("ไม่สามารถเชื่อมต่อ Supabase ได้");
-    return;
-  }
-
-  if (typeof protectPage === "function") {
-    await protectPage(["admin", "executive", "ceo"]);
-  }
-
-  ["searchInput", "filterScope", "filterExecStatus", "filterDateFrom", "filterDateTo"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener("input", applyFilters);
-    el.addEventListener("change", applyFilters);
-  });
-
-  const modal = document.getElementById("ceoModal");
-  if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeCeoModal();
-    });
-  }
-
-  window.addEventListener("resize", () => {
-    const modalEl = document.getElementById("ceoModal");
-    if (modalEl?.classList.contains("open") && currentExecClaim) {
-      const savedSignature = getSignatureValue(currentExecClaim);
-      if (savedSignature && isFinalized(currentExecClaim)) {
-        initExecSignaturePad();
-        drawSavedSignature(savedSignature);
-      }
-    }
-  });
-
-  await loadExecClaims();
-});
-
-// Expose functions to global scope for use by HTML onclick
-window.resetFilters = resetFilters;
-window.exportExecExcel = exportExecExcel;
-window.closeCeoModal = closeCeoModal;
-window.saveExecDecision = saveExecDecision;
-window.clearExecSignature = clearExecSignature;
-window.closeLightbox = closeLightbox;
-window.openLightbox = openLightbox;
-window.openApprovalDocument = openApprovalDocument;
-window.openCeoModalByApprovalId = openCeoModalByApprovalId;
-
-// Provide small API used by external pages
-window.ApprovalDocument = window.ApprovalDocument || {};
-window.ApprovalDocument.open = window.ApprovalDocument.open || openApprovalDocument;
-window.ApprovalDocument.download = window.ApprovalDocument.download || downloadApprovalDocument;
-window.ApprovalDocument.share = window.ApprovalDocument.share || shareApprovalDocument;
 
 /* ================================================================
-   Mini Sidebar controller
+   INIT
 ================================================================ */
-(function initEaMiniSidebar() {
-  function ready(fn) {
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
-    else fn();
-  }
-
-  ready(function () {
-    const body = document.body;
-    const toggle = document.getElementById("eaMiniToggle");
-    const sidebarLogout = document.getElementById("eaSidebarLogoutBtn");
-
-    const saved = localStorage.getItem("ea-mini-sidebar");
-    if (saved === "open") body.classList.remove("is-sidebar-collapsed");
-    if (saved === "collapsed") body.classList.add("is-sidebar-collapsed");
-
-    toggle?.addEventListener("click", function () {
-      body.classList.toggle("is-sidebar-collapsed");
-      localStorage.setItem(
-        "ea-mini-sidebar",
-        body.classList.contains("is-sidebar-collapsed") ? "collapsed" : "open"
-      );
-    });
-
-    sidebarLogout?.addEventListener("click", function () {
-      const oldLogout = document.getElementById("logoutBtn");
-      if (oldLogout) {
-        oldLogout.click();
-        return;
-      }
-
-      if (typeof logout === "function") logout();
-      else if (typeof handleLogout === "function") handleLogout();
-      else window.location.href = "/index.html";
-    });
-  });
-})();
+document.addEventListener("DOMContentLoaded", async () => {
+  hydrateApprovalTypeFilter();

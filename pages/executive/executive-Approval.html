@@ -64,30 +64,30 @@
           <span class="material-symbols-outlined">home</span>
           <span class="ea-mini-text">หน้าหลัก</span>
         </a>
-        <a
-          class="ea-mini-link active"
-          href="/pages/executive/executive-Approval.html"
-          title="ขออนุมัติ"
-        >
+
+        <a class="ea-mini-link active"
+          href="/pages/executive/executive-Approval.html" title="ขออนุมัติ" >
           <span class="material-symbols-outlined">approval_delegation</span>
           <span class="ea-mini-text">ขออนุมัติงาน</span>
         </a>
+
         <a
           class="ea-mini-link"
-          href="/pages/reports/reportTracker.html"
-          title="รายงาน"
-        >
+          href="/pages/reports/reportTracker.html" title="รายงาน" >
           <span class="material-symbols-outlined">bar_chart</span>
           <span class="ea-mini-text">รายงานประจำสัปดาห์</span>
         </a>
+
         <a class="ea-mini-link" href="#" title="เคลมภายนอก">
           <span class="material-symbols-outlined">assignment</span>
           <span class="ea-mini-text">comingsoon</span>
         </a>
+
         <a class="ea-mini-link" href="#" title="เคลมภายใน">
           <span class="material-symbols-outlined">manage_search</span>
           <span class="ea-mini-text">comingsoon</span>
         </a>
+
       </nav>
 
       <div class="ea-mini-spacer"></div>
@@ -193,16 +193,28 @@
           </div>
         </div>
 
-        <!-- FILTER BAR -->
-        <div class="qc-filter-bar">
-          <div class="filter-group" style="flex: 2; min-width: 220px">
-            <span class="material-symbols-outlined filter-icon">search</span>
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="ค้นหางานอนุมัติ..."
-            />
-          </div>
+       
+
+         <!-- FILTER BAR -->
+<div class="filter-card">
+<div class="qc-filter-compact">
+  <div class="filter-search-box">
+    <span class="material-symbols-outlined">search</span>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="ค้นหาสินค้า / ลูกค้า / พนักงาน..."
+    />
+  </div>
+
+  <button class="btn-advance-filter" type="button" onclick="toggleAdvanceFilter()">
+    <span class="material-symbols-outlined">tune</span>
+    Advance Filter
+  </button>
+</div>
+</div>
+
+<!-- ADVANCE FILTER PANEL -->
 
           <div class="filter-group" style="min-width: 200px; flex: 0 0 auto">
             <span class="material-symbols-outlined filter-icon">category</span>
