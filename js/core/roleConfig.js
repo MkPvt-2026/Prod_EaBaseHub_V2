@@ -53,14 +53,14 @@ const ROLE_CONFIG = {
   // MANAGER — ดูรายงานและ dashboard ของตัวเอง
   // -------------------------------------------------------
   manager: {
-    defaultPage: '/pages/dashboard/managerDashboard.html',
+    defaultPage: '/index.html',
     allowedPages: [
-      '/pages/dashboard/managerDashboard.html',
+      '/index.html',
       '/pages/dashboard/RfmDashboard.html',
-      '/pages/components/rfmImport.html',
       '/pages/reports/reportTracker.html',
+      '/pages/components/rfmImport.html',
       '/pages/reports/reportManager.html',
-      '/index',
+      '/pages/dashboard/managerDashboard.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },

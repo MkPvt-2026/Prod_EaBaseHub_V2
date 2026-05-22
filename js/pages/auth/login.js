@@ -51,7 +51,7 @@ async function redirectIfLoggedIn() {
     } else if (profile.role === "sales") {
       window.location.href = "/index.html";
     } else if (profile.role === "manager") {
-      window.location.href = "/index.html";
+      window.location.href = "/pages/reports/reportTracker.html";
     } else if (profile.role === "executive") {
       window.location.href = "/pages/executive/executiveHome.html";
     }
@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Active + มี role → redirect ตาม role
       // ══════════════════════════════════════════════
       if (profile.role === "admin") {
-        showLoginOverlay("/index.html");
+        showLoginOverlay("/pages/dashboard/adminDashboard.html");
       } else if (profile.role === "adminQc") {
         showLoginOverlay("/pages/dashboard/QcDashboard.html");
       } else if (profile.role === "sales") {
