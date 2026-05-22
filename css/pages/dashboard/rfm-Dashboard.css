@@ -66,11 +66,14 @@
   /* ---- Font ---- */
   --font-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
 
-  /* ---- Shadows ---- */
-  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
-  --shadow-sm: 0 2px 6px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
-  --shadow-md: 0 6px 16px rgba(28, 25, 23, 0.08), 0 2px 4px rgba(28, 25, 23, 0.04);
-  --shadow-lg: 0 16px 40px rgba(28, 25, 23, 0.12), 0 4px 10px rgba(28, 25, 23, 0.06);
+  
+  
+
+    /* ---- Shadows ---- */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06);
 
   /* ---- Radii ---- */
   --r-sm: 8px;
@@ -86,15 +89,15 @@
   --t-base: 240ms;
   --t-slow: 420ms;
 
-  /* ---- Sidebar ---- */
+  /* ---- Sidebar (Teal gradient) ---- */
   --ea-side-mini: 84px;
   --ea-side-full: 240px;
   --ea-side-gap: 18px;
-  --ea-side-bg: #ce5200;
-  --ea-side-bg-2: #f97316;
+  --ea-side-bg: #075985;
+  --ea-side-bg-2: #0ea5e9;
   --ea-side-hover: rgba(255, 255, 255, 0.14);
-  --ea-side-active: #eb6e25;
-  --ea-side-text: #fde6d3;
+  --ea-side-active: #0284c7;
+  --ea-side-text: #cffafe;
 }
 /* ============================================================
    2) BASE & RESET
@@ -180,11 +183,7 @@ body {
 .app-sidebar {
   width: 64px;
   min-height: 100vh;
-  background: linear-gradient(
-    180deg,
-    var(--manager) 0%,
-    var(--manager-hover) 100%
-  );
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -195,7 +194,7 @@ body {
   z-index: 200;
   box-shadow: 2px 0 12px rgba(124, 58, 237, 0.25);
   transition: width 0.25s ease;
-  /* overflow: hidden; */
+  overflow: hidden;
 }
 
 /* Logo Area */
@@ -334,12 +333,13 @@ body {
 /* Sidebar Collapse Toggle */
 .sidebar-collapse-btn {
   position: absolute;
-  right: -12px;
+  right: -13px;
+  width: 13px;
+  /* bottom: -50px; */
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 40px;
-  background: var(--manager);
+  height: 60px;
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   /* border: 1px solid rgba(255,255,255,0.3); */
   border-radius: 0 8px 8px 0;
   display: flex;
@@ -349,16 +349,23 @@ body {
   color: white;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.15s ease;
+  z-index: 10;
 }
 
+
+
+
+
 .sidebar-collapse-btn:hover {
-  background: var(--manager-hover);
-  right: -14px;
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  width: 24px;
+  right: -24px;
 }
 
 .sidebar-collapse-btn .material-symbols-outlined {
   font-size: 14px !important;
   color: white !important;
+  margin-right: -2px;
 }
 
 /* Divider */
@@ -430,7 +437,7 @@ body {
 
 /* ตอน sidebar ขยาย */
 .app-main.sidebar-expanded{
-  margin-left:220px;
+  margin-left:200px;
 }
 
 /* sidebar default ย่อ */
@@ -796,7 +803,7 @@ body {
 /* tab active */
 .tab-btn.active{
   height: 62px;
-  background: linear-gradient(180deg,var(#60a5fa) 50%,var(#021c3b) 100%);
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   color: #ffffff;
   border-color: transparent;
   /* box-shadow: 0 10px 24px rgba(37,99,235,.22); */
@@ -844,7 +851,7 @@ body {
 }
 
 .preset-btn.active{
-  background: linear-gradient(180deg,var(--manager),var(--manager-hover));
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   color: #fff;
   border-color: transparent;
   box-shadow: 0 8px 18px rgba(37,99,235,.22);
@@ -969,12 +976,12 @@ body {
   transition: all 0.15s;
 }
 .btn-primary-sm {
-  background: var(--brand);
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   color: #fff;
   border: 1px solid var(--brand);
 }
 .btn-primary-sm:hover {
-  background: var(--brand-strong);
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
 }
 .btn-secondary-sm {
   background: #fff;
@@ -2190,7 +2197,7 @@ tr:hover td { background: var(--surface-soft); }
 
 /* active */
 .tab-btn.active{
-  background: #60a5fa;
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
 
   color: #ffffff;
 
@@ -2275,11 +2282,7 @@ tr:hover td { background: var(--surface-soft); }
 
 /* active */
 .preset-btn.active{
-  background: linear-gradient(
-    180deg,
-    var(--manager),
-    var(--manager-hover)
-  );
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
 
   color:#fff;
 
@@ -2382,8 +2385,8 @@ tr:hover td { background: var(--surface-soft); }
 
   background: linear-gradient(
     90deg,
-    var(--manager),
-    #60a5fa
+    var(--ea-side-bg-2),
+    var(--ea-side-bg) 
   );
 
   border-radius:
@@ -2422,7 +2425,7 @@ body{
   position:fixed;
   inset:0 auto 0 0;
   z-index:400;
-  background:linear-gradient(180deg,var(--manager) 0%,var(--manager-hover) 100%);
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -2438,9 +2441,12 @@ body{
 }
 
 .sidebar-collapse-btn{
-  z-index:410;
+  z-index:5;
 }
-
+.sidebar-nav{
+  position: relative;
+  z-index: 50;
+}
 .app-sidebar.expanded .sidebar-nav-item,
 .app-sidebar.expanded .sidebar-logout{
   flex-direction:row;
@@ -2557,7 +2563,7 @@ body{
   width:36px;
   height:36px;
   border-radius:50%;
-  background:linear-gradient(135deg,var(--manager),var(--manager-hover));
+background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   color:#fff;
   display:flex;
   align-items:center;
@@ -2686,7 +2692,7 @@ body{
 .tab-btn.active{
   height:48px;
   color:#fff;
-  background:linear-gradient(180deg,var(#60a5fa) 50%,var(#021c3b) 100%);
+  background:linear-gradient(180deg, var(--ea-side-bg-2) 50%, var(--ea-side-bg ) 100%);
   border-color:transparent;
   z-index:5;
   margin-left: 5px;
@@ -2816,7 +2822,7 @@ body{
 
 .preset-btn.active{
   border-color:transparent;
-  background:linear-gradient(180deg,var(--manager),var(--manager-hover));
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   color:#fff;
   box-shadow:0 10px 20px rgba(37,99,235,.24);
 }
@@ -2858,12 +2864,12 @@ body{
 
 .btn-primary-sm{
   border:1px solid var(--manager);
-  background:var(--manager);
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
   color:#fff;
 }
 
 .btn-primary-sm:hover{
-  background:var(--manager-hover);
+  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
 }
 
 .btn-secondary-sm,
@@ -3212,3 +3218,29 @@ body{
     height: 260px;
   }
 }
+
+
+
+
+
+/* ให้เมนูกดได้ปกติ */
+.sidebar-nav,
+.sidebar-nav a{
+  position: relative;
+  z-index: 20;
+}
+
+/* ให้ปุ่ม collapse อยู่บนพอให้กดได้ */
+.sidebar-collapse-btn{
+  z-index: 80 !important;
+  pointer-events: auto;
+}
+
+/* ตอน sidebar ขยาย ให้ปุ่มอยู่ขอบขวาและกดได้ */
+.app-sidebar.expanded .sidebar-collapse-btn{
+  right: -13px;
+  z-index: 120 !important;
+}
+
+
+
