@@ -825,3 +825,42 @@ const RFM = (function () {
 window.RFM = RFM;
 
 console.log('✅ rfm-dashboard.js loaded (drill-down 3 ชั้น)');
+
+
+
+
+
+
+
+
+
+function toggleSidebar() {
+  const sidebar = document.getElementById("appSidebar");
+  const main = document.querySelector(".app-main");
+  const icon = document.getElementById("collapseIcon");
+
+  const expanded = sidebar.classList.contains("expanded");
+
+  if (expanded) {
+    sidebar.classList.remove("expanded");
+    sidebar.classList.add("collapsed");
+    main.classList.remove("sidebar-expanded");
+    icon.textContent = "chevron_right";
+  } else {
+    sidebar.classList.remove("collapsed");
+    sidebar.classList.add("expanded");
+    main.classList.add("sidebar-expanded");
+    icon.textContent = "chevron_left";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const dateEl = document.getElementById("headerDateText");
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+});

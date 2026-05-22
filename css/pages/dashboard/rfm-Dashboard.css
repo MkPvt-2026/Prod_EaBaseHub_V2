@@ -14,7 +14,88 @@
 ====================================================== */
 
 
+:root {
+  /* ---- Surface ---- */
+  --surface-0: #fafaf9;
+  --surface-1: #ffffff;
+  --surface-2: #f5f5f4;
+  --surface-3: #e7e5e4;
 
+  /* ---- Ink ---- */
+  --ink-1: #1c1917;
+  --ink-2: #44403c;
+  --ink-3: #78716c;
+  --ink-4: #a8a29e;
+
+  /* ---- Lines ---- */
+  --line: #e7e5e4;
+  --line-strong: #d6d3d1;
+
+  /* ---- Semantic ---- */
+  --success: #10b981;
+  --success-rgb: 16, 185, 129;
+  --success-dark: #047857;
+  --success-soft: #d1fae5;
+
+  --info: #3b82f6;
+  --info-soft: #dbeafe;
+
+  --warning: #f59e0b;
+  --warning-soft: #fef3c7;
+
+  --danger: #ef4444;
+  --danger-dark: #b91c1c;
+  --danger-soft: #fee2e2;
+
+  --purple: #8b5cf6;
+  --purple-soft: #ede9fe;
+
+  /* ---- QC Grading ---- */
+  --qc-success: var(--success);
+  --qc-success-dark: var(--success-dark);
+  --qc-danger: var(--danger);
+
+  /* ---- Role color fallback (ถ้า role-colors.css โหลดไม่ทัน) ---- */
+  --role-color: #f97316;
+  --role-rgb: 249, 115, 22;
+  --role-hover: #ea580c;
+  --role-text: #c2410c;
+  --role-soft: #ffedd5;
+  --role-border: #fed7aa;
+
+  /* ---- Font ---- */
+  --font-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
+
+  /* ---- Shadows ---- */
+  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-sm: 0 2px 6px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 6px 16px rgba(28, 25, 23, 0.08), 0 2px 4px rgba(28, 25, 23, 0.04);
+  --shadow-lg: 0 16px 40px rgba(28, 25, 23, 0.12), 0 4px 10px rgba(28, 25, 23, 0.06);
+
+  /* ---- Radii ---- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 12px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 160ms;
+  --t-base: 240ms;
+  --t-slow: 420ms;
+
+  /* ---- Sidebar ---- */
+  --ea-side-mini: 84px;
+  --ea-side-full: 240px;
+  --ea-side-gap: 18px;
+  --ea-side-bg: #ce5200;
+  --ea-side-bg-2: #f97316;
+  --ea-side-hover: rgba(255, 255, 255, 0.14);
+  --ea-side-active: #eb6e25;
+  --ea-side-text: #fde6d3;
+}
 /* ============================================================
    2) BASE & RESET
 ============================================================ */
@@ -56,176 +137,753 @@ img {
   display: block;
 }
 
-/* ============================================================
-   3) LAYOUT
-============================================================ */
-.rfm-header {
-  background: var(--header-manager);
-  padding: 10px 28px;
-  border-bottom: 0;
+/* =====================================================
+   sidebar-header.css —  Sidebar + White Header
+   ตาม design reference (EABaseHub Claims QC style)
+   ===================================================== */
+
+:root {
+   /* Manager — ฟ้า */
+  --manager:        #2563EB;
+  --manager-hover:  #1D4ED8;
+  --manager-soft:   #EFF6FF;
+  --manager-border: #BFDBFE;
+  --manager-text:   #1E3A8A;
 }
 
-.rfm-header-inner {
-  max-width: var(--container);
-  margin: 0 auto;
+/* ── RESET & ROOT ── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Kanit", sans-serif;
+  background: #f1f5f9;
+  color: #111827;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =====================================================
+   APP LAYOUT — Sidebar + Main
+   ===================================================== */
+.app-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--gap-4);
+  min-height: 100vh;
 }
 
-.rfm-header .logo {
+/* =====================================================
+   SIDEBAR
+   ===================================================== */
+.app-sidebar {
+  width: 64px;
+  min-height: 100vh;
+  background: linear-gradient(
+    180deg,
+    var(--manager) 0%,
+    var(--manager-hover) 100%
+  );
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  box-shadow: 2px 0 12px rgba(124, 58, 237, 0.25);
+  transition: width 0.25s ease;
+  /* overflow: hidden; */
 }
 
-.rfm-header .logo-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r-full);
-  /* background: rgba(255, 255, 255, 0.18); */
+/* Logo Area */
+.sidebar-logo {
+  width: 64px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
-}
-.rfm-header .logo-circle img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
 }
 
-.rfm-header h1,
-.rfm-header h2 {
-  margin: 0 0 2px;
-  color: #fff;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.rfm-header .subtitle {
-  margin: 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* User box */
-.user-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--r-full);
-  /* background: rgba(255, 255, 255, 0.2); */
+.sidebar-logo-circle {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.sidebar-logo-circle img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.sidebar-logo-circle span {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f97316;
+}
+
+/* Nav Items */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.sidebar-nav-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.75);
+  transition: all 0.15s ease;
+  gap: 3px;
+}
+
+.sidebar-nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-nav-item.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Active left indicator bar */
+.sidebar-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  background: #ffffff;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Active circle highlight */
+.sidebar-nav-item.active .nav-icon-wrap {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+}
+
+.nav-icon-wrap {
+  width: 40px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.sidebar-nav-item:hover .nav-icon-wrap {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-nav-item .nav-label {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.sidebar-nav-item.active .nav-label {
+  opacity: 1;
+}
+
+/* Sidebar icons color */
+.sidebar-nav-item .material-symbols-outlined {
+  font-size: 22px !important;
+  color: inherit !important;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.sidebar-nav-item.active .material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+/* Sidebar Collapse Toggle */
+.sidebar-collapse-btn {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 40px;
+  background: var(--manager);
+  /* border: 1px solid rgba(255,255,255,0.3); */
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+}
+
+.sidebar-collapse-btn:hover {
+  background: var(--manager-hover);
+  right: -14px;
+}
+
+.sidebar-collapse-btn .material-symbols-outlined {
+  font-size: 14px !important;
+  color: white !important;
+}
+
+/* Divider */
+.sidebar-divider {
+  width: 36px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+/* Logout at bottom */
+.sidebar-logout {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.7);
+  gap: 3px;
+  border: none;
+  background: transparent;
+  font-family: "Kanit", sans-serif;
+  transition: all 0.15s ease;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-logout .material-symbols-outlined {
+  font-size: 20px !important;
+  color: inherit !important;
+}
+
+.sidebar-logout .nav-label {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+
+/* =====================================================
+   FIX: Sidebar + Header Layout
+===================================================== */
+
+.app-layout{
+  display:flex;
+  min-height:100vh;
+  width:100%;
+  background:#f1f5f9;
+}
+
+/* main ต้องขยับออกจาก sidebar */
+.app-main{
+  flex:1;
+  margin-left:64px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  transition:margin-left .25s ease;
+  overflow-x:hidden;
+}
+
+/* ตอน sidebar ขยาย */
+.app-main.sidebar-expanded{
+  margin-left:220px;
+}
+
+/* sidebar default ย่อ */
+.app-sidebar.collapsed{
+  width:64px;
+  overflow:visible;
+}
+
+.app-sidebar.collapsed .nav-label{
+  display:block;
+  font-size:9px;
+}
+
+/* sidebar ตอนขยาย */
+.app-sidebar.expanded{
+  width:220px;
+}
+
+.app-sidebar.expanded .sidebar-nav-item,
+.app-sidebar.expanded .sidebar-logout{
+  flex-direction:row;
+  justify-content:flex-start;
+  padding-left:16px;
+  gap:12px;
+}
+
+.app-sidebar.expanded .nav-label{
+  font-size:13px;
+  display:block;
+}
+
+.app-sidebar.expanded .sidebar-logo{
+  width:100%;
+  justify-content:flex-start;
+  padding-left:10px;
+}
+
+/* =====================================================
+   TOP HEADER
+   ===================================================== */
+.app-header {
+ 
+  position: fixed;
+  top: 0;
+  left: 64px;
+  right: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 0 24px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.header-system-name {
   font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
 }
 
-.user-info {
-  text-align: right;
-  line-height: 1.3;
+.header-system-name .header-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--manager-soft);
+  border: 1px solid var(--manager-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.user-name {
-  color: #fff;
-  font-weight: 600;
-  font-size: 14px;
+.header-system-name .header-icon .material-symbols-outlined {
+  font-size: 18px !important;
+  color: var(--manager) !important;
 }
 
-.user-role {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.78);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+.header-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+  padding-left: 40px;
+  line-height: 1;
 }
 
-.btn-logout {
-  background: #fff;
-  border: 1px solid var(--line-strong);
-  padding: 8px 16px;
-  border-radius: var(--r-md);
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Date pill */
+.header-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--manager-soft);
+  border: 1px solid var(--manager-border);
+  color: var(--manager-text);
+  padding: 8px 14px;
+  border-radius: 20px;
   font-size: 13px;
-  color: var(--ink-2);
-  transition: all 0.15s;
-}
-.btn-logout:hover {
-  background: var(--danger-bg);
-  border-color: var(--danger);
-  color: var(--danger-text);
+  font-weight: 500;
 }
 
-/* Main */
-.rfm-main {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 24px 28px;
+.header-date-pill .material-symbols-outlined {
+  font-size: 15px !important;
+  color: var(--manager) !important;
 }
+
+/* Action button */
+.header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--manager);
+  color: white;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-family: "Kanit", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+}
+
+.header-action-btn:hover {
+  background: var(--manager);
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+.header-action-btn .material-symbols-outlined {
+  font-size: 16px !important;
+  color: white !important;
+}
+
+
+
+/* Breadcrumb */
+.app-breadcrumb{
+  width:100%;
+  min-height:38px;
+  background:#f9fafb;
+  border-bottom:1px solid #e5e7eb;
+  padding:8px 24px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+}
+
+.app-breadcrumb a,
+.app-breadcrumb span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+
+.app-breadcrumb a{
+  color:#64748b;
+  text-decoration:none;
+}
+
+.app-breadcrumb a:hover,
+.app-breadcrumb .bc-current{
+  color:var(--manager);
+  font-weight:600;
+}
+
+.bc-sep{
+  color:#cbd5e1;
+}
+
+/* =====================================================
+   FIX HEADER FIXED
+===================================================== */
+
+/* header fixed */
+.app-header{
+  position: fixed !important;
+  top: 0;
+  left: 64px;
+  right: 0;
+  width: auto;
+  z-index: 300;
+}
+
+/* ตอน sidebar ขยาย */
+.app-main.sidebar-expanded .app-header{
+  left: 220px;
+}
+
+/* breadcrumb ต้องเลื่อนลง */
+.app-breadcrumb{
+  margin-top:72px;
+}
+
+/* responsive */
+@media (max-width:768px){
+
+  .app-header{
+    left:56px;
+  }
+
+  .app-main.sidebar-expanded .app-header{
+    left:180px;
+  }
+
+  .app-breadcrumb{
+    margin-top:64px;
+  }
+}
+
+
+/* =====================================================
+   PAGE CONTENT WRAPPER
+   ===================================================== */
+
+
+.app-content {
+  flex: 1;
+  padding: 24px;
+  background: #f1f5f9;
+}
+
+
+/* rfm-main ต้องไม่โดนบีบและไม่ล้นผิด */
+.rfm-main{
+  width:100%;
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 0 28px;
+}
+
+/* แก้ tab/date ให้พอดีกับ content */
+.tab-nav,
+.date-filter-bar{
+  max-width:100%;
+}
+
+/* กัน dashboard ชิดซ้ายเกิน */
+.kpi-grid,
+.charts-grid,
+.meta-bar,
+.filters,
+.table-card,
+.chart-card{
+  width:100%;
+}
+
+/* Responsive */
+@media (max-width:768px){
+  .app-main{
+    margin-left:56px;
+  }
+
+  .app-sidebar,
+  .app-sidebar.collapsed{
+    width:56px;
+  }
+
+  .app-main.sidebar-expanded{
+    margin-left:180px;
+  }
+
+  .app-sidebar.expanded{
+    width:180px;
+  }
+
+  .app-header{
+    min-height:64px;
+    padding:0 14px;
+  }
+
+  .header-subtitle,
+  .header-user-name,
+  .header-date-pill{
+    display:none;
+  }
+
+  .app-content{
+    padding:16px;
+  }
+}
+
+
+
+/* =====================================================
+   ATTACHED TAB + FILTER PANEL
+===================================================== */
+
+.control-panel{
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 22px;
+  overflow: visible;
+}
+
+.control-panel::before{
+  display: none;
+}
+
+/* tab อยู่ติดกับกล่อง */
+.tab-nav{
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  position: relative;
+  z-index: 3;
+}
+
+.tab-nav-inner{
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  border: 0;
+  overflow: visible;
+  padding-left: 14px;
+}
+
+/* tab ปกติ */
+.tab-btn{
+  height: 56px;
+  min-width: 220px;
+  padding: 0 24px;
+  border: 1px solid #dbeafe;
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 -2px 10px rgba(15,23,42,.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transform: translateY(1px);
+}
+
+/* tab active */
+.tab-btn.active{
+  height: 62px;
+  background: linear-gradient(180deg,var(--manager),var(--manager-hover));
+  color: #ffffff;
+  border-color: transparent;
+  /* box-shadow: 0 10px 24px rgba(37,99,235,.22); */
+  z-index: 1;
+}
+
+.tab-btn:not(.active):hover{
+  background: #f8fbff;
+  color: var(--manager);
+  transform: translateY(-1px);
+}
+
+/* กล่อง filter เป็น body ของ index card */
+.date-filter-bar{
+  margin: 0;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  box-shadow: 0 14px 34px rgba(15,23,42,.08);
+  position: relative;
+  z-index: 1;
+}
+
+/* ถ้าต้องการให้มุมซ้ายบนต่อกับ active tab */
+.date-filter-bar{
+  border-top-left-radius: 8px;
+}
+
+/* เส้นแบ่งใน filter */
+.date-custom{
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+}
+
+/* ปุ่มใน filter */
+.preset-btn{
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: #fff;
+  font-weight: 600;
+  color: #334155;
+  box-shadow: 0 2px 5px rgba(15,23,42,.04);
+}
+
+.preset-btn.active{
+  background: linear-gradient(180deg,var(--manager),var(--manager-hover));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(37,99,235,.22);
+}
+
+.preset-btn:hover{
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: var(--manager);
+}
+
+/* input/date */
+.date-input,
+.btn-secondary-sm{
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+}
+
+.date-input:focus{
+  background:#fff;
+  border-color:var(--manager);
+  box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  outline:none;
+}
+
+
+
 
 /* ============================================================
    4) NAVIGATION (Tab + Date Filter)
    จัด tab + date เป็น "การ์ดเดียวกัน" ขอบโค้งสวย
 ============================================================ */
-.tab-nav {
-  max-width: var(--container);
-  margin: 18px auto 0;
-  padding: 0 20px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-bottom: 0;
-  border-radius: var(--r-xl) var(--r-xl) 0 0;
-}
 
-.tab-nav-inner {
-  max-width: none;
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--line);
-  overflow-x: auto;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 14px 22px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--muted-strong);
-  border-bottom: 3px solid transparent;
-  white-space: nowrap;
-  transition: all 0.15s;
-}
-
-.tab-btn:hover {
-  color: var(--manager);
-  background: var(--surface-soft);
-}
-.tab-btn.active {
-  color: var(--manager);
-  border-bottom-color: var(--manager-hover);
-}
 
 /* Date filter bar — ต่อจาก tab-nav แบบไร้รอยต่อ */
-.date-filter-bar {
-  max-width: var(--container);
-  margin: 0 auto 20px;
-  padding: 16px 20px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-top: 0;
-  border-radius: 0 0 var(--r-xl) var(--r-xl);
-  box-shadow: var(--shadow-sm);
-}
 
-.date-filter-inner {
+/* .date-filter-inner {
   max-width: none !important;
   display: grid !important;
   grid-template-columns: auto 1fr auto !important;
@@ -235,7 +893,7 @@ img {
   column-gap: 14px !important;
   row-gap: 12px !important;
   align-items: center !important;
-}
+} */
 
 .date-filter-label {
   grid-area: label;
@@ -384,6 +1042,7 @@ img {
   font-size: 13px;
   color: var(--muted);
   margin-bottom: 16px;
+  margin-top: 16px;
   padding: 12px 16px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1268,7 +1927,7 @@ tr:hover td { background: var(--surface-soft); }
 }
 
 @media (max-width: 1024px) {
-  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid { grid-template-columns: 1fr ; }
 }
 
 @media (max-width: 900px) {
@@ -1327,4 +1986,1233 @@ tr:hover td { background: var(--surface-soft); }
   .kpi { padding: 14px; }
   .chart-card { padding: 16px; }
   .chart-wrap { height: 240px; }
+}
+
+
+
+/* =====================================================
+   UI POLISH: Section Cards
+===================================================== */
+
+/* ทำให้แต่ละ section เป็นการ์ด */
+.tab-nav,
+.date-filter-bar,
+.meta-bar,
+.kpi-grid,
+.charts-grid,
+.filters,
+.table-card,
+.chart-card,
+.insight-card{
+  position: relative;
+}
+
+/* กล่องรวมช่วงบน */
+.tab-nav{
+  margin-top: 20px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15,23,42,.06);
+}
+
+.date-filter-bar{
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15,23,42,.07);
+}
+
+/* Meta bar ให้เด่นขึ้น */
+.meta-bar{
+  background: #fff;
+  border: 1px solid #dbeafe;
+  box-shadow: 0 8px 22px rgba(37,99,235,.08);
+}
+
+/* KPI card */
+.kpi{
+  background: linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 10px 26px rgba(15,23,42,.08);
+}
+
+.kpi:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(37,99,235,.14);
+}
+
+/* Chart / Table / Filter เป็นการ์ดเด่น */
+.chart-card,
+.table-card,
+.filters,
+.insight-card{
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(15,23,42,.07);
+}
+
+/* เพิ่มหัวการ์ดแบบนุ่ม */
+.chart-card h3,
+.table-title{
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* filter ให้เหมือนกล่องควบคุม */
+.filters{
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+/* input/select ดูชัดขึ้น */
+.filter-field input,
+.filter-field select,
+.date-input{
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.filter-field input:focus,
+.filter-field select:focus,
+.date-input:focus{
+  background: #fff;
+  border-color: var(--manager);
+  box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+}
+
+/* ตารางให้เหมือนวางบนการ์ด */
+.table-card{
+  overflow: hidden;
+}
+
+.table-header{
+  background: linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+}
+
+/* เว้นช่องไฟระหว่างกลุ่ม */
+.kpi-grid,
+.charts-grid,
+.filters,
+.table-card,
+.chart-card,
+.insight-card{
+  margin-bottom: 22px;
+}
+
+/* =====================================================
+   PREMIUM CONTROL PANEL
+===================================================== */
+
+/* กล่องใหญ่ */
+/* .control-panel{
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f8fbff 100%
+  );
+  border: 1px solid #dbeafe;
+  border-radius: 24px;
+  padding: 22px;
+  margin-bottom: 22px;
+
+  box-shadow:
+    0 10px 30px rgba(15,23,42,.06),
+    0 2px 8px rgba(37,99,235,.06); */
+
+  /* position: relative; */
+  /* overflow: hidden; */
+/* } */
+
+/* glow ด้านบน */
+/* .control-panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:4px;
+
+  background: linear-gradient(
+    90deg,
+    var(--manager),
+    #60a5fa
+  );
+} */
+
+/* =====================================================
+   TAB NAV
+===================================================== */
+
+.tab-nav{
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  /* margin: 0 0 18px; */
+}
+
+.tab-nav-inner{
+  border: 0;
+  /* gap: 10px; */
+}
+
+/* ปุ่ม tab */
+.tab-btn{
+  height: 44px;
+  /* padding: 0 18px; */
+
+  /* border-radius: 14px; */
+  border: 1px solid transparent;
+
+  background: #ffffff;
+
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+
+  box-shadow:
+    0 2px 6px rgba(15,23,42,.04);
+
+  transition: all .18s ease;
+}
+
+/* hover */
+.tab-btn:hover{
+  transform: translateY(-1px);
+
+  background: #f8fbff;
+
+  border-color: #bfdbfe;
+
+  color: var(--manager);
+
+  box-shadow:
+    0 8px 20px rgba(37,99,235,.10);
+}
+
+/* active */
+.tab-btn.active{
+  background: linear-gradient(
+    180deg,
+    var(--manager) 0%,
+    var(--manager-hover) 100%
+  );
+
+  color: #ffffff;
+
+  border-color: transparent;
+
+  /* box-shadow:
+    0 10px 22px rgba(37,99,235,.28); */
+
+  transform: translateY(-1px);
+}
+
+/* เอาเส้นล่างออก */
+.tab-btn.active{
+  border-bottom: none;
+}
+
+/* =====================================================
+   DATE FILTER
+===================================================== */
+
+.date-filter-bar{
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  margin: 0;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 6px 18px rgba(15,23,42,.05);
+}
+
+/* หัวข้อ */
+.date-filter-label{
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* preset buttons */
+.preset-btn{
+  height: 38px;
+  padding: 0 16px;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #dbeafe;
+
+  color: #334155;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 2px 5px rgba(15,23,42,.04);
+
+  transition: all .18s ease;
+}
+
+/* hover */
+.preset-btn:hover{
+  background: #eff6ff;
+
+  border-color: #93c5fd;
+
+  color: var(--manager);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 18px rgba(37,99,235,.10);
+}
+
+/* active */
+.preset-btn.active{
+  background: linear-gradient(
+    180deg,
+    var(--manager),
+    var(--manager-hover)
+  );
+
+  color:#fff;
+
+  border-color: transparent;
+
+  box-shadow:
+    0 10px 20px rgba(37,99,235,.25);
+}
+
+/* input */
+.date-input{
+  height: 40px;
+
+  background: #f8fafc;
+
+  border: 1px solid #cbd5e1;
+
+  border-radius: 12px;
+
+  padding: 0 14px;
+
+  transition: all .18s ease;
+}
+
+.date-input:hover{
+  border-color: #93c5fd;
+}
+
+.date-input:focus{
+  background: #ffffff;
+
+  border-color: var(--manager);
+
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,.12);
+
+  outline:none;
+}
+
+/* ปุ่มล้าง */
+.btn-secondary-sm{
+  height: 40px;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #dbeafe;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 2px 5px rgba(15,23,42,.04);
+}
+
+.btn-secondary-sm:hover{
+  background: #eff6ff;
+
+  border-color: #93c5fd;
+
+  color: var(--manager);
+}
+
+/* info box */
+.date-info{
+  background: linear-gradient(
+    180deg,
+    #f8fbff 0%,
+    #eff6ff 100%
+  );
+
+  border: 1px solid #bfdbfe;
+
+  border-radius: 14px;
+
+  padding: 10px 14px;
+
+  color: #1e40af;
+
+  font-weight: 500;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+
+
+
+.chart-card::before,
+.table-card::before,
+.filters::before{
+  .control-panel::before{
+  content:"";
+  position:absolute;
+
+  top:0;
+  left:0;
+  width:100%;
+  height:4px;
+
+  background: linear-gradient(
+    90deg,
+    var(--manager),
+    #60a5fa
+  );
+
+  border-radius:
+    24px 24px 0 0;
+}
+}
+
+
+/* ============================================================
+   FINAL OVERRIDE — Attached Paper Card UI
+   วางท้ายไฟล์เพื่อแก้ layout/มิติของ tab + filter panel
+============================================================ */
+
+/* ---------- Base cleanup ---------- */
+html,
+body{
+  min-height:100%;
+  background:#f1f5f9 !important;
+}
+
+body{
+  overflow-x:hidden;
+}
+
+.app-layout{
+  display:flex;
+  width:100%;
+  min-height:100vh;
+  background:#f1f5f9;
+}
+
+/* ---------- Sidebar ---------- */
+.app-sidebar{
+  width:64px;
+  min-height:100vh;
+  position:fixed;
+  inset:0 auto 0 0;
+  z-index:400;
+  background:linear-gradient(180deg,var(--manager) 0%,var(--manager-hover) 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  box-shadow:2px 0 14px rgba(37,99,235,.24);
+}
+
+.app-sidebar.collapsed{
+  width:64px;
+}
+
+.app-sidebar.expanded{
+  width:220px;
+}
+
+.sidebar-collapse-btn{
+  z-index:410;
+}
+
+.app-sidebar.expanded .sidebar-nav-item,
+.app-sidebar.expanded .sidebar-logout{
+  flex-direction:row;
+  justify-content:flex-start;
+  padding-left:16px;
+  gap:12px;
+}
+
+.app-sidebar.expanded .nav-label{
+  font-size:13px;
+}
+
+/* ---------- Main / fixed header ---------- */
+.app-main{
+  flex:1;
+  margin-left:64px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow-x:hidden;
+  transition:margin-left .25s ease;
+}
+
+.app-main.sidebar-expanded{
+  margin-left:220px;
+}
+
+.app-header{
+  position:fixed !important;
+  top:0;
+  left:64px;
+  right:0;
+  height:72px;
+  z-index:300;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  box-shadow:0 1px 5px rgba(15,23,42,.08);
+  padding:0 24px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  transition:left .25s ease;
+}
+
+.app-main.sidebar-expanded .app-header{
+  left:220px;
+}
+
+.header-left{
+  flex:1;
+  min-width:0;
+}
+
+.header-system-name{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:18px;
+  font-weight:700;
+  color:#0f172a;
+}
+
+.header-icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:var(--manager-soft);
+  border:1px solid var(--manager-border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.header-icon .material-symbols-outlined{
+  color:var(--manager) !important;
+  font-size:20px !important;
+}
+
+.header-subtitle{
+  margin-top:2px;
+  padding-left:44px;
+  font-size:12px;
+  color:#94a3b8;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-shrink:0;
+}
+
+.header-date-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:38px;
+  padding:0 14px;
+  border-radius:999px;
+  background:var(--manager-soft);
+  border:1px solid var(--manager-border);
+  color:var(--manager-text);
+  font-size:13px;
+  font-weight:600;
+}
+
+.header-user{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.header-user-avatar{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--manager),var(--manager-hover));
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
+
+/* ---------- Breadcrumb / Content ---------- */
+.app-breadcrumb{
+  margin-top:72px;
+  min-height:38px;
+  background:#f9fafb;
+  border-bottom:1px solid #e5e7eb;
+  padding:8px 24px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+}
+
+.app-content{
+  flex:1;
+  padding:24px;
+  background:#f1f5f9;
+}
+
+.rfm-main{
+  width:100%;
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 0 32px;
+}
+
+/* ============================================================
+   Paper stack: outer base card + top paper + attached tabs
+============================================================ */
+
+/* การ์ดฐานด้านหลัง */
+/* .control-panel{
+  position:relative;
+  isolation:isolate;
+  margin:26px 0 22px;
+  padding:34px 22px 22px;
+  border-radius:24px;
+  background:linear-gradient(180deg,#f8fbff 0%,#eef6ff 100%);
+  border:1px solid #dbeafe;
+  box-shadow:
+    0 20px 44px rgba(37,99,235,.10),
+    0 4px 12px rgba(15,23,42,.06);
+  overflow:visible;
+} */
+
+/* กระดาษชั้นล่าง ให้เห็นเหมือนซ้อน */
+/* .control-panel::after{
+  content:"";
+  position:absolute;
+  left:16px;
+  right:16px;
+  bottom:10px;
+  height:92px;
+  border-radius:0 0 22px 22px;
+  background:#eaf3ff;
+  border:1px solid #dbeafe;
+  box-shadow:0 14px 26px rgba(37,99,235,.12);
+  z-index:-1;
+  transform:translateY(15px);
+} */
+
+/* ปิดเส้น gradient เดิม */
+/* .control-panel::before{
+  display:none !important;
+} */
+
+/* Tabs ต้องวางทับขอบบนของกระดาษ */
+.tab-nav{
+  position:relative;
+  z-index:3;
+  margin:0;
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+
+.tab-nav-inner{
+  display:flex;
+  align-items:flex-end;
+  gap:0.5px;
+  padding-left:0;
+  border:0;
+  overflow:visible;
+}
+
+/* ปุ่มแท็บเหมือนสันแฟ้ม */
+.tab-btn{
+  position:relative;
+  height:38px;
+  min-width:230px;
+  padding:0 24px;
+  display:flex;
+  margin-left: 0px;
+  margin-right: 5px;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border:1px solid #dbeafe;
+  border-bottom:0;
+  border-radius:18px 18px 0 0;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+  color:#475569;
+  font-size:15px;
+  font-weight:700;
+  box-shadow:
+    0 -2px 8px rgba(15,23,42,.03),
+    0 4px 12px rgba(15,23,42,.04);
+  transform:translateY(1px);
+  transition:all .18s ease;
+}
+
+.tab-btn:not(.active):hover{
+  color:var(--manager);
+  background:linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);
+  transform:translateY(-1px);
+}
+
+.tab-btn.active{
+  height:48px;
+  color:#fff;
+  background:linear-gradient(180deg,var(--manager) 0%,var(--manager-hover) 100%);
+  border-color:transparent;
+  z-index:5;
+  margin-left: 5px;
+  margin-right: 5px;
+  /* box-shadow:
+    0 16px 28px rgba(37,99,235,.24),
+    inset 0 1px 0 rgba(255,255,255,.28); */
+}
+
+/* .tab-btn.active::before{
+  content:"";
+  position:absolute;
+  left:20px;
+  right:20px;
+  top:0;
+  height:3px;
+  border-radius:999px;
+  background:rgba(255,255,255,.75);
+} */
+
+/* กระดาษฟิลเตอร์ด้านบน */
+.date-filter-bar{
+  position:relative;
+  z-index:2;
+  margin:0;
+  padding:24px;
+  border-radius:0 20px 20px 20px;
+  background:#ffffff;
+  border:1px solid #dbeafe;
+  /* box-shadow:
+    0 18px 34px rgba(15,23,42,.10),
+    0 3px 8px rgba(37,99,235,.06); */
+}
+
+/* เงาด้านล่างของกระดาษ */
+/* .date-filter-bar::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:-11px;
+  height:14px;
+  border-radius:999px;
+  background:rgba(37,99,235,.14);
+  filter:blur(9px);
+  z-index:-1;
+} */
+
+/* ---------- Date filter layout ---------- */
+.date-filter-inner{
+  display:grid !important;
+  grid-template-columns:auto 1fr auto !important;
+  grid-template-areas:
+    "label presets presets"
+    "custom custom info" !important;
+  gap:14px 16px !important;
+  align-items:center !important;
+}
+
+.date-filter-label{
+  grid-area:label;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:15px;
+  font-weight:700;
+  color:#0f172a;
+  white-space:nowrap;
+}
+
+.date-presets{
+  grid-area:presets;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+
+.date-custom{
+  grid-area:custom;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  padding-top:14px;
+  border-top:1px solid #e2e8f0;
+  color:#64748b;
+  font-size:13px;
+}
+
+.date-info{
+  grid-area:info;
+  justify-self:end;
+  display:inline-flex;
+  align-items:center;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:14px;
+  background:#f8fbff;
+  border:1px solid #bfdbfe;
+  color:#1e40af;
+  font-size:13px;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* ---------- Buttons / inputs ---------- */
+.preset-btn{
+  height:40px;
+  padding:0 15px;
+  border-radius:13px;
+  border:1px solid #dbeafe;
+  background:#fff;
+  color:#334155;
+  font-size:13px;
+  font-weight:600;
+  box-shadow:0 2px 6px rgba(15,23,42,.04);
+  transition:all .16s ease;
+}
+
+.preset-btn:hover{
+  border-color:#93c5fd;
+  background:#eff6ff;
+  color:var(--manager);
+  transform:translateY(-1px);
+}
+
+.preset-btn.active{
+  border-color:transparent;
+  background:linear-gradient(180deg,var(--manager),var(--manager-hover));
+  color:#fff;
+  box-shadow:0 10px 20px rgba(37,99,235,.24);
+}
+
+.date-input{
+  width:170px;
+  height:42px;
+  padding:0 14px;
+  border-radius:13px;
+  border:1px solid #cbd5e1;
+  background:#f8fafc;
+  font-size:13px;
+}
+
+.date-input:hover{
+  border-color:#93c5fd;
+}
+
+.date-input:focus{
+  outline:0;
+  background:#fff;
+  border-color:var(--manager);
+  box-shadow:0 0 0 4px rgba(37,99,235,.12);
+}
+
+.btn-primary-sm,
+.btn-secondary-sm,
+.btn-secondary,
+.btn-refresh{
+  border-radius:12px;
+  font-weight:600;
+}
+
+.btn-primary-sm,
+.btn-secondary-sm{
+  height:42px;
+  padding:0 16px;
+}
+
+.btn-primary-sm{
+  border:1px solid var(--manager);
+  background:var(--manager);
+  color:#fff;
+}
+
+.btn-primary-sm:hover{
+  background:var(--manager-hover);
+}
+
+.btn-secondary-sm,
+.btn-secondary,
+.btn-refresh{
+  border:1px solid #dbeafe;
+  background:#fff;
+  color:#334155;
+  box-shadow:0 2px 6px rgba(15,23,42,.04);
+}
+
+.btn-secondary-sm:hover,
+.btn-secondary:hover,
+.btn-refresh:hover{
+  background:#eff6ff;
+  border-color:#93c5fd;
+  color:var(--manager);
+}
+
+/* ---------- Meta bar as small paper ---------- */
+.meta-bar{
+  margin-top:22px;
+  margin-bottom:20px;
+  padding:14px 18px;
+  min-height:56px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:16px;
+  border-radius:16px;
+  background:#fff;
+  border:1px solid #dbeafe;
+  box-shadow:
+    0 10px 24px rgba(15,23,42,.07),
+    0 2px 6px rgba(37,99,235,.06);
+}
+
+/* ---------- KPI / cards ---------- */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:16px;
+  margin-bottom:22px;
+}
+
+.kpi,
+.chart-card,
+.filters,
+.table-card,
+.insight-card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:20px;
+  box-shadow:
+    0 12px 28px rgba(15,23,42,.07),
+    0 2px 6px rgba(15,23,42,.04);
+}
+
+.kpi{
+  min-height:116px;
+  padding:18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.kpi:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 16px 34px rgba(37,99,235,.11),
+    0 4px 10px rgba(15,23,42,.05);
+}
+
+.charts-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:22px;
+}
+
+.chart-card{
+  padding:22px;
+}
+
+.filters{
+  padding:18px;
+  margin-bottom:18px;
+}
+
+.table-card{
+  overflow:hidden;
+  margin-bottom:24px;
+}
+
+.table-header{
+  background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:1200px){
+  .kpi-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+@media (max-width:1024px){
+  .charts-grid{
+    grid-template-columns:1fr;
+  }
+
+  .date-filter-inner{
+    grid-template-columns:1fr !important;
+    grid-template-areas:
+      "label"
+      "presets"
+      "custom"
+      "info" !important;
+  }
+
+  .date-info{
+    justify-self:start;
+    white-space:normal;
+  }
+}
+
+@media (max-width:768px){
+  .app-sidebar,
+  .app-sidebar.collapsed{
+    width:56px;
+  }
+
+  .app-main{
+    margin-left:56px;
+  }
+
+  .app-sidebar.expanded{
+    width:180px;
+  }
+
+  .app-main.sidebar-expanded{
+    margin-left:180px;
+  }
+
+  .app-header{
+    left:56px;
+    height:64px;
+    padding:0 14px;
+  }
+
+  .app-main.sidebar-expanded .app-header{
+    left:180px;
+  }
+
+  .app-breadcrumb{
+    margin-top:64px;
+  }
+
+  .header-subtitle,
+  .header-user-name,
+  .header-date-pill{
+    display:none;
+  }
+
+  .app-content{
+    padding:16px;
+  }
+
+  .control-panel{
+    padding:28px 14px 18px;
+  }
+
+  .tab-nav-inner{
+    padding-left:0;
+    overflow-x:auto;
+  }
+
+  .tab-btn{
+    min-width:190px;
+    height:52px;
+    font-size:13px;
+  }
+
+  .tab-btn.active{
+    height:58px;
+  }
+
+  .date-filter-bar{
+    padding:18px;
+  }
+
+  .kpi-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width:480px){
+  .kpi-grid{
+    grid-template-columns:1fr;
+  }
+
+  .date-input{
+    width:100%;
+  }
+}
+
+
+/* =====================================================
+   TABLET RESPONSIVE FIX — keep layout like desktop
+===================================================== */
+
+@media (min-width: 769px) and (max-width: 1180px){
+
+  .app-content{
+    padding: 20px;
+  }
+
+  .rfm-main{
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* กล่อง filter ไม่ให้แตก/ซ้อน */
+  .control-panel{
+    width: 100%;
+  }
+
+  .tab-nav-inner{
+    padding-left: 0;
+    gap: 4px;
+  }
+
+  .tab-btn{
+    min-width: 190px;
+    height: 48px;
+    padding: 0 18px;
+    font-size: 13px;
+  }
+
+  .tab-btn.active{
+    height: 52px;
+  }
+
+  .date-filter-bar{
+    padding: 18px 20px;
+  }
+
+  .date-filter-inner{
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    grid-template-areas:
+      "label presets"
+      "custom custom"
+      "info info" !important;
+    column-gap: 12px !important;
+    row-gap: 12px !important;
+    align-items: center !important;
+  }
+
+  .date-presets{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .preset-btn{
+    height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .date-custom{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  .date-input{
+    width: 150px;
+    height: 36px;
+  }
+
+  .btn-primary-sm,
+  .btn-secondary-sm{
+    height: 36px;
+    padding: 0 14px;
+  }
+
+  .date-info{
+    justify-self: end;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+
+  /* meta bar */
+  .meta-bar{
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  /* KPI ให้เหมือนภาพแรก: 6 ใบในแถวเดียว แต่ย่อขนาด */
+  .kpi-grid{
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+
+  .kpi{
+    min-height: 92px;
+    padding: 12px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .kpi-icon{
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .kpi-title{
+    font-size: 11px;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .kpi-number{
+    font-size: 20px;
+  }
+
+  .kpi-sub{
+    font-size: 11px;
+  }
+
+  /* chart 2 ช่องเหมือนเดิม */
+  .charts-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px;
+  }
+
+  .chart-card{
+    padding: 18px;
+  }
+
+  .chart-wrap{
+    height: 260px;
+  }
 }
