@@ -318,13 +318,13 @@ img { max-width: 100%; display: block; }
 /* Collapse button */
 .sidebar-collapse-btn {
   position: absolute;
-  top: 50%;
+  top: 80%;
   right: -11px;
   width: 22px;
   height: 44px;
   transform: translateY(-50%);
-  background: linear-gradient(180deg, var(--manager) 0%, var(--manager-hover) 100%);
-  border: 2px solid #ffffff;
+  background: linear-gradient(180deg, var(--ea-side-bg) 0%, var(--ea-side-bg-2) 100%);
+  border: 0.5px solid #ffffff;
   border-radius: var(--r-full);
   display: flex;
   align-items: center;
