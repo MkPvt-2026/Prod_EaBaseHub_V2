@@ -168,7 +168,7 @@ img { max-width: 100%; display: block; }
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 400;
-  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  background: linear-gradient(180deg, var(--manager) 0%, var(--manager-hover) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -323,7 +323,7 @@ img { max-width: 100%; display: block; }
   width: 22px;
   height: 44px;
   transform: translateY(-50%);
-  background: linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  background: linear-gradient(180deg, var(--manager) 0%, var(--manager-hover) 100%);
   border: 2px solid #ffffff;
   border-radius: var(--r-full);
   display: flex;
