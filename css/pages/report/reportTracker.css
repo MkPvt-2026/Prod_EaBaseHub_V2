@@ -1,54 +1,134 @@
 /* =====================================================
-   executiveHome.css v6 - Sales Table Modal + Comment Popup
-   ธีม: Clean White + Green Accent
+   executiveHome.css v7 - CLEAN VERSION
+   ธีม: Clean White + Blue Sidebar
    รองรับ role: admin / executive / manager / user
    ===================================================== */
 
-/* ── VARIABLES ── */
+/* =====================================================
+   1. VARIABLES (รวมเป็นที่เดียว)
+   ===================================================== */
 :root {
-  --primary:      #f8fafc;
-  --surface:      #ffffff;
-  --surface2:     #f1f5f9;
-  --surface3:     #e2e8f0;
-  --accent:       #10b981;
-  --accent-light: #d1fae5;
-  --accent-dark:  #059669;
-  --accent2:      #f59e0b;
-  --accent2-light:#fef3c7;
-  --accent3:      #ef4444;
-  --blue:         #3b82f6;
-  --blue-dark:    #0447b4;
-  --blue-light:   #8dbffc;
-  --blue-light1:  #aed7fd;
-  --cyan-light:   #e7e7e7;
-  --purple:       #8b5cf6;
-  --text:         #111827;
-  --text-muted:   #6b7280;
-  --text-light:   #9ca3af;
-  --text-med:     #5493ff;
-  --border:       #e5e7eb;
-  --border-accent: rgba(16,185,129,0.25);
-  --shadow:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:    0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg:    0 8px 24px rgba(0,0,0,0.1);
-  --shadow-xl:    0 20px 60px rgba(0,0,0,0.18);
-  --radius:       12px;
-  --radius-sm:    8px;
-  --transition:   0.15s ease;
-  --unread-bg:    #f7f6b9;
-  --unread-border: #f59e0b;
-  --danger:       #ef4444;
-  --info:         #0093ad;
+  /* ---- Manager (Blue) ---- */
+  --manager:        #2563EB;
+  --manager-hover:  #1D4ED8;
+  --manager-soft:   #EFF6FF;
+  --manager-border: #BFDBFE;
+  --manager-text:   #1E3A8A;
+
+  /* ---- Brand alias ---- */
+  --brand:          var(--manager);
+  --brand-hover:    var(--manager-hover);
+  --brand-soft:     var(--manager-soft);
+  --brand-soft-2:   #dbeafe;
+  --brand-light:    #93c5fd;
+  --brand-strong:   var(--manager-text);
+
+  /* ---- Sidebar gradient ---- */
+  --ea-side-bg:     #0c87c9;
+  --ea-side-bg-2:   #0ea5e9;
+  --ea-side-hover:  rgba(255, 255, 255, 0.14);
+  --ea-side-active: #0284c7;
+  --ea-side-text:   #cffafe;
+
+  /* ---- Surfaces ---- */
+  --page-bg:        #f1f5f9;
+  --primary:        #f8fafc;
+  --surface:        #ffffff;
+  --surface-soft:   #f8fafc;
+  --surface-muted:  #f1f5f9;
+  --surface2:       #f1f5f9;
+  --surface3:       #e2e8f0;
+
+  /* ---- Ink / text ---- */
+  --ink:            #0f172a;
+  --ink-1:          #1c1917;
+  --ink-2:          #334155;
+  --text:           #111827;
+  --text-muted:     #6b7280;
+  --text-light:     #9ca3af;
+  --text-med:       #5493ff;
+  --muted:          #64748b;
+  --muted-strong:   #475569;
+  --muted-soft:     #94a3b8;
+
+  /* ---- Lines / borders ---- */
+  --line:           #e5e7eb;
+  --line-soft:      #f1f5f9;
+  --line-strong:    #cbd5e1;
+  --border:         #e5e7eb;
+  --border-accent:  rgba(16, 185, 129, 0.25);
+
+  /* ---- Semantic ---- */
+  --success:        #10b981;
+  --success-text:   #047857;
+  --accent:         #10b981;
+  --accent-light:   #d1fae5;
+  --accent-dark:    #059669;
+  --accent2:        #f59e0b;
+  --accent2-light:  #fef3c7;
+  --accent3:        #ef4444;
+
+  --info:           #0093ad;
+  --info-text:      #1e40af;
+  --info-bg:        #dbeafe;
+
+  --warning:        #f59e0b;
+  --warning-text:   #78350f;
+  --warning-bg:     #fef3c7;
+
+  --danger:         #ef4444;
+  --danger-text:    #b91c1c;
+  --danger-bg:      #fee2e2;
+
+  --blue:           #3b82f6;
+  --blue-dark:      #0447b4;
+  --blue-light:     #8dbffc;
+  --blue-light1:    #aed7fd;
+  --cyan-light:     #e7e7e7;
+  --purple:         #8b5cf6;
+
+  /* ---- States ---- */
+  --unread-bg:      #f7f6b9;
+  --unread-border:  #f59e0b;
+
+  /* ---- Radii ---- */
+  --r-sm:           8px;
+  --r-md:           12px;
+  --r-lg:           16px;
+  --r-xl:           20px;
+  --r-full:         999px;
+  --radius:         12px;
+  --radius-sm:      8px;
+
+  /* ---- Shadows ---- */
+  --shadow-xs:      0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow:         0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm:      0 2px 6px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md:      0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg:      0 16px 40px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06);
+  --shadow-xl:      0 20px 60px rgba(0, 0, 0, 0.18);
+
+  /* ---- Motion ---- */
+  --t-fast:         150ms;
+  --t-base:         200ms;
+  --transition:     0.15s ease;
+  --ease:           cubic-bezier(0.16, 1, 0.3, 1);
 
   --line-radius:    #10c98b;
 }
 
-/* ── BASE ── */
-* { box-sizing: border-box; }
+/* =====================================================
+   2. RESET & BASE
+   ===================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
+  font-family: "Kanit", sans-serif;
   background: var(--primary);
-  font-family: 'Kanit', sans-serif;
   color: var(--text-muted);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -60,23 +140,24 @@ body {
   padding: 24px;
 }
 
-/* ===================================================
-   MATERIAL ICONS - Base Setup
-=================================================== */
+/* =====================================================
+   3. MATERIAL ICONS
+   ===================================================== */
 .material-symbols-outlined {
   font-variation-settings:
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 24;
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
   font-size: 20px;
-  line-height: 1;
+  line-height: 1 !important;
   color: var(--blue-dark);
   user-select: none;
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle;
 }
 
 .icon-primary  { color: var(--primary); }
@@ -98,7 +179,7 @@ body {
 .icon-xl { font-size: 32px; }
 
 .icon-filled {
-  font-variation-settings: 'FILL' 1, 'wght' 500;
+  font-variation-settings: "FILL" 1, "wght" 500;
 }
 
 .emoji-status {
@@ -106,98 +187,80 @@ body {
   line-height: 1;
 }
 
-/* ── PAGE HEADER ── */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.page-header h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
-}
-
-.page-header p {
-  color: var(--text-muted);
-  margin: 4px 0 0;
-  font-size: 14px;
-}
-
 /* =====================================================
-   sidebar-header.css —  Sidebar + White Header
-   ตาม design reference (EABaseHub Claims QC style)
-   ===================================================== */
-
-:root {
-   /* Manager — ฟ้า */
-  --manager:        #2563EB;
-  --manager-hover:  #1D4ED8;
-  --manager-soft:   #EFF6FF;
-  --manager-border: #BFDBFE;
-  --manager-text:   #1E3A8A;
-}
-
-/* ── RESET & ROOT ── */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: "Kanit", sans-serif;
-  background: #f1f5f9;
-  color: #111827;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* =====================================================
-   APP LAYOUT — Sidebar + Main
+   4. APP LAYOUT
    ===================================================== */
 .app-layout {
   display: flex;
   min-height: 100vh;
 }
 
+.app-main {
+  flex: 1;
+  margin-left: 64px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 /* =====================================================
-   SIDEBAR
+   5. SIDEBAR
    ===================================================== */
 .app-sidebar {
   width: 64px;
   min-height: 100vh;
-  background: linear-gradient(
-    180deg,
-    var(--manager) 0%,
-    var(--manager-hover) 100%
-  );
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 400;
+  background: linear-gradient(180deg, var(--ea-side-bg) 0%, var(--ea-side-bg-2) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-shadow: 2px 0 14px rgba(7, 89, 133, 0.24);
+  transition: width var(--t-base) var(--ease);
+  overflow: visible;
+}
+
+.app-sidebar.collapsed { width: 64px; }
+.app-sidebar.expanded  { width: 220px; }
+
+/* ── SIDEBAR LOGO ── */
+.sidebar-logo {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 200;
-  box-shadow: 2px 0 12px rgba(124, 58, 237, 0.25);
-  transition: width 0.25s ease;
-  /* overflow: hidden; */
+  justify-content: flex-start;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;              /* ✅ เพิ่ม */
+  transition: padding var(--t-base) var(--ease),
+              gap var(--t-base) var(--ease);
 }
 
-/* Logo Area */
-.sidebar-logo {
-  width: 64px;
+/* ✅ เพิ่มเส้นใต้ logo (เฉพาะตอน expanded) */
+.app-sidebar.expanded .sidebar-logo::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);        /* เว้นซ้าย-ขวาด้านละ 16px */
+  height: 1px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.app-sidebar.collapsed .sidebar-logo {
   height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  padding: 18px 0 0 0;
+  gap: 0;
+}
+
+.app-sidebar.expanded .sidebar-logo {
+  height: auto;
+  padding: 20px 12px 16px;
+  gap: 10px;
 }
 
 .sidebar-logo-circle {
@@ -210,6 +273,7 @@ body {
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .sidebar-logo-circle img {
@@ -224,161 +288,167 @@ body {
   color: #f97316;
 }
 
-/* Nav Items */
-.sidebar-nav {
-  flex: 1;
+/* ── BRAND TEXT (2 บรรทัด) ── */
+.sidebar-brand-text {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  line-height: 1.15;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sidebar-brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sidebar-brand-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.app-sidebar.collapsed .sidebar-brand-text {
+  display: none;
+}
+
+.app-sidebar.expanded .sidebar-brand-text {
+  display: flex;
+}
+
+/* ── SIDEBAR NAV ── */
+.sidebar-nav {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 4px;
   padding: 8px 0;
-  width: 100%;
+  position: relative;
+  z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar-nav-item {
   width: 100%;
+  height: 48px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  height: 56px;
-  cursor: pointer;
+  justify-content: flex-start;
+  gap: 0;
   position: relative;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.75);
-  transition: all 0.15s ease;
-  gap: 3px;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  transition: color var(--t-fast), background var(--t-fast);
 }
 
-.sidebar-nav-item:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
-}
-
+.sidebar-nav-item:hover,
 .sidebar-nav-item.active {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Active left indicator bar */
 .sidebar-nav-item.active::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 10px;
-  bottom: 10px;
+  top: 8px;
+  bottom: 8px;
   width: 3px;
   background: #ffffff;
   border-radius: 0 3px 3px 0;
 }
 
-/* Active circle highlight */
-.sidebar-nav-item.active .nav-icon-wrap {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 10px;
-}
-
 .nav-icon-wrap {
-  width: 40px;
-  height: 36px;
+  width: 64px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: background 0.15s ease;
+  flex-shrink: 0;
 }
 
-.sidebar-nav-item:hover .nav-icon-wrap {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.sidebar-nav-item .nav-label {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-  opacity: 0.85;
-  line-height: 1;
-}
-
-.sidebar-nav-item.active .nav-label {
-  opacity: 1;
-}
-
-/* Sidebar icons color */
 .sidebar-nav-item .material-symbols-outlined {
   font-size: 22px !important;
   color: inherit !important;
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 400,
-    "GRAD" 0,
-    "opsz" 24;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 .sidebar-nav-item.active .material-symbols-outlined {
-  font-variation-settings:
-    "FILL" 1,
-    "wght" 500,
-    "GRAD" 0,
-    "opsz" 24;
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
 }
 
-/* Sidebar Collapse Toggle */
-.sidebar-collapse-btn {
-  position: absolute;
-  right: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 40px;
-  background: var(--manager);
-  /* border: 1px solid rgba(255,255,255,0.3); */
-  border-radius: 0 8px 8px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: white;
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.15s ease;
+.sidebar-nav-item .nav-label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  transition: opacity var(--t-fast) var(--ease),
+              max-width var(--t-base) var(--ease),
+              padding var(--t-base) var(--ease);
 }
 
-.sidebar-collapse-btn:hover {
-  background: var(--manager-hover);
-  right: -14px;
+.app-sidebar.collapsed .sidebar-nav-item .nav-label {
+  opacity: 0;
+  max-width: 0;
+  padding: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.sidebar-collapse-btn .material-symbols-outlined {
-  font-size: 14px !important;
-  color: white !important;
+.app-sidebar.expanded .sidebar-nav-item .nav-label {
+  opacity: 1;
+  max-width: 160px;
+  padding-right: 12px;
+  visibility: visible;
 }
 
-/* Divider */
+/* ── SIDEBAR DIVIDER ── */
 .sidebar-divider {
-  width: 36px;
+  width: calc(100% - 18px);
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 4px 0;
+  margin: 4px 9px;
+  background: rgba(255, 255, 255, 0.25);
   flex-shrink: 0;
 }
 
-/* Logout at bottom */
+/* ── SIDEBAR LOGOUT ── */
 .sidebar-logout {
   width: 100%;
+  height: 48px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  height: 56px;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.7);
-  gap: 3px;
+  justify-content: flex-start;
+  gap: 0;
+  margin-bottom: 8px;
   border: none;
   background: transparent;
   font-family: "Kanit", sans-serif;
-  transition: all 0.15s ease;
-  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
   flex-shrink: 0;
+  overflow: hidden;
+  transition: color var(--t-fast), background var(--t-fast);
 }
 
 .sidebar-logout:hover {
@@ -387,29 +457,106 @@ body {
 }
 
 .sidebar-logout .material-symbols-outlined {
+  width: 64px;
   font-size: 20px !important;
   color: inherit !important;
+  flex-shrink: 0;
 }
 
 .sidebar-logout .nav-label {
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 500;
-  opacity: 0.85;
-}
-
-/* =====================================================
-   MAIN CONTENT AREA
-   ===================================================== */
-.app-main {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   flex: 1;
-  margin-left: 64px;
+  transition: opacity var(--t-fast) var(--ease),
+              max-width var(--t-base) var(--ease);
+}
+
+.app-sidebar.collapsed .sidebar-logout .nav-label {
+  opacity: 0;
+  max-width: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.app-sidebar.expanded .sidebar-logout .nav-label {
+  opacity: 1;
+  max-width: 160px;
+  padding-right: 12px;
+  visibility: visible;
+}
+
+/* ── COLLAPSE TOGGLE BUTTON ── */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 76px;
+  right: -11px;
+  width: 30px;
+  height: 30px;
+  background: var(--ea-side-bg-2);
+  border: 1.5px solid #ffffff;
+  border-radius: var(--r-full);
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(7, 89, 133, 0.25),
+              0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+  z-index: 500;
+}
+
+.sidebar-collapse-btn:hover {
+  transform: scale(1.08);
+  background: var(--ea-side-active);
+  box-shadow: 0 6px 16px rgba(7, 89, 133, 0.45);
+}
+
+.sidebar-collapse-btn:active {
+  transform: scale(0.96);
+}
+
+.sidebar-collapse-btn .material-symbols-outlined {
+  font-size: 18px !important;
+  color: white !important;
+  font-variation-settings: "FILL" 0, "wght" 600, "GRAD" 0, "opsz" 24;
+  transition: transform var(--t-base) var(--ease);
+}
+
+.app-sidebar.collapsed .sidebar-collapse-btn .material-symbols-outlined {
+  transform: rotate(0deg);
+}
+
+.app-sidebar.expanded .sidebar-collapse-btn .material-symbols-outlined {
+  transform: rotate(180deg);
+}
+
+/* ── TOOLTIP ตอน collapsed ── */
+.app-sidebar.collapsed .sidebar-nav-item[title]:hover::after,
+.app-sidebar.collapsed .sidebar-logout[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 600;
+  font-family: "Kanit", sans-serif;
 }
 
 /* =====================================================
-   TOP HEADER
+   6. TOP HEADER
    ===================================================== */
 .app-header {
   position: sticky;
@@ -474,7 +621,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Date pill */
 .header-date-pill {
   display: inline-flex;
   align-items: center;
@@ -493,7 +639,6 @@ body {
   color: var(--manager) !important;
 }
 
-/* Action button */
 .header-action-btn {
   display: inline-flex;
   align-items: center;
@@ -512,7 +657,7 @@ body {
 }
 
 .header-action-btn:hover {
-  background: var(--manager);
+  background: var(--manager-hover);
   box-shadow: 0 4px 10px rgba(124, 58, 237, 0.35);
   transform: translateY(-1px);
 }
@@ -522,7 +667,6 @@ body {
   color: white !important;
 }
 
-/* DEV badge */
 .header-dev-badge {
   background: #f97316;
   color: white;
@@ -533,7 +677,6 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* User avatar in header */
 .header-user {
   display: flex;
   align-items: center;
@@ -543,11 +686,7 @@ body {
 .header-user-avatar {
   width: 36px;
   height: 36px;
-  background: linear-gradient(
-    135deg,
-    var(--manager) 0%,
-    var(--manager-hover) 100%
-  );
+  background: linear-gradient(135deg, var(--manager) 0%, var(--manager-hover) 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -564,7 +703,7 @@ body {
   color: #374151;
 }
 
-/* Breadcrumb below header */
+/* ── BREADCRUMB ── */
 .app-breadcrumb {
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
@@ -605,66 +744,44 @@ body {
   font-size: 14px !important;
 }
 
-/* =====================================================
-   PAGE CONTENT WRAPPER
-   ===================================================== */
+/* ── PAGE CONTENT WRAPPER ── */
 .app-content {
   flex: 1;
   padding: 24px;
-  background: #f1f5f9;
+  background: var(--page-bg);
 }
-
-
-
-
-
 
 /* =====================================================
-   RESPONSIVE
+   7. PAGE HEADER
    ===================================================== */
-@media (max-width: 768px) {
-  .app-sidebar {
-    width: 56px;
-  }
-
-  .app-main {
-    margin-left: 56px;
-  }
-
-  .app-header {
-    padding: 0 16px;
-    height: 64px;
-  }
-
-  .header-subtitle {
-    display: none;
-  }
-
-  .header-date-pill {
-    display: none;
-  }
-
-  .header-system-name {
-    font-size: 15px;
-  }
-
-  .app-content {
-    padding: 16px;
-  }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 480px) {
-  .header-user-name {
-    display: none;
-  }
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+.page-header p {
+  color: var(--text-muted);
+  margin: 4px 0 0;
+  font-size: 14px;
+}
 
-
-
-
-
-/* ── SUMMARY CARDS ── */
+/* =====================================================
+   8. SUMMARY CARDS
+   ===================================================== */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -703,10 +820,10 @@ body {
   flex-shrink: 0;
 }
 
-.sum-icon       { background: var(--accent-light); }
-.sum-icon-desc  { background: var(--blue-light1); }
-.sum-icon-unread{ background: var(--accent2-light); }
-.sum-icon-cyan  { background: var(--surface2); }
+.sum-icon        { background: var(--accent-light); }
+.sum-icon-desc   { background: var(--blue-light1); }
+.sum-icon-unread { background: var(--accent2-light); }
+.sum-icon-cyan   { background: var(--surface2); }
 
 .sum-content { flex: 1; }
 
@@ -723,7 +840,9 @@ body {
   color: var(--text-muted);
 }
 
-/* ── CARD ── */
+/* =====================================================
+   9. CARD
+   ===================================================== */
 .card {
   background: var(--surface);
   border-radius: var(--radius);
@@ -747,6 +866,9 @@ body {
   font-weight: 600;
   color: var(--text);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .card-hint {
@@ -765,7 +887,7 @@ body {
 }
 
 /* =====================================================
-   🆕 VIEW TOGGLE
+   10. VIEW TOGGLE
    ===================================================== */
 .view-toggle {
   display: inline-flex;
@@ -777,18 +899,18 @@ body {
 }
 
 .view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   padding: 7px 14px;
   border-radius: 6px;
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   transition: all var(--transition);
 }
 
@@ -799,14 +921,15 @@ body {
 .view-toggle-btn.active {
   background: var(--surface);
   color: var(--blue-dark);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* View Panels */
 .view-panel { display: none; }
 .view-panel.active { display: block; }
 
-/* ── SALES GRID ── */
+/* =====================================================
+   11. SALES GRID (Card view)
+   ===================================================== */
 .sales-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -835,7 +958,7 @@ body {
 }
 
 .sales-card.has-unread::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 12px;
   right: 12px;
@@ -848,7 +971,7 @@ body {
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50%      { opacity: 0.5; }
 }
 
 .sales-card-header {
@@ -896,6 +1019,9 @@ body {
   font-weight: 600;
   color: var(--text);
   margin-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .sales-stats {
@@ -924,16 +1050,19 @@ body {
 .stat-label {
   font-size: 11px;
   color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* =====================================================
-   🆕 SALES QUICK PICK (Table view)
+   12. SALES QUICK PICK (Table view)
    ===================================================== */
 .table-by-sales-hint {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, rgba(59,140,233,0.06) 0%, rgba(96,214,250,0.06) 100%);
+  background: linear-gradient(135deg, rgba(59, 140, 233, 0.06) 0%, rgba(96, 214, 250, 0.06) 100%);
   border: 1px solid var(--blue-light);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
@@ -957,7 +1086,7 @@ body {
   border-radius: var(--radius);
   padding: 12px 14px;
   cursor: pointer;
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   text-align: left;
   transition: all var(--transition);
   position: relative;
@@ -992,10 +1121,7 @@ body {
   flex-shrink: 0;
 }
 
-.qp-info {
-  flex: 1;
-  min-width: 0;
-}
+.qp-info { flex: 1; min-width: 0; }
 
 .qp-name {
   font-size: 14px;
@@ -1026,7 +1152,9 @@ body {
   color: var(--blue);
 }
 
-/* ── FILTER SECTION ── */
+/* =====================================================
+   13. FILTER SECTION
+   ===================================================== */
 .filter-section {
   background: var(--surface);
   border-radius: var(--radius);
@@ -1060,7 +1188,7 @@ body {
   padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   font-size: 14px;
   background: var(--surface);
   color: var(--text);
@@ -1075,39 +1203,73 @@ body {
 
 .filter-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-/* ── BUTTONS ── */
+/* =====================================================
+   14. BUTTONS
+   ===================================================== */
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 10px 20px;
   border: none;
   border-radius: var(--radius-sm);
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
 }
 
-.btn-primary { background: var(--blue); color: white; }
-.btn-primary:hover { background: var(--blue-dark); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+.btn-primary {
+  background: var(--blue);
+  color: white;
+}
 
-.btn-secondary { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
-.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary:hover {
+  background: var(--blue-dark);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
 
-.btn-export { background: transparent; color: var(--accent2); border: 1px solid rgba(245,158,11,0.3); }
-.btn-export:hover { background: var(--accent2-light); border-color: var(--accent2); }
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
 
-.btn-success { background: var(--accent); color: white; }
-.btn-success:hover { background: var(--accent-dark); }
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
-/* ── REPORTS CONTAINER (List view) ── */
+.btn-export {
+  background: transparent;
+  color: var(--accent2);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.btn-export:hover {
+  background: var(--accent2-light);
+  border-color: var(--accent2);
+}
+
+.btn-success {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-success:hover {
+  background: var(--accent-dark);
+}
+
+/* =====================================================
+   15. REPORTS (List view)
+   ===================================================== */
 .reports-container {
   display: flex;
   flex-direction: column;
@@ -1115,16 +1277,16 @@ body {
 }
 
 .report-item {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  cursor: pointer;
-  transition: all var(--transition);
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 14px;
   align-items: center;
   background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all var(--transition);
 }
 
 .report-item:hover {
@@ -1166,15 +1328,22 @@ body {
   font-size: 15px;
   font-weight: 600;
   color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .report-date {
   font-size: 13px;
   color: var(--text-med);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .report-details {
   display: flex;
+  align-items: center;
   gap: 20px;
   font-size: 14px;
   color: var(--text-muted);
@@ -1182,12 +1351,16 @@ body {
 }
 
 .report-detail-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.report-status { flex-shrink: 0; }
+.report-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
 
 .badge {
   display: inline-flex;
@@ -1203,6 +1376,18 @@ body {
 .badge-read   { background: var(--accent-light); color: var(--accent-dark); }
 .badge-info   { background: var(--blue-light1); color: var(--blue-dark); }
 
+.badge-comment {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--blue-light1);
+  color: var(--blue-dark);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .report-province {
   display: inline-flex;
   align-items: center;
@@ -1217,7 +1402,7 @@ body {
 }
 
 /* =====================================================
-   💬 COMMENT STYLES — แยก 4 roles
+   16. COMMENTS
    ===================================================== */
 .comment-item {
   padding: 12px 16px;
@@ -1271,6 +1456,9 @@ body {
 }
 
 .comment-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   padding: 3px 10px;
   border-radius: 20px;
@@ -1330,13 +1518,13 @@ body {
 .comments-list::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
 .comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
   font-size: 15px;
   color: #333;
   margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .comment-section {
@@ -1366,6 +1554,7 @@ body {
 
 .modal-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-top: 15px;
   flex-wrap: wrap;
@@ -1376,7 +1565,9 @@ body {
   min-width: 150px;
 }
 
-/* ── PAGINATION ── */
+/* =====================================================
+   17. PAGINATION
+   ===================================================== */
 .pagination {
   display: flex;
   justify-content: center;
@@ -1392,7 +1583,7 @@ body {
   background: var(--surface);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-muted);
@@ -1411,7 +1602,7 @@ body {
 }
 
 /* =====================================================
-   ── MODAL (เดิม + ใหม่) ──
+   18. MODAL
    ===================================================== */
 .modal {
   display: none;
@@ -1420,7 +1611,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   z-index: 9999;
   align-items: center;
@@ -1435,10 +1626,9 @@ body {
 
 @keyframes modal-fade-in {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
-/* 🆕 z-index สูงกว่า sales modal */
 #commentPopupModal { z-index: 10000; }
 
 .modal-content {
@@ -1459,7 +1649,6 @@ body {
   to   { transform: translateY(0); opacity: 1; }
 }
 
-/* 🆕 Modal sizes */
 .modal-content-xl {
   max-width: 1280px;
   box-shadow: var(--shadow-xl);
@@ -1469,7 +1658,6 @@ body {
   max-width: 520px;
 }
 
-/* ปุ่มปิด */
 .modal-content .close-btn {
   position: absolute;
   top: 14px;
@@ -1524,7 +1712,6 @@ body {
   padding: 24px;
 }
 
-/* 🆕 Sales modal header layout */
 .modal-header-left {
   display: flex;
   align-items: center;
@@ -1553,12 +1740,12 @@ body {
   margin-top: 2px;
 }
 
-/* 🆕 Mini Summary */
+/* ── MINI SUMMARY ── */
 .mini-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
-  background: linear-gradient(135deg, rgba(59,140,233,0.05) 0%, rgba(96,214,250,0.05) 100%);
+  background: linear-gradient(135deg, rgba(59, 140, 233, 0.05) 0%, rgba(96, 214, 250, 0.05) 100%);
   border: 1px solid var(--blue-light);
   border-radius: var(--radius);
   padding: 14px 18px;
@@ -1585,7 +1772,7 @@ body {
 }
 
 /* =====================================================
-   🆕 SALES TABLE
+   19. SALES TABLE
    ===================================================== */
 .sales-table-wrapper {
   background: var(--surface);
@@ -1653,10 +1840,7 @@ body {
   border-left: 3px solid var(--accent2);
 }
 
-/* Cell styles */
-.td-date {
-  white-space: nowrap;
-}
+.td-date { white-space: nowrap; }
 
 .td-date-main {
   font-weight: 600;
@@ -1687,10 +1871,7 @@ body {
   margin-right: 2px;
 }
 
-/* products cell — ใช้ wrapper flex แทนการให้ td เป็น flex (กันเส้นกระโดด) */
-.td-products {
-  max-width: 200px;
-}
+.td-products { max-width: 200px; }
 
 .product-chips {
   display: flex;
@@ -1725,11 +1906,8 @@ body {
   word-break: break-word;
 }
 
-.td-note {
-  min-width: 220px;
-}
+.td-note { min-width: 220px; }
 
-/* รายละเอียดการเข้าเยี่ยม — แสดงเต็ม / ย่อได้ */
 .note-cell {
   font-size: 12px;
   color: var(--text-muted);
@@ -1752,7 +1930,7 @@ body {
   background: transparent;
   border: none;
   color: var(--blue-dark);
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   font-size: 11px;
   font-weight: 500;
   padding: 4px 0 0;
@@ -1780,11 +1958,11 @@ body {
   font-style: italic;
 }
 
-.col-status, .col-action {
+.col-status,
+.col-action {
   text-align: center;
 }
 
-/* Comment button in row */
 .row-comment-btn {
   display: inline-flex;
   align-items: center;
@@ -1794,10 +1972,10 @@ body {
   background: var(--surface);
   border-radius: 16px;
   cursor: pointer;
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   color: var(--text-muted);
-  transition: all var(--transition);
   font-size: 12px;
+  transition: all var(--transition);
 }
 
 .row-comment-btn:hover {
@@ -1821,13 +1999,9 @@ body {
   color: white;
 }
 
-.cmt-count {
-  font-weight: 600;
-}
+.cmt-count { font-weight: 600; }
 
-/* =====================================================
-   🆕 COMMENT POPUP — Shop info
-   ===================================================== */
+/* ── POPUP SHOP INFO ── */
 .popup-shop-info {
   background: var(--surface2);
   border-radius: var(--radius-sm);
@@ -1868,7 +2042,7 @@ body {
 }
 
 /* =====================================================
-   ── REPORT DETAIL MODAL (เดิม) ──
+   20. REPORT DETAIL MODAL
    ===================================================== */
 .modal-body .info-grid {
   display: grid;
@@ -1889,12 +2063,12 @@ body {
 }
 
 .modal-body .info-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #6b7280;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
 }
 
 .modal-body .info-value {
@@ -1944,75 +2118,8 @@ body {
   margin-bottom: 12px;
 }
 
-/* ── LOADING ── */
-.loading {
-  text-align: center;
-  padding: 48px;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--text-muted);
-}
-
-.empty-state h3 {
-  font-size: 16px;
-  color: var(--text);
-  margin: 12px 0 6px;
-}
-
-.empty-state p {
-  font-size: 13px;
-  margin: 0;
-}
-
-.empty-icon-mat {
-  font-size: 48px !important;
-  color: var(--text-light);
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 8px;
-}
-
-/* ── TOAST ── */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--text);
-  color: white;
-  padding: 14px 24px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  box-shadow: var(--shadow-lg);
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.3s;
-  pointer-events: none;
-  z-index: 10001;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* ── FOOTER ── */
-.footer {
-  text-align: center;
-  padding: 24px;
-  color: var(--text-light);
-  font-size: 13px;
-}
-
 /* =====================================================
-   DATE RANGE SECTION
+   21. DATE RANGE SECTION
    ===================================================== */
 .date-range-section {
   background: linear-gradient(135deg, rgba(25, 147, 247, 0.08) 0%, rgba(96, 214, 250, 0.08) 100%);
@@ -2044,6 +2151,9 @@ body {
 }
 
 .date-range-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: rgba(59, 140, 233, 0.15);
   color: var(--blue-dark);
   padding: 6px 14px;
@@ -2079,7 +2189,7 @@ body {
   background: transparent;
   border: none;
   color: var(--text);
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   font-size: 0.9rem;
   padding: 4px 8px;
   border-radius: 6px;
@@ -2104,20 +2214,23 @@ body {
 }
 
 .quick-range-btn {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 0.75rem;
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .quick-range-btn:hover {
-  background: rgba(0,117,212,0.1);
-  border-color: rgba(0,117,212,0.3);
+  background: rgba(0, 117, 212, 0.1);
+  border-color: rgba(0, 117, 212, 0.3);
   color: var(--blue-dark);
 }
 
@@ -2127,81 +2240,95 @@ body {
   font-weight: 500;
 }
 
-/* Badge comment in list view */
-.badge-comment {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--blue-light1);
-  color: var(--blue-dark);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
+/* =====================================================
+   22. LOADING / EMPTY / TOAST / FOOTER
+   ===================================================== */
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
-/* ===================================================
-   🎯 GLOBAL ICON ALIGNMENT FIX
-=================================================== */
-.material-symbols-outlined {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  line-height: 1 !important;
-  vertical-align: middle;
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
 }
 
-.badge,
-.badge-comment,
-.btn,
-.comment-role-badge,
-.report-detail-item,
-.report-province,
-.report-date,
-.report-sales,
-.quick-range-btn,
-.date-range-label,
-.sales-name,
-.stat-label,
-.view-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  line-height: 1;
+.empty-state h3 {
+  font-size: 16px;
+  color: var(--text);
+  margin: 12px 0 6px;
 }
 
-.page-header h1,
-.card-header h2,
-.date-range-title,
-.comment-header,
-.info-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  line-height: 1.2;
+.empty-state p {
+  font-size: 13px;
+  margin: 0;
 }
 
-.report-header,
-.report-details,
-.report-status,
-.filter-actions,
-.modal-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+.empty-icon-mat {
+  font-size: 48px !important;
+  color: var(--text-light);
 }
 
-/* ── RESPONSIVE ── */
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--text);
+  color: white;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 10001;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+/* =====================================================
+   23. RESPONSIVE
+   ===================================================== */
 @media (max-width: 1024px) {
-  .modal-content-xl {
-    max-width: 96vw;
-  }
+  .modal-content-xl { max-width: 96vw; }
 }
 
 @media (max-width: 768px) {
-  .container { padding: 16px; }
+  .app-sidebar { width: 56px; }
+  .app-sidebar.collapsed { width: 56px; }
+  .app-sidebar.expanded { width: 200px; }
+  .nav-icon-wrap { width: 56px; }
+  .sidebar-logout .material-symbols-outlined { width: 56px; }
+  .app-main { margin-left: 56px; }
 
+  .app-header { padding: 0 16px; height: 64px; }
+  .header-subtitle { display: none; }
+  .header-date-pill { display: none; }
+  .header-system-name { font-size: 15px; }
+  .app-content { padding: 16px; }
+
+  .container { padding: 16px; }
   .page-header { flex-direction: column; align-items: flex-start; }
 
   .date-range-header { flex-direction: column; align-items: flex-start; }
@@ -2228,24 +2355,14 @@ body {
   .modal-actions { flex-direction: column; }
   .modal-actions .btn { width: 100%; justify-content: center; }
 
-  /* 🆕 Sales table responsive — บนแท็บเล็ตยังพอดี ไม่ต้องเลื่อนซ้ายขวา */
   .sales-table { font-size: 12px; }
   .sales-table thead th,
-  .sales-table tbody td {
-    padding: 10px 8px;
-  }
+  .sales-table tbody td { padding: 10px 8px; }
 
   .product-chip { font-size: 10px; padding: 2px 6px; max-width: 130px; }
 
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .view-toggle-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
+  .header-actions { width: 100%; justify-content: space-between; }
+  .view-toggle-btn { padding: 6px 10px; font-size: 12px; }
 }
 
 @media (max-width: 600px) {
@@ -2258,7 +2375,6 @@ body {
   .modal-header { padding: 16px 52px 16px 18px; }
   .modal-header h3 { font-size: 15px; width: 100%; }
   .modal-badges { margin-top: 4px; }
-
   .modal-body { padding: 16px; }
 
   .mini-summary {
@@ -2267,4 +2383,8 @@ body {
   }
 
   .sales-quick-pick { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .header-user-name { display: none; }
 }

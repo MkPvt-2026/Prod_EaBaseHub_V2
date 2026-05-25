@@ -35,8 +35,11 @@
   --manager-hover:  #1D4ED8;
   --manager-soft:   #EFF6FF;
   --manager-border: #BFDBFE;
-  --manager-text:   #1E3A8A;
-
+  --manager-border1:  #2e4c9e;
+  --ea-side-bg:     #0c87c9;
+  --ea-side-bg-2:   #0ea5e9;
+  --manager-side:    linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  --manager-header:  linear-gradient(180deg, var(--manager-soft) 0%, var(--manager-soft) 100%);
   /* Executive — ม่วง */
   --executive:        #7C3AED;
   --executive-hover:  #6D28D9;
@@ -70,7 +73,8 @@
   --role-color:  var(--manager);
   --role-hover:  var(--manager-hover);
   --role-soft:   var(--manager-soft);
-  --role-border: var(--manager-border);
+  --role-border: var(--manager-border1);
+  --role-header: var(--manager-header);
   --role-text:   var(--manager-text);
   --role-rgb:    37, 99, 235;
 }
@@ -89,7 +93,7 @@ body.role-admin {
 }
 
 body.role-manager {
-  --role-color:  var(--manager);
+  --role-color:  var(--manager-side);
   --role-hover:  var(--manager-hover);
   --role-soft:   var(--manager-soft);
   --role-border: var(--manager-border);

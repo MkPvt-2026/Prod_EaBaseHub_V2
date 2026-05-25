@@ -18,6 +18,11 @@
 
   <aside class="app-sidebar collapsed" id="appSidebar">
 
+    <!-- Navigation Items -->
+    <nav class="sidebar-nav" id="sidebarNav">
+
+
+
     <!-- Logo -->
     <div class="sidebar-logo">
       <div class="sidebar-logo-circle">
@@ -25,13 +30,15 @@
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
         <span style="display:none">E</span>
       </div>
+       <div class="sidebar-brand-text">
+    <div class="sidebar-brand-title">EABaseHub</div>
+    <div class="sidebar-brand-sub">RFM System</div>
+  </div>
     </div>
 
 
     
 
-    <!-- Navigation Items -->
-    <nav class="sidebar-nav" id="sidebarNav">
 
       <a href="/index.html"
          class="sidebar-nav-item"
@@ -42,41 +49,51 @@
         <span class="nav-label">หน้าหลัก</span>
       </a>
 
+
+      <a href="/pages/dashboard/managerDashboard.html" class="sidebar-nav-item" title="Dashboard">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">empty_dashboard</span>
+        </div>
+        <span class="nav-label">Dashboard</span>     
+      </a>
+
+
+      
       <a href="/pages/reports/reportTracker.html"
          class="sidebar-nav-item"
          title="รายงาน">
         <div class="nav-icon-wrap">
           <span class="material-symbols-outlined">assignment</span>
         </div>
-        <span class="nav-label">รายงาน</span>
+        <span class="nav-label">รายงาน เข้าร้าน</span>
       </a>
 
       <a href="/pages/admin/Adminannouncements.html"
          class="sidebar-nav-item"
-         title="ร้านค้า">
+         title="ประกาศ">
         <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">breaking_news</span>
+          <span class="material-symbols-outlined">campaign</span>
         </div>
-        <span class="nav-label">ประกาศ</span>
+        <span class="nav-label">ประชาสัมพันธ์</span>
       </a>
 
-      <a href="#"
+      <a href="/UnderDev.html"
          class="sidebar-nav-item"
-         title="สินค้า">
+         title="ขออนุมัติ">
         <div class="nav-icon-wrap">
           <span class="material-symbols-outlined">approval_delegation</span>
         </div>
-        <span class="nav-label">ขออนุมัติ</span>
+        <span class="nav-label">ขออนุมัติเอกสาร</span>
       </a>
 
       
       <a href="/pages/dashboard/RfmDashboard.html"
       class="sidebar-nav-item active"
-      title="วิเคราะห์">
+      title="วิเคราะห์(RFM)">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">bar_chart</span>
       </div>
-      <span class="nav-label">วิเคราะห์(RFM)</span>
+      <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
     </a>
     
     <!-- <a href="#"
@@ -101,7 +118,7 @@
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">logout</span>
       </div>
-      <span class="nav-label">ออก</span>
+      <span class="nav-label">ออกจากระบบ</span>
     </button>
 
   </aside>
@@ -117,10 +134,10 @@
       <div class="header-icon">
         <span class="material-symbols-outlined">analytics</span>
       </div>
-      Customer & Product Dashboard
+      Customer & Product Analysis
     </div>
     <div class="header-subtitle">
-      วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร
+      วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร · RFM
     </div>
   </div>
 
@@ -140,14 +157,14 @@
 </header>
 
 <div class="app-breadcrumb">
-  <a href="/pages/executive/home.html">
+  <a href="/index.html">
     <span class="material-symbols-outlined">home</span>
     หน้าหลัก
   </a>
   <span class="bc-sep">›</span>
   <span class="bc-current">
     <span class="material-symbols-outlined">analytics</span>
-    Dashboard
+    วิเคราะห์ข้อมูล (RMF)
   </span>
 </div>
   
@@ -173,13 +190,21 @@
         📦 Product Analytics
       </button>
     </div>
+
+
+    <!-- ✅ ปุ่ม Import Data ใหม่ -->
+  <a href="/pages/components/importData" class="btn-import-data">
+    <span class="material-symbols-outlined">upload_file</span>
+    Import Data
+  </a>
+
   </nav>
 
 
 <!-- Global Date Range Filter -->
 <div class="date-filter-bar">
   <div class="date-filter-inner">
-    <span class="date-filter-label"><i class="fa-solid fa-calendar-days fa-xl" style="color: #119b6d;"></i> ช่วงเวลาวิเคราะห์:</span>
+    <span class="date-filter-label"><i class="fa-solid fa-calendar-days fa-xl" style="color: #0a6be9;"></i> ช่วงเวลาวิเคราะห์:</span>
     <div class="date-presets">
       <button class="preset-btn" data-preset="all">ทั้งหมด</button>
       <button class="preset-btn" data-preset="ytd">ปีนี้ (YTD)</button>
@@ -200,10 +225,12 @@
       <input type="date" id="dateEnd" class="date-input">
       <button class="btn-primary-sm" onclick="DateFilter.apply()">ปรับใช้</button>
       <button class="btn-secondary-sm" onclick="DateFilter.reset()">ล้าง</button>
-    </div>
+    
     <div class="date-info" id="dateInfo"></div>
   </div>
 </div>
+</div>
+  
 </div><!-- /.control-panel -->
 
   <div id="loadingBox" class="loading-box">

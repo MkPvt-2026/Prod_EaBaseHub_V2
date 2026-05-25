@@ -33,12 +33,16 @@
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
         <span style="display:none">E</span>
       </div>
+       <div class="sidebar-brand-text">
+    <div class="sidebar-brand-title">EABaseHub</div>
+    <div class="sidebar-brand-sub">Claim System</div>
+  </div>
     </div>
 
     <!-- Navigation Items -->
     <nav class="sidebar-nav" id="sidebarNav">
 
-      <a href="/UnderDev.html"
+      <a href="/index.html"
          class="sidebar-nav-item"
          title="หน้าหลัก">
         <div class="nav-icon-wrap">
@@ -47,41 +51,48 @@
         <span class="nav-label">หน้าหลัก</span>
       </a>
 
-      <a href="/pages/executive/executiveHome.html"
-         class="sidebar-nav-item active"
+      <a href="/pages/dashboard/managerDashboard.html" class="sidebar-nav-item" title="Dashboard">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">empty_dashboard</span>
+        </div>
+        <span class="nav-label">Dashboard</span>     
+      </a>
+
+      <a href="/pages/reports/reportTracker.html"
+         class="sidebar-nav-item"
          title="รายงาน">
         <div class="nav-icon-wrap">
           <span class="material-symbols-outlined">assignment</span>
         </div>
-        <span class="nav-label">รายงาน</span>
+        <span class="nav-label">รายงาน เข้าร้าน</span>
       </a>
 
       <a href="/pages/admin/Adminannouncements.html"
          class="sidebar-nav-item"
-         title="ร้านค้า">
+         title="ประกาศ">
         <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">breaking_news</span>
+          <span class="material-symbols-outlined">campaign</span>
         </div>
-        <span class="nav-label">ประกาศ</span>
+        <span class="nav-label">ประชาสัมพันธ์</span>
       </a>
 
-      <a href="#"
+      <a href="/UnderDev.html"
          class="sidebar-nav-item"
-         title="สินค้า">
+         title="ขออนุมัติ">
         <div class="nav-icon-wrap">
           <span class="material-symbols-outlined">approval_delegation</span>
         </div>
-        <span class="nav-label">ขออนุมัติ</span>
+        <span class="nav-label">ขออนุมัติเอกสาร</span>
       </a>
 
       
       <a href="/pages/dashboard/RfmDashboard.html"
-      class="sidebar-nav-item"
-      title="วิเคราะห์">
+      class="sidebar-nav-item active"
+      title="วิเคราะห์(RFM)">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">bar_chart</span>
       </div>
-      <span class="nav-label">วิเคราะห์(RFM)</span>
+      <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
     </a>
     
     <!-- <a href="#"
@@ -97,16 +108,16 @@
 
 <!-- Collapse toggle button -->
 <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
-  <span class="material-symbols-outlined" id="collapseIcon">chevron_left</span>
+  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
 </div>
 
 <div class="sidebar-divider"></div>
     <!-- Logout -->
     <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
       <div class="nav-icon-wrap">
-        <span class="material-symbols-outlined">logout</span>
+        <span class="material-symbols-outlined" style="font-size:24px!important;color:white!important">logout</span>
       </div>
-      <span class="nav-label">ออก</span>
+      <span class="nav-label">ออกจากระบบ</span>
     </button>
 
   </aside>
@@ -615,25 +626,26 @@
 
 <script>
   // ── Sidebar collapse toggle ──
-  let sidebarExpanded = false;
+  const sidebar = document.getElementById('appSidebar');
+  const main = document.querySelector('.app-main');
+  const icon = document.getElementById('collapseIcon');
+
+  // ✅ Default: collapsed
+  sidebar.classList.add('collapsed');
 
   function toggleSidebar() {
-    const sidebar = document.getElementById('appSidebar');
-    const main = document.querySelector('.app-main');
-    const icon = document.getElementById('collapseIcon');
+    const isCollapsed = sidebar.classList.contains('collapsed');
 
-    sidebarExpanded = !sidebarExpanded;
-
-    if (sidebarExpanded) {
-      sidebar.style.width = '180px';
-      main.style.marginLeft = '180px';
-      icon.textContent = 'chevron_left';
-      // Show labels
-      sidebar.querySelectorAll('.nav-label').forEach(el => el.style.opacity = '1');
+    if (isCollapsed) {
+      // → ขยาย
+      sidebar.classList.remove('collapsed');
+      sidebar.classList.add('expanded');
+      if (main) main.style.marginLeft = '220px';
     } else {
-      sidebar.style.width = '64px';
-      main.style.marginLeft = '64px';
-      icon.textContent = 'chevron_right';
+      // → ย่อ
+      sidebar.classList.remove('expanded');
+      sidebar.classList.add('collapsed');
+      if (main) main.style.marginLeft = '64px';
     }
   }
 

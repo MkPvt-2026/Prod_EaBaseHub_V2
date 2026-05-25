@@ -427,12 +427,12 @@ function showRoleButtons(role) {
   }
 
   // Executive Dashboard: executive + manager + admin
-  if (isExecutive || isManager || isAdmin) {
+  if (isExecutive ||isAdmin) {
     showButton("executiveDashboardBtn");
   }
 
   // Admin QC Dashboard: adminQc + manager + admin
-  if (isAdminQc || isManager || isAdmin) {
+  if (isAdminQc || isAdmin) {
     showButton("adminQcDashboardBtn");
   }
 
