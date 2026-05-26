@@ -15,7 +15,6 @@
   <!-- <link rel="stylesheet" href="/css/base/sidebar-header.css"> -->
 </head>
 <body>
-
 <!-- ══════════════════════════════════════════════════
      APP LAYOUT WRAPPER
 ══════════════════════════════════════════════════ -->
@@ -33,7 +32,14 @@
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
         <span style="display:none">E</span>
       </div>
+
+
+       <div class="sidebar-brand-text">
+    <div class="sidebar-brand-title">EABaseHub</div>
+    <div class="sidebar-brand-sub">Claim System</div>
+  </div>
     </div>
+
 
     <!-- Navigation Items -->
     <nav class="sidebar-nav" id="sidebarNav">
@@ -56,7 +62,7 @@
         <span class="nav-label">รายงาน</span>
       </a>
 
-      <a href="/pages/executive/executive-Approval.html"
+      <a href="/UnderDev.html"
          class="sidebar-nav-item"
          title="ร้านค้า">
         <div class="nav-icon-wrap">
@@ -97,7 +103,7 @@
 
 <!-- Collapse toggle button -->
 <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
-  <span class="material-symbols-outlined" id="collapseIcon">chevron_left</span>
+  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
 </div>
 
 <div class="sidebar-divider"></div>
@@ -106,10 +112,11 @@
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">logout</span>
       </div>
-      <span class="nav-label">ออก</span>
+      <span class="nav-label">ออกจากระบบ</span>
     </button>
 
   </aside>
+
 
   <!-- ══════════════════════════════════════════════════
        MAIN CONTENT
@@ -141,14 +148,13 @@
           <span id="headerDateText">—</span>
         </div>
 
-        <!-- User avatar -->
+         <!-- User avatar -->
         <div class="header-user">
           <div class="header-user-avatar" id="userAvatar">
             <span class="material-symbols-outlined" style="font-size:16px!important;color:white!important">person</span>
           </div>
           <span class="header-user-name" id="userName">กำลังโหลด...</span>
         </div>
-
       </div>
     </header>
 
@@ -615,25 +621,26 @@
 
 <script>
   // ── Sidebar collapse toggle ──
-  let sidebarExpanded = false;
+  const sidebar = document.getElementById('appSidebar');
+  const main = document.querySelector('.app-main');
+  const icon = document.getElementById('collapseIcon');
+
+  // ✅ Default: collapsed
+  sidebar.classList.add('collapsed');
 
   function toggleSidebar() {
-    const sidebar = document.getElementById('appSidebar');
-    const main = document.querySelector('.app-main');
-    const icon = document.getElementById('collapseIcon');
+    const isCollapsed = sidebar.classList.contains('collapsed');
 
-    sidebarExpanded = !sidebarExpanded;
-
-    if (sidebarExpanded) {
-      sidebar.style.width = '180px';
-      main.style.marginLeft = '180px';
-      icon.textContent = 'chevron_left';
-      // Show labels
-      sidebar.querySelectorAll('.nav-label').forEach(el => el.style.opacity = '1');
+    if (isCollapsed) {
+      // → ขยาย
+      sidebar.classList.remove('collapsed');
+      sidebar.classList.add('expanded');
+      if (main) main.style.marginLeft = '220px';
     } else {
-      sidebar.style.width = '64px';
-      main.style.marginLeft = '64px';
-      icon.textContent = 'chevron_right';
+      // → ย่อ
+      sidebar.classList.remove('expanded');
+      sidebar.classList.add('collapsed');
+      if (main) main.style.marginLeft = '64px';
     }
   }
 

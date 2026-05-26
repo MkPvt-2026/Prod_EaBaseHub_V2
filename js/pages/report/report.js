@@ -15,6 +15,10 @@ let shopsMap = {};
 let productsMap = {};
 let categoriesCache = [];
 let currentViewReportId = null;
+let currentReplyReportId = null;
+let currentReplyToText = "";
+let currentReplyName = "";
+let isSubmittingReply = false;
 
 // รายการสินค้าที่เลือกแล้ว (in-memory)
 let selectedProducts = [];
@@ -980,10 +984,9 @@ async function handleView(id) {
 // (สอดคล้องกับ reportTracker.js)
 // =====================================================
 function getCommentRoleStyle(role) {
-  // ถ้ามี roleConfig.js โหลดมาแล้ว ให้ใช้จากที่นั่น
   if (typeof getRoleMeta === "function") {
     const meta = getRoleMeta(role);
-    // Map cssClass จาก reportTracker → inline style สำหรับใช้ใน modal
+
     const stylePresets = {
       "comment-admin": {
         bgColor: "#fde8e8",
@@ -999,9 +1002,15 @@ function getCommentRoleStyle(role) {
       },
       "comment-manager": {
         bgColor: "#e8f4fd",
-        borderColor: "#17a2b8",
-        badgeGrad: "linear-gradient(135deg,#17a2b8,#138496)",
+        borderColor: "#0a51e9",
+        badgeGrad: "linear-gradient(135deg,#0a51e9,#0841b8)",
         icon: "work",
+      },
+      "comment-sales": {
+        bgColor: "#ecfdf5",
+        borderColor: "#10b981",
+        badgeGrad: "linear-gradient(135deg,#10b981,#047857)",
+        icon: "support_agent",
       },
       "comment-user": {
         bgColor: "#f5f5f5",
@@ -1010,21 +1019,25 @@ function getCommentRoleStyle(role) {
         icon: "person",
       },
     };
-    const preset = stylePresets[meta.cssClass] || stylePresets["comment-user"];
-    // ลบ emoji ออกจาก label เผื่อ roleConfig ส่ง emoji มา
-    const cleanLabel = (meta.labelShort || meta.label || "")
+
+    const preset =
+      stylePresets[meta.cssClass] ||
+      stylePresets[`comment-${role}`] ||
+      stylePresets["comment-user"];
+
+    const cleanLabel = (meta.labelShort || meta.label || getDefaultLabel(role))
       .replace(
         /[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F680}-\u{1F6FF}]/gu,
         "",
       )
       .trim();
+
     return {
       label: cleanLabel || getDefaultLabel(role),
       ...preset,
     };
   }
 
-  // Fallback ถ้าไม่ได้โหลด roleConfig.js
   switch (role) {
     case "admin":
       return {
@@ -1034,6 +1047,7 @@ function getCommentRoleStyle(role) {
         borderColor: "#dc2626",
         badgeGrad: "linear-gradient(135deg,#dc2626,#991b1b)",
       };
+
     case "executive":
       return {
         label: "Executive",
@@ -1042,14 +1056,25 @@ function getCommentRoleStyle(role) {
         borderColor: "#f0ad4e",
         badgeGrad: "linear-gradient(135deg,#f0ad4e,#ec971f)",
       };
+
     case "manager":
       return {
         label: "Manager",
         icon: "star_half",
         bgColor: "#e8f4fd",
-        borderColor: "#17a2b8",
-        badgeGrad: "linear-gradient(135deg,#17a2b8,#138496)",
+        borderColor: "#0a51e9",
+        badgeGrad: "linear-gradient(135deg,#0a51e9,#0841b8)",
       };
+
+    case "sales":
+      return {
+        label: "Sale",
+        icon: "support_agent",
+        bgColor: "#ecfdf5",
+        borderColor: "#10b981",
+        badgeGrad: "linear-gradient(135deg,#10b981,#047857)",
+      };
+
     default:
       return {
         label: "User",
@@ -1061,7 +1086,6 @@ function getCommentRoleStyle(role) {
   }
 }
 
-// Helper สำหรับ label default
 function getDefaultLabel(role) {
   const labels = {
     admin: "แอดมิน",
@@ -1072,7 +1096,6 @@ function getDefaultLabel(role) {
   };
   return labels[role] || "ผู้ใช้";
 }
-
 // =====================================================
 // LOAD MANAGER COMMENTS — highlight ข้อความใหม่
 // รองรับ 4 roles (admin / executive / manager / user)
@@ -1084,7 +1107,17 @@ async function loadManagerComments(reportId) {
   try {
     const { data } = await supabaseClient
       .from("report_comments")
-      .select("comment, created_at, profiles(display_name, role)")
+      .select(`
+  id,
+  report_id,
+  manager_id,
+  comment,
+  created_at,
+  profiles:manager_id (
+    display_name,
+    role
+  )
+`)
       .eq("report_id", reportId)
       .order("created_at", { ascending: true });
 
@@ -1099,8 +1132,12 @@ async function loadManagerComments(reportId) {
 
     container.innerHTML = data
       .map((c) => {
-        const role = c.profiles?.role || "user";
-        const displayName = c.profiles?.display_name || "ผู้ใช้";
+        const profile = Array.isArray(c.profiles)
+  ? c.profiles[0]
+  : c.profiles;
+
+const role = profile?.role || "user";
+const displayName = profile?.display_name || "ผู้ใช้";
         const isNew = lastRead ? new Date(c.created_at) > lastRead : true;
 
         // ดึง style ตาม role (4 tier)
@@ -1170,6 +1207,38 @@ function closeModal() {
   }
 }
 
+function renderCommentText(rawText) {
+  const text = String(rawText || "");
+
+  if (!text.startsWith("↳ ตอบกลับ ")) {
+    return `<div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${escapeHtml(text)}</div>`;
+  }
+
+  const lines = text.split("\n");
+  const replyLine = lines[0] || "";
+  const mainText = lines.slice(1).join("\n");
+
+  return `
+    <div style="
+      margin-bottom:6px;
+      padding:6px 8px;
+      border-left:3px solid #94a3b8;
+      background:#f8fafc;
+      border-radius:6px;
+      font-size:12px;
+      color:#64748b;
+    ">
+      ${escapeHtml(replyLine)}
+    </div>
+
+    <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">
+      ${escapeHtml(mainText)}
+    </div>
+  `;
+}
+
+
+
 async function loadManagerCommentsForGroup(reportIds) {
   const container = document.getElementById("m-manager-comments");
   if (!container) return;
@@ -1177,7 +1246,19 @@ async function loadManagerCommentsForGroup(reportIds) {
   try {
     const { data } = await supabaseClient
       .from("report_comments")
-      .select("report_id, comment, created_at, profiles(display_name, role)")
+      .select(
+        `
+  id,
+  report_id,
+  manager_id,
+  comment,
+  created_at,
+  profiles:manager_id (
+    display_name,
+    role
+  )
+`,
+      )
       .in("report_id", reportIds)
       .order("created_at", { ascending: true });
 
@@ -1190,8 +1271,12 @@ async function loadManagerCommentsForGroup(reportIds) {
 
     container.innerHTML = data
       .map((c) => {
-        const role = c.profiles?.role || "user";
-        const displayName = c.profiles?.display_name || "ผู้ใช้";
+        const profile = Array.isArray(c.profiles)
+  ? c.profiles[0]
+  : c.profiles;
+
+const role = profile?.role || "user";
+const displayName = profile?.display_name || "ผู้ใช้";
         const lastRead = reads[c.report_id]
           ? new Date(reads[c.report_id])
           : null;
@@ -1221,7 +1306,15 @@ async function loadManagerCommentsForGroup(reportIds) {
             ${newBadge}
             <span style="color:#999;margin-left:auto;">${formatDateTime(c.created_at)}</span>
           </div>
-          <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${escapeHtml(c.comment)}</div>
+          <div style="font-size:13px;color:#333;white-space:pre-wrap;word-break:break-word;">${renderCommentText(c.comment)}</div>
+
+<div style="display:flex;justify-content:flex-end;margin-top:6px;">
+  <button type="button"
+    onclick="startReplyComment('${c.report_id}', '${escapeJs(displayName)}', '${role}', '${escapeJs(c.comment)}')"
+    style="border:0;background:rgba(255,255,255,.8);padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer;color:#0f766e;">
+    ตอบกลับ
+  </button>
+</div>
         </div>`;
       })
       .join("");
@@ -1529,3 +1622,163 @@ function setupLogout() {
     window.location.href = "/pages/auth/login.html";
   });
 }
+
+// ตอบกลับ คอมเมนท์
+
+function escapeJs(str) {
+  return String(str || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "&quot;")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "");
+}
+
+
+
+function startReplyComment(reportId, displayName, role = "user", replyText = "") {
+  console.log("reply target:", { reportId, displayName, role, replyText });
+
+  currentReplyReportId = reportId;
+  currentReplyName = displayName || "ผู้ใช้";
+  currentReplyToText = replyText || "";
+
+  const box = document.getElementById("commentReplyBox");
+  const target = document.getElementById("replyTargetText");
+  const text = document.getElementById("replyCommentText");
+
+  const style = getCommentRoleStyle(role);
+
+  if (box) box.style.display = "block";
+
+  if (target) {
+    target.innerHTML = `
+      <div style="
+        font-size:12px;
+        color:#64748b;
+        margin-bottom:6px;
+      ">
+        กำลังตอบกลับ
+      </div>
+
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+      ">
+        <span class="reply-role-name" style="
+  background:${style.badgeGrad};
+          color:#fff;
+          padding:3px 10px;
+          border-radius:999px;
+          font-size:11px;
+          font-weight:600;
+        ">
+          ${style.label}
+        </span>
+
+        <strong>
+          ${escapeHtml(currentReplyName)}
+        </strong>
+      </div>
+
+      <div style="
+        margin-top:8px;
+        padding:8px 10px;
+        border-left:3px solid #cbd5e1;
+        background:#f8fafc;
+        border-radius:6px;
+        color:#475569;
+        font-size:12px;
+      ">
+        ${escapeHtml(currentReplyToText).slice(0, 80)}
+      </div>
+    `;
+  }
+
+  if (text) {
+    text.value = "";
+    text.focus();
+  }
+}
+
+function cancelReplyComment() {
+  currentReplyReportId = null;
+  currentReplyName = "";
+
+  const box = document.getElementById("commentReplyBox");
+  const text = document.getElementById("replyCommentText");
+
+  if (box) box.style.display = "none";
+  if (text) text.value = "";
+}
+
+async function submitReplyComment() {
+  if (isSubmittingReply) return; // กันกดเบิ้ล
+
+  const text = document.getElementById("replyCommentText");
+  const comment = text?.value?.trim();
+
+  if (!currentReplyReportId) {
+    showToast("ไม่พบรายการที่จะตอบกลับ");
+    return;
+  }
+
+  if (!comment) {
+    showToast("กรุณาพิมพ์ข้อความก่อนส่ง");
+    return;
+  }
+
+  isSubmittingReply = true;
+
+  const submitBtn = document.querySelector("#commentReplyBox button:last-child");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "กำลังส่ง...";
+  }
+
+  try {
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+      alert("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+      return;
+    }
+
+   const replyRoleBadge = document.querySelector("#replyTargetText .reply-role-name");
+
+const replyRole =
+  replyRoleBadge?.textContent?.trim() || "ผู้ใช้";
+
+const finalComment = currentReplyToText
+  ? `↳ ตอบกลับ ${replyRole}: ${currentReplyToText}\n${comment}`
+  : comment;
+
+const { error } = await supabaseClient.from("report_comments").insert({
+  report_id: currentReplyReportId,
+  manager_id: session.user.id,
+  comment: finalComment,
+});
+
+    if (error) throw error;
+
+    showToast("ส่งตอบกลับแล้ว");
+    cancelReplyComment();
+
+    await loadManagerCommentsForGroup([currentReplyReportId]);
+  } catch (e) {
+    console.error("submitReplyComment error:", e);
+    alert("ส่งตอบกลับไม่สำเร็จ: " + e.message);
+  } finally {
+    isSubmittingReply = false;
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "ส่งตอบกลับ";
+    }
+  }
+}
+

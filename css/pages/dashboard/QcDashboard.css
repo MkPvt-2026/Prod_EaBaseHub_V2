@@ -33,6 +33,13 @@
   --ea-side-bg2:  #f97316;
   --ea-side-hover: rgba(255,255,255,0.14);
 
+  /* Admin QC — ส้ม */
+  --adminQc:        #F97316;
+  --adminQc-hover:  #EA580C;
+  --adminQc-soft:   #FFF3E8;
+  --adminQc-border: #FDBA74;
+  --adminQc-text:   #9A3412;
+
   /* ROLE COLORS */
   --role-color:  #f97316;
   --role-hover:  #ea580c;

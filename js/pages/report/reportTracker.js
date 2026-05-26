@@ -17,6 +17,38 @@ let profilesMap = {};
 let shopsMap = {};
 let productsMap = {};
 let commentCountsMap = {};
+let replyCountsMap = {};
+
+const REPLY_READ_KEY = "ea_reply_reads";
+let replyUnreadMap = {};
+
+function getReplyReads() {
+  try {
+    return JSON.parse(localStorage.getItem(REPLY_READ_KEY) || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveReplyReads(reads) {
+  localStorage.setItem(REPLY_READ_KEY, JSON.stringify(reads));
+}
+
+function markRepliesAsRead(reportIds) {
+  const reads = getReplyReads();
+  const now = new Date().toISOString();
+
+  (reportIds || []).forEach((id) => {
+    reads[id] = now;
+    replyUnreadMap[id] = 0;
+  });
+
+  saveReplyReads(reads);
+}
+
+
+let isSavingComment = false;
+let isSavingPopupComment = false;
 
 let dateStart = null;
 let dateEnd = null;
@@ -488,6 +520,40 @@ async function loadCommentCounts(reportIds) {
   }
 }
 
+
+async function loadReplyCounts(reportIds) {
+  replyCountsMap = {};
+  replyUnreadMap = {};
+
+  if (!reportIds || !reportIds.length) return;
+
+  const reads = getReplyReads();
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("report_comments")
+      .select("report_id, created_at, manager_id, profiles:manager_id(role)")
+      .in("report_id", reportIds);
+
+    if (error) throw error;
+
+    (data || []).forEach((c) => {
+      const profile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+      const role = profile?.role;
+
+      if (role === "sales" || role === "user") {
+        replyCountsMap[c.report_id] = (replyCountsMap[c.report_id] || 0) + 1;
+
+        const lastRead = reads[c.report_id];
+        if (!lastRead || new Date(c.created_at) > new Date(lastRead)) {
+          replyUnreadMap[c.report_id] = (replyUnreadMap[c.report_id] || 0) + 1;
+        }
+      }
+    });
+  } catch (e) {
+    console.error("❌ loadReplyCounts error:", e);
+  }
+}
 // =====================================================
 // 🔗 GROUP REPORTS
 // =====================================================
@@ -562,6 +628,26 @@ function getGroupCommentCount(group) {
   return total;
 }
 
+
+function getGroupReplyCount(group) {
+  let total = 0;
+
+  for (const rid of group.reportIds) {
+    total += replyCountsMap[rid] || 0;
+  }
+
+  return total;
+}
+
+function getGroupUnreadReplyCount(group) {
+  let total = 0;
+
+  for (const rid of group.reportIds) {
+    total += replyUnreadMap[rid] || 0;
+  }
+
+  return total;
+}
 // =====================================================
 // 📊 LOAD REPORTS
 // =====================================================
@@ -590,7 +676,12 @@ async function loadReports() {
       return t >= startTime && t <= endTime;
     });
 
-    await loadCommentCounts(allReports.map((r) => r.id));
+    const reportIds = allReports.map((r) => r.id);
+
+await Promise.all([
+  loadCommentCounts(reportIds),
+  loadReplyCounts(reportIds),
+]);
 
     groupedReports = groupReportRows(allReports);
     filteredGroups = [...groupedReports];
@@ -929,15 +1020,41 @@ function renderReports() {
       }
 
       const commentCount = getGroupCommentCount(g);
-      const commentBadge =
-        commentCount > 0
-          ? `
-        <span class="badge-comment" title="${commentCount} ความคิดเห็น">
-          <span class="material-symbols-outlined icon-sm icon-blue">chat_bubble</span>
-          ${commentCount}
+      const replyCount = getGroupReplyCount(g);
+      const unreadReplyCount = getGroupUnreadReplyCount(g);
+      const commentBadge = `
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+
+    ${
+      commentCount > 0
+        ? `
+      <span class="badge-comment" title="${commentCount} ความคิดเห็น">
+        <span class="material-symbols-outlined icon-sm icon-blue">
+          chat_bubble
         </span>
-      `
-          : "";
+        ${commentCount}
+      </span>
+    `
+        : ""
+    }
+
+    ${
+  replyCount > 0
+    ? `
+  <span class="badge-comment badge-reply ${unreadReplyCount > 0 ? "has-new-reply" : ""}"
+        title="${replyCount} การตอบกลับ${unreadReplyCount > 0 ? ` • ใหม่ ${unreadReplyCount}` : ""}">
+    ${unreadReplyCount > 0 ? `<span class="reply-pulse-dot"></span>` : ""}
+    <span class="material-symbols-outlined icon-sm">
+      reply
+    </span>
+    ${replyCount}
+  </span>
+`
+    : ""
+}
+
+  </div>
+`;
 
       const provinceHtml = province
         ? `
@@ -1318,14 +1435,18 @@ function closeCommentPopup() {
 // 🆕 SAVE COMMENT (popup version)
 // =====================================================
 async function savePopupComment() {
+  if (isSavingPopupComment) return;
   if (!currentPopupReportId) return;
 
   const input = document.getElementById("popupCommentInput");
   const text = input?.value?.trim();
+
   if (!text) {
     showToast("⚠️ กรุณาพิมพ์ความคิดเห็น");
     return;
   }
+
+  isSavingPopupComment = true;
 
   try {
     const session = await getSessionSafely();
@@ -1348,11 +1469,9 @@ async function savePopupComment() {
     showToast("💬 บันทึกความคิดเห็นแล้ว");
     input.value = "";
 
-    // อัปเดต comment count ใน map
     commentCountsMap[currentPopupReportId] =
       (commentCountsMap[currentPopupReportId] || 0) + 1;
 
-    // โหลด comments ใหม่
     const group = groupedReports.find((g) => g.key === currentPopupGroupKey);
     if (group) {
       await loadCommentsIntoElement(
@@ -1361,13 +1480,18 @@ async function savePopupComment() {
       );
     }
 
-    // refresh table & summary
     if (currentSalesModalId) renderSalesTable(currentSalesModalId);
+
+    await loadReplyCounts(allReports.map((r) => r.id));
+
+
     updateSummaryCards();
     renderReports();
   } catch (e) {
     console.error("❌ savePopupComment error:", e);
     showToast("❌ เกิดข้อผิดพลาด: " + e.message);
+  } finally {
+    isSavingPopupComment = false;
   }
 }
 
@@ -1437,6 +1561,12 @@ async function openGroupModal(groupKey) {
     showToast("❌ ไม่พบรายงาน");
     return;
   }
+
+  // mark ว่าอ่านแล้ว
+markRepliesAsRead(group.reportIds);
+
+// refresh badge
+renderReports();
 
   currentGroupKey = groupKey;
   currentGroupRows = allReports.filter((r) => group.reportIds.includes(r.id));
@@ -1521,6 +1651,75 @@ async function openGroupModal(groupKey) {
   }
 }
 
+
+
+function renderCommentText(rawText) {
+  const text = String(rawText || "");
+
+  if (!text.startsWith("↳ ตอบกลับ ")) {
+    return `
+      <div style="
+        font-size:13px;
+        color:#334155;
+        line-height:1.5;
+        white-space:pre-wrap;
+        word-break:break-word;
+        margin-top:4px;
+      ">
+        ${escapeHtml(text)}
+      </div>
+    `;
+  }
+
+  const lines = text.split("\n");
+
+  const replyLine = lines[0] || "";
+  const mainText = lines.slice(1).join("\n");
+
+  return `
+    <div style="
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:6px;
+    ">
+
+      <div style="
+        display:inline-flex;
+        align-items:center;
+        width:fit-content;
+        max-width:100%;
+        padding:6px 10px;
+        border-left:3px solid #94a3b8;
+        background:#f8fafc;
+        border-radius:8px;
+        font-size:12px;
+        color:#64748b;
+        line-height:1.4;
+        word-break:break-word;
+      ">
+       ${escapeHtml(replyLine)
+  .replace("Admin", "<strong style='color:#dc2626;'>Admin</strong>")
+  .replace("Executive", "<strong style='color:#f59e0b;'>Executive</strong>")
+  .replace("Manager", "<strong style='color:#0891b2;'>Manager</strong>")
+  .replace("Sale", "<strong style='color:#16a34a;'>Sale</strong>")
+}
+      </div>
+
+      <div style="
+        font-size:13px;
+        color:#1e293b;
+        line-height:1.35;
+        white-space:pre-wrap;
+        word-break:break-word;
+        margin-top:1px;
+      ">
+        ${escapeHtml(mainText)}
+      </div>
+
+    </div>
+  `;
+}
 // =====================================================
 // 💬 LOAD COMMENTS — generic (เพิ่ม element target)
 // =====================================================
@@ -1583,7 +1782,7 @@ async function loadCommentsIntoElement(reportIds, container) {
             <span class="comment-role-badge ${roleClass}">${roleBadge}</span>
             <span class="comment-date">${formatDateTime(c.created_at)}</span>
           </div>
-          <div class="comment-text">${escapeHtml(c.comment)}</div>
+          <div class="comment-text">${renderCommentText(c.comment)}</div>
         </div>`;
       })
       .join("");
@@ -1606,14 +1805,18 @@ async function loadCommentsForGroup(reportIds) {
 // 💬 SAVE COMMENT (เดิม - list view modal)
 // =====================================================
 async function saveComment() {
+  if (isSavingComment) return;
   if (!currentReportId) return;
 
   const input = document.getElementById("commentInput");
   const text = input?.value?.trim();
+
   if (!text) {
     showToast("⚠️ กรุณาพิมพ์ความคิดเห็น");
     return;
   }
+
+  isSavingComment = true;
 
   try {
     const session = await getSessionSafely();
@@ -1644,14 +1847,17 @@ async function saveComment() {
       await loadCommentsForGroup(group.reportIds);
     }
 
+    await loadReplyCounts(allReports.map((r) => r.id));
+
     updateSummaryCards();
     renderReports();
   } catch (e) {
     console.error("❌ saveComment error:", e);
     showToast("❌ เกิดข้อผิดพลาด: " + e.message);
+  } finally {
+    isSavingComment = false;
   }
 }
-
 // =====================================================
 // ✅ MARK AS READ (เดิม)
 // =====================================================

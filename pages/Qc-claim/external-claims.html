@@ -35,98 +35,170 @@
   </head>
   <body class="role-adminQc">
 
+ <body>
 
+<!-- ══════════════════════════════════════════════════
+     APP LAYOUT WRAPPER
+══════════════════════════════════════════════════ -->
+<div class="app-layout">
 
-    <!-- MINI SIDEBAR -->
-    <aside class="ea-sidebar" id="eaSidebar">
-      <div class="ea-logo">
-        <img src="/assets/icons/icon-192.png" alt="logo" />
+  <!-- ══════════════════════════════════════════════════
+       🆕 SIDEBAR
+  ══════════════════════════════════════════════════ -->
+  <aside class="app-sidebar" id="appSidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <span style="display:none">E</span>
       </div>
+       <div class="sidebar-brand-text">
+    <div class="sidebar-brand-title">EABaseHub</div>
+    <div class="sidebar-brand-sub">Claim System</div>
+  </div>
+    </div>
 
-      <div class="mini-brand-text">
-        <strong>EABaseHub</strong>
-        <span>Claim System</span>
-      </div>
+    <!-- Navigation Items -->
+    <nav class="sidebar-nav" id="sidebarNav">
 
-      <nav class="ea-menu">
-      <a class="ea-link" href="/pages/dashboard/QcDashboard.html" title="Dashboard">
-        <span class="material-symbols-outlined">home</span>
-        <span class="ea-text">หน้าหลัก</span>
-      </a>
-      <a class="ea-link" href="/pages/Qc-claim/adminQc.html" title="Claims QC">
-        <span class="material-symbols-outlined">fact_check</span>
-        <span class="ea-text">จัดการเคลม</span>
-      </a>
-      <a class="ea-link active" href="/pages/Qc-claim/external-claims.html" title="เคลมลูกค้า">
-        <span class="material-symbols-outlined">assignment_return</span>
-        <span class="ea-text">เคลม-ภายนอก</span>
-      </a>
-      <a class="ea-link" href="/UnderDev.html" title="เคลมภายใน">
-        <span class="material-symbols-outlined">inventory_2</span>
-        <span class="ea-text">เคลม-ภายใน</span>
-      </a>
-    </nav>
-
-      <button
-        class="ea-toggle"
-        id="eaSidebarToggle"
-        type="button"
-        aria-label="ย่อ/ขยาย sidebar"
-      >
-        <span class="material-symbols-outlined">chevron_right</span>
-      </button>
-
-      <button class="ea-user" id="logoutBtn" type="button" title="Logout">
-        <span class="material-symbols-outlined">logout</span>
-        <span class="ea-text">Logout</span>
-      </button>
-    </aside>
-
-
-    
-
-    <!-- PAGE HEADER -->
-    <header class="app-header">
-      <div class="app-header-left">
-        <div class="app-header-icon">
-          <span class="material-symbols-outlined">assignment</span>
+      <a href="/pages/dashboard/QcDashboard.html"
+         class="sidebar-nav-item"
+         title="หน้าหลัก">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">home</span>
         </div>
-        <div class="app-header-text">
-          <h1>จัดการเคลมสินค้า(ภายนอก)</h1>
-          <p>รับเคลม • ตรวจสอบ • อนุมัติ • บันทึกผล • Export</p>
+        <span class="nav-label">หน้าหลัก</span>
+      </a>
+
+      <a href="/pages/Qc-claim/adminQc.html" class="sidebar-nav-item" title="จัดการเคลม">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">fact_check</span>
         </div>
-      </div>
+        <span class="nav-label">จัดการเคลม</span>     
+      </a>
 
-      <div class="app-header-date" id="appHeaderDate">
-        <span class="material-symbols-outlined">calendar_month</span>
-        <span id="appHeaderDateText">—</span>
-      </div>
+      <a href="/pages/Qc-claim/external-claims.html"
+         class="sidebar-nav-item"
+         title="เคลมลูกค้า">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">assignment_return</span>
+        </div>
+        <span class="nav-label">เคลม-ภายนอก</span>
+      </a>
 
+      <a href="/UnderDev.html"
+         class="sidebar-nav-item"
+         title="เคลมภายใน">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">inventory_2</span>
+        </div>
+        <span class="nav-label">เคลมภายใน</span>
+      </a>
 
-      <div class="app-header-user">
-        <div class="user-avatar" id="userAvatar">👤</div>
-        <div class="user-name" id="userName">กำลังโหลด...</div>
-      </div>
+      <a href="/UnderDev.html"
+         class="sidebar-nav-item"
+         title="ขออนุมัติ">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">approval_delegation</span>
+        </div>
+        <span class="nav-label">ขออนุมัติเอกสาร</span>
+      </a>
 
       
+      <!-- <a href="/pages/dashboard/RfmDashboard.html"
+      class="sidebar-nav-item active"
+      title="วิเคราะห์(RFM)">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">bar_chart</span>
+      </div>
+      <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
+    </a> -->
+    
+    <!-- <a href="#"
+    class="sidebar-nav-item"
+    title="ทีมงาน">
+    <div class="nav-icon-wrap">
+      <span class="material-symbols-outlined">groups</span>
+    </div>
+    <span class="nav-label">ทีมงาน</span>
+  </a> -->
+  
+</nav>
+
+<!-- Collapse toggle button -->
+<div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
+</div>
+
+<div class="sidebar-divider"></div>
+    <!-- Logout -->
+    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined" style="font-size:24px!important;color:white!important">logout</span>
+      </div>
+      <span class="nav-label">ออกจากระบบ</span>
+    </button>
+
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════════════════ -->
+  <div class="app-main">
+
+    <!-- ══════════════════════════════════════════════════
+         🆕 HEADER (White)
+    ══════════════════════════════════════════════════ -->
+    <header class="app-header">
+
+      <!-- Left: System name + subtitle -->
+      <div class="header-left">
+        <div class="header-system-name">
+          <div class="header-icon">
+            <span class="material-symbols-outlined">assignment</span>
+          </div>
+          รายงานการเข้าร้านค้า
+        </div>
+        <div class="header-subtitle">ดูรายงานทั้งหมด • Comment • ติดตามทีมงาน</div>
+      </div>
+
+      <!-- Right: date + action + user -->
+      <div class="header-right">
+
+        <!-- Current date pill -->
+        <div class="header-date-pill" id="headerDatePill">
+          <span class="material-symbols-outlined">calendar_month</span>
+          <span id="headerDateText">—</span>
+        </div>
+
+        <!-- User avatar -->
+        <div class="header-user">
+          <div class="header-user-avatar" id="userAvatar">
+            <span class="material-symbols-outlined" style="font-size:16px!important;color:white!important">person</span>
+          </div>
+          <span class="header-user-name" id="userName">กำลังโหลด...</span>
+        </div>
+
+      </div>
     </header>
 
-    <!-- MAIN -->
-    <main class="container">
-      <!-- BREADCRUMB -->
-      <nav class="breadcrumb-bar" aria-label="breadcrumb">
-        <a href="/pages/dashboard/QcDashboard.html" class="breadcrumb-item home">
-          <span class="material-symbols-outlined">home</span>
-          <span>หน้าหลัก</span>
-        </a>
+    <!-- Breadcrumb -->
+    <div class="app-breadcrumb">
+      <a href="/pages/dashboard/QcDashboard.html">
+        <span class="material-symbols-outlined">home</span>
+        หน้าหลัก
+      </a>
+      <span class="bc-sep">›</span>
+      <span class="bc-current">
+        <span class="material-symbols-outlined">chevron_right</span>
+         เคลมลูกค้า (External)
+      </span>
+    </div>
 
-        <span class="breadcrumb-sep">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </span>
-        <span class="breadcrumb-item current" aria-current="page">
-          เคลมลูกค้า (External)
-        </span>
-      </nav>
+ <main class="container">
+   
 
       <!-- SUMMARY CARDS -->
       <div class="qc-summary">
@@ -602,5 +674,57 @@
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
     <script src="/js/core/themeToggle.js"></script>
+
+
+
+<script>
+  // ── Sidebar collapse toggle ──
+  const sidebar = document.getElementById('appSidebar');
+  const main = document.querySelector('.app-main');
+  const icon = document.getElementById('collapseIcon');
+
+  // ✅ Default: collapsed
+  sidebar.classList.add('collapsed');
+
+  function toggleSidebar() {
+    const isCollapsed = sidebar.classList.contains('collapsed');
+
+    if (isCollapsed) {
+      // → ขยาย
+      sidebar.classList.remove('collapsed');
+      sidebar.classList.add('expanded');
+      if (main) main.style.marginLeft = '220px';
+    } else {
+      // → ย่อ
+      sidebar.classList.remove('expanded');
+      sidebar.classList.add('collapsed');
+      if (main) main.style.marginLeft = '64px';
+    }
+  }
+
+  // ── Set active nav based on current URL ──
+  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    if (item.getAttribute('href') === window.location.pathname) {
+      document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    }
+  });
+
+  // ── Header date display ──
+  function updateHeaderDate() {
+    const el = document.getElementById('headerDateText');
+    if (!el) return;
+    const now = new Date();
+    el.textContent = now.toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+  updateHeaderDate();
+</script>
+
+
+
   </body>
 </html>
