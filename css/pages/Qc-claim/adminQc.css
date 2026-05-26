@@ -1,17 +1,16 @@
 /* =========================================================
-   ADMIN QC HUB — Complete Stylesheet (v4.3 — aligned with HTML)
+   ADMIN QC HUB — Complete Stylesheet (v5.0 — Layout Fixed)
    Role:  adminQc  (โทนส้ม #F97316)
    Theme: Light only
    Font:  Kanit (display) + IBM Plex Sans Thai (body)
 
-   ✅ v4.3 — ปรับให้ตรงกับ HTML จริง:
-   - Sidebar: ใช้ .ea-sidebar > .ea-logo + .mini-brand-text + .ea-menu
-     + .ea-user (logout) + .ea-toggle (toggle button)
-   - Page Shell: .page-shell ครอบ header + main
-   - Header: fixed bar (.app-header) มี left + .app-header-icon
-     + .app-header-text(h1+p) + .app-header-date + .app-header-user
-   - Breadcrumb (.breadcrumb-bar) ติดกับ header เป็นแถบเต็ม
-   - คงโทนสีส้มเดิมไว้
+   ✅ v5.0 — แก้ layout ให้ตรงกับ HTML จริง:
+   - ใช้ .app-layout (flex) > .app-sidebar + .app-main
+   - Sidebar เป็น flex item ไม่ต้อง fixed/margin-left
+   - .app-main จัดการ width เอง (flex:1) — ไม่ต้อง margin offset
+   - .app-header, .app-breadcrumb, .container อยู่ใน .app-main แล้ว
+     ไม่ต้องเสียเวลา offset margin-left
+   - Responsive: < 768px ให้ sidebar fixed overlay
    ========================================================= */
 
 /* =========================================================
@@ -154,27 +153,51 @@ input, select, textarea { font-family: inherit; }
 img { max-width: 100%; display: block; }
 
 
+/* =========================================================
+   3. APP LAYOUT (Flex shell)
+   ========================================================= */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;          /* ✅ สำคัญ! กัน flex item overflow */
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+  position: relative;
+  /* overflow-x: hidden; */
+}
+
 
 /* =====================================================
-   5. SIDEBAR
+   5. SIDEBAR (เป็น flex item — ไม่ใช่ fixed อีกต่อไป)
    ===================================================== */
 .app-sidebar {
-  width: 64px;
+  width: var(--side-mini);
   min-height: 100vh;
-  position: fixed;
-  inset: 0 auto 0 0;
+  flex-shrink: 0;        /* ✅ ไม่ให้ย่อตัวเอง */
+  position: sticky;       /* ✅ sticky แทน fixed */
+  top: 0;
+  align-self: flex-start;
   z-index: 400;
   background: linear-gradient(180deg, var(--ea-side-bg) 0%, var(--ea-side-bg-2) 100%);
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  box-shadow: 2px 0 14px rgba(7, 89, 133, 0.24);
+  box-shadow: 2px 0 14px rgba(249, 115, 22, 0.24);
   transition: width var(--t-base) var(--ease);
   overflow: visible;
+  height: 100vh;
 }
 
-.app-sidebar.collapsed { width: 64px; }
-.app-sidebar.expanded  { width: 220px; }
+.app-sidebar.collapsed { width: var(--side-mini); }
+.app-sidebar.expanded  { width: var(--side-full); }
+
 
 /* ── SIDEBAR LOGO ── */
 .sidebar-logo {
@@ -186,19 +209,18 @@ img { max-width: 100%; display: block; }
   flex-shrink: 0;
   overflow: hidden;
   box-sizing: border-box;
-  position: relative;              /* ✅ เพิ่ม */
+  position: relative;
   transition: padding var(--t-base) var(--ease),
               gap var(--t-base) var(--ease);
 }
 
-/* ✅ เพิ่มเส้นใต้ logo (เฉพาะตอน expanded) */
 .app-sidebar.expanded .sidebar-logo::after {
   content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 32px);        /* เว้นซ้าย-ขวาด้านละ 16px */
+  width: calc(100% - 32px);
   height: 1px;
   background: rgba(255, 255, 255, 0.25);
 }
@@ -326,7 +348,7 @@ img { max-width: 100%; display: block; }
 }
 
 .nav-icon-wrap {
-  width: 64px;
+  width: var(--side-mini);
   height: 100%;
   display: flex;
   align-items: center;
@@ -408,8 +430,12 @@ img { max-width: 100%; display: block; }
   background: rgba(255, 255, 255, 0.12);
 }
 
+.sidebar-logout > .nav-icon-wrap {
+  width: var(--side-mini);
+}
+
 .sidebar-logout > .material-symbols-outlined {
-  width: 64px;
+  width: var(--side-mini);
   font-size: 20px !important;
   color: inherit !important;
   flex-shrink: 0;
@@ -445,8 +471,8 @@ img { max-width: 100%; display: block; }
   position: absolute;
   top: 76px;
   right: -11px;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   background: var(--ea-side-bg-2);
   border: 1.5px solid #ffffff;
   border-radius: var(--r-full);
@@ -455,7 +481,7 @@ img { max-width: 100%; display: block; }
   justify-content: center;
   cursor: pointer;
   color: white;
-  box-shadow: 0 4px 12px rgba(7, 89, 133, 0.25),
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35),
               0 2px 4px rgba(0, 0, 0, 0.08);
   transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
   z-index: 500;
@@ -464,7 +490,7 @@ img { max-width: 100%; display: block; }
 .sidebar-collapse-btn:hover {
   transform: scale(1.08);
   background: var(--ea-side-active);
-  box-shadow: 0 6px 16px rgba(7, 89, 133, 0.45);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.5);
 }
 
 .sidebar-collapse-btn:active {
@@ -509,20 +535,21 @@ img { max-width: 100%; display: block; }
 
 
 /* =====================================================
-   6. TOP HEADER
+   6. TOP HEADER (อยู่ใน .app-main แล้ว — ไม่ต้อง offset)
    ===================================================== */
 .app-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 300;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   padding: 0 24px;
-  height: 72px;
+  height: var(--header-h);
   display: flex;
   align-items: center;
   gap: 16px;
+  width: 100%;
 }
 
 .header-left {
@@ -580,62 +607,23 @@ img { max-width: 100%; display: block; }
   gap: 6px;
   background: var(--adminQc-soft);
   border: 1px solid var(--adminQc-border);
-  color: var(--adminQc  -text);
+  color: var(--adminQc-text);
   padding: 8px 14px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .header-date-pill .material-symbols-outlined {
   font-size: 15px !important;
   color: var(--adminQc) !important;
-  
-}
-
-.header-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--executive);
-  color: white;
-  border: none;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-family: "Kanit", sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
-}
-
-.header-action-btn:hover {
-  background: var(--executive-hover);
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.35);
-  transform: translateY(-1px);
-}
-
-.header-action-btn .material-symbols-outlined {
-  font-size: 16px !important;
-  color: white !important;
-}
-
-.header-dev-badge {
-  background: #f97316;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
 }
 
 .header-user {
   display: flex;
   align-items: center;
   gap: 8px;
-  
 }
 
 .header-user-avatar {
@@ -656,10 +644,14 @@ img { max-width: 100%; display: block; }
   font-size: 14px;
   font-weight: 500;
   color: #374151;
+  white-space: nowrap;
 }
 
 /* ── BREADCRUMB ── */
 .app-breadcrumb {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 299;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
   padding: 8px 24px;
@@ -679,7 +671,7 @@ img { max-width: 100%; display: block; }
 }
 
 .app-breadcrumb a:hover {
-  color: var(--executive);
+  color: var(--adminQc);
 }
 
 .app-breadcrumb .bc-sep {
@@ -699,26 +691,18 @@ img { max-width: 100%; display: block; }
   font-size: 14px !important;
 }
 
-/* ── PAGE CONTENT WRAPPER ── */
-.app-content {
-  flex: 1;
-  padding: 24px;
-  background: var(--page-bg);
-}
-
 /* =========================================================
-   4.5. CONTAINER (.container ใต้ header)
+   4.5. CONTAINER (.container — page content wrapper)
    ========================================================= */
 .container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px 64px;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
-  /* ✅ ดันลงให้พ้น fixed header */
-  padding-top: var(--header-h);
+  margin: 0;
+  padding: 24px;
+  overflow-x: hidden;
+  flex: 1;
 }
-
 
 
 /* =========================================================
@@ -1051,7 +1035,8 @@ img { max-width: 100%; display: block; }
 
 .table-wrap {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .qc-table {
@@ -1343,6 +1328,17 @@ img { max-width: 100%; display: block; }
   font-size: 24px;
   margin-right: 8px;
   color: var(--role-color);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.material-symbols-outlined.spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .table-empty {
@@ -1930,6 +1926,12 @@ img { max-width: 100%; display: block; }
 .ea-confirm-textarea {
   min-height: 76px;
   border-radius: 16px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
 }
 
 .ea-confirm-actions {
@@ -1945,7 +1947,10 @@ img { max-width: 100%; display: block; }
 .ea-confirm-btn-ok {
   height: 46px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: 6px;
   padding: 0 18px;
   font-family: var(--font-display);
   font-size: 0.9rem;
@@ -2180,7 +2185,7 @@ img { max-width: 100%; display: block; }
 .ea-success-btn-ok .material-symbols-outlined { font-size: 20px; }
 
 /* =========================================================
-   13. FOOTER
+   13. FOOTER (อยู่ใน .app-main แล้ว — ไม่ต้อง offset)
    ========================================================= */
 .footer {
   text-align: center;
@@ -2188,84 +2193,119 @@ img { max-width: 100%; display: block; }
   color: var(--ink-3);
   font-size: 0.82rem;
   border-top: 1px solid var(--line);
-  margin-top: 40px;
-  margin-left: var(--side-mini);
-  transition: margin-left var(--t-base) var(--ease);
-}
-
-body.sidebar-expanded .footer {
-  margin-left: var(--side-full);
+  margin: 40px 0 0;
+  width: 100%;
 }
 
 /* =========================================================
    14. RESPONSIVE
    ========================================================= */
-@media (max-width: 1200px) {
-  .qc-summary { grid-template-columns: repeat(5, 1fr); }
+
+/* Desktop กว้าง: ลด summary cards เป็น 5 คอลัมน์เหมือนเดิม */
+@media (max-width: 1280px) {
   .qc-table { font-size: 0.78rem; }
   .qc-table thead th,
   .qc-table tbody td { padding: 10px 8px; }
 }
 
+/* Tablet: table scroll horizontal */
 @media (max-width: 1024px) {
-  .table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
   .qc-table {
     table-layout: auto;
     min-width: 900px;
   }
 }
 
+/* รองรับ sidebar ขยายในจอเล็ก — ย่อ table */
 @media (min-width: 1024px) and (max-width: 1500px) {
-  body.sidebar-expanded .container { font-size: 12px; }
-  body.sidebar-expanded .qc-summary { gap: 10px; }
-  body.sidebar-expanded .summary-card { padding: 12px; }
-  body.sidebar-expanded .summary-icon { width: 38px; height: 38px; }
-  body.sidebar-expanded .summary-icon .material-symbols-outlined { font-size: 22px; }
-  body.sidebar-expanded .summary-num { font-size: 1.35rem; }
-  body.sidebar-expanded .qc-table { font-size: 0.76rem; }
-  body.sidebar-expanded .qc-table thead th,
-  body.sidebar-expanded .qc-table tbody td { padding: 9px 6px; }
-  body.sidebar-expanded .qc-table thead th { font-size: 0.7rem; }
-  body.sidebar-expanded .cell-thumb,
-  body.sidebar-expanded .cell-thumb-video { width: 28px; height: 28px; }
-  body.sidebar-expanded .type-tag { font-size: 0.66rem; padding: 1px 6px; }
-  body.sidebar-expanded .status-badge { font-size: 0.66rem; padding: 3px 8px; }
-  body.sidebar-expanded .btn-view { padding: 5px 9px; font-size: 0.7rem; }
+  .app-sidebar.expanded ~ .app-main .qc-summary { gap: 10px; }
+  .app-sidebar.expanded ~ .app-main .summary-card { padding: 12px; }
+  .app-sidebar.expanded ~ .app-main .summary-icon { width: 38px; height: 38px; }
+  .app-sidebar.expanded ~ .app-main .summary-icon .material-symbols-outlined { font-size: 22px; }
+  .app-sidebar.expanded ~ .app-main .summary-num { font-size: 1.35rem; }
+  .app-sidebar.expanded ~ .app-main .qc-table { font-size: 0.76rem; }
+  .app-sidebar.expanded ~ .app-main .qc-table thead th,
+  .app-sidebar.expanded ~ .app-main .qc-table tbody td { padding: 9px 6px; }
+  .app-sidebar.expanded ~ .app-main .qc-table thead th { font-size: 0.7rem; }
+  .app-sidebar.expanded ~ .app-main .cell-thumb,
+  .app-sidebar.expanded ~ .app-main .cell-thumb-video { width: 28px; height: 28px; }
+  .app-sidebar.expanded ~ .app-main .type-tag { font-size: 0.66rem; padding: 1px 6px; }
+  .app-sidebar.expanded ~ .app-main .status-badge { font-size: 0.66rem; padding: 3px 8px; }
+  .app-sidebar.expanded ~ .app-main .btn-view { padding: 5px 9px; font-size: 0.7rem; }
 }
 
+/* Tablet เล็ก: ย่อ summary cards เป็น 2-3 คอลัมน์ */
 @media (max-width: 900px) {
   .qc-summary { grid-template-columns: repeat(2, 1fr); }
   .modal-info-grid { grid-template-columns: 1fr; }
   .advance-filter-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Mobile: sidebar กลายเป็น overlay (fixed) */
 @media (max-width: 768px) {
   :root {
     --side-mini: 56px;
-    --side-full: 180px;
-    --header-h: 64px;
+    --side-full: 220px;
+    --header-h: 60px;
   }
 
-  body { padding-left: var(--side-mini); }
-  body.sidebar-expanded { padding-left: var(--side-full); }
+  /* Sidebar: fixed overlay */
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 500;
+  }
 
-  .ea-sidebar { width: var(--side-mini); }
-  body.sidebar-expanded .ea-sidebar { width: var(--side-full); }
+  /* App main: ต้อง offset padding เพื่อไม่ทับ sidebar */
+  .app-main {
+    margin-left: var(--side-mini);
+    width: calc(100% - var(--side-mini));
+    min-width: 0;
+  }
 
-  .app-header { left: var(--side-mini); }
-  body.sidebar-expanded .app-header { left: var(--side-full); }
+  /* ตอน sidebar.expanded บน mobile — overlay ทับเลย (ไม่ดัน main) */
+  .app-sidebar.expanded {
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  }
 
-  .footer { margin-left: var(--side-mini); }
-  body.sidebar-expanded .footer { margin-left: var(--side-full); }
+  /* Header */
+  .app-header {
+    padding: 0 14px;
+    gap: 8px;
+  }
 
-  .app-header { padding: 0 14px; }
-  .app-header-text p,
-  .app-header-date,
-  .user-name { display: none; }
+  .header-system-name {
+    font-size: 15px;
+  }
 
+  .header-system-name .header-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .header-system-name .header-icon .material-symbols-outlined {
+    font-size: 16px !important;
+  }
+
+  .header-subtitle {
+    font-size: 11px;
+    padding-left: 36px;
+  }
+
+  /* ซ่อน user name + date เพื่อประหยัดพื้นที่ */
+  .header-user-name { display: none; }
+
+  .header-date-pill {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Container padding ลด */
+  .container { padding: 16px; }
+
+  /* Filter: stack */
   .qc-filter-compact { grid-template-columns: 1fr; }
   .btn-advance-filter { width: 100%; justify-content: center; }
 
@@ -2274,17 +2314,15 @@ body.sidebar-expanded .footer {
   .advance-filter-actions button { width: 100%; justify-content: center; }
 }
 
+/* Mobile เล็ก */
 @media (max-width: 640px) {
-  .container { padding-left: 16px; padding-right: 16px; }
-
-  .breadcrumb-bar {
-    margin-left: -16px;
-    margin-right: -16px;
-    padding-left: 16px;
-    padding-right: 16px;
+  .header-date-pill span:last-child {
+    display: none;  /* ซ่อน text เหลือแค่ icon */
   }
 
-  .app-header-text h1 { font-size: 1rem; }
+  .header-date-pill {
+    padding: 6px 8px;
+  }
 
   .qc-summary { grid-template-columns: 1fr; }
 
@@ -2304,14 +2342,11 @@ body.sidebar-expanded .footer {
   .ea-confirm-box,
   .ea-success-box { max-width: 100%; border-radius: var(--r-lg); }
 
-  .ea-confirm-actions { flex-direction: column-reverse; }
+  .ea-confirm-actions { grid-template-columns: 1fr; }
   .ea-confirm-btn-cancel,
-  .ea-confirm-btn-ok { width: 100%; justify-content: center; }
+  .ea-confirm-btn-ok { width: 100%; }
 
   .ea-success-btn-ok { width: 100%; }
-
-  .app-header-icon { width: 32px; height: 32px; }
-  .app-header-icon .material-symbols-outlined { font-size: 18px !important; }
 
   .qc-table th:last-child,
   .qc-table td:last-child { width: 110px; min-width: 110px; text-align: center; }
@@ -2342,9 +2377,9 @@ body.sidebar-expanded .footer {
    15. PRINT
    ========================================================= */
 @media print {
-  .ea-sidebar,
+  .app-sidebar,
   .app-header,
-  .breadcrumb-bar,
+  .app-breadcrumb,
   .filter-card,
   .advance-filter-panel,
   .qc-action-btns,
@@ -2353,11 +2388,8 @@ body.sidebar-expanded .footer {
     display: none !important;
   }
 
-  body {
-    background: #fff !important;
-    padding-left: 0 !important;
-  }
-
+  body { background: #fff !important; }
+  .app-main { margin-left: 0 !important; width: 100% !important; }
   .container { padding-top: 0; }
 
   .qc-main {

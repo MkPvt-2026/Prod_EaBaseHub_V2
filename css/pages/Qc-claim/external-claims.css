@@ -1,13 +1,14 @@
 /* =========================================================
-   EXTERNAL CLAIMS — QC Dashboard Stylesheet (v4)
+   EXTERNAL CLAIMS — QC Dashboard Stylesheet (v4.1 — cleaned layout)
    ----------------------------------------------------------
    Role:  adminQc  (โทนส้ม #F97316)
    Theme: Light only
    Font:  Kanit (display) + IBM Plex Sans Thai (body)
    ----------------------------------------------------------
-   Changelog v4:
-   - FIX: @media print syntax error (.breadcrumb-bar ขาด comma)
-   - NEW: .ea-success-* (success popup modal)
+   Changelog v4.1:
+   - FIX: Header + Breadcrumb ติดด้านบนเมื่อเลื่อนหน้า
+   - FIX: Sidebar ไม่ทับ content / ไม่ดันล้นขวา
+   - CLEAN: จัด section และเพิ่มคอมเมนต์จุดสำคัญ
    ========================================================= */
 
 
@@ -175,6 +176,46 @@ img { max-width: 100%; display: block; }
 
 .app-sidebar.collapsed { width: 64px; }
 .app-sidebar.expanded  { width: 220px; }
+
+/* =====================================================
+   5.1 CONTENT OFFSET
+   -----------------------------------------------------
+   Sidebar ใช้ position: fixed จึงต้องเว้นพื้นที่ด้านซ้ายให้
+   header / breadcrumb / content ตามความกว้างของ sidebar
+   หมายเหตุ:
+   - ไม่ใส่ width: calc(...) ให้ .container เพราะมี padding แล้วจะล้นขวา
+   - ให้ width เฉพาะ header/breadcrumb ซึ่งเป็นแถบเต็มด้านบน
+   ===================================================== */
+
+/* ตอน sidebar ย่อ */
+.app-content,
+.container,
+.footer {
+  margin-left: var(--side-mini);
+  transition: margin-left var(--t-base) var(--ease);
+}
+
+.app-header,
+.app-breadcrumb {
+  margin-left: var(--side-mini);
+  width: calc(100% - var(--side-mini));
+  transition:
+    margin-left var(--t-base) var(--ease),
+    width var(--t-base) var(--ease);
+}
+
+/* ตอน sidebar ขยาย */
+body.sidebar-expanded .app-content,
+body.sidebar-expanded .container,
+body.sidebar-expanded .footer {
+  margin-left: var(--side-full);
+}
+
+body.sidebar-expanded .app-header,
+body.sidebar-expanded .app-breadcrumb {
+  margin-left: var(--side-full);
+  width: calc(100% - var(--side-full));
+}
 
 /* ── SIDEBAR LOGO ── */
 .sidebar-logo {
@@ -530,17 +571,17 @@ img { max-width: 100%; display: block; }
  .app-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 300;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   padding: 0 24px;
-  height: 72px;
+  height: var(--header-h);
   display: flex;
   align-items: center;
   gap: 16px;
+  width: 100%;
 }
-
 /* .header-left {
   display: flex;
   flex-direction: column;
@@ -549,6 +590,32 @@ img { max-width: 100%; display: block; }
 } */
 
 /* .app-main.sidebar-expanded .app-header { left: 220px; } */
+
+.app-main{
+  transition: all .25s ease;
+}
+
+/* sidebar ย่อ */
+.app-sidebar.collapsed{
+  width: 64px;
+}
+
+/* sidebar ขยาย */
+.app-sidebar.expanded{
+  width: 220px;
+}
+
+/* main content ตอนย่อ */
+.app-main{
+  margin-left: 64px;
+  width: calc(100% - 64px);
+}
+
+/* main content ตอนขยาย */
+body.sidebar-expanded .app-main{
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
 
 .header-left {
   flex: 1;
@@ -563,7 +630,7 @@ img { max-width: 100%; display: block; }
   gap: 10px;
   font-size: 18px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--ink-1);
   line-height: 1.2;
 }
 
@@ -588,7 +655,7 @@ img { max-width: 100%; display: block; }
   margin-top: 2px;
   padding-left: 44px;
   font-size: 12px;
-  color: var(--muted-soft);
+  color: var(--ink-4);
   line-height: 1;
 }
 
@@ -666,31 +733,46 @@ img { max-width: 100%; display: block; }
 
 /* Breadcrumb */
 .app-breadcrumb {
-  /* position: fixed; */
-  margin-top: 72px;
-  min-height: 38px;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 299;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
   padding: 8px 24px;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  background: #f9fafb;
-  border-bottom: 1px solid var(--line);
+  color: #6b7280;
 }
 
-.app-breadcrumb a,
-.app-breadcrumb span {
-  display: inline-flex;
+.app-breadcrumb a {
+  color: #6b7280;
+  text-decoration: none;
+  display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.app-breadcrumb a { color: var(--muted); text-decoration: none; }
+.app-breadcrumb a:hover {
+  color: var(--adminQc);
+}
 
-.app-breadcrumb a:hover,
+.app-breadcrumb .bc-sep {
+  color: #d1d5db;
+  font-size: 16px;
+}
+
 .app-breadcrumb .bc-current {
   color: var(--adminQc);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app-breadcrumb .material-symbols-outlined {
+  font-size: 14px !important;
 }
 
 .bc-sep { color: var(--line-strong); }
@@ -704,16 +786,22 @@ img { max-width: 100%; display: block; }
 
 /* =========================================================
    4.5. CONTAINER (.container ใต้ header)
+   ---------------------------------------------------------
+   Header + Breadcrumb เป็น sticky และยังอยู่ใน flow ปกติ
+   ดังนั้นไม่ต้อง padding-top: var(--header-h)
    ========================================================= */
 .container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px 64px;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
-  /* ✅ ดันลงให้พ้น fixed header */
-  padding-top: var(--header-h);
+
+  margin: 0;
+  padding: 24px 24px 64px;
+
+  overflow: visible;
 }
+
+
 
 
 /* =========================================================
@@ -3144,3 +3232,69 @@ button:focus-visible {
   
 }
 
+
+/* =========================================================
+   99. FINAL LAYOUT SAFETY OVERRIDES
+   ---------------------------------------------------------
+   จุดนี้ตั้งใจวางท้ายไฟล์เพื่อกัน rule เก่าด้านบนทับกันเอง
+   ใช้สำหรับ:
+   1) ให้ Header + Breadcrumb อยู่กับที่ตอนเลื่อน
+   2) กัน content ล้นขวาเมื่อ sidebar ขยาย
+   3) กัน parent overflow ทำให้ sticky ไม่ทำงาน
+   ========================================================= */
+
+/* Parent ต้องไม่ตัด sticky */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* Header ติดด้านบน */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  width: calc(100% - var(--side-mini));
+}
+
+/* Breadcrumb ติดใต้ Header */
+.app-breadcrumb {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 299;
+  width: calc(100% - var(--side-mini));
+}
+
+/* เมื่อ sidebar ขยาย ให้แถบบนลดความกว้างตาม */
+body.sidebar-expanded .app-header,
+body.sidebar-expanded .app-breadcrumb {
+  width: calc(100% - var(--side-full));
+}
+
+/* Content ไม่บังคับ width แบบ calc เพื่อไม่ให้ padding ดันล้นขวา */
+.app-content,
+.container {
+  width: auto;
+  max-width: none;
+}
+
+/* มือถือ: ให้ sidebar ทับเป็น overlay และไม่ดันเนื้อหา */
+@media (max-width: 768px) {
+  .app-content,
+  .container,
+  .footer,
+  .app-header,
+  .app-breadcrumb,
+  body.sidebar-expanded .app-content,
+  body.sidebar-expanded .container,
+  body.sidebar-expanded .footer,
+  body.sidebar-expanded .app-header,
+  body.sidebar-expanded .app-breadcrumb {
+    margin-left: var(--side-mini);
+    width: calc(100% - var(--side-mini));
+  }
+
+  .container {
+    padding: 16px 14px 48px;
+  }
+}
