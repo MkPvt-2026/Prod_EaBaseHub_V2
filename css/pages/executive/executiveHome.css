@@ -469,7 +469,7 @@ body {
 
 .app-sidebar.expanded .sidebar-nav-item .nav-label {
   opacity: 1;
-  max-width: 160px;
+  max-width: 240px;
   padding-right: 12px;
   visibility: visible;
 }
@@ -543,6 +543,23 @@ body {
 /* ── COLLAPSE TOGGLE BUTTON ── */
 .sidebar-collapse-btn {
   position: absolute;
+  right: -16px;
+  top: 76px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(180deg, var(--executive) 0%, var(--executive-hover) 100%);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  transition: transform var(--transition), background var(--transition);
+  z-index: 550;
+
+
+  /* position: absolute;
   top: 76px;
   right: -11px;
   width: 30px;
@@ -558,7 +575,7 @@ body {
   box-shadow: 0 4px 12px rgba(7, 89, 133, 0.25),
               0 2px 4px rgba(0, 0, 0, 0.08);
   transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
-  z-index: 500;
+  z-index: 500; */
 }
 
 .sidebar-collapse-btn:hover {
@@ -573,7 +590,7 @@ body {
 
 .sidebar-collapse-btn .material-symbols-outlined {
   font-size: 18px !important;
-  color: white !important;
+  color: var(--info-bg) !important;
   font-variation-settings: "FILL" 0, "wght" 600, "GRAD" 0, "opsz" 24;
   transition: transform var(--t-base) var(--ease);
 }
@@ -621,7 +638,8 @@ body {
   height: 72px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 16px;+
+  backdrop-filter: blur(10px);
 }
 
 .header-left {

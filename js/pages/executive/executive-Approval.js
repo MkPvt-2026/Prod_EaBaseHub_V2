@@ -243,7 +243,9 @@ async function getApproverName(userId) {
   }
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     if (user?.id === userId && user.email) {
       const fallback = user.email.split("@")[0];
       _approverNameCache.set(userId, fallback);
@@ -258,7 +260,11 @@ function getQcResult(claim) {
   const raw = claim?.qc_result;
   if (!raw) return {};
   if (typeof raw === "string") {
-    try { return JSON.parse(raw) || {}; } catch (_) { return {}; }
+    try {
+      return JSON.parse(raw) || {};
+    } catch (_) {
+      return {};
+    }
   }
   return raw;
 }
@@ -275,18 +281,35 @@ function getGradeRows(qc) {
 
 function getClaimTotalQty(claim) {
   const qc = getQcResult(claim);
-  const totalFromQc = getGradeRows(qc).reduce((s, [, , q]) => s + Number(q || 0), 0);
-  return totalFromQc || Number(claim?.qty || claim?.quantity || claim?.claim_qty || 0);
+  const totalFromQc = getGradeRows(qc).reduce(
+    (s, [, , q]) => s + Number(q || 0),
+    0
+  );
+  return (
+    totalFromQc ||
+    Number(claim?.qty || claim?.quantity || claim?.claim_qty || 0)
+  );
 }
 
-function buildStatusBadge(row) { return getApprovalStatusMeta(row).badge; }
-function getExecText(row) { return getApprovalStatusMeta(row).label; }
-function isFinalized(row) { return ["approved", "rejected"].includes(getApprovalStatus(row)); }
+function buildStatusBadge(row) {
+  return getApprovalStatusMeta(row).badge;
+}
+function getExecText(row) {
+  return getApprovalStatusMeta(row).label;
+}
+function isFinalized(row) {
+  return ["approved", "rejected"].includes(getApprovalStatus(row));
+}
 
 function getRequesterText(row) {
   return val(
-    row?.requester_name, row?.request_by_name, row?.created_by_name,
-    row?.emp_name, row?.request_by, row?.created_by, "—"
+    row?.requester_name,
+    row?.request_by_name,
+    row?.created_by_name,
+    row?.emp_name,
+    row?.request_by,
+    row?.created_by,
+    "—"
   );
 }
 
@@ -300,20 +323,36 @@ function getApprovalTitle(row) {
 
 function getApprovalDetail(row) {
   return val(
-    row?.request_detail, row?.detail, row?.claim_detail,
-    row?.problem_detail, row?.description, "—"
+    row?.request_detail,
+    row?.detail,
+    row?.claim_detail,
+    row?.problem_detail,
+    row?.description,
+    "—"
   );
 }
 
 function getApprovalAmount(row) {
-  return val(row?.amount, row?.total_amount, row?.credit_amount, row?.price_amount, "");
+  return val(
+    row?.amount,
+    row?.total_amount,
+    row?.credit_amount,
+    row?.price_amount,
+    ""
+  );
 }
 
-function getSignatureValue(row) { return row?.exec_signature || row?.approval_signature || ""; }
-function getApprovalCommentValue(row) { return row?.exec_comment || row?.approval_comment || ""; }
+function getSignatureValue(row) {
+  return row?.exec_signature || row?.approval_signature || "";
+}
+function getApprovalCommentValue(row) {
+  return row?.exec_comment || row?.approval_comment || "";
+}
 
 function adaptLegacyClaimRow(claim) {
-  const requestStatus = mapQcStatusToRequestStatus(claim.qc_status || claim.exec_status);
+  const requestStatus = mapQcStatusToRequestStatus(
+    claim.qc_status || claim.exec_status
+  );
   return {
     id: claim.id,
     approval_request_id: null,
@@ -322,7 +361,13 @@ function adaptLegacyClaimRow(claim) {
     request_title:
       claim.request_title ||
       `อนุมัติเคลมสินค้า ${val(claim.product, claim.product_name, "")}`,
-    request_detail: val(claim.detail, claim.claim_detail, claim.problem_detail, claim.description, "—"),
+    request_detail: val(
+      claim.detail,
+      claim.claim_detail,
+      claim.problem_detail,
+      claim.description,
+      "—"
+    ),
     request_status: requestStatus,
     priority: claim.priority || "normal",
     amount: claim.amount || claim.total_amount || null,
@@ -374,14 +419,20 @@ async function loadExecClaims() {
       .in("qc_status", CEO_VISIBLE_QC_STATUSES)
       .order("created_at", { ascending: false });
 
-    const [approvalRes, claimsRes] = await Promise.all([approvalQuery, claimsQuery]);
+    const [approvalRes, claimsRes] = await Promise.all([
+      approvalQuery,
+      claimsQuery,
+    ]);
 
     if (approvalRes.error) throw approvalRes.error;
     const approvalRows = approvalRes.data || [];
 
     let claimRows = [];
     if (claimsRes.error) {
-      console.warn("[CEO] load legacy claims failed:", claimsRes.error.message || claimsRes.error);
+      console.warn(
+        "[CEO] load legacy claims failed:",
+        claimsRes.error.message || claimsRes.error
+      );
     } else {
       claimRows = claimsRes.data || [];
     }
@@ -428,9 +479,15 @@ async function loadExecClaims() {
    SUMMARY + PULSE ALERT
 ================================================================ */
 function updateExecSummary() {
-  const wait     = allExecClaims.filter((c) => getApprovalStatus(c) === "pending").length;
-  const approved = allExecClaims.filter((c) => getApprovalStatus(c) === "approved").length;
-  const rejected = allExecClaims.filter((c) => getApprovalStatus(c) === "rejected").length;
+  const wait = allExecClaims.filter(
+    (c) => getApprovalStatus(c) === "pending"
+  ).length;
+  const approved = allExecClaims.filter(
+    (c) => getApprovalStatus(c) === "approved"
+  ).length;
+  const rejected = allExecClaims.filter(
+    (c) => getApprovalStatus(c) === "rejected"
+  ).length;
 
   const w = document.getElementById("sumWaiting");
   const a = document.getElementById("sumExecApproved");
@@ -440,7 +497,6 @@ function updateExecSummary() {
   if (a) a.textContent = approved;
   if (r) r.textContent = rejected;
 
-  // ✨ Toggle pulse alert ที่การ์ดรออนุมัติ
   const pendingCard = document.getElementById("cardPending");
   if (pendingCard) {
     pendingCard.classList.toggle("has-alert", wait > 0);
@@ -456,7 +512,8 @@ function updateExecSummary() {
    FILTERS
 ================================================================ */
 function applyFilters() {
-  const search = document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
+  const search =
+    document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
   const type = document.getElementById("filterScope")?.value || "";
   const status = document.getElementById("filterExecStatus")?.value || "";
   const dateFrom = document.getElementById("filterDateFrom")?.value || "";
@@ -465,7 +522,10 @@ function applyFilters() {
   filteredExecClaims = allExecClaims.filter((row) => {
     const rowType = normalizeApprovalType(row.request_type);
     const rowStatus = getApprovalStatus(row);
-    const rowDate = String(row.created_at || row.request_date || "").slice(0, 10);
+    const rowDate = String(row.created_at || row.request_date || "").slice(
+      0,
+      10
+    );
 
     if (type && rowType !== type) return false;
     if (status && rowStatus !== status) return false;
@@ -515,7 +575,6 @@ function hydrateApprovalTypeFilter() {
   const select = document.getElementById("filterScope");
   if (!select) return;
   const currentValue = select.value || "";
-  // ปล่อยให้ HTML จัดการ options เริ่มต้น — แค่คงค่าที่เลือกไว้
   select.value = currentValue;
 }
 
@@ -565,7 +624,11 @@ function renderExecTable(list) {
           <td class="cell-product">
             <div class="cell-strong cell-clamp-2" title="${escapeHtml(getApprovalDetail(item))}">${escapeHtml(getApprovalDetail(item))}</div>
             <div class="cell-sub">
-              ${amount !== "—" && amount ? `วงเงิน/มูลค่า: ${escapeHtml(formatMoney(amount))}` : `เลขที่: ${escapeHtml(getApprovalDocNo(item))}`}
+              ${
+                amount !== "—" && amount
+                  ? `วงเงิน/มูลค่า: ${escapeHtml(formatMoney(amount))}`
+                  : `เลขที่: ${escapeHtml(getApprovalDocNo(item))}`
+              }
             </div>
           </td>
           <td>
@@ -602,9 +665,7 @@ function renderExecCardList(list) {
 
   wrap.innerHTML = list
     .map((item) => {
-      // ใส่ลง cache เผื่อเปิด modal จาก card list ก่อน
       _ceoClaimsCache.set(item.id, item);
-
       const type = normalizeApprovalType(item.request_type);
       const meta = getApprovalTypeMeta(type);
       const amount = getApprovalAmount(item);
@@ -620,7 +681,6 @@ function renderExecCardList(list) {
           </div>
 
           <div class="qc-card-title">${escapeHtml(getApprovalTitle(item))}</div>
-
           <div class="qc-card-detail">${escapeHtml(getApprovalDetail(item))}</div>
 
           <div class="qc-card-meta">
@@ -662,8 +722,9 @@ function ensureExecutiveSections() {
       </div>
       <div class="ceo-media-grid" id="ceoMediaGrid"></div>
     `;
-
-    const detailSection = document.getElementById("ceoQcSummary")?.closest(".modal-section");
+    const detailSection = document
+      .getElementById("ceoQcSummary")
+      ?.closest(".modal-section");
     if (detailSection) detailSection.before(mediaSection);
     else modalBody.prepend(mediaSection);
   }
@@ -889,7 +950,8 @@ function buildClaimInfoGrid(claim) {
 function buildClaimQcDetailHtml(claim) {
   const qc = getQcResult(claim);
   const gradeRows = getGradeRows(qc)
-    .map(([grade, label, qty]) => `
+    .map(
+      ([grade, label, qty]) => `
         <tr>
           <td>
             <label class="modal-check">
@@ -899,7 +961,8 @@ function buildClaimQcDetailHtml(claim) {
           </td>
           <td>${escapeHtml(label)}</td>
           <td style="text-align:right;">${Number(qty || 0).toLocaleString()}</td>
-        </tr>`)
+        </tr>`
+    )
     .join("");
 
   return `
@@ -955,12 +1018,16 @@ function openCeoModal(row) {
 
   const info = document.getElementById("ceoInfoGrid");
   if (info) {
-    info.innerHTML = type === "claim" ? buildClaimInfoGrid(row) : buildGenericInfoGrid(row);
+    info.innerHTML =
+      type === "claim" ? buildClaimInfoGrid(row) : buildGenericInfoGrid(row);
   }
 
   const sumBox = document.getElementById("ceoQcSummary");
   if (sumBox) {
-    sumBox.innerHTML = type === "claim" ? buildClaimQcDetailHtml(row) : buildGenericDetailHtml(row);
+    sumBox.innerHTML =
+      type === "claim"
+        ? buildClaimQcDetailHtml(row)
+        : buildGenericDetailHtml(row);
   }
 
   renderMediaSection(row);
@@ -980,10 +1047,6 @@ function openCeoModal(row) {
 /* ================================================================
    HEADER (date + user)
 ================================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  initExecutiveHeader();
-});
-
 function initExecutiveHeader() {
   renderHeaderDate();
   renderHeaderUser();
@@ -1007,7 +1070,9 @@ async function renderHeaderUser() {
   if (!nameEl || !avatarEl) return;
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     const name =
       user?.user_metadata?.display_name ||
       user?.user_metadata?.full_name ||
@@ -1045,7 +1110,8 @@ async function openCeoModalByApprovalId(rowId) {
 
     if (error) {
       console.error("load claim detail error:", error);
-      if (typeof showToast === "function") showToast("โหลดรายละเอียดเคลมไม่สำเร็จ", "danger");
+      if (typeof showToast === "function")
+        showToast("โหลดรายละเอียดเคลมไม่สำเร็จ", "danger");
       else alert("โหลดรายละเอียดเคลมไม่สำเร็จ");
       return;
     }
@@ -1099,7 +1165,9 @@ async function saveExecDecision() {
     return;
   }
 
-  const decisionEl = document.querySelector("input[name='execDecision']:checked");
+  const decisionEl = document.querySelector(
+    "input[name='execDecision']:checked"
+  );
   if (!decisionEl) {
     alert("กรุณาเลือกผลการพิจารณา (อนุมัติ / ปฏิเสธ)");
     return;
@@ -1111,7 +1179,8 @@ async function saveExecDecision() {
     return;
   }
 
-  const comment = document.getElementById("execComment")?.value.trim() || "";
+  const comment =
+    document.getElementById("execComment")?.value.trim() || "";
 
   if (decision === "rejected" && !comment) {
     alert("กรุณาระบุเหตุผลในการปฏิเสธ");
@@ -1130,7 +1199,12 @@ async function saveExecDecision() {
     return;
   }
 
-  if (!confirm(`ยืนยันการ${decision === "approved" ? "อนุมัติ" : "ปฏิเสธ"}รายการนี้?`)) return;
+  if (
+    !confirm(
+      `ยืนยันการ${decision === "approved" ? "อนุมัติ" : "ปฏิเสธ"}รายการนี้?`
+    )
+  )
+    return;
 
   const saveBtn = document.querySelector(".btn-save-draft");
   if (saveBtn) {
@@ -1139,9 +1213,12 @@ async function saveExecDecision() {
   }
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     const now = new Date().toISOString();
-    const approvalRequestId = currentExecClaim.approval_request_id || null;
+    const approvalRequestId =
+      currentExecClaim.approval_request_id || null;
     const type = normalizeApprovalType(currentExecClaim.request_type);
     const isLegacyClaim = !!currentExecClaim._legacy_claim;
 
@@ -1158,23 +1235,26 @@ async function saveExecDecision() {
     };
 
     if (approvalRequestId) {
-      const { data: updatedApproval, error: approvalError } = await supabaseClient
-        .from("approval_requests")
-        .update({
-          request_status: decision,
-          approval_comment: comment || null,
-          approval_signature: signatureData,
-          approved_by: user?.id || null,
-          approved_at: now,
-          updated_at: now,
-        })
-        .eq("id", approvalRequestId)
-        .select()
-        .maybeSingle();
+      const { data: updatedApproval, error: approvalError } =
+        await supabaseClient
+          .from("approval_requests")
+          .update({
+            request_status: decision,
+            approval_comment: comment || null,
+            approval_signature: signatureData,
+            approved_by: user?.id || null,
+            approved_at: now,
+            updated_at: now,
+          })
+          .eq("id", approvalRequestId)
+          .select()
+          .maybeSingle();
 
       if (approvalError) throw approvalError;
       if (!updatedApproval) {
-        throw new Error("อัปเดต approval_requests ไม่สำเร็จ: ไม่พบรายการ หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
+        throw new Error(
+          "อัปเดต approval_requests ไม่สำเร็จ: ไม่พบรายการ หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต"
+        );
       }
 
       finalDocumentRow = {
@@ -1187,7 +1267,8 @@ async function saveExecDecision() {
     if (type === "claim" && currentExecClaim.id) {
       const updatePayload = {
         exec_status: decision,
-        qc_status: decision === "approved" ? "exec_approved" : "exec_rejected",
+        qc_status:
+          decision === "approved" ? "exec_approved" : "exec_rejected",
         exec_comment: comment || null,
         exec_signature: signatureData,
         exec_by: user?.id || null,
@@ -1195,7 +1276,7 @@ async function saveExecDecision() {
         updated_at: now,
       };
 
-      const claimId = isLegacyClaim ? currentExecClaim.id : currentExecClaim.id;
+      const claimId = currentExecClaim.id;
 
       const { data: updatedClaim, error: claimError } = await supabaseClient
         .from("claims")
@@ -1206,7 +1287,9 @@ async function saveExecDecision() {
 
       if (claimError) throw claimError;
       if (!updatedClaim) {
-        throw new Error("อัปเดต claims ไม่สำเร็จ: ไม่พบเคลม หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต");
+        throw new Error(
+          "อัปเดต claims ไม่สำเร็จ: ไม่พบเคลม หรือสิทธิ์ RLS ไม่อนุญาตให้อ่านหลังอัปเดต"
+        );
       }
 
       finalDocumentRow = {
@@ -1218,7 +1301,9 @@ async function saveExecDecision() {
     }
 
     if (!approvalRequestId && type !== "claim") {
-      console.warn("[CEO] No approval_request_id and not a claim — nothing was written.");
+      console.warn(
+        "[CEO] No approval_request_id and not a claim — nothing was written."
+      );
     }
 
     if (typeof showToast === "function") {
@@ -1248,11 +1333,16 @@ function buildClaimApprovalDocumentHtml(claim, approverName) {
   const qc = getQcResult(claim);
   const docNo = getApprovalDocNo(claim);
   const statusText = getExecText(claim);
-  const statusClass = getApprovalStatus(claim) === "approved" ? "approved" : "rejected";
-  const finalApprover = approverName && approverName.trim() ? approverName.trim() : "CEO / Executive";
+  const statusClass =
+    getApprovalStatus(claim) === "approved" ? "approved" : "rejected";
+  const finalApprover =
+    approverName && approverName.trim()
+      ? approverName.trim()
+      : "CEO / Executive";
 
   const gradeRows = getGradeRows(qc)
-    .map(([grade, label, qty]) => `
+    .map(
+      ([grade, label, qty]) => `
     <tr>
       <td>
         <label class="pdf-check">
@@ -1262,7 +1352,8 @@ function buildClaimApprovalDocumentHtml(claim, approverName) {
       </td>
       <td>${escapeHtml(label)}</td>
       <td class="num">${Number(qty || 0).toLocaleString()}</td>
-    </tr>`)
+    </tr>`
+    )
     .join("");
 
   return buildDocumentShell({
@@ -1303,8 +1394,12 @@ function buildGenericApprovalDocumentHtml(row, approverName) {
   const typeMeta = getApprovalTypeMeta(row.request_type);
   const docNo = getApprovalDocNo(row);
   const statusText = getExecText(row);
-  const statusClass = getApprovalStatus(row) === "approved" ? "approved" : "rejected";
-  const finalApprover = approverName && approverName.trim() ? approverName.trim() : "CEO / Executive";
+  const statusClass =
+    getApprovalStatus(row) === "approved" ? "approved" : "rejected";
+  const finalApprover =
+    approverName && approverName.trim()
+      ? approverName.trim()
+      : "CEO / Executive";
   const amount = getApprovalAmount(row);
 
   return buildDocumentShell({
@@ -1360,7 +1455,14 @@ function buildDecisionDocumentSection(row, finalApprover) {
   `;
 }
 
-function buildDocumentShell({ docNo, title, subtitle, statusText, statusClass, mainHtml }) {
+function buildDocumentShell({
+  docNo,
+  title,
+  subtitle,
+  statusText,
+  statusClass,
+  mainHtml,
+}) {
   return `<!doctype html>
 <html lang="th">
 <head>
@@ -1439,7 +1541,8 @@ function buildDocumentShell({ docNo, title, subtitle, statusText, statusClass, m
 
 function buildApprovalDocumentHtml(row, approverName) {
   const type = normalizeApprovalType(row?.request_type);
-  if (type === "claim") return buildClaimApprovalDocumentHtml(row, approverName);
+  if (type === "claim")
+    return buildClaimApprovalDocumentHtml(row, approverName);
   return buildGenericApprovalDocumentHtml(row, approverName);
 }
 
@@ -1457,7 +1560,10 @@ async function openApprovalDocument(row) {
       await externalOpen(row);
       return;
     } catch (e) {
-      console.warn("[CEO] ApprovalDocument.open failed, fallback to internal builder:", e);
+      console.warn(
+        "[CEO] ApprovalDocument.open failed, fallback to internal builder:",
+        e
+      );
     }
   }
 
@@ -1468,13 +1574,17 @@ async function openApprovalDocument(row) {
   }
 
   win.document.open();
-  win.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>กำลังโหลด...</title>
+  win.document.write(
+    `<!doctype html><html><head><meta charset="UTF-8"><title>กำลังโหลด...</title>
     <style>body{font-family:"Kanit",sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#475569;background:#f8fafc;}</style>
-    </head><body>⏳ กำลังจัดเตรียมเอกสาร...</body></html>`);
+    </head><body>⏳ กำลังจัดเตรียมเอกสาร...</body></html>`
+  );
   win.document.close();
 
   try {
-    const approverName = await getApproverName(row.exec_by || row.approved_by);
+    const approverName = await getApproverName(
+      row.exec_by || row.approved_by
+    );
     const html = buildApprovalDocumentHtml(row, approverName);
     win.document.open();
     win.document.write(html);
@@ -1497,15 +1607,24 @@ function downloadApprovalDocument(row) {
     typeof externalDownload === "function" &&
     externalDownload !== downloadApprovalDocument
   ) {
-    try { externalDownload(row); return; }
-    catch (e) { console.warn("[CEO] ApprovalDocument.download failed, fallback:", e); }
+    try {
+      externalDownload(row);
+      return;
+    } catch (e) {
+      console.warn("[CEO] ApprovalDocument.download failed, fallback:", e);
+    }
   }
 
   const win = window.open("", "_blank");
-  if (!win) { alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup"); return; }
+  if (!win) {
+    alert("เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup");
+    return;
+  }
 
   win.document.open();
-  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Preparing...</title></head><body style="font-family:Kanit, Arial, sans-serif;">⏳ กำลังเตรียมเอกสาร...</body></html>`);
+  win.document.write(
+    `<!doctype html><html><head><meta charset="utf-8"><title>Preparing...</title></head><body style="font-family:Kanit, Arial, sans-serif;">⏳ กำลังเตรียมเอกสาร...</body></html>`
+  );
   win.document.close();
 
   getApproverName(row.exec_by || row.approved_by)
@@ -1518,7 +1637,11 @@ function downloadApprovalDocument(row) {
         win.document.close();
         win.focus();
         setTimeout(() => {
-          try { win.print(); } catch (e) { console.warn("[CEO] print failed:", e); }
+          try {
+            win.print();
+          } catch (e) {
+            console.warn("[CEO] print failed:", e);
+          }
         }, 700);
       } catch (e) {
         console.error("[CEO] downloadApprovalDocument error:", e);
@@ -1536,12 +1659,18 @@ async function shareApprovalDocument(row) {
     typeof externalShare === "function" &&
     externalShare !== shareApprovalDocument
   ) {
-    try { await externalShare(row); return; }
-    catch (e) { console.warn("[CEO] ApprovalDocument.share failed, fallback:", e); }
+    try {
+      await externalShare(row);
+      return;
+    } catch (e) {
+      console.warn("[CEO] ApprovalDocument.share failed, fallback:", e);
+    }
   }
 
   try {
-    const approverName = await getApproverName(row.exec_by || row.approved_by).catch(() => null);
+    const approverName = await getApproverName(
+      row.exec_by || row.approved_by
+    ).catch(() => null);
     const html = buildApprovalDocumentHtml(row, approverName);
     const blob = new Blob([html], { type: "text/html" });
     const fileName = `${getApprovalDocNo(row)}.html`;
@@ -1559,8 +1688,11 @@ async function shareApprovalDocument(row) {
     }
 
     try {
-      await navigator.clipboard.writeText(`${getApprovalDocNo(row)} — ดูเอกสารในระบบ`);
-      if (window.showToast) window.showToast("คัดลอกข้อมูลเอกสารไปยังคลิปบอร์ดแล้ว", "info");
+      await navigator.clipboard.writeText(
+        `${getApprovalDocNo(row)} — ดูเอกสารในระบบ`
+      );
+      if (window.showToast)
+        window.showToast("คัดลอกข้อมูลเอกสารไปยังคลิปบอร์ดแล้ว", "info");
     } catch (_) {}
 
     openApprovalDocument(row);
@@ -1580,9 +1712,17 @@ function exportExecExcel() {
   }
 
   const headers = [
-    "เลขอ้างอิง", "วันที่ส่งคำขอ", "ประเภทงาน", "หัวข้อ", "รายละเอียด",
-    "ผู้ขอ", "มูลค่า/วงเงิน", "ความเร่งด่วน", "สถานะ",
-    "ความเห็นผู้บริหาร", "วันที่อนุมัติ/ปฏิเสธ",
+    "เลขอ้างอิง",
+    "วันที่ส่งคำขอ",
+    "ประเภทงาน",
+    "หัวข้อ",
+    "รายละเอียด",
+    "ผู้ขอ",
+    "มูลค่า/วงเงิน",
+    "ความเร่งด่วน",
+    "สถานะ",
+    "ความเห็นผู้บริหาร",
+    "วันที่อนุมัติ/ปฏิเสธ",
   ];
 
   const rows = filteredExecClaims.map((row) => {
@@ -1621,7 +1761,9 @@ function exportExecExcel() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `executive-approval-center-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `executive-approval-center-${new Date()
+    .toISOString()
+    .slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1678,7 +1820,10 @@ function initExecSignaturePad() {
   const getPos = (e) => {
     const r = canvas.getBoundingClientRect();
     if (e.touches && e.touches[0]) {
-      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+      return {
+        x: e.touches[0].clientX - r.left,
+        y: e.touches[0].clientY - r.top,
+      };
     }
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
@@ -1701,7 +1846,9 @@ function initExecSignaturePad() {
     _sigHasInk = true;
   };
 
-  const end = () => { _sigDrawing = false; };
+  const end = () => {
+    _sigDrawing = false;
+  };
 
   canvas.addEventListener("mousedown", start);
   canvas.addEventListener("mousemove", move);
@@ -1737,21 +1884,172 @@ function drawSavedSignature(signatureData) {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     ctx.restore();
   };
-  img.onerror = () => console.warn("[CEO] failed to load saved signature image");
+  img.onerror = () =>
+    console.warn("[CEO] failed to load saved signature image");
   img.src = signatureData;
 }
 
-function hasExecSignature() { return _sigHasInk; }
+function hasExecSignature() {
+  return _sigHasInk;
+}
 
 function getExecSignatureData() {
   const canvas = document.getElementById("execSignaturePad");
   if (!canvas) return null;
-  try { return canvas.toDataURL("image/png"); }
-  catch (e) { console.error("[CEO] canvas.toDataURL failed:", e); return null; }
+  try {
+    return canvas.toDataURL("image/png");
+  } catch (e) {
+    console.error("[CEO] canvas.toDataURL failed:", e);
+    return null;
+  }
 }
 
 /* ================================================================
-   INIT
+   SIDEBAR TOGGLE
+================================================================ */
+function toggleSidebar() {
+  const sidebar = document.querySelector(".app-sidebar");
+  if (!sidebar) return;
+  const isExpanded = sidebar.classList.contains("expanded");
+  sidebar.classList.toggle("expanded", !isExpanded);
+  sidebar.classList.toggle("collapsed", isExpanded);
+  document.body.classList.toggle("sidebar-expanded", !isExpanded);
+}
+
+/* ================================================================
+   THEME TOGGLE
+================================================================ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  try {
+    localStorage.setItem("ea-theme", isDark ? "light" : "dark");
+  } catch (_) {}
+}
+
+function initTheme() {
+  try {
+    const saved = localStorage.getItem("ea-theme");
+    if (saved) {
+      document.documentElement.setAttribute("data-theme", saved);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  } catch (_) {}
+}
+
+/* ================================================================
+   INIT — DOMContentLoaded  ← จุดที่ถูกตัดหายในไฟล์เดิม
 ================================================================ */
 document.addEventListener("DOMContentLoaded", async () => {
+  // 1) โหลด theme ก่อน (ไม่กระพริบ)
+  initTheme();
+
+  // 2) รอ supabaseClient พร้อม
+  const ready = await waitForSupabase();
+  if (!ready) {
+    console.error("[CEO] supabaseClient ไม่พร้อม — ไม่สามารถโหลดข้อมูลได้");
+    const tbody = document.getElementById("ceoTableBody");
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="table-loading" style="color:var(--danger);">
+            ❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณารีเฟรชหน้า
+          </td>
+        </tr>`;
+    }
+    return;
+  }
+
+  // 3) ตั้งค่า header date + user
+  initExecutiveHeader();
+
+  // 4) hydrate filter dropdown
   hydrateApprovalTypeFilter();
+
+  // 5) โหลดข้อมูลตาราง  ← บรรทัดนี้หายไปจากไฟล์เดิม
+  await loadExecClaims();
+
+  // 6) Bind filter inputs
+  const filterInputIds = [
+    "searchInput",
+    "filterScope",
+    "filterExecStatus",
+    "filterDateFrom",
+    "filterDateTo",
+  ];
+  filterInputIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", applyFilters);
+      el.addEventListener("change", applyFilters);
+    }
+  });
+
+  // 7) Bind modal close (backdrop click)
+  const modal = document.getElementById("ceoModal");
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeCeoModal();
+    });
+  }
+
+  // 8) Bind lightbox close
+  const lightbox = document.getElementById("lightbox");
+  if (lightbox) {
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+  }
+
+  // 9) Sidebar collapse button
+  const collapseBtn = document.getElementById("sidebarCollapseBtn");
+  if (collapseBtn) {
+    collapseBtn.addEventListener("click", toggleSidebar);
+  }
+
+  // 10) Theme toggle button
+  const themeBtn = document.getElementById("eaThemeToggleBtn");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", toggleTheme);
+  }
+
+  // 11) Advance filter panel toggle
+  const advBtn = document.querySelector(".btn-advance-filter");
+  const advPanel = document.querySelector(".advance-filter-panel");
+  if (advBtn && advPanel) {
+    advBtn.addEventListener("click", () => {
+      advPanel.classList.toggle("show");
+    });
+  }
+
+  // 12) Reset filter button
+  const resetBtn = document.getElementById("btnResetFilter");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetFilters);
+  }
+
+  // 13) Export CSV/Excel button
+  const exportBtn = document.getElementById("btnExportExcel");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportExecExcel);
+  }
+
+  // 14) Save decision button
+  const saveBtn = document.querySelector(".btn-save-draft");
+  if (saveBtn) {
+    // ป้องกัน bind ซ้ำถ้า HTML มี onclick อยู่แล้ว
+    if (!saveBtn.dataset.bound) {
+      saveBtn.dataset.bound = "1";
+      saveBtn.addEventListener("click", saveExecDecision);
+    }
+  }
+
+  // 15) Clear signature button
+  const clearSigBtn = document.querySelector(".btn-clear-signature");
+  if (clearSigBtn && !clearSigBtn.dataset.bound) {
+    clearSigBtn.dataset.bound = "1";
+    clearSigBtn.addEventListener("click", () => clearExecSignature());
+  }
+});

@@ -1,14 +1,14 @@
 /* =========================================================
-   EXTERNAL CLAIMS — QC Dashboard Stylesheet (v4.1 — cleaned layout)
+   EXTERNAL CLAIMS — QC Dashboard Stylesheet (v4.2 — organized & commented)
    ----------------------------------------------------------
    Role:  adminQc  (โทนส้ม #F97316)
    Theme: Light only
    Font:  Kanit (display) + IBM Plex Sans Thai (body)
    ----------------------------------------------------------
-   Changelog v4.1:
-   - FIX: Header + Breadcrumb ติดด้านบนเมื่อเลื่อนหน้า
-   - FIX: Sidebar ไม่ทับ content / ไม่ดันล้นขวา
-   - CLEAN: จัด section และเพิ่มคอมเมนต์จุดสำคัญ
+   Changelog v4.2:
+   - FIX: รวม Sidebar offset ให้เหลือจุดเดียว ลดอาการดันซ้ำ/ล้นขวา
+   - CLEAN: ลบโค้ดเก่าที่คอมเมนต์ทิ้งไว้และจัดหมวดให้อ่านง่ายขึ้น
+   - COMMENT: เพิ่มคำอธิบายจุดสำคัญของ layout
    ========================================================= */
 
 
@@ -124,9 +124,6 @@ html[data-theme="dark"] {
   --ea-side-text:   #fde6d3;
 }
 
-/* =========================================================
-   2. RESET / BASE
-   ========================================================= */
 
 /* ============================================================
    2) BASE & RESET
@@ -155,6 +152,39 @@ input, select, textarea { font-family: inherit; }
 img { max-width: 100%; display: block; }
 
 
+/* =========================================================
+   3. APP SHELL & SIDEBAR OFFSET
+   ---------------------------------------------------------
+   หลักการจัด Layout:
+   - Sidebar เป็น fixed อยู่ซ้ายมือ
+   - ให้ดันเฉพาะ .app-main เท่านั้น
+   - Header / Breadcrumb / Container อยู่ภายใน .app-main แล้ว
+     จึงไม่ต้องใส่ margin-left ซ้ำ ไม่อย่างนั้นจะล้นขวา
+   ========================================================= */
+.app-main {
+  margin-left: var(--side-mini);
+  width: calc(100% - var(--side-mini));
+  min-width: 0;
+  transition:
+    margin-left var(--t-base) var(--ease),
+    width var(--t-base) var(--ease);
+}
+
+body.sidebar-expanded .app-main {
+  margin-left: var(--side-full);
+  width: calc(100% - var(--side-full));
+}
+
+.app-header,
+.app-breadcrumb,
+.container,
+.app-content,
+.footer {
+  margin-left: 0;
+  width: 100%;
+}
+
+
 
 /* =====================================================
    5. SIDEBAR
@@ -176,46 +206,6 @@ img { max-width: 100%; display: block; }
 
 .app-sidebar.collapsed { width: 64px; }
 .app-sidebar.expanded  { width: 220px; }
-
-/* =====================================================
-   5.1 CONTENT OFFSET
-   -----------------------------------------------------
-   Sidebar ใช้ position: fixed จึงต้องเว้นพื้นที่ด้านซ้ายให้
-   header / breadcrumb / content ตามความกว้างของ sidebar
-   หมายเหตุ:
-   - ไม่ใส่ width: calc(...) ให้ .container เพราะมี padding แล้วจะล้นขวา
-   - ให้ width เฉพาะ header/breadcrumb ซึ่งเป็นแถบเต็มด้านบน
-   ===================================================== */
-
-/* ตอน sidebar ย่อ */
-.app-content,
-.container,
-.footer {
-  margin-left: var(--side-mini);
-  transition: margin-left var(--t-base) var(--ease);
-}
-
-.app-header,
-.app-breadcrumb {
-  margin-left: var(--side-mini);
-  width: calc(100% - var(--side-mini));
-  transition:
-    margin-left var(--t-base) var(--ease),
-    width var(--t-base) var(--ease);
-}
-
-/* ตอน sidebar ขยาย */
-body.sidebar-expanded .app-content,
-body.sidebar-expanded .container,
-body.sidebar-expanded .footer {
-  margin-left: var(--side-full);
-}
-
-body.sidebar-expanded .app-header,
-body.sidebar-expanded .app-breadcrumb {
-  margin-left: var(--side-full);
-  width: calc(100% - var(--side-full));
-}
 
 /* ── SIDEBAR LOGO ── */
 .sidebar-logo {
@@ -552,23 +542,8 @@ body.sidebar-expanded .app-breadcrumb {
 /* ============================================================
    5) HEADER & BREADCRUMB
 ============================================================ */
-/* .app-header {
-  position: fixed;
-  top: 0;
-  left: 64px;
-  right: 0;
-  z-index: 300;
-  height: 72px;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.08);
-  transition: left var(--t-base) var(--ease);
-} */
- .app-header {
+
+.app-header {
   position: sticky;
   top: 0;
   z-index: 300;
@@ -582,40 +557,7 @@ body.sidebar-expanded .app-breadcrumb {
   gap: 16px;
   width: 100%;
 }
-/* .header-left {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-} */
 
-/* .app-main.sidebar-expanded .app-header { left: 220px; } */
-
-.app-main{
-  transition: all .25s ease;
-}
-
-/* sidebar ย่อ */
-.app-sidebar.collapsed{
-  width: 64px;
-}
-
-/* sidebar ขยาย */
-.app-sidebar.expanded{
-  width: 220px;
-}
-
-/* main content ตอนย่อ */
-.app-main{
-  margin-left: 64px;
-  width: calc(100% - 64px);
-}
-
-/* main content ตอนขยาย */
-body.sidebar-expanded .app-main{
-  margin-left: 220px;
-  width: calc(100% - 220px);
-}
 
 .header-left {
   flex: 1;
@@ -2783,7 +2725,7 @@ body.sidebar-expanded .app-main{
     font-size: 0.7rem;
   }
 
-  body.sidebar-expanded .app-header {
+  body.sidebar-expanded.app-header {
     padding: 14px 20px;
   }
 
@@ -2851,60 +2793,20 @@ body.sidebar-expanded .app-main{
 }
 
 @media (max-width: 768px) {
-  body,
-  body.sidebar-expanded {
-    padding-left: 0;
+  /* มือถือ/แท็บเล็ตเล็ก: คง Sidebar แบบ mini ไว้ ไม่ให้ดันซ้ำ */
+  .app-main,
+  body.sidebar-expanded .app-main {
+    margin-left: var(--side-mini);
+    width: calc(100% - var(--side-mini));
   }
 
-  .ea-sidebar {
-    transform: translateX(calc(-100% - var(--ea-side-gap) * 2));
-    transition: transform 0.28s ease, width 0.25s ease;
-  }
-
-  body.sidebar-expanded .ea-sidebar {
-    transform: translateX(0);
-    width: 260px;
-    align-items: stretch;
-  }
-
-  body.sidebar-expanded .mini-brand-text,
-  body.sidebar-expanded .ea-text {
-    display: inline;
-  }
-
-  body.sidebar-expanded .mini-brand-text {
-    display: block;
-  }
-
-  body.sidebar-expanded .ea-link,
-  body.sidebar-expanded .ea-user {
-    justify-content: flex-start;
-    padding: 0 14px;
-  }
-
-  .ea-toggle {
-    right: -22px;
-    background: linear-gradient(135deg, #f97316, #ea580c);
-  }
-
-  body.sidebar-expanded::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: rgba(28, 25, 23, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 9998;
-    animation: eaFade 0.2s ease;
-  }
-
-  @keyframes eaFade {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .container {
+    padding: 16px 14px 48px;
   }
 }
 
 @media (max-width: 640px) {
-  .app-header {
+ .app-header {
     margin: 16px 16px 0;
     padding: 14px 16px;
     flex-direction: column;
@@ -3020,9 +2922,10 @@ body.sidebar-expanded .app-main{
    15. PRINT
    ========================================================= */
 @media print {
-  .ea-sidebar,
+  .app-sidebar,
   .app-header,
   .breadcrumb-bar,
+  .app-breadcrumb,
   .qc-filter-bar,
   .qc-action-btns,
   .qc-modal-header-actions,
@@ -3064,7 +2967,13 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
-.filter-panel{   
+
+/* =========================================================
+   17. COMPACT / ADVANCE FILTER CARD
+   ---------------------------------------------------------
+   ใช้กับ filter แบบใหม่: ช่องค้นหา + ปุ่ม Advance Filter
+   ========================================================= */
+.filter-panel {
   width: 100%;
   height: 42px;
   padding: 0 12px;
@@ -3188,23 +3097,7 @@ button:focus-visible {
   align-items: center;
 }
 
-.qc-filter-compact {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto;
-  gap: 14px;
-  align-items: center;
-}
-
-.advance-filter-panel {
-  display: none;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
-
-.advance-filter-panel.show {
-  display: block;
-}
+/* หมายเหตุ: .qc-filter-compact และ .advance-filter-panel ถูกกำหนดด้านบนแล้ว */
 
 @media (max-width: 768px) {
   .qc-filter-compact {
@@ -3230,71 +3123,4 @@ button:focus-visible {
   }
 
   
-}
-
-
-/* =========================================================
-   99. FINAL LAYOUT SAFETY OVERRIDES
-   ---------------------------------------------------------
-   จุดนี้ตั้งใจวางท้ายไฟล์เพื่อกัน rule เก่าด้านบนทับกันเอง
-   ใช้สำหรับ:
-   1) ให้ Header + Breadcrumb อยู่กับที่ตอนเลื่อน
-   2) กัน content ล้นขวาเมื่อ sidebar ขยาย
-   3) กัน parent overflow ทำให้ sticky ไม่ทำงาน
-   ========================================================= */
-
-/* Parent ต้องไม่ตัด sticky */
-html,
-body {
-  overflow-x: hidden;
-}
-
-/* Header ติดด้านบน */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 300;
-  width: calc(100% - var(--side-mini));
-}
-
-/* Breadcrumb ติดใต้ Header */
-.app-breadcrumb {
-  position: sticky;
-  top: var(--header-h);
-  z-index: 299;
-  width: calc(100% - var(--side-mini));
-}
-
-/* เมื่อ sidebar ขยาย ให้แถบบนลดความกว้างตาม */
-body.sidebar-expanded .app-header,
-body.sidebar-expanded .app-breadcrumb {
-  width: calc(100% - var(--side-full));
-}
-
-/* Content ไม่บังคับ width แบบ calc เพื่อไม่ให้ padding ดันล้นขวา */
-.app-content,
-.container {
-  width: auto;
-  max-width: none;
-}
-
-/* มือถือ: ให้ sidebar ทับเป็น overlay และไม่ดันเนื้อหา */
-@media (max-width: 768px) {
-  .app-content,
-  .container,
-  .footer,
-  .app-header,
-  .app-breadcrumb,
-  body.sidebar-expanded .app-content,
-  body.sidebar-expanded .container,
-  body.sidebar-expanded .footer,
-  body.sidebar-expanded .app-header,
-  body.sidebar-expanded .app-breadcrumb {
-    margin-left: var(--side-mini);
-    width: calc(100% - var(--side-mini));
-  }
-
-  .container {
-    padding: 16px 14px 48px;
-  }
 }
