@@ -84,7 +84,7 @@ const ROLE_CONFIG = {
   // SALES — หน้า sales ของตัวเอง
   // -------------------------------------------------------
   sales: {
-    defaultPage: '/pages/sales/salesDashboard.html',
+    defaultPage: '/index.html',
     allowedPages: [
       '/pages/sales/salesDashboard.html',
       '/pages/sales/salesReport.html',
