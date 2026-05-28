@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#F97316" />
-    <meta name="description" content="EABaseHub - [ชื่อหน้า]" />
+    <meta name="description" content="EABaseHub - Executive Dashboard" />
 
     <!-- ✏️ แก้ชื่อ title ตามหน้าที่ใช้งาน -->
-    <title>[ชื่อหน้า] - EABaseHub</title>
+    <title>EABaseHub | Executive Command Center</title>
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -54,7 +54,7 @@
       <!-- Brand -->
       <div class="mini-brand-text">
         <strong>EABaseHub</strong>
-        <span>Claim System</span>
+        <span>Executive Command Center</span>
       </div>
 
       <!-- Menu -->
@@ -121,7 +121,7 @@
                 DASHBOARD
               </h2>
               <!-- ✏️ แก้คำอธิบายใต้ชื่อ -->
-              <p class="subtext">[คำอธิบายหน้านี้]</p>
+              <p class="subtext">ภาพรวมรายงาน งานอนุมัติ และการติดตามภายในองค์กร</p>
             </div>
             <div class="header-right">
               <span id="currentDate" class="page-date-chip">—</span>
@@ -155,20 +155,7 @@
           <section class="qc-summary" aria-label="สรุปสถานะงานอนุมัติ">
 
   
-   <!-- Card 1: รออนุมัติ → ไปหน้า Approval -->
-<div class="summary-card pending" id="cardPending"
-     onclick="location.href='/pages/executive/executive-Approval.html'"
-     style="cursor:pointer;">
-  <div class="summary-icon">
-    <span class="material-symbols-outlined">hourglass_top</span>
-  </div>
-  <div class="summary-info">
-    <div class="summary-head">รอตรวจสอบอนุมัติ</div>
-    <div class="summary-num" id="sumWaiting">0</div>
-    <div class="summary-label">รายการ</div>
-  </div>
-</div>
-
+   
  
    <!-- Card 2: รายงานใหม่ → ไปหน้า Reports -->
 <div class="summary-card approved" id="cardNewReport"
@@ -183,6 +170,22 @@
       <div class="summary-label">รายการ</div>
     </div>    
   </div>
+
+
+
+  <!-- Card 1: รออนุมัติ → ไปหน้า Approval -->
+<div class="summary-card pending" id="cardPending"
+     onclick="location.href='/pages/executive/executive-Approval.html'"
+     style="cursor:pointer;">
+  <div class="summary-icon">
+    <span class="material-symbols-outlined">hourglass_top</span>
+  </div>
+  <div class="summary-info">
+    <div class="summary-head">รอตรวจสอบอนุมัติ</div>
+    <div class="summary-num" id="sumWaiting">0</div>
+    <div class="summary-label">รายการ</div>
+  </div>
+</div>
 
 
             <!-- หลัง (แก้แล้ว) -->

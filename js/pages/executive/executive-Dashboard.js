@@ -463,7 +463,121 @@ function subscribeRealtimeSummary() {
 
 
 
+/* =================================================
+   📷 Avatar Upload
+================================================= */
 
+async function initAvatarUpload() {
+  const uploadInput = document.getElementById("uploadAvatar");
+  const profileImage = document.getElementById("profileImage");
+  const avatarWrapper = document.querySelector(".avatar-wrapper");
+
+  if (!uploadInput || !profileImage || !avatarWrapper) return;
+
+  await loadCurrentAvatar(profileImage);
+
+  avatarWrapper.addEventListener("click", () => {
+    uploadInput.click();
+  });
+
+  uploadInput.addEventListener("change", async function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("ไฟล์ใหญ่เกินไป (ไม่เกิน 2MB)");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      profileImage.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    await uploadAvatar(file, profileImage, avatarWrapper);
+  });
+}
+
+async function loadCurrentAvatar(imgElement) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.avatar_url) {
+      imgElement.src = profile.avatar_url;
+    }
+  } catch (err) {
+    console.error("โหลดรูปโปรไฟล์ไม่สำเร็จ:", err);
+  }
+}
+
+async function uploadAvatar(file, imgElement, wrapperElement) {
+  try {
+    wrapperElement.classList.add("uploading");
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) throw new Error("ไม่พบ user");
+
+    const fileExt = file.name.split(".").pop().toLowerCase();
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+
+    try {
+      const { data: oldProfile } = await supabaseClient
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (oldProfile?.avatar_url) {
+        const oldFileName = oldProfile.avatar_url.split("/").pop();
+        if (oldFileName && !oldFileName.includes("default")) {
+          await supabaseClient.storage.from("avatars").remove([oldFileName]);
+        }
+      }
+    } catch (e) {
+      console.log("ไม่มีรูปเก่าหรือลบไม่ได้:", e);
+    }
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from("avatars")
+      .upload(fileName, file, { cacheControl: "3600", upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabaseClient.storage
+      .from("avatars")
+      .getPublicUrl(fileName);
+
+    const publicUrl = urlData.publicUrl;
+
+    const { error: updateError } = await supabaseClient
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", user.id);
+
+    if (updateError) throw updateError;
+
+    imgElement.src = publicUrl + "?t=" + Date.now();
+    console.log("✅ อัปโหลดรูปโปรไฟล์สำเร็จ");
+  } catch (err) {
+    console.error("❌ อัปโหลดรูปไม่สำเร็จ:", err);
+    alert("อัปโหลดรูปไม่สำเร็จ: " + err.message);
+  } finally {
+    wrapperElement.classList.remove("uploading");
+  }
+}
 
 
 
