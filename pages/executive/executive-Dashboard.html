@@ -25,27 +25,33 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-<!-- dependencies (ใส่ใน <head>) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- dependencies (ใส่ใน <head>) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/assets/icons/icon-192.png"
+    />
 
     <!-- Styles -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <!-- ✏️ เปลี่ยน path ตามที่วางไฟล์ -->
-    <link rel="stylesheet" href="/css/pages/executive/executive-Dashboard.css" />
+    <link
+      rel="stylesheet"
+      href="/css/pages/executive/executive-Dashboard.css"
+    />
   </head>
 
   <body class="role-executive">
-
     <!-- =====================================================
          SIDEBAR (floating orange)
          ✏️ แก้ ea-link active ให้ตรงกับหน้าปัจจุบัน
          ===================================================== -->
     <aside class="ea-sidebar" id="eaSidebar">
-
       <!-- Logo -->
       <div class="ea-logo">
         <img src="/assets/icons/icon-192.png" alt="EABaseHub Logo" />
@@ -59,15 +65,27 @@
 
       <!-- Menu -->
       <nav class="ea-menu">
-        <a class="ea-link" href="/pages/executive/executive-Dashboard.html" title="Dashboard">
+        <a
+          class="ea-link"
+          href="/pages/executive/executive-Dashboard.html"
+          title="Dashboard"
+        >
           <span class="material-symbols-outlined">home</span>
           <span class="ea-text">หน้าหลัก</span>
         </a>
-        <a class="ea-link" href="/pages/executive/executiveHome.html" title="Claims QC">
+        <a
+          class="ea-link"
+          href="/pages/executive/executiveHome.html"
+          title="Claims QC"
+        >
           <span class="material-symbols-outlined">fact_check</span>
           <span class="ea-text">รายงาน</span>
         </a>
-        <a class="ea-link" href="/pages/executive/executive-Approval.html" title="เคลมลูกค้า">
+        <a
+          class="ea-link"
+          href="/pages/executive/executive-Approval.html"
+          title="เคลมลูกค้า"
+        >
           <span class="material-symbols-outlined">assignment_return</span>
           <span class="ea-text">ขออนุมัติงาน</span>
         </a>
@@ -90,12 +108,7 @@
       </button>
 
       <!-- Logout -->
-      <button
-        class="ea-user"
-        type="button"
-        title="Logout"
-        onclick="logout()"
-      >
+      <button class="ea-user" type="button" title="Logout" onclick="logout()">
         <span class="material-symbols-outlined">logout</span>
         <span class="ea-text">Logout</span>
       </button>
@@ -106,22 +119,25 @@
          ===================================================== -->
     <main class="content">
       <div class="content-layout">
-
         <!-- ── ซ้าย: เนื้อหาหลัก ── -->
         <div class="main-content">
-
           <!-- HEADER -->
           <header class="header">
             <div class="header-left">
               <!-- ✏️ แก้ icon และชื่อหน้า -->
               <h2>
-                <span class="material-symbols-outlined" style="font-size:22px;vertical-align:-4px;">
+                <span
+                  class="material-symbols-outlined"
+                  style="font-size: 22px; vertical-align: -4px"
+                >
                   verified
                 </span>
                 DASHBOARD
               </h2>
               <!-- ✏️ แก้คำอธิบายใต้ชื่อ -->
-              <p class="subtext">ภาพรวมรายงาน งานอนุมัติ และการติดตามภายในองค์กร</p>
+              <p class="subtext">
+                ภาพรวมรายงาน งานอนุมัติ และการติดตามภายในองค์กร
+              </p>
             </div>
             <div class="header-right">
               <span id="currentDate" class="page-date-chip">—</span>
@@ -132,7 +148,6 @@
                PAGE BODY — วาง content ของหน้าใหม่ที่นี่
                ===================================================== -->
           <div class="page-body">
-
             <!--
             ╔═══════════════════════════════════════════════════╗
             ║   ✏️  เพิ่ม content ของหน้าใหม่ตรงนี้             ║
@@ -146,101 +161,99 @@
             ║                                                   ║
             ║                                                   ║
             ╚═══════════════════════════════════════════════════╝   -->
-        
- <div class="container">
-        <!-- <main class="container"> -->
-          <!-- =====================================================
+
+            <div class="container">
+              <!-- <main class="container"> -->
+              <!-- =====================================================
             SUMMARY CARDS
           ====================================================== -->
-          <section class="qc-summary" aria-label="สรุปสถานะงานอนุมัติ">
-
-  
-   
- 
-   <!-- Card 2: รายงานใหม่ → ไปหน้า Reports -->
-<div class="summary-card approved" id="cardNewReport"
-     onclick="location.href='/pages/executive/executiveHome.html'"
-     style="cursor:pointer;">  
-    <div class="summary-icon">
-      <span class="material-symbols-outlined">verified</span>
-    </div>
-    <div class="summary-info">
-      <div class="summary-head">มีรายงานใหม่</div>
-      <div class="summary-num" id="sumExecApproved">0</div>
-      <div class="summary-label">รายการ</div>
-    </div>    
-  </div>
-
-
-
-  <!-- Card 1: รออนุมัติ → ไปหน้า Approval -->
-<div class="summary-card pending" id="cardPending"
-     onclick="location.href='/pages/executive/executive-Approval.html'"
-     style="cursor:pointer;">
-  <div class="summary-icon">
-    <span class="material-symbols-outlined">hourglass_top</span>
-  </div>
-  <div class="summary-info">
-    <div class="summary-head">รอตรวจสอบอนุมัติ</div>
-    <div class="summary-num" id="sumWaiting">0</div>
-    <div class="summary-label">รายการ</div>
-  </div>
-</div>
-
-
-            <!-- หลัง (แก้แล้ว) -->
-            <div class="summary-card approved">
-            <div class="summary-icon">
-                <span class="material-symbols-outlined"></span>
-            </div>
-            <div class="summary-info">
-                <div class="summary-head"></div>
-                <div class="summary-label"></div>
-            </div>
-            </div>
-
-            
-          </section>
-
-          <!-- ประชาสัมพันธ์ -->
-            <section class="announce-section" id="announceSection">
-              <div class="announce-header">
-                <div class="announce-header-left">
-                  <span class="material-symbols-outlined">campaign</span>
-                  <h3>ประชาสัมพันธ์</h3>
-                  <span
-                    class="announce-badge"
-                    id="announceBadge"
-                    style="display: none"
-                    >0</span
-                  >
+              <section class="qc-summary" aria-label="สรุปสถานะงานอนุมัติ">
+                <!-- Card 2: รายงานใหม่ → ไปหน้า Reports -->
+                <div
+                  class="summary-card approved"
+                  id="cardNewReport"
+                  onclick="
+                    location.href = '/pages/executive/executiveHome.html'
+                  "
+                  style="cursor: pointer"
+                >
+                  <div class="summary-icon">
+                    <span class="material-symbols-outlined">verified</span>
+                  </div>
+                  <div class="summary-info">
+                    <div class="summary-head">มีรายงานใหม่</div>
+                    <div class="summary-num" id="sumExecApproved">0</div>
+                    <div class="summary-label">รายการ</div>
+                  </div>
                 </div>
-                <div class="announce-header-right">
-                  <button
-                    class="announce-btn-add"
-                    id="announceBtnAdd"
-                    style="display: none"
-                    onclick="location.href = 'Announcements.html'"
-                  >
-                    <span class="material-symbols-outlined">add</span>
-                    สร้างประกาศ
-                  </button>
-                </div>
-              </div>
-              <div class="announce-list" id="announceList"></div>
-            </section>
 
- </div>
+                <!-- Card 1: รออนุมัติ → ไปหน้า Approval -->
+                <div
+                  class="summary-card pending"
+                  id="cardPending"
+                  onclick="
+                    location.href = '/pages/executive/executive-Approval.html'
+                  "
+                  style="cursor: pointer"
+                >
+                  <div class="summary-icon">
+                    <span class="material-symbols-outlined">hourglass_top</span>
+                  </div>
+                  <div class="summary-info">
+                    <div class="summary-head">รอตรวจสอบอนุมัติ</div>
+                    <div class="summary-num" id="sumWaiting">0</div>
+                    <div class="summary-label">รายการ</div>
+                  </div>
+                </div>
+
+                <!-- หลัง (แก้แล้ว) -->
+                <div class="summary-card approved">
+                  <div class="summary-icon">
+                    <span class="material-symbols-outlined"></span>
+                  </div>
+                  <div class="summary-info">
+                    <div class="summary-head"></div>
+                    <div class="summary-label"></div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ประชาสัมพันธ์ -->
+              <section class="announce-section" id="announceSection">
+                <div class="announce-header">
+                  <div class="announce-header-left">
+                    <span class="material-symbols-outlined">campaign</span>
+                    <h3>ประชาสัมพันธ์</h3>
+                    <span
+                      class="announce-badge"
+                      id="announceBadge"
+                      style="display: none"
+                      >0</span
+                    >
+                  </div>
+                  <div class="announce-header-right">
+                    <button
+                      class="announce-btn-add"
+                      id="announceBtnAdd"
+                      style="display: none"
+                      onclick="location.href = 'Announcements.html'"
+                    >
+                      <span class="material-symbols-outlined">add</span>
+                      สร้างประกาศ
+                    </button>
+                  </div>
+                </div>
+                <div class="announce-list" id="announceList"></div>
+              </section>
+            </div>
           </div>
           <!-- /.page-body -->
-
         </div>
         <!-- /.main-content -->
 
         <!-- ── ขวา: User Panel + Calendar ── -->
         <div class="right-column">
           <aside class="right-panel">
-
             <!-- PROFILE CARD -->
             <div class="user-card">
               <div class="avatar-wrapper">
@@ -273,10 +286,18 @@
                 <h4 id="calendarTitle">กำลังโหลด...</h4>
                 <div class="calendar-nav">
                   <button onclick="prevMonth()" aria-label="เดือนก่อนหน้า">
-                    <span class="material-symbols-outlined" style="font-size:16px">chevron_left</span>
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 16px"
+                      >chevron_left</span
+                    >
                   </button>
                   <button onclick="nextMonth()" aria-label="เดือนถัดไป">
-                    <span class="material-symbols-outlined" style="font-size:16px">chevron_right</span>
+                    <span
+                      class="material-symbols-outlined"
+                      style="font-size: 16px"
+                      >chevron_right</span
+                    >
                   </button>
                 </div>
               </div>
@@ -285,13 +306,9 @@
 
             <!-- ✏️ Mini Stats — แก้/ลบ/เพิ่มตามต้องการ -->
             <div class="page-mini-stats">
+              <!-- Widget mount point -->
+              <!-- <div id="notifWidgetRoot"></div> -->
 
-                
-
-                <!-- Widget mount point -->
-             <!-- <div id="notifWidgetRoot"></div> -->
-             
-                
               <!-- <div class="page-mini-stat">
                 <span class="material-symbols-outlined">trending_up</span>
                 <div>
@@ -307,11 +324,9 @@
                 </div>
               </div> -->
             </div>
-
           </aside>
         </div>
         <!-- /.right-column -->
-
       </div>
     </main>
 
@@ -331,7 +346,7 @@
 
     <!-- Template base script -->
     <!-- ✏️ เปลี่ยน path ตามที่วางไฟล์ -->
-     <script src="/js/pages/admin/Announcements.js"></script>
+    <script src="/js/pages/admin/Announcements.js"></script>
     <script src="/js/pages/executive/executive-Dashboard.js"></script>
 
     <!-- Splash -->
@@ -340,14 +355,11 @@
 
     <!-- Role theme init -->
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        if (typeof RoleTheme !== 'undefined') RoleTheme.init();
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof RoleTheme !== "undefined") RoleTheme.init();
       });
     </script>
 
     <!-- ✏️ เพิ่ม page-specific script ที่นี่ หรือ link ไฟล์ .js แยกต่างหาก -->
-
-    
-
   </body>
 </html>
