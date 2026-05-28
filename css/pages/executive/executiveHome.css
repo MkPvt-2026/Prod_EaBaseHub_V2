@@ -851,6 +851,40 @@ body {
   font-size: 14px;
 }
 
+
+
+.page-header-badge,
+.header-date-pill{
+
+  height:40px;
+
+  padding:0 14px;
+
+  border-radius:var(--r-full);
+
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  background:#f5f3ff;
+
+  border:
+    1px solid #ddd6fe;
+
+  color:#5b21b6;
+
+  font-size:13px;
+  font-weight:600;
+
+  white-space:nowrap;
+}
+
+.page-header-badge .material-symbols-outlined,
+.header-date-pill .material-symbols-outlined{
+  font-size:18px !important;
+}
+
+
 /* =====================================================
    RESPONSIVE
    ===================================================== */

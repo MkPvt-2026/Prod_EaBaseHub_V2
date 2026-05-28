@@ -69,11 +69,11 @@ const ROLE_CONFIG = {
   // EXECUTIVE — ดู dashboard ภาพรวมและรายงาน
   // -------------------------------------------------------
   executive: {
-    defaultPage: '/pages/executive/executiveHome.html',
+    defaultPage: '/pages/executive/executive-Dashboard.html',
     allowedPages: [
       '/pages/executive/executiveHome.html',
       '/pages/Qc-claim/claim-evaluation.html',
-      '/pages/executive/executiveDashboard.html',
+      '/pages/executive/executive-Dashboard.html',
       '/pages/executive/rfmDashboard.html', 
       '/pages/manager/reportManager.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้

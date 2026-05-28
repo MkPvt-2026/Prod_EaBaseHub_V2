@@ -51,7 +51,7 @@
       <!-- =====================================================
         SIDEBAR
       ====================================================== -->
-      <aside class="app-sidebar collapsed" id="appSidebar">
+      <aside class="app-sidebar" id="appSidebar">
         <!-- Logo / Brand -->
         <div class="sidebar-logo">
           <div class="sidebar-logo-circle">
@@ -70,66 +70,65 @@
         </div>
 
         <!-- Main navigation -->
-        <nav class="sidebar-nav" id="sidebarNav" aria-label="เมนูหลัก">
-          <a class="ea-mini-link" href="/UnderDev.html" title="หน้าหลัก">
-            <span class="material-symbols-outlined">home</span>
-            <span class="ea-mini-text">หน้าหลัก</span>
-          </a>
+         <nav class="sidebar-nav" id="sidebarNav">
 
-          <a
-            class="ea-mini-link"
-            href="/pages/executive/executiveHome.html"
-            title="รายงานประจำสัปดาห์"
-          >
-            <span class="material-symbols-outlined">assignment</span>
-            <span class="ea-mini-text">รายงานประจำสัปดาห์</span>
-          </a>
+          <a href="/pages/executive/executive-Dashboard.html"
+         class="sidebar-nav-item"
+         title="หน้าหลัก">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">home</span>
+        </div>
+        <span class="nav-label">หน้าหลัก</span>
+      </a>
 
-          <a
-            class="ea-mini-link active"
-            href="/pages/executive/executive-Approval.html"
-            title="ขออนุมัติงาน"
-            aria-current="page"
-          >
-            <span class="material-symbols-outlined">approval_delegation</span>
-            <span class="ea-mini-text">ขออนุมัติงาน</span>
-          </a>
+         <a href="/pages/executive/executiveHome.html"
+         class="sidebar-nav-item"
+         title="รายงาน">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <span class="nav-label">รายงาน</span>
+      </a>
+
+      <a href="/pages/executive/executive-Approval.html"
+         class="sidebar-nav-item active"
+         title="ร้านค้า">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">approval_delegation</span>
+        </div>
+        <span class="nav-label">ขออนุมัติ</span>
+      </a>
+
         </nav>
-
-        <div class="ea-mini-spacer"></div>
-        <div class="sidebar-divider"></div>
+       
 
         <!-- Theme toggle -->
-        <button
-          class="ea-mini-link ea-theme-toggle"
+        <!-- <button
+          class="nav-icon-wrap ea-theme-toggle"
           id="eaThemeToggleBtn"
           type="button"
           title="สลับโหมดสว่าง/มืด"
         >
           <span class="material-symbols-outlined" id="eaThemeToggleIcon">dark_mode</span>
-          <span class="ea-mini-text" id="eaThemeToggleText">โหมดมืด</span>
-        </button>
+          <span class="nav-label" id="eaThemeToggleText">โหมดมืด</span>
+        </button> -->
 
         <!-- Sidebar collapse / expand -->
-        <button
-          class="sidebar-collapse-btn"
-          type="button"
-          onclick="toggleSidebar()"
-          title="ย่อ/ขยาย"
-          aria-label="ย่อหรือขยายเมนูด้านข้าง"
-        >
-          <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
-        </button>
+       <!-- Collapse toggle button -->
+<div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
+</div>
 
-        <!-- Logout -->
-        <button class="sidebar-logout" id="logoutBtn" type="button" onclick="logout()" title="ออกจากระบบ">
-          <div class="nav-icon-wrap">
-            <span class="material-symbols-outlined">logout</span>
-          </div>
-          <span class="nav-label">ออกจากระบบ</span>
-        </button>
-      </aside>
+        <div class="sidebar-divider"></div>
+    <!-- Logout -->
+    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">logout</span>
+      </div>
+      <span class="nav-label">ออกจากระบบ</span>
+    </button>
 
+  </aside>
       <!-- =====================================================
         MAIN CONTENT
       ====================================================== -->
@@ -140,6 +139,8 @@
           ส่วนหัวแบบ sticky แสดงชื่อหน้า วันที่ และผู้ใช้งาน
         ====================================================== -->
         <header class="app-header">
+
+
           <div class="header-left">
             <div class="header-system-name">
               <div class="header-icon">
@@ -158,19 +159,23 @@
               <span>Executive</span>
             </div>
 
-            <div class="header-date-pill" id="headerDatePill">
-              <span class="material-symbols-outlined">calendar_month</span>
-              <span id="headerDateText">—</span>
-            </div>
+            
 
-            <div class="header-user">
-              <div class="header-user-avatar" id="userAvatar">
-                <span class="material-symbols-outlined">person</span>
-              </div>
-              <span class="header-user-name" id="userName">กำลังโหลด...</span>
-            </div>
+            <div class="header-date-pill" id="headerDatePill">
+  <span class="material-symbols-outlined">calendar_month</span>
+  <span id="headerDateText">—</span>
+  <span id="appHeaderDateText" hidden>—</span>
+</div>
+
+             <!-- User avatar -->
+        <div class="header-user">
+          <div class="header-user-avatar" id="userAvatar">
+            <span class="material-symbols-outlined" style="font-size:16px!important;color:white!important">person</span>
           </div>
-        </header>
+          <span class="header-user-name" id="userName">กำลังโหลด...</span>
+        </div>
+      </div>
+    </header>
 
         <!-- Breadcrumb -->
         <div class="app-breadcrumb">
@@ -185,12 +190,15 @@
           </span>
         </div>
 
-        <main class="container">
+
+        <main class="app-content">
+      <div class="container">
+        <!-- <main class="container"> -->
           <!-- =====================================================
             SUMMARY CARDS
           ====================================================== -->
           <section class="qc-summary" aria-label="สรุปสถานะงานอนุมัติ">
-            <div class="summary-card pending">
+            <div class="summary-card pending" id="cardPending">
               <div class="summary-icon">
                 <span class="material-symbols-outlined">hourglass_top</span>
               </div>
@@ -607,5 +615,21 @@
     <script src="/js/pages/executive/executive-Approval.js"></script>
     <script src="/js/core/themeToggle.js"></script>
     <!-- <script src="/js/services/nav-service.js"></script> -->
+
+
+    <script>
+  (function () {
+    const el = document.getElementById("headerDateText");
+    if (!el) return;
+
+    const text = new Date().toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    el.textContent = text;
+  })();
+</script>
   </body>
 </html>

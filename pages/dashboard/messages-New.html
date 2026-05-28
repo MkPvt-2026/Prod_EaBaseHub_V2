@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ข้อความแจ้งเตือน</title>
+<!-- ✅ 1. Supabase CDN ก่อน -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ✅ 2. แล้วค่อย core scripts -->
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0d0d1a;
+  --surface: #13132b;
+  --card:    #191932;
+  --border:  rgba(255,255,255,0.07);
+  --accent:  #e94560;
+  --violet:  #7c4dff;
+  --gold:    #ffca28;
+  --teal:    #26c6da;
+  --text:    #f0f0f8;
+  --muted:   rgba(240,240,248,0.42);
+  --radius:  16px;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'Sarabun',sans-serif; min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 55% 35% at 85% 8%, rgba(124,77,255,.1) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 8% 85%, rgba(233,69,96,.07) 0%, transparent 55%);
+}
+
+/* header */
+header {
+  position:sticky; top:0; z-index:100;
+  background:rgba(13,13,26,.88); backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  height:60px; padding:0 22px;
+  display:flex; align-items:center; gap:14px;
+}
+.back-btn {
+  width:36px; height:36px; border-radius:10px;
+  background:var(--card); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  text-decoration:none; color:var(--muted); font-size:18px; transition:all .2s;
+}
+.back-btn:hover { color:var(--text); background:var(--surface); }
+.h-title { font-family:'Prompt',sans-serif; font-size:17px; font-weight:600; flex:1; }
+.mark-btn {
+  font-family:'Sarabun',sans-serif; font-size:13px;
+  padding:7px 14px; border-radius:8px; background:transparent;
+  border:1px solid var(--border); color:var(--muted); cursor:pointer; transition:all .2s;
+}
+.mark-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* layout */
+.container { max-width:760px; margin:0 auto; padding:28px 18px 70px; }
+
+/* filter tabs */
+.tabs { display:flex; gap:8px; margin-bottom:24px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab {
+  flex-shrink:0; padding:8px 18px; border-radius:20px; font-size:13px; font-weight:500;
+  border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer; transition:all .2s;
+}
+.tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.tab:not(.active):hover { border-color:rgba(255,255,255,.2); color:var(--text); }
+
+/* section label */
+.sec-lbl { font-size:11px; font-weight:600; letter-spacing:.11em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; padding-left:2px; }
+
+/* message card */
+.msg-card {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:18px 20px; margin-bottom:10px; cursor:pointer;
+  transition:transform .2s, box-shadow .2s, border-color .2s;
+  position:relative; overflow:hidden;
+}
+.msg-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  border-radius:3px 0 0 3px; opacity:0; transition:opacity .2s;
+}
+.msg-card.unread::before { opacity:1; }
+.msg-card[data-cat=holiday]::before  { background:var(--gold); }
+.msg-card[data-cat=update]::before   { background:var(--violet); }
+.msg-card[data-cat=announce]::before { background:var(--accent); }
+.msg-card[data-cat=info]::before     { background:var(--teal); }
+.msg-card:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(0,0,0,.35); border-color:rgba(255,255,255,.13); }
+
+.msg-top { display:flex; align-items:flex-start; gap:12px; }
+.msg-icon {
+  width:40px; height:40px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+  background:rgba(255,255,255,.05);
+}
+.msg-card[data-cat=holiday]  .msg-icon { background:rgba(255,202,40,.1); }
+.msg-card[data-cat=update]   .msg-icon { background:rgba(124,77,255,.14); }
+.msg-card[data-cat=announce] .msg-icon { background:rgba(233,69,96,.12); }
+.msg-card[data-cat=info]     .msg-icon { background:rgba(38,198,218,.1); }
+
+.msg-meta { flex:1; min-width:0; }
+.msg-row1 { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.udot { width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+.msg-card:not(.unread) .udot { display:none; }
+.msg-subject { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px; }
+.msg-card:not(.unread) .msg-subject { color:var(--muted); font-weight:500; }
+.tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px; letter-spacing:.05em; text-transform:uppercase; flex-shrink:0; }
+.tag-holiday  { background:rgba(255,202,40,.14); color:var(--gold); }
+.tag-update   { background:rgba(124,77,255,.18); color:#b39ddb; }
+.tag-announce { background:rgba(233,69,96,.15);  color:#ef9a9a; }
+.tag-info     { background:rgba(38,198,218,.12); color:#80deea; }
+.tag-pinned   { background:rgba(255,202,40,.12); color:var(--gold); }
+
+.msg-preview { font-size:13px; color:var(--muted); margin-top:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.msg-time { font-size:11px; color:var(--muted); margin-top:7px; }
+
+/* expanded */
+.msg-body { display:none; font-size:14px; color:var(--text); line-height:1.85; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+.msg-cover { display:none; width:100%; border-radius:10px; margin-top:12px; max-height:260px; object-fit:cover; border:1px solid var(--border); }
+.msg-card.expanded .msg-preview { display:none; }
+.msg-card.expanded .msg-body    { display:block; }
+.msg-card.expanded .msg-cover   { display:block; }
+
+.msg-attach { display:inline-flex; align-items:center; gap:7px; margin-top:12px; padding:8px 14px; border-radius:9px; background:rgba(255,255,255,.06); border:1px solid var(--border); font-size:13px; color:var(--text); text-decoration:none; transition:background .2s; }
+.msg-attach:hover { background:rgba(255,255,255,.1); }
+
+/* state */
+.state { text-align:center; padding:64px 20px; color:var(--muted); }
+.state .ico { font-size:44px; margin-bottom:14px; }
+.state p { font-size:14px; }
+
+/* skeleton */
+.skeleton { background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:var(--radius); height:88px; margin-bottom:10px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* scroll-top */
+.stbtn { position:fixed; bottom:26px; right:22px; width:40px; height:40px; border-radius:50%; background:var(--accent); border:none; color:#fff; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(233,69,96,.4); opacity:0; pointer-events:none; transition:opacity .3s; }
+.stbtn.show { opacity:1; pointer-events:auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/pages/executive/executive-Dashboard.html" class="back-btn">‹</a>
+  <div class="h-title">🔔 ข้อความแจ้งเตือน</div>
+  <button class="mark-btn" id="markAllBtn" onclick="markAllRead()">อ่านทั้งหมด</button>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="setTab(this,'all')">ทั้งหมด</div>
+    <div class="tab" onclick="setTab(this,'unread')">ยังไม่อ่าน</div>
+    <div class="tab" onclick="setTab(this,'holiday')">วันหยุด</div>
+    <div class="tab" onclick="setTab(this,'update')">อัปเดต</div>
+    <div class="tab" onclick="setTab(this,'announce')">ประกาศ</div>
+    <div class="tab" onclick="setTab(this,'info')">ข้อมูล</div>
+  </div>
+  <div class="sec-lbl" id="secLbl"></div>
+  <div id="msgList"></div>
+  <div class="state" id="stateEl" style="display:none">
+    <div class="ico" id="stateIco">📭</div>
+    <p id="stateTxt">ไม่มีข้อความในหมวดนี้</p>
+  </div>
+</div>
+<button class="stbtn" id="stbtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ── ใช้ supabaseClient จาก supabaseClient.js ──────────────
+const sb = window.supabaseClient;
+
+const CAT_MAP = {
+  holiday:  { label:'วันหยุด', icon:'🏖️', tagClass:'tag-holiday'  },
+  update:   { label:'อัปเดต',  icon:'🔧', tagClass:'tag-update'   },
+  announce: { label:'ประกาศ',  icon:'📢', tagClass:'tag-announce' },
+  info:     { label:'ข้อมูล',  icon:'📊', tagClass:'tag-info'     },
+};
+function getCat(c) { return CAT_MAP[c] || { label:c, icon:'📌', tagClass:'tag-info' }; }
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date(), diff = now - d;
+  if (diff < 60_000)         return 'เมื่อกี้';
+  if (diff < 3_600_000)      return Math.floor(diff/60_000) + ' นาทีที่แล้ว';
+  if (diff < 86_400_000)     return 'วันนี้ ' + d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  if (diff < 2*86_400_000)   return 'เมื่อวาน';
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+}
+
+function escHtml(s='') { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function stripHtml(s='')  { return s.replace(/<[^>]+>/g,''); }
+
+let currentUser = null;
+let allMessages = [];
+let currentTab  = 'all';
+
+// ── init ────────────────────────────────────────────────
+(async () => {
+  if (!sb) { showState('⚠️','supabaseClient ไม่พร้อม'); return; }
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { showState('🔒','กรุณาเข้าสู่ระบบก่อน'); return; }
+  currentUser = user;
+  await loadMessages();
+  subscribeRealtime();
+})();
+
+// ── load ───────────────────────────────────────────────
+async function loadMessages() {
+  showSkeletons();
+  const { data: announcements, error } = await sb
+    .from('announcements')
+    .select('*')
+    .eq('status', 'published')
+    .order('is_pinned', { ascending: false })
+    .order('published_at', { ascending: false });
+
+  if (error) { showState('⚠️','โหลดข้อมูลไม่สำเร็จ: ' + error.message); return; }
+
+  const { data: reads } = await sb
+    .from('announcement_reads')
+    .select('announcement_id')
+    .eq('user_id', currentUser.id);
+
+  const readSet = new Set((reads||[]).map(r => r.announcement_id));
+  allMessages = (announcements||[]).map(a => ({ ...a, _read: readSet.has(a.id) }));
+  render();
+}
+
+// ── render ─────────────────────────────────────────────
+function render() {
+  const list = document.getElementById('msgList');
+  const stEl = document.getElementById('stateEl');
+  const lbl  = document.getElementById('secLbl');
+
+  let items = allMessages;
+  if (currentTab === 'unread')   items = items.filter(m => !m._read);
+  else if (currentTab !== 'all') items = items.filter(m => m.category === currentTab);
+
+  if (!items.length) { list.innerHTML=''; stEl.style.display='block'; lbl.textContent=''; return; }
+  stEl.style.display = 'none';
+
+  const unreadCount = items.filter(m => !m._read).length;
+  lbl.textContent = unreadCount > 0 ? `ยังไม่อ่าน ${unreadCount} ข้อความ` : `ทั้งหมด ${items.length} ข้อความ`;
+
+  list.innerHTML = items.map(msg => {
+    const cat = getCat(msg.category);
+    return `
+    <div class="msg-card ${msg._read?'':'unread'}" data-cat="${msg.category}" data-id="${msg.id}" onclick="toggleMsg(this,'${msg.id}')">
+      <div class="msg-top">
+        <div class="msg-icon">${cat.icon}</div>
+        <div class="msg-meta">
+          <div class="msg-row1">
+            <span class="udot"></span>
+            <span class="msg-subject">${escHtml(msg.title)}</span>
+            <span class="tag ${cat.tagClass}">${cat.label}</span>
+            ${msg.is_pinned ? '<span class="tag tag-pinned">📌 ปักหมุด</span>' : ''}
+          </div>
+          <div class="msg-preview">${stripHtml(msg.content).substring(0,120)}</div>
+          <div class="msg-time">${fmtTime(msg.published_at)}</div>
+        </div>
+      </div>
+      <div class="msg-body">
+        ${DOMPurify.sanitize(msg.content, { ALLOWED_TAGS: ['strong','em','br','ul','ol','li','a','p','span'], ALLOWED_ATTR: ['href','target','rel'] })}
+        ${msg.cover_image_url ? `<img src="${escHtml(msg.cover_image_url)}" class="msg-cover" alt="ภาพประกอบ" onerror="this.style.display='none'">` : ''}
+        ${msg.attachment_url  ? `<a class="msg-attach" href="${escHtml(msg.attachment_url)}" target="_blank" rel="noopener">📎 ${escHtml(msg.attachment_name||'ดาวน์โหลดไฟล์แนบ')}</a>` : ''}
+        ${msg.external_link   ? `<a class="msg-attach" href="${escHtml(msg.external_link)}" target="_blank" rel="noopener">🔗 ดูข้อมูลเพิ่มเติม</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── toggle + mark read ─────────────────────────────────
+
+async function toggleMsg(el, id) {
+  const expanded = el.classList.contains('expanded');
+  document.querySelectorAll('.msg-card.expanded')
+    .forEach(c => c.classList.remove('expanded'));
+  if (expanded) return;
+  el.classList.add('expanded');
+
+  const msg = allMessages.find(m => m.id === id);
+  if (!msg || msg._read) return;
+
+  msg._read = true;
+  el.classList.remove('unread');
+  updateUnreadLabel();
+
+  await sb.from('announcement_reads').upsert({
+    announcement_id: id,
+    user_id: currentUser.id,
+    read_at: new Date().toISOString()
+  }, { onConflict: 'announcement_id,user_id', ignoreDuplicates: true });
+}
+
+function updateUnreadLabel() {
+  const unread = allMessages.filter(m => !m._read).length;
+  const lbl = document.getElementById('secLbl');
+  if (lbl) lbl.textContent = unread > 0
+    ? `ยังไม่อ่าน ${unread} ข้อความ`
+    : `ทั้งหมด ${allMessages.length} ข้อความ`;
+}
+
+// ── mark all read ──────────────────────────────────────
+async function markAllRead() {
+  const btn = document.getElementById('markAllBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+  const unread = allMessages.filter(m => !m._read);
+  if (!unread.length) { btn.disabled=false; btn.textContent='อ่านทั้งหมด'; return; }
+
+  const rows = unread.map(m => ({
+    announcement_id: m.id, user_id: currentUser.id, read_at: new Date().toISOString()
+  }));
+  await sb.from('announcement_reads').upsert(rows, { onConflict:'announcement_id,user_id', ignoreDuplicates:true });
+  allMessages.forEach(m => m._read = true);
+  render();
+  btn.disabled=false; btn.textContent='อ่านทั้งหมด';
+}
+
+// ── tab ────────────────────────────────────────────────
+function setTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active'); currentTab = tab; render();
+}
+
+// ── realtime ───────────────────────────────────────────
+function subscribeRealtime() {
+  sb.channel('view-' + currentUser.id)
+    .on('postgres_changes',{ event:'INSERT', schema:'public', table:'announcements' }, loadMessages)
+    .on('postgres_changes',{ event:'UPDATE', schema:'public', table:'announcements' }, loadMessages)
+    .on('postgres_changes',{ event:'DELETE', schema:'public', table:'announcements' }, loadMessages)
+    .subscribe();
+}
+
+// ── helpers ────────────────────────────────────────────
+function showSkeletons() {
+  document.getElementById('msgList').innerHTML = [1,2,3].map(()=>'<div class="skeleton"></div>').join('');
+  document.getElementById('stateEl').style.display='none';
+}
+function showState(ico, txt) {
+  document.getElementById('msgList').innerHTML='';
+  document.getElementById('stateEl').style.display='block';
+  document.getElementById('stateIco').textContent = ico;
+  document.getElementById('stateTxt').textContent = txt;
+}
+window.addEventListener('scroll', () => {
+  document.getElementById('stbtn').classList.toggle('show', window.scrollY > 200);
+});
+</script>
+</body>
+</html>

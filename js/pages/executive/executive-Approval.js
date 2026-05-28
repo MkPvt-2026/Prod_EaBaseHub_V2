@@ -59,7 +59,7 @@ const APPROVAL_STATUS_META = {
   },
   approved: {
     label: "อนุมัติ",
-    badge: `<span class="status-badge approved">✅ อนุมัติแล้ว</span>`,
+    badge: `<span class="status-badge approved">✅ อนุมัติ</span>`,
   },
   rejected: {
     label: "ปฏิเสธ",
@@ -473,6 +473,147 @@ async function loadExecClaims() {
         </div>`;
     }
   }
+}
+
+// =====================================================
+// 📅 DATE RANGE CONTROLS
+// =====================================================
+function initDateRange() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  dateStart = monday;
+  dateEnd = sunday;
+
+  const startInput = document.getElementById("dateStart");
+  const endInput = document.getElementById("dateEnd");
+  if (startInput) startInput.value = formatDateForInput(dateStart);
+  if (endInput) endInput.value = formatDateForInput(dateEnd);
+
+  updateDateRangeLabel();
+}
+
+function setupDateControls() {
+  const startInput = document.getElementById("dateStart");
+  const endInput = document.getElementById("dateEnd");
+
+  if (startInput) {
+    startInput.addEventListener("change", () => {
+      dateStart = new Date(startInput.value);
+      dateStart.setHours(0, 0, 0, 0);
+      updateDateRangeLabel();
+      clearQuickRangeActive();
+      loadReports();
+    });
+  }
+
+  if (endInput) {
+    endInput.addEventListener("change", () => {
+      dateEnd = new Date(endInput.value);
+      dateEnd.setHours(23, 59, 59, 999);
+      updateDateRangeLabel();
+      clearQuickRangeActive();
+      loadReports();
+    });
+  }
+
+  document.querySelectorAll(".quick-range-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setQuickRange(btn.dataset.range);
+      document
+        .querySelectorAll(".quick-range-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
+}
+
+function clearQuickRangeActive() {
+  document
+    .querySelectorAll(".quick-range-btn")
+    .forEach((b) => b.classList.remove("active"));
+}
+
+function setQuickRange(range) {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  let start = new Date();
+  start.setHours(0, 0, 0, 0);
+  let end = new Date(today);
+
+  switch (range) {
+    case "today":
+      break;
+    case "7days":
+      start.setDate(start.getDate() - 6);
+      break;
+    case "30days":
+      start.setDate(start.getDate() - 29);
+      break;
+    case "thisWeek": {
+      const d = start.getDay();
+      start.setDate(start.getDate() + (d === 0 ? -6 : 1 - d));
+      break;
+    }
+    case "lastWeek": {
+      const d = start.getDay();
+      start.setDate(start.getDate() + (d === 0 ? -6 : 1 - d) - 7);
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+      break;
+    }
+    case "thisMonth":
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      break;
+    case "lastMonth":
+      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      end = new Date(today.getFullYear(), today.getMonth(), 0);
+      end.setHours(23, 59, 59, 999);
+      break;
+    default: {
+      const dd = start.getDay();
+      start.setDate(start.getDate() + (dd === 0 ? -6 : 1 - dd));
+    }
+  }
+
+  dateStart = start;
+  dateEnd = end;
+
+  const startInput = document.getElementById("dateStart");
+  const endInput = document.getElementById("dateEnd");
+  if (startInput) startInput.value = formatDateForInput(dateStart);
+  if (endInput) endInput.value = formatDateForInput(dateEnd);
+
+  updateDateRangeLabel();
+  loadReports();
+}
+
+function updateDateRangeLabel() {
+  const label = document.getElementById("dateRangeLabel");
+  if (!label) return;
+  const days = Math.ceil((dateEnd - dateStart) / (1000 * 60 * 60 * 24)) + 1;
+  const fmt = (d) =>
+    d.toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+    });
+  label.textContent = `${fmt(dateStart)} – ${fmt(dateEnd)} (${days} วัน)`;
+}
+
+function formatDateForInput(date) {
+  return date.toISOString().split("T")[0];
 }
 
 /* ================================================================
@@ -2017,7 +2158,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 11) Advance filter panel toggle
   const advBtn = document.querySelector(".btn-advance-filter");
-  const advPanel = document.querySelector(".advance-filter-panel");
+   const advPanel = document.querySelector(".qc-filter-bar");
   if (advBtn && advPanel) {
     advBtn.addEventListener("click", () => {
       advPanel.classList.toggle("show");

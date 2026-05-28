@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — จัดการข้อความแจ้งเตือน</title>
+ <!-- ✅ 1. Supabase CDN ก่อน -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ✅ 2. แล้วค่อย core scripts -->
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg:     #09091a;
+  --card:   #151530;
+  --card2:  #1a1a38;
+  --border: rgba(255,255,255,0.08);
+  --accent: #7c4dff;
+  --danger: #e94560;
+  --gold:   #ffca28;
+  --green:  #43a047;
+  --text:   #eeeef8;
+  --muted:  rgba(238,238,248,0.42);
+  --inp:    #1c1c3a;
+  --radius: 14px;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'Sarabun',sans-serif; min-height:100vh;
+  background-image:radial-gradient(ellipse 50% 35% at 92% 5%, rgba(124,77,255,.12) 0%, transparent 60%);
+}
+
+/* header */
+header {
+  position:sticky; top:0; z-index:100;
+  background:rgba(9,9,26,.9); backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  height:60px; padding:0 26px;
+  display:flex; align-items:center; gap:14px;
+}
+.back-btn { width:36px; height:36px; border-radius:10px; background:var(--card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; text-decoration:none; color:var(--muted); font-size:18px; transition:all .2s; }
+.back-btn:hover { color:var(--text); }
+.h-title { font-family:'Prompt',sans-serif; font-size:17px; font-weight:600; flex:1; }
+.abadge { font-size:10px; padding:3px 10px; border-radius:4px; background:rgba(124,77,255,.2); color:#b39ddb; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+/* env badge จาก supabaseClient.js จะแสดงมุมบนขวาอัตโนมัติ */
+
+/* auth gate */
+.auth-gate { max-width:420px; margin:80px auto; text-align:center; padding:20px; }
+.auth-gate .ico { font-size:52px; margin-bottom:16px; }
+.auth-gate h2 { font-family:'Prompt',sans-serif; font-size:20px; margin-bottom:8px; }
+.auth-gate p { color:var(--muted); font-size:14px; }
+
+/* wrapper */
+.wrapper { max-width:1100px; margin:0 auto; padding:30px 18px 60px; display:grid; grid-template-columns:440px 1fr; gap:28px; }
+@media(max-width:840px){ .wrapper{ grid-template-columns:1fr; } }
+
+/* panel title */
+.ptitle { font-family:'Prompt',sans-serif; font-size:15px; font-weight:600; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.ptitle span { font-size:19px; }
+
+/* form */
+.form-card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; }
+label { display:block; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+input[type=text], input[type=url], textarea, select {
+  width:100%; background:var(--inp); border:1px solid var(--border); border-radius:10px;
+  color:var(--text); font-family:'Sarabun',sans-serif; font-size:14px; padding:11px 14px;
+  outline:none; transition:border-color .2s; margin-bottom:16px;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--accent); }
+textarea { resize:vertical; min-height:100px; }
+.richtext-note { font-size:11px; color:var(--muted); margin-top:-12px; margin-bottom:16px; }
+
+/* cat pills */
+.cat-pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.cpill { flex-shrink:0; padding:7px 15px; border-radius:20px; font-size:13px; font-weight:500; border:1px solid var(--border); background:var(--inp); color:var(--muted); cursor:pointer; transition:all .18s; }
+.cpill.active { border-color:var(--accent); background:rgba(124,77,255,.2); color:#d1c4e9; }
+.cpill[data-cat=holiday].active  { border-color:var(--gold);   background:rgba(255,202,40,.12); color:var(--gold); }
+.cpill[data-cat=announce].active { border-color:var(--danger); background:rgba(233,69,96,.12);  color:#ef9a9a; }
+.cpill[data-cat=info].active     { border-color:#26c6da;       background:rgba(38,198,218,.1);  color:#80deea; }
+
+/* toggles */
+.toggles { display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+.tog { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.tog input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+.tog span { font-size:13px; color:var(--muted); }
+
+/* image preview */
+.img-wrap { position:relative; margin-bottom:16px; }
+.img-prev { width:100%; border-radius:10px; max-height:150px; object-fit:cover; border:1px solid var(--border); display:none; }
+.img-prev.show { display:block; }
+.img-clr { position:absolute; top:7px; right:7px; background:rgba(0,0,0,.65); border:none; color:#fff; width:25px; height:25px; border-radius:50%; cursor:pointer; font-size:12px; display:none; align-items:center; justify-content:center; }
+.img-prev.show ~ .img-clr { display:flex; }
+
+/* status radio */
+.status-row { display:flex; gap:12px; margin-bottom:16px; }
+.sradio { display:flex; align-items:center; gap:7px; cursor:pointer; }
+.sradio input { accent-color:var(--accent); cursor:pointer; }
+.sradio span { font-size:13px; color:var(--muted); }
+
+/* buttons */
+.btn-row { display:flex; gap:10px; margin-top:6px; }
+.btn { flex:1; padding:12px; border-radius:10px; border:none; font-family:'Sarabun',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#9c6fff; }
+.btn-primary:disabled { opacity:.5; cursor:default; }
+.btn-secondary { background:var(--inp); color:var(--muted); border:1px solid var(--border); }
+.btn-secondary:hover { color:var(--text); }
+
+/* stats */
+.stats { display:flex; gap:12px; margin-bottom:18px; }
+.stat { flex:1; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+.stat .num { font-family:'Prompt',sans-serif; font-size:24px; font-weight:700; }
+.stat .lbl { font-size:11px; color:var(--muted); margin-top:2px; }
+.stat.s-total .num { color:var(--accent); }
+.stat.s-unread .num { color:var(--danger); }
+.stat.s-pinned .num { color:var(--gold); }
+
+/* list */
+.list-wrap { position:sticky; top:76px; height:calc(100vh - 100px); overflow-y:auto; }
+.list-wrap::-webkit-scrollbar { width:4px; }
+.list-wrap::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
+
+.alist-filter { display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; }
+.afilt { flex-shrink:0; padding:6px 14px; border-radius:16px; font-size:12px; font-weight:500; border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer; transition:all .2s; }
+.afilt.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+.acard { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius); padding:15px 16px; margin-bottom:9px; position:relative; transition:border-color .2s; }
+.acard:hover { border-color:rgba(255,255,255,.14); }
+.acard-top { display:flex; align-items:flex-start; gap:10px; }
+.acard-ico { font-size:19px; flex-shrink:0; margin-top:1px; }
+.acard-info { flex:1; min-width:0; }
+.acard-subj { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:90px; }
+.acard-prev { font-size:12px; color:var(--muted); margin-top:3px; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.acard-meta { display:flex; align-items:center; gap:7px; margin-top:8px; flex-wrap:wrap; }
+.acard-time { font-size:11px; color:var(--muted); }
+.acard-acts { position:absolute; top:11px; right:11px; display:flex; gap:6px; }
+.aact { width:28px; height:28px; border-radius:7px; border:1px solid var(--border); background:var(--inp); color:var(--muted); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .18s; }
+.aact:hover { color:var(--danger); border-color:var(--danger); }
+.aact.pin:hover, .aact.pin.pinned { color:var(--gold); border-color:var(--gold); }
+.aact.edit:hover { color:#80deea; border-color:#80deea; }
+
+.tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px; letter-spacing:.05em; text-transform:uppercase; }
+.tag-holiday  { background:rgba(255,202,40,.14); color:var(--gold); }
+.tag-update   { background:rgba(124,77,255,.18); color:#b39ddb; }
+.tag-announce { background:rgba(233,69,96,.15);  color:#ef9a9a; }
+.tag-info     { background:rgba(38,198,218,.12); color:#80deea; }
+.tag-draft    { background:rgba(255,255,255,.07); color:var(--muted); }
+.tag-unread   { background:rgba(233,69,96,.18); color:var(--danger); }
+
+.empty-list { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+.sk { background:linear-gradient(90deg,var(--card2) 25%,rgba(255,255,255,.04) 50%,var(--card2) 75%); background-size:200% 100%; animation:shimmer 1.3s infinite; border-radius:var(--radius); height:76px; margin-bottom:9px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* toast */
+.toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(80px); padding:11px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff; z-index:999; transition:transform .4s cubic-bezier(.34,1.56,.64,1); white-space:nowrap; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.ok  { background:var(--green); }
+.toast.err { background:var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/pages/dashboard/messages-New.html" class="back-btn">‹</a>
+  <div class="h-title">⚙️ จัดการข้อความแจ้งเตือน</div>
+  <div class="abadge">Admin</div>
+</header>
+
+<div class="auth-gate" id="authGate">
+  <div class="ico">⏳</div>
+  <h2>กำลังตรวจสอบสิทธิ์</h2>
+  <p id="authMsg">กรุณารอสักครู่…</p>
+</div>
+
+<div class="wrapper" id="mainUI" style="display:none">
+
+  <!-- FORM -->
+  <div>
+    <div class="ptitle"><span>✉️</span> <span id="formTitle">สร้างข้อความใหม่</span></div>
+    <div class="form-card">
+      <input type="hidden" id="editId">
+
+      <label>ประเภทข้อความ</label>
+      <div class="cat-pills">
+        <div class="cpill active" data-cat="holiday"  onclick="selectCat(this)">🏖️ วันหยุด</div>
+        <div class="cpill" data-cat="update"   onclick="selectCat(this)">⚙️ อัปเดต</div>
+        <div class="cpill" data-cat="announce" onclick="selectCat(this)">📢 ประกาศ</div>
+        <div class="cpill" data-cat="info"     onclick="selectCat(this)">📊 ข้อมูล</div>
+      </div>
+
+      <label>หัวเรื่อง <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="inTitle" placeholder="เช่น 🎉 วันหยุดราชการ — วันแม่แห่งชาติ" maxlength="150">
+
+      <label>เนื้อหา <span style="color:var(--danger)">*</span></label>
+      <textarea id="inContent" placeholder="รายละเอียด (รองรับ HTML เช่น <strong>ตัวหนา</strong> <br> <ul><li>…</li></ul>)"></textarea>
+      <div class="richtext-note">💡 รองรับ HTML: &lt;strong&gt; &lt;em&gt; &lt;br&gt; &lt;ul&gt;&lt;li&gt; &lt;a href="…"&gt;</div>
+
+      <label>URL รูปภาพหน้าปก</label>
+      <input type="url" id="inImage" placeholder="https://…" oninput="previewImg(this.value)">
+      <div class="img-wrap">
+        <img id="imgPrev" class="img-prev" alt="preview"
+     onerror="this.classList.remove('show');
+              document.getElementById('inImage').value='';
+              this.src=''">
+        <button class="img-clr" onclick="clearImg()">✕</button>
+      </div>
+
+      <label>ไฟล์แนบ — URL</label>
+      <input type="url" id="inAttach" placeholder="https://…/file.pdf">
+      <label>ชื่อไฟล์แนบ</label>
+      <input type="text" id="inAttachName" placeholder="เช่น ระเบียบการลาหยุด.pdf">
+
+      <label>ลิงก์ภายนอก</label>
+      <input type="url" id="inExtLink" placeholder="https://…">
+
+      <div class="toggles">
+        <label class="tog"><input type="checkbox" id="chkPin"> <span>📌 ปักหมุด</span></label>
+      </div>
+
+      <label>สถานะ</label>
+      <div class="status-row">
+        <label class="sradio"><input type="radio" name="status" value="published" checked> <span>✅ เผยแพร่ทันที</span></label>
+        <label class="sradio"><input type="radio" name="status" value="draft">            <span>📝 บันทึกฉบับร่าง</span></label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="clearForm()">ล้าง</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitMsg()">📤 ส่งข้อความ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div>
+    <div class="ptitle"><span>📋</span> ข้อความทั้งหมด</div>
+    <div class="stats">
+      <div class="stat s-total"><div class="num" id="sTotal">–</div><div class="lbl">ทั้งหมด</div></div>
+      <div class="stat s-unread"><div class="num" id="sUnread">–</div><div class="lbl">ยังไม่อ่าน</div></div>
+      <div class="stat s-pinned"><div class="num" id="sPinned">–</div><div class="lbl">ปักหมุด</div></div>
+    </div>
+    <div class="alist-filter">
+      <div class="afilt active" onclick="setAFilter(this,'all')">ทั้งหมด</div>
+      <div class="afilt" onclick="setAFilter(this,'published')">เผยแพร่</div>
+      <div class="afilt" onclick="setAFilter(this,'draft')">ร่าง</div>
+      <div class="afilt" onclick="setAFilter(this,'pinned')">ปักหมุด</div>
+    </div>
+    <div class="list-wrap">
+      <div id="aList"></div>
+      <div class="empty-list" id="aEmpty" style="display:none">ยังไม่มีข้อความ</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+
+
+    <script src="/js/pages/auth/role-theme.js"></script>
+
+    <!-- Template base script -->
+    <!-- ✏️ เปลี่ยน path ตามที่วางไฟล์ -->
+    <!-- <script src="/js/pages/executive/executive-Dashboard.js"></script> -->
+
+    <!-- Splash -->
+    <script src="/js/core/splash.js"></script>
+    <script src="/js/core/loadingSplash.js"></script>
+
+
+
+
+
+<script>
+// ── ใช้ supabaseClient จาก supabaseClient.js ──────────────
+const sb = window.supabaseClient;
+
+const CAT_MAP = {
+  holiday:  { label:'วันหยุด', icon:'🏖️', tagClass:'tag-holiday'  },
+  update:   { label:'อัปเดต',  icon:'🔧', tagClass:'tag-update'   },
+  announce: { label:'ประกาศ',  icon:'📢', tagClass:'tag-announce' },
+  info:     { label:'ข้อมูล',  icon:'📊', tagClass:'tag-info'     },
+};
+function getCat(c) { return CAT_MAP[c] || { label:c, icon:'📌', tagClass:'tag-info' }; }
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date(), diff = now - d;
+  if (diff < 60_000)        return 'เมื่อกี้';
+  if (diff < 3_600_000)     return Math.floor(diff/60_000) + ' นาทีที่แล้ว';
+  if (diff < 86_400_000)    return 'วันนี้ ' + d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  if (diff < 2*86_400_000)  return 'เมื่อวาน';
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+}
+
+function escHtml(s='') { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function stripHtml(s='') { return s.replace(/<[^>]+>/g,''); }
+
+let adminUser   = null;
+let allMsgs     = [];
+let aFilter     = 'all';
+let selectedCat = 'holiday';
+let readCounts  = {};
+
+// ── init ────────────────────────────────────────────────
+(async () => {
+  if (!sb) { showGate('⚠️','supabaseClient ไม่พร้อม ตรวจสอบ supabaseClient.js'); return; }
+
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { showGate('🔒','กรุณาเข้าสู่ระบบก่อน'); return; }
+
+  // เช็ค admin จากตาราง admin_users
+ const { data: profile } = await sb
+  .from('profiles')
+  .select('role')
+  .eq('id', user.id)
+  .maybeSingle();
+
+const ADMIN_ROLES = ['admin', 'adminQc', 'manager', 'executive'];
+if (!profile || !ADMIN_ROLES.includes(profile.role)) {
+  showGate('🚫', `บัญชี ${user.email} ไม่มีสิทธิ์ Admin`);
+  return;
+}
+
+  adminUser = user;
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('mainUI').style.display   = 'grid';
+  await loadMsgs();
+  subscribeRealtime();
+})();
+
+function showGate(ico, msg) {
+  document.getElementById('authGate').querySelector('.ico').textContent = ico;
+  document.getElementById('authMsg').textContent = msg;
+  document.getElementById('mainUI').style.display = 'none';
+}
+
+// ── load ───────────────────────────────────────────────
+async function loadMsgs() {
+  document.getElementById('aList').innerHTML = [1,2,3].map(()=>'<div class="sk"></div>').join('');
+  document.getElementById('aEmpty').style.display = 'none';
+
+  const { data, error } = await sb
+    .from('announcements')
+    .select('*')
+    .order('is_pinned', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) { toast('โหลดไม่สำเร็จ: '+error.message, true); return; }
+  allMsgs = data || [];
+
+  const { data: reads } = await sb.from('announcement_reads').select('announcement_id');
+  readCounts = {};
+  (reads||[]).forEach(r => { readCounts[r.announcement_id] = (readCounts[r.announcement_id]||0)+1; });
+
+  updateStats();
+  renderList();
+}
+
+function updateStats() {
+  document.getElementById('sTotal').textContent  = allMsgs.length;
+  document.getElementById('sPinned').textContent = allMsgs.filter(m=>m.is_pinned).length;
+  document.getElementById('sUnread').textContent = allMsgs.filter(m=>m.status==='published'&&!(readCounts[m.id]>0)).length;
+}
+
+// ── render list ────────────────────────────────────────
+function renderList() {
+  const list  = document.getElementById('aList');
+  const empty = document.getElementById('aEmpty');
+  let items = allMsgs;
+  if (aFilter==='published') items = items.filter(m=>m.status==='published');
+  else if (aFilter==='draft') items = items.filter(m=>m.status==='draft');
+  else if (aFilter==='pinned') items = items.filter(m=>m.is_pinned);
+
+  if (!items.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  list.innerHTML = items.map(m => {
+    const cat = getCat(m.category);
+    const rc  = readCounts[m.id] || 0;
+    return `
+    <div class="acard" id="ac-${m.id}">
+      <div class="acard-acts">
+        <button class="aact edit" onclick="editMsg('${m.id}')" title="แก้ไข">✏️</button>
+        <button class="aact pin ${m.is_pinned?'pinned':''}" onclick="togglePin('${m.id}')" title="ปักหมุด">📌</button>
+        <button class="aact" onclick="deleteMsg('${m.id}')" title="ลบ">🗑</button>
+      </div>
+      <div class="acard-top">
+        <div class="acard-ico">${cat.icon}</div>
+        <div class="acard-info">
+          <div class="acard-subj">${escHtml(m.title)}</div>
+          <div class="acard-prev">${stripHtml(m.content).substring(0,80)}</div>
+          <div class="acard-meta">
+            <span class="tag ${cat.tagClass}">${cat.label}</span>
+            ${m.status==='draft'?'<span class="tag tag-draft">ร่าง</span>':''}
+            ${m.is_pinned?'<span class="tag" style="background:rgba(255,202,40,.12);color:var(--gold)">📌</span>':''}
+            ${rc>0?`<span class="tag tag-info">อ่านแล้ว ${rc} คน</span>`:'<span class="tag tag-unread">ยังไม่มีคนอ่าน</span>'}
+            <span class="acard-time">${fmtTime(m.created_at)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── submit ─────────────────────────────────────────────
+async function submitMsg() {
+  const title   = document.getElementById('inTitle').value.trim();
+  const content = document.getElementById('inContent').value.trim();
+  if (!title)   { toast('กรุณาใส่หัวเรื่อง', true); return; }
+  if (!content) { toast('กรุณาใส่เนื้อหา', true); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='กำลังบันทึก…';
+
+  const status = document.querySelector('input[name=status]:checked').value;
+  const payload = {
+    title, content, category: selectedCat,
+    is_pinned:       document.getElementById('chkPin').checked,
+    cover_image_url: document.getElementById('inImage').value.trim()      || null,
+    attachment_url:  document.getElementById('inAttach').value.trim()     || null,
+    attachment_name: document.getElementById('inAttachName').value.trim() || null,
+    external_link:   document.getElementById('inExtLink').value.trim()    || null,
+    status,
+    published_at: status==='published' ? new Date().toISOString() : null,
+    created_by:        adminUser.id,
+    created_by_name:   adminUser.user_metadata?.full_name || adminUser.email,
+  };
+
+  const editId = document.getElementById('editId').value;
+  let error;
+  if (editId) {
+    delete payload.created_by; delete payload.created_by_name;
+    ({ error } = await sb.from('announcements').update(payload).eq('id', editId));
+  } else {
+    ({ error } = await sb.from('announcements').insert(payload));
+  }
+
+  btn.disabled=false;
+  if (error) { toast('บันทึกไม่สำเร็จ: '+error.message, true); btn.textContent='📤 ส่งข้อความ'; return; }
+
+  toast(editId ? '✅ แก้ไขสำเร็จ' : '✅ ส่งข้อความสำเร็จ');
+  clearForm();
+  await loadMsgs();
+}
+
+// ── edit ──────────────────────────────────────────────
+function editMsg(id) {
+  const m = allMsgs.find(x=>x.id===id); if (!m) return;
+  document.getElementById('editId').value       = m.id;
+  document.getElementById('inTitle').value      = m.title;
+  document.getElementById('inContent').value    = m.content;
+  document.getElementById('inImage').value      = m.cover_image_url||'';
+  document.getElementById('inAttach').value     = m.attachment_url||'';
+  document.getElementById('inAttachName').value = m.attachment_name||'';
+  document.getElementById('inExtLink').value    = m.external_link||'';
+  document.getElementById('chkPin').checked     = m.is_pinned;
+  document.querySelector(`input[name=status][value="${m.status}"]`).checked = true;
+  previewImg(m.cover_image_url);
+  document.querySelectorAll('.cpill').forEach(p => p.classList.toggle('active', p.dataset.cat===m.category));
+  selectedCat = m.category;
+  document.getElementById('formTitle').textContent  = 'แก้ไขข้อความ';
+  document.getElementById('submitBtn').textContent  = '💾 บันทึกการแก้ไข';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── delete ────────────────────────────────────────────
+async function deleteMsg(id) {
+  if (!confirm('ต้องการลบข้อความนี้?\n(ไม่สามารถย้อนกลับได้)')) return;
+  const { error } = await sb.from('announcements').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: '+error.message, true); return; }
+  toast('🗑️ ลบข้อความแล้ว');
+  await loadMsgs();
+}
+
+// ── toggle pin ─────────────────────────────────────────
+async function togglePin(id) {
+  const m = allMsgs.find(x=>x.id===id); if (!m) return;
+  const { error } = await sb.from('announcements').update({ is_pinned: !m.is_pinned }).eq('id', id);
+  if (error) { toast('ปรับไม่สำเร็จ: '+error.message, true); return; }
+  await loadMsgs();
+}
+
+// ── form helpers ──────────────────────────────────────
+function selectCat(el) {
+  document.querySelectorAll('.cpill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active'); selectedCat = el.dataset.cat;
+}
+function previewImg(url) {
+  const img = document.getElementById('imgPrev');
+  if (url) { img.src=url; img.classList.add('show'); } else clearImg();
+}
+function clearImg() {
+  const img = document.getElementById('imgPrev');
+  img.src=''; img.classList.remove('show');
+  document.getElementById('inImage').value='';
+}
+function clearForm() {
+  document.getElementById('editId').value='';
+  ['inTitle','inContent','inImage','inAttach','inAttachName','inExtLink'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('chkPin').checked=false;
+  document.querySelector('input[name=status][value="published"]').checked=true;
+  clearImg();
+  document.querySelectorAll('.cpill').forEach(p=>p.classList.toggle('active',p.dataset.cat==='holiday'));
+  selectedCat='holiday';
+  document.getElementById('formTitle').textContent='สร้างข้อความใหม่';
+  document.getElementById('submitBtn').textContent='📤 ส่งข้อความ';
+}
+
+function setAFilter(el, f) {
+  document.querySelectorAll('.afilt').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active'); aFilter=f; renderList();
+}
+
+// ── realtime ──────────────────────────────────────────
+function subscribeRealtime() {
+  sb.channel('admin-ch-' + adminUser.id)
+    .on('postgres_changes',{ event:'*', schema:'public', table:'announcements' },    loadMsgs)
+    .on('postgres_changes',{ event:'*', schema:'public', table:'announcement_reads'}, loadMsgs)
+    .subscribe();
+}
+
+// ── toast ─────────────────────────────────────────────
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(err?'err':'ok');
+  setTimeout(()=>t.classList.add('show'),30);
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>

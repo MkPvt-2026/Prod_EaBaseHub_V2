@@ -96,53 +96,16 @@ button{
   min-height:100vh;
 }
 
-.app-main{
-  flex:1;
-  min-width:0;
-  margin-left:var(--sidebar-collapse);
-  display:flex;
-  flex-direction:column;
-  min-height:100vh;
-  transition:margin-left var(--t);
-}
+
 
 
 /* =========================================================
    SIDEBAR
    ========================================================= */
-.app-sidebar{
-  position:fixed;
-  top:0;
-  left:0;
-  width:var(--sidebar-collapse);
-  height:100vh;
 
-  background:
-    linear-gradient(
-      180deg,
-      var(--sidebar-bg-1) 0%,
-      var(--sidebar-bg-2) 100%
-    );
 
-  display:flex;
-  flex-direction:column;
-
-  z-index:500;
-  overflow:hidden;
-
-  transition:width var(--t);
-
-  box-shadow:
-    2px 0 16px rgba(0,0,0,.08);
-}
-
-.app-sidebar.expanded{
-  width:var(--sidebar-expand);
-}
-
-.app-sidebar.expanded ~ .app-main{
-  margin-left:var(--sidebar-expand);
-}
+.app-sidebar.collapsed { width: 64px; }
+.app-sidebar.expanded  { width: 220px; }
 
 
 /* =========================================================
@@ -158,9 +121,7 @@ button{
 
   padding:16px;
 
-  border-bottom:
-    1px solid rgba(255,255,255,.12);
-
+  
   flex-shrink:0;
 }
 
@@ -213,14 +174,17 @@ button{
    SIDEBAR NAV
    ========================================================= */
 .sidebar-nav{
-  flex:1;
-
-  display:flex;
-  flex-direction:column;
-
-  gap:4px;
-
-  padding:12px 8px;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 8px 0;
+  position: relative;
+  z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 
@@ -228,24 +192,21 @@ button{
    SIDEBAR MENU
    ========================================================= */
 .ea-mini-link,
+.sidebar-nav-item,
 .sidebar-logout{
 
   width:100%;
   height:48px;
 
-  border-radius:14px;
-
   display:flex;
   align-items:center;
+  justify-content:center;
 
-  color:rgba(255,255,255,.88);
+  position:relative;
 
   overflow:hidden;
 
-  transition:
-    background var(--t),
-    color var(--t),
-    transform var(--t);
+  color:rgba(255,255,255,.9);
 }
 
 
@@ -274,10 +235,10 @@ button{
 
 
 /* active */
-.ea-mini-link.active{
+/* .ea-mini-link.active{
   background:rgba(255,255,255,.16);
   color:#fff;
-}
+} */
 
 
 /* icon */
@@ -331,38 +292,6 @@ button{
 /* =========================================================
    SIDEBAR TOGGLE BUTTON
    ========================================================= */
-.sidebar-collapse-btn{
-
-  position:absolute;
-
-  top:82px;
-  right:-14px;
-
-  width:28px;
-  height:28px;
-
-  border-radius:50%;
-
-  background:
-    linear-gradient(
-      180deg,
-      var(--sidebar-bg-1),
-      var(--sidebar-bg-2)
-    );
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  color:#fff;
-
-  cursor:pointer;
-
-  box-shadow:
-    0 6px 16px rgba(0,0,0,.15);
-
-  z-index:800;
-}
 
 .sidebar-collapse-btn:hover{
   transform:scale(1.06);
@@ -558,7 +487,7 @@ button{
 
   padding:0 24px;
 
-  font-size:13px;
+  font-size:14px;
 
   color:var(--text-soft);
 }
@@ -587,7 +516,7 @@ button{
 }
 
 .app-breadcrumb .material-symbols-outlined{
-  font-size:16px !important;
+  font-size:18px !important;
 }
 
 
@@ -668,11 +597,14 @@ button{
     padding:16px;
   }
 
-  .page-header-badge span:last-child,
-  .header-date-pill span:last-child{
-    display:none;
-  }
+  .header-date-pill{
+  min-width: 120px;
+  justify-content:center;
+}
 
+.header-date-pill span:last-child{
+  display:inline !important;
+}
 }
 
 
@@ -900,9 +832,10 @@ body {
 }
 
 .container {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 
@@ -914,13 +847,35 @@ body {
   min-height: 100vh;
 }
 
-.app-main {
-  flex: 1;
-  margin-left: 64px;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.app-main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+
+  margin-left:64px;
+  width:calc(100% - 64px);
+
+  transition:
+    margin-left 0.2s ease,
+    width 0.2s ease;
 }
+
+
+/* =========================
+   SIDEBAR EXPAND LAYOUT
+   ========================= */
+
+.app-sidebar.expanded ~ .app-main{
+  margin-left:220px;
+  width:calc(100% - 220px);
+}
+
+.app-sidebar.collapsed ~ .app-main{
+  margin-left:64px;
+  width:calc(100% - 64px);
+}
+
 
 /* =====================================================
    5. SIDEBAR
@@ -1339,7 +1294,7 @@ body {
 }
 
 .header-system-name .header-icon .material-symbols-outlined {
-  font-size: 18px !important;
+  font-size: 20px !important;
   color: var(--executive) !important;
 }
 
@@ -1367,12 +1322,12 @@ body {
   color: var(--executive-text);
   padding: 8px 14px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .header-date-pill .material-symbols-outlined {
-  font-size: 15px !important;
+  font-size: 16px !important;
   color: var(--executive) !important;
   
 }
@@ -1450,7 +1405,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
@@ -1518,19 +1473,46 @@ body {
   font-size: 14px;
 }
 
-.container {
-  /* width: min(1280px, 100%); */
-  flex: 1;
-  margin: 0;
-  padding: 24px;
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 768px) {
+  .app-sidebar {
+    width: 56px;
+  }
+
+  .app-main {
+    margin-left: 56px;
+  }
+
+  .app-header {
+    padding: 0 16px;
+    height: 64px;
+  }
+
+  .header-subtitle {
+    display: none;
+  }
+
+  .header-date-pill {
+    display: none;
+  }
+
+  .header-system-name {
+    font-size: 15px;
+  }
+
+  .app-content {
+    padding: 16px;
+  }
 }
 
-.footer {
-  padding: 26px 24px 40px;
-  color: var(--text-muted);
-  font-size: 13px;
-  text-align: center;
+@media (max-width: 480px) {
+  .header-user-name {
+    display: none;
+  }
 }
+
 
 /* =====================================================
    SUMMARY CARDS
@@ -2396,13 +2378,35 @@ body {
 }
 
 @media (max-width: 1024px) {
-  .app-sidebar { width: 64px; }
-  .app-main { margin-left: 64px; }
-  .app-sidebar.expanded { width: 64px; }
-  .app-sidebar.expanded .sidebar-brand-text { display: none; }
-  .ea-mini-text { display: none !important; }
-  .qc-summary { grid-template-columns: 1fr; }
-  .qc-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-main {
+    margin-left: 64px;
+  }
+
+  .app-sidebar.collapsed {
+    width: 64px;
+  }
+
+  .app-sidebar.expanded {
+    width: 220px;
+  }
+
+  .app-sidebar.collapsed .sidebar-brand-text,
+  .app-sidebar.collapsed .ea-mini-text,
+  .app-sidebar.collapsed .nav-label {
+    display: none !important;
+  }
+
+  .app-sidebar.expanded .sidebar-brand-text {
+    display: flex !important;
+  }
+
+  .qc-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 980px) {
@@ -2646,33 +2650,432 @@ body {
   }
 }
 
-/* FIX sidebar สำหรับ HTML ชุดนี้ */
-.app-sidebar.collapsed .ea-mini-text,
-.app-sidebar.collapsed .sidebar-brand-text {
-  display: none !important;
+
+
+.app-sidebar.collapsed .sidebar-nav-item .nav-label{
+  display:none !important;
 }
 
-.app-sidebar.collapsed .ea-mini-link {
-  width: 64px !important;
-  justify-content: center !important;
-  padding: 0 !important;
+.app-sidebar.collapsed .sidebar-nav-item{
+  justify-content:center;
+}
+
+.app-sidebar.collapsed .nav-icon-wrap{
+  width:64px;
+}
+
+
+
+/* ================================
+   FIX SIDEBAR FINAL
+   ================================ */
+
+/* สีไอคอนเมนู */
+.sidebar-nav-item .material-symbols-outlined,
+.sidebar-logout .material-symbols-outlined,
+.ea-theme-toggle .material-symbols-outlined {
+  color: #ffffff !important;
+}
+
+/* แถวเมนู */
+.sidebar-nav-item {
+  width: 100%;
+  height: 48px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
   gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
-.app-sidebar.collapsed .ea-mini-link .material-symbols-outlined {
+/* กล่องไอคอน ต้องกว้าง 64px เสมอ */
+.sidebar-nav-item .nav-icon-wrap,
+.sidebar-logout .nav-icon-wrap {
   width: 64px !important;
   min-width: 64px !important;
+  height: 48px !important;
+
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+
+  flex: 0 0 64px !important;
 }
 
-.app-sidebar.expanded .ea-mini-text {
-  display: inline !important;
-}
-
-/* กันตัวอักษรเขียวล้นออกนอก sidebar */
-.ea-mini-link {
-  overflow: hidden !important;
+/* ตัวหนังสือตอนขยาย */
+.app-sidebar.expanded .sidebar-nav-item .nav-label,
+.app-sidebar.expanded .sidebar-logout .nav-label,
+.app-sidebar.expanded .ea-theme-toggle .nav-label {
+  display: inline-flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  max-width: 140px !important;
+  color: #ffffff !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* ตัวหนังสือตอนย่อ */
+.app-sidebar.collapsed .sidebar-nav-item .nav-label,
+.app-sidebar.collapsed .sidebar-logout .nav-label,
+.app-sidebar.collapsed .ea-theme-toggle .nav-label {
+  display: none !important;
+}
+
+/* ปุ่มโหมดมืด */
+.ea-theme-toggle {
+  width: 100% !important;
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 !important;
+}
+
+.app-sidebar.collapsed .ea-theme-toggle {
+  justify-content: center !important;
+}
+
+/* ตอนขยาย sidebar */
+.app-sidebar.expanded {
+  width: 220px !important;
+}
+
+/* ตอนย่อ sidebar */
+.app-sidebar.collapsed {
+  width: 64px !important;
+}
+
+
+
+
+/* =====================================================
+   EXECUTIVE TABLE FIX
+   ===================================================== */
+
+.approval-table{
+  width:100%;
+  overflow:hidden;
+}
+
+.approval-table table{
+  width:100%;
+  table-layout:fixed;
+  border-collapse:collapse;
+}
+
+/* ---------- HEADER + CELL ---------- */
+
+.approval-table th,
+.approval-table td{
+  padding:14px 12px;
+  vertical-align:top;
+  word-break:break-word;
+}
+
+/* ---------- COLUMN WIDTH ---------- */
+
+/* วันที่ */
+.approval-table th:nth-child(1),
+.approval-table td:nth-child(1){
+  width:110px;
+}
+
+/* ประเภท */
+.approval-table th:nth-child(2),
+.approval-table td:nth-child(2){
+  width:110px;
+}
+
+/* หัวข้อ */
+.approval-table th:nth-child(3),
+.approval-table td:nth-child(3){
+  width:180px;
+}
+
+/* รายละเอียด */
+.approval-table th:nth-child(4),
+.approval-table td:nth-child(4){
+  width:auto;
+}
+
+/* ความสำคัญ */
+.approval-table th:nth-child(5),
+.approval-table td:nth-child(5){
+  width:90px;
+}
+
+/* สถานะ */
+.approval-table th:nth-child(6),
+.approval-table td:nth-child(6){
+  width:110px;
+}
+
+/* ปุ่ม */
+.approval-table th:nth-child(7),
+.approval-table td:nth-child(7){
+  width:120px;
+}
+
+/* ---------- TEXT ---------- */
+
+.cell-clamp-1,
+.cell-clamp-2{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.cell-clamp-1{
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+}
+
+.cell-clamp-2{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+
+/* ---------- BUTTON ---------- */
+
+.btn-view{
+  width:100%;
+  min-width:unset;
+  padding:8px 10px;
+  font-size:12px;
+  justify-content:center;
+}
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+
+@media (max-width:1180px){
+
+  .container{
+    padding:16px;
+  }
+
+  .approval-table th,
+  .approval-table td{
+    padding:10px 8px;
+    font-size:12px;
+  }
+
+  .approval-table th:nth-child(1),
+  .approval-table td:nth-child(1){
+    width:95px;
+  }
+
+  .approval-table th:nth-child(2),
+  .approval-table td:nth-child(2){
+    width:90px;
+  }
+
+  .approval-table th:nth-child(3),
+  .approval-table td:nth-child(3){
+    width:150px;
+  }
+
+  .approval-table th:nth-child(5),
+  .approval-table td:nth-child(5){
+    width:80px;
+  }
+
+  .approval-table th:nth-child(6),
+  .approval-table td:nth-child(6){
+    width:95px;
+  }
+
+  .approval-table th:nth-child(7),
+  .approval-table td:nth-child(7){
+    width:105px;
+  }
+
+  .btn-view{
+    padding:7px 8px;
+    font-size:11px;
+  }
+}
+
+
+/* ซ่อน Advance Filter ก่อน */
+.advance-filter-panel,
+.qc-filter-bar{
+  display: none;
+}
+
+/* กดปุ่มแล้วค่อยแสดง */
+.advance-filter-panel.show,
+.qc-filter-bar.show{
+  display: grid;
+}
+
+
+
+/* =====================================================
+   FIX: Executive table badge + column balance
+   ===================================================== */
+
+.qc-table{
+  width:100%;
+  min-width:0 !important;
+  table-layout:fixed;
+}
+
+.qc-table th,
+.qc-table td{
+  padding:12px 10px;
+  vertical-align:middle;
+}
+
+/* ปรับขนาดคอลัมน์ให้พอดี */
+.qc-table th:nth-child(1),
+.qc-table td:nth-child(1){ width:95px; }
+
+.qc-table th:nth-child(2),
+.qc-table td:nth-child(2){ width:100px; }
+
+.qc-table th:nth-child(3),
+.qc-table td:nth-child(3){ width:150px; }
+
+.qc-table th:nth-child(4),
+.qc-table td:nth-child(4){ width: 150px; }
+
+.qc-table th:nth-child(5),
+.qc-table td:nth-child(5){ width:88px; }
+
+.qc-table th:nth-child(6),
+.qc-table td:nth-child(6){ width: 100px; }
+
+.qc-table th:nth-child(7),
+.qc-table td:nth-child(7){ width:100px; }
+
+/* Badge ประเภทงาน */
+.scope-pill{
+  width:100px;
+  height:30px;
+  padding:6px 8px !important;
+  border-radius:18px;
+  display:inline-flex;
+  /* flex-direction:column; */
+  justify-content:center;
+  align-items:center;
+  gap:2px;
+  font-size:13px !important;
+  line-height:1.2;
+  text-align:center;
+}
+
+.scope-pill .material-symbols-outlined{
+  font-size:15px !important;
+}
+
+/* Badge สถานะ */
+.status-badge{
+  width:100px;
+  height:30px;
+  padding:6px 8px !important;
+  border-radius:999px;
+  display:inline-flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:2px;
+  font-size:13px !important;
+  line-height:1.15;
+  text-align:center;
+  white-space:normal;
+}
+
+/* ปุ่มจัดการ */
+.btn-view{
+  width:82px;
+  height:36px;
+  padding:0 10px !important;
+  border-radius:12px;
+  font-size:11px !important;
+  gap:4px;
+  justify-content:center;
+  white-space:nowrap;
+}
+
+/* ข้อความไม่ดันตาราง */
+.cell-title,
+.cell-product{
+  min-width:0;
+}
+
+.cell-strong,
+.cell-sub{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* iPad / Tablet */
+@media (max-width:1180px){
+  .qc-table th,
+  .qc-table td{
+    padding:10px 8px;
+    font-size:12px;
+  }
+
+  .qc-table th:nth-child(2),
+  .qc-table td:nth-child(2){
+    width: 110px;
+  }
+
+  .qc-table th:nth-child(6),
+  .qc-table td:nth-child(6){
+    width:110px;
+  }
+
+  .scope-pill{
+    width:100px;
+    height:30px;
+    font-size:10.5px !important;
+  }
+
+  .status-badge{
+    width:100px;
+    height:30px;
+    font-size:10.5px !important;
+  }
+}
+
+
+
+/* =====================================================
+   Pending Approval Alert
+   ===================================================== */
+
+@keyframes pendingBlink {
+  0%, 100% {
+    border-color: #e5e7eb;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+  }
+
+  50% {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18),
+                0 10px 28px rgba(124, 58, 237, 0.22);
+    background: #faf5ff;
+  }
+}
+
+#cardPending.has-alert {
+  animation: pendingBlink 1s infinite !important;
+}
+
+#cardPending.has-alert .summary-num {
+  color: #7c3aed !important;
+}
+
+#cardPending.has-alert .summary-icon {
+  background: #ede9fe !important;
+  color: #7c3aed !important;
 }
