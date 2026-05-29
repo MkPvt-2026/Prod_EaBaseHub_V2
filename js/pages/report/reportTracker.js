@@ -1159,38 +1159,51 @@ function getDateKey(dateValue) {
   return String(dateValue).split("T")[0];
 }
 
+// =====================================================
+// 🆕 LOAD TRIP PLANS FOR A SALE
+// - ดึงข้อมูลจากตาราง trips โดยกรองด้วย user_id หรือ user_name (กรณีที่ profile ไม่มีชื่อ)
+// - สร้างแผนที่ tripPlanMap: { "2024-06-01": ["ร้าน A", "ร้าน B"], "2024-06-02": ["ร้าน C"] }
+// - ใช้ใน modal ตารางรายงานของเซลล์ เพื่อแสดงว่ามีแผนจะไปเยี่ยมร้านไหนบ้างในแต่ละวัน 
+
+
 async function loadTripPlansForSale(saleId) {
   tripPlanMap = {};
 
   const profile = profilesMap[saleId];
-  const saleName = profile?.display_name || "";
+  const saleName = String(profile?.display_name || "").trim();
 
   console.log("🧑 saleId =", saleId);
   console.log("🧑 saleName =", saleName);
 
-  let query = supabaseClient
+  const start = formatDateForInput(dateStart);
+  const end = formatDateForInput(dateEnd);
+
+  const { data, error } = await supabaseClient
     .from("trips")
     .select("id, user_id, user_name, trips, start_date, end_date, status, is_latest, created_at")
+    .lte("start_date", end)
+    .gte("end_date", start)
     .order("created_at", { ascending: false });
 
-  // ✅ หาได้ทั้งกรณี id ตรง หรือชื่อพนักงานตรง
-  if (saleName) {
-    query = query.or(`user_id.eq.${saleId},user_name.eq.${saleName}`);
-  } else {
-    query = query.eq("user_id", saleId);
-  }
-
-  const { data, error } = await query;
-
-  console.log("🚌 trips data =", data);
+  console.log("🚌 trips raw =", data);
   console.log("❌ trips error =", error);
 
-  if (error) {
-    console.error("❌ loadTripPlansForSale:", error);
-    return;
-  }
+  if (error) return;
 
-  (data || []).forEach((plan) => {
+  const matchedPlans = (data || []).filter((plan) => {
+    const dbName = String(plan.user_name || "").trim();
+
+    return (
+      plan.user_id === saleId ||
+      dbName === saleName ||
+      dbName.includes(saleName) ||
+      saleName.includes(dbName)
+    );
+  });
+
+  console.log("✅ matchedPlans =", matchedPlans);
+
+  matchedPlans.forEach((plan) => {
     let rows = [];
 
     if (Array.isArray(plan.trips)) {
@@ -1219,7 +1232,6 @@ async function loadTripPlansForSale(saleId) {
 
   console.log("✅ tripPlanMap =", tripPlanMap);
 }
-
 
 // =====================================================
 // 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
