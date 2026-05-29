@@ -1164,8 +1164,9 @@ async function loadTripPlansForSale(saleId) {
 
   const { data, error } = await supabaseClient
     .from("trips")
-    .select("id, user_id, trips, start_date, end_date, created_at")
+    .select("id, user_id, trips, start_date, end_date, created_at, is_latest")
     .eq("user_id", saleId)
+    // .eq("is_latest", true)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -1173,16 +1174,40 @@ async function loadTripPlansForSale(saleId) {
     return;
   }
 
+  console.log("🚌 trips data:", data);
+
   (data || []).forEach((plan) => {
     const rows = Array.isArray(plan.trips) ? plan.trips : [];
 
     rows.forEach((t) => {
-      const dateKey = getDateKey(t.date);
+      console.log("🧾 trip row:", t);
+
+      const dateKey = getDateKey(
+        t.date ||
+        t.trip_date ||
+        t.visit_date ||
+        t.plan_date ||
+        t.day
+      );
+
       if (!dateKey) return;
 
-      const shops = [t.shop1, t.shop2, t.shop3].filter(
-        (v) => v && String(v).trim() && v !== "-" && v !== "ชื่อร้าน",
-      );
+      const shops = [
+        t.shop1,
+        t.shop2,
+        t.shop3,
+        t.shop_1,
+        t.shop_2,
+        t.shop_3,
+        t.store1,
+        t.store2,
+        t.store3,
+        t.customer1,
+        t.customer2,
+        t.customer3
+      ]
+        .filter((v) => v && String(v).trim() && v !== "-" && v !== "ชื่อร้าน")
+        .map((v) => String(v).trim());
 
       if (!tripPlanMap[dateKey]) tripPlanMap[dateKey] = [];
 
@@ -1193,23 +1218,9 @@ async function loadTripPlansForSale(saleId) {
       });
     });
   });
+
+  console.log("✅ tripPlanMap:", tripPlanMap);
 }
-
-function renderPlanShopsByDate(reportDate) {
-  const dateKey = getDateKey(reportDate);
-  const shops = tripPlanMap[dateKey] || [];
-
-  if (!shops.length) {
-    return `<span class="muted-text">—</span>`;
-  }
-
-  return `
-    <div class="plan-shop-list">
-      ${shops.map((shop) => `<div>${escapeHtml(shop)}</div>`).join("")}
-    </div>
-  `;
-}
-
 // =====================================================
 // 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
 // =====================================================
@@ -1251,6 +1262,28 @@ async function openSalesTableModal(saleId) {
     modal.classList.add("show");
     document.body.style.overflow = "hidden";
   }
+}
+
+
+function renderPlanShopsByDate(reportDate) {
+  const dateKey = getDateKey(reportDate);
+  const shops = tripPlanMap[dateKey] || [];
+
+  if (!shops.length) {
+    return `<span class="muted-text">—</span>`;
+  }
+
+  return `
+    <div class="plan-shop-list">
+      ${shops.map((shop) => `<div>${escapeHtml(shop)}</div>`).join("")}
+    </div>
+  `;
+}
+
+
+function getDateKey(dateValue) {
+  if (!dateValue) return "";
+  return String(dateValue).split("T")[0];
 }
 
 // =====================================================
