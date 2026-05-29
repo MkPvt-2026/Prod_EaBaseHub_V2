@@ -1162,6 +1162,8 @@ function getDateKey(dateValue) {
 async function loadTripPlansForSale(saleId) {
   tripPlanMap = {};
 
+   console.log("🔎 query trips user_id =", saleId);
+
   const { data, error } = await supabaseClient
     .from("trips")
     .select("id, user_id, trips, start_date, end_date, created_at, is_latest")
@@ -1181,14 +1183,18 @@ async function loadTripPlansForSale(saleId) {
 
     rows.forEach((t) => {
       console.log("🧾 trip row:", t);
+      console.log("🧾 trip row keys:", Object.keys(t));
+console.log("🧾 trip row value:", t);
 
       const dateKey = getDateKey(
-        t.date ||
-        t.trip_date ||
-        t.visit_date ||
-        t.plan_date ||
-        t.day
-      );
+  t.date ||
+  t.visit_date ||
+  t.trip_date ||
+  t.plan_date ||
+  t.work_date ||
+  t.day ||
+  t.dateText
+);
 
       if (!dateKey) return;
 
@@ -1251,6 +1257,9 @@ async function openSalesTableModal(saleId) {
       });
     subtitleEl.textContent = `ช่วงเวลา ${fmt(dateStart)} – ${fmt(dateEnd)}`;
   }
+
+  console.log("🧑 saleId ที่ส่งมา =", saleId);
+console.log("🧑 profile =", profile);
 
   // โหลดแผนการเดินทางของเซลล์ก่อน แล้วค่อย render ตาราง
   await loadTripPlansForSale(saleId);
