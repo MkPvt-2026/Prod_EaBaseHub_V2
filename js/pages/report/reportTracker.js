@@ -1162,13 +1162,10 @@ function getDateKey(dateValue) {
 async function loadTripPlansForSale(saleId) {
   tripPlanMap = {};
 
-   console.log("🔎 query trips user_id =", saleId);
-
   const { data, error } = await supabaseClient
     .from("trips")
-    .select("id, user_id, trips, start_date, end_date, created_at, is_latest")
+    .select("id, user_id, trips, start_date, end_date, status, is_latest, created_at")
     .eq("user_id", saleId)
-    // .eq("is_latest", true)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -1179,41 +1176,22 @@ async function loadTripPlansForSale(saleId) {
   console.log("🚌 trips data:", data);
 
   (data || []).forEach((plan) => {
-    const rows = Array.isArray(plan.trips) ? plan.trips : [];
+    let rows = [];
+
+    // ✅ trips อาจเป็น array เก่า หรือ object ใหม่ { rows, expense }
+    if (Array.isArray(plan.trips)) {
+      rows = plan.trips;
+    } else if (plan.trips && typeof plan.trips === "object") {
+      rows = Array.isArray(plan.trips.rows) ? plan.trips.rows : [];
+    }
 
     rows.forEach((t) => {
-      console.log("🧾 trip row:", t);
-      console.log("🧾 trip row keys:", Object.keys(t));
-console.log("🧾 trip row value:", t);
-
-      const dateKey = getDateKey(
-  t.date ||
-  t.visit_date ||
-  t.trip_date ||
-  t.plan_date ||
-  t.work_date ||
-  t.day ||
-  t.dateText
-);
-
+      const dateKey = getDateKey(t.date);
       if (!dateKey) return;
 
-      const shops = [
-        t.shop1,
-        t.shop2,
-        t.shop3,
-        t.shop_1,
-        t.shop_2,
-        t.shop_3,
-        t.store1,
-        t.store2,
-        t.store3,
-        t.customer1,
-        t.customer2,
-        t.customer3
-      ]
-        .filter((v) => v && String(v).trim() && v !== "-" && v !== "ชื่อร้าน")
-        .map((v) => String(v).trim());
+      const shops = [t.shop1, t.shop2, t.shop3]
+        .map((v) => String(v || "").trim())
+        .filter((v) => v && v !== "-" && v !== "ชื่อร้าน");
 
       if (!tripPlanMap[dateKey]) tripPlanMap[dateKey] = [];
 
