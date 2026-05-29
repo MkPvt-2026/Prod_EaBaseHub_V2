@@ -400,7 +400,29 @@ button{
 /* =========================================================
    BADGE / PILLS
    ========================================================= */
-.page-header-badge,
+.page-header-badge  {
+
+  height:40px;
+
+  padding:0 14px;
+
+  border-radius:var(--r-full);
+
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+   background: linear-gradient(135deg, #fff7ed, #fffbeb);
+  border: 1px solid #fbbf24;
+  color: #92400e;
+  
+  font-size:13px;
+  font-weight:600;
+
+  white-space:nowrap;
+}
+
+
 .header-date-pill{
 
   height:40px;
