@@ -2417,3 +2417,4 @@ window.savePopupComment = savePopupComment;
 window.markPopupAsRead = markPopupAsRead;
 window.switchView = switchView;
 window.toggleNote = toggleNote;
+ซไๆ
