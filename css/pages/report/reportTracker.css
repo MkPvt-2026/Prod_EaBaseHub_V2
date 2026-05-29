@@ -2380,6 +2380,38 @@ body {
   font-size: 13px;
 }
 
+
+
+
+.comment-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:8px;
+}
+
+.comment-btn-edit,
+.comment-btn-delete{
+  border:none;
+  border-radius:8px;
+  padding:4px 10px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.comment-btn-edit{
+  background:#e0f2fe;
+  color:#0369a1;
+}
+
+.comment-btn-delete{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+
+
+
 /* =====================================================
    23. RESPONSIVE
    ===================================================== */

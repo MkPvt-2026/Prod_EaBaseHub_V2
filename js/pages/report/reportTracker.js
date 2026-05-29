@@ -1839,7 +1839,14 @@ async function loadCommentsIntoElement(reportIds, container) {
   try {
     const { data, error } = await supabaseClient
       .from("report_comments")
-      .select("comment, created_at, report_id, profiles(display_name, role)")
+      .select(`
+  id,
+  comment,
+  created_at,
+  report_id,
+  manager_id,
+  profiles(display_name, role)
+`)
       .in("report_id", reportIds)
       .order("created_at", { ascending: true });
 
@@ -1885,15 +1892,52 @@ async function loadCommentsIntoElement(reportIds, container) {
           }
         }
 
+        const canManage =
+  localUser &&
+  (
+    localUser.id === c.manager_id ||
+    ["admin", "executive"].includes(localUser.role)
+  );
+
         return `
-        <div class="comment-item ${roleClass}">
-          <div class="comment-meta">
-            <span class="comment-author">${escapeHtml(displayName)}</span>
-            <span class="comment-role-badge ${roleClass}">${roleBadge}</span>
-            <span class="comment-date">${formatDateTime(c.created_at)}</span>
-          </div>
-          <div class="comment-text">${renderCommentText(c.comment)}</div>
-        </div>`;
+<div class="comment-item ${roleClass}">
+
+  <div class="comment-meta">
+    <span class="comment-author">${escapeHtml(displayName)}</span>
+    <span class="comment-role-badge ${roleClass}">
+      ${roleBadge}
+    </span>
+    <span class="comment-date">
+      ${formatDateTime(c.created_at)}
+    </span>
+  </div>
+
+  <div class="comment-text">
+    ${renderCommentText(c.comment)}
+  </div>
+
+  ${
+    canManage
+      ? `
+      <div class="comment-actions">
+        <button
+          class="comment-btn-edit"
+          onclick="editComment('${c.id}')">
+          แก้ไข
+        </button>
+
+        <button
+          class="comment-btn-delete"
+          onclick="deleteComment('${c.id}')">
+          ลบ
+        </button>
+      </div>
+    `
+      : ""
+  }
+
+</div>`;
+
       })
       .join("");
   } catch (e) {
@@ -2234,6 +2278,119 @@ async function logout() {
     window.location.href = "/pages/auth/login.html";
   }
 }
+
+
+
+
+
+async function editComment(commentId) {
+  const { data, error } = await supabaseClient
+    .from("report_comments")
+    .select("comment")
+    .eq("id", commentId)
+    .single();
+
+  if (error || !data) {
+    showToast("❌ ไม่พบความคิดเห็น");
+    return;
+  }
+
+  const newText = prompt(
+    "แก้ไขความคิดเห็น",
+    data.comment || ""
+  );
+
+  if (newText === null) return;
+
+  const { error: updateError } = await supabaseClient
+    .from("report_comments")
+    .update({
+      comment: newText.trim()
+    })
+    .eq("id", commentId);
+
+  if (updateError) {
+    showToast("❌ แก้ไขไม่สำเร็จ");
+    return;
+  }
+
+  showToast("✅ แก้ไขแล้ว");
+
+  refreshComments();
+}
+
+
+
+
+
+async function deleteComment(commentId) {
+  if (!confirm("ต้องการลบความคิดเห็นนี้ใช่หรือไม่")) return;
+
+  const { data, error } = await supabaseClient
+    .from("report_comments")
+    .delete()
+    .eq("id", commentId)
+    .select("id");
+
+  if (error) {
+    console.error("deleteComment error:", error);
+    showToast("❌ ลบไม่สำเร็จ: " + error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    showToast("⚠️ ไม่มีสิทธิ์ลบ หรือไม่พบความคิดเห็นนี้");
+    return;
+  }
+
+  showToast("✅ ลบความคิดเห็นแล้ว");
+
+  await refreshComments();
+}
+
+
+
+
+
+async function refreshComments() {
+
+  if (currentPopupGroupKey) {
+    const group = groupedReports.find(
+      g => g.key === currentPopupGroupKey
+    );
+
+    if (group) {
+      await loadCommentsIntoElement(
+        group.reportIds,
+        document.getElementById("popupCommentsHistory")
+      );
+    }
+  }
+
+  if (currentGroupKey) {
+    const group = groupedReports.find(
+      g => g.key === currentGroupKey
+    );
+
+    if (group) {
+      await loadCommentsForGroup(group.reportIds);
+    }
+  }
+
+  await loadCommentCounts(
+    allReports.map(r => r.id)
+  );
+
+  renderReports();
+  updateSummaryCards();
+updateSalesGrid();
+updateSalesQuickPick();
+
+  if (currentSalesModalId) {
+    renderSalesTable(currentSalesModalId);
+  }
+}
+
 
 // =====================================================
 // 🌐 GLOBAL FUNCTIONS
