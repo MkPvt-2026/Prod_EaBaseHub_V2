@@ -1162,23 +1162,37 @@ function getDateKey(dateValue) {
 async function loadTripPlansForSale(saleId) {
   tripPlanMap = {};
 
-  const { data, error } = await supabaseClient
+  const profile = profilesMap[saleId];
+  const saleName = profile?.display_name || "";
+
+  console.log("🧑 saleId =", saleId);
+  console.log("🧑 saleName =", saleName);
+
+  let query = supabaseClient
     .from("trips")
-    .select("id, user_id, trips, start_date, end_date, status, is_latest, created_at")
-    .eq("user_id", saleId)
+    .select("id, user_id, user_name, trips, start_date, end_date, status, is_latest, created_at")
     .order("created_at", { ascending: false });
+
+  // ✅ หาได้ทั้งกรณี id ตรง หรือชื่อพนักงานตรง
+  if (saleName) {
+    query = query.or(`user_id.eq.${saleId},user_name.eq.${saleName}`);
+  } else {
+    query = query.eq("user_id", saleId);
+  }
+
+  const { data, error } = await query;
+
+  console.log("🚌 trips data =", data);
+  console.log("❌ trips error =", error);
 
   if (error) {
     console.error("❌ loadTripPlansForSale:", error);
     return;
   }
 
-  console.log("🚌 trips data:", data);
-
   (data || []).forEach((plan) => {
     let rows = [];
 
-    // ✅ trips อาจเป็น array เก่า หรือ object ใหม่ { rows, expense }
     if (Array.isArray(plan.trips)) {
       rows = plan.trips;
     } else if (plan.trips && typeof plan.trips === "object") {
@@ -1203,8 +1217,10 @@ async function loadTripPlansForSale(saleId) {
     });
   });
 
-  console.log("✅ tripPlanMap:", tripPlanMap);
+  console.log("✅ tripPlanMap =", tripPlanMap);
 }
+
+
 // =====================================================
 // 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
 // =====================================================
