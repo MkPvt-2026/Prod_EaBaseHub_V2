@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotion Upload Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #0066cc;
+        }
+        section {
+            margin-bottom: 40px;
+            background-color: #e6f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, select, button {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #004499;
+        }
+        #preview img {
+            max-width: 200px;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #0066cc;
+            color: white;
+        }
+        .actions button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Promotion Upload Management</h1>
+    <script>
+        // Security check: Assume isAdmin() checks user role
+        function isAdmin() {
+            // Placeholder: Check session or token
+            return true; // For demo, assume admin
+        }
+        if (!isAdmin()) {
+            alert('Access denied. Admin only.');
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <section id="upload-section">
+        <h2>Upload Promotion</h2>
+        <form id="upload-form" action="/api/upload-promotion" method="POST" enctype="multipart/form-data">
+            <label for="title">Promotion Title:</label>
+            <input type="text" id="title" name="title" required>
+
+            <label for="file">File (Image/PDF/Excel):</label>
+            <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.pdf,.xlsx,.xls" required>
+            <div id="preview"></div>
+
+            <label for="visibility">Visibility:</label>
+            <select id="visibility" name="visible_area">
+                <option value="all">ทั้งหมด</option>
+                <option value="bangkok">เฉพาะ กทม.</option>
+                <option value="upcountry">เฉพาะ ตจว.</option>
+            </select>
+
+            <button type="submit">อัปโหลด</button>
+        </form>
+    </section>
+
+    <section id="list-section">
+        <h2>Uploaded Promotions</h2>
+        <table id="promo-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Visible Area</th>
+                    <th>File Type</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="promo-tbody">
+                <!-- Rows loaded via JS -->
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        // Preview file if image
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('preview');
+            if (file && file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                preview.innerHTML = '';
+                preview.appendChild(img);
+            } else {
+                preview.innerHTML = '';
+            }
+        });
+
+        // Validation on submit
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            const title = document.getElementById('title').value.trim();
+            const file = document.getElementById('file').files[0];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (!title) {
+                alert('Title is required.');
+                e.preventDefault();
+                return;
+            }
+            if (!file) {
+                alert('File is required.');
+                e.preventDefault();
+                return;
+            }
+            if (file.size > maxSize) {
+                alert('File size exceeds 10MB.');
+                e.preventDefault();
+                return;
+            }
+            // Form will submit to backend
+        });
+
+        // Load promotions list
+        function loadPromotions() {
+            fetch('/api/promotions')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('promo-tbody');
+                    tbody.innerHTML = '';
+                    data.forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${p.title}</td>
+                            <td>${p.visible_area}</td>
+                            <td>${p.file_type}</td>
+                            <td>${new Date(p.created_at).toLocaleString()}</td>
+                            <td>${p.active ? 'Active' : 'Inactive'}</td>
+                            <td class="actions">
+                                <button onclick="editVisibility(${p.id})">Edit Visibility</button>
+                                <button onclick="deletePromo(${p.id})">Delete</button>
+                                <button onclick="toggleStatus(${p.id})">${p.active ? 'Deactivate' : 'Activate'}</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => console.error('Error loading promotions:', err));
+        }
+
+        // Action functions
+        function editVisibility(id) {
+            // Placeholder: Open modal or inline edit
+            const newArea = prompt('Enter new visibility (all/bangkok/upcountry):');
+            if (newArea) {
+                fetch(`/api/promotions/${id}/visibility`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ visible_area: newArea })
+                }).then(() => loadPromotions());
+            }
+        }
+
+        function deletePromo(id) {
+            if (confirm('Are you sure you want to delete this promotion?')) {
+                fetch(`/api/promotions/${id}`, { method: 'DELETE' })
+                    .then(() => loadPromotions());
+            }
+        }
+
+        function toggleStatus(id) {
+            fetch(`/api/promotions/${id}/toggle-status`, { method: 'POST' })
+                .then(() => loadPromotions());
+        }
+
+        // Load on page load
+        window.addEventListener('load', loadPromotions);
+    </script>
+</body>
+</html>

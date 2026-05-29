@@ -8,38 +8,166 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
     <!-- Base CSS -->
-    <link rel="stylesheet" href="/css/base/bassManager.css">
+    <link rel="stylesheet" href="/css/base/baseExecutive.css">
     <link rel="stylesheet" href="/css/pages/admin/Adminannouncements.css">
 </head>
-<body>
-<!-- ═══════════════ HEADER ═══════════════ -->
-<header class="app-header">
-    <div class="logo">
-        <div class="logo-circle">
-            <img src="/assets/icons/icon-192.png" alt="logo">
-        </div>
-        <h2>EABaseHub</h2>
+<body class="role-manager">
+<div class="app-layout">
+
+  <aside class="app-sidebar collapsed" id="appSidebar">
+
+    <!-- Navigation Items -->
+    <nav class="sidebar-nav" id="sidebarNav">
+
+
+      
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <span style="display:none">E</span>
+      </div>
+      <div class="sidebar-brand-text">
+    <div class="sidebar-brand-title">EABaseHub</div>
+    <div class="sidebar-brand-sub">Announcements System</div>
+  </div>
     </div>
 
-    <div class="user-box">
-        <div class="user-avatar" id="userAvatar">👤</div>
-        <div class="user-info">
-            <div class="user-name" id="userName">กำลังโหลด...</div>
+
+    
+
+
+      <a href="/index.html"
+         class="sidebar-nav-item"
+         title="หน้าหลัก">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">home</span>
         </div>
-        <div class="group">
-            <span class="badge badge--message-sent" onclick="logout()">
-                <span class="badge-icon">
-                    <span class="material-symbols-outlined" style="font-size:17px">logout</span>
-                </span>
-                ออกจากระบบ
-            </span>
+        <span class="nav-label">หน้าหลัก</span>
+      </a>
+
+
+      <a href="/pages/dashboard/managerDashboard.html" class="sidebar-nav-item" title="Dashboard">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">empty_dashboard</span>
         </div>
+        <span class="nav-label">Dashboard</span>     
+      </a>
+
+      
+
+      <a href="/pages/reports/reportTracker.html"
+         class="sidebar-nav-item"
+         title="รายงาน">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <span class="nav-label">รายงาน เข้าร้าน</span>
+      </a>
+
+      <a href="/pages/admin/Adminannouncements.html"
+         class="sidebar-nav-item active"
+         title="ประกาศ">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">campaign</span>
+        </div>
+        <span class="nav-label">ประชาสัมพันธ์</span>
+      </a>
+
+      <a href="/UnderDev.html"
+         class="sidebar-nav-item"
+         title="ขออนุมัติ">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">approval_delegation</span>
+        </div>
+        <span class="nav-label">ขออนุมัติเอกสาร</span>
+      </a>
+
+      
+      <a href="/pages/dashboard/RfmDashboard.html"
+      class="sidebar-nav-item"
+      title="วิเคราะห์(RFM)">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">bar_chart</span>
+      </div>
+      <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
+    </a>
+    
+    <!-- <a href="#"
+    class="sidebar-nav-item"
+    title="ทีมงาน">
+    <div class="nav-icon-wrap">
+      <span class="material-symbols-outlined">groups</span>
     </div>
+    <span class="nav-label">ทีมงาน</span>
+  </a> -->
+  
+</nav>
+
+<!-- Collapse toggle button -->
+<div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
+</div>
+
+<div class="sidebar-divider"></div>
+    <!-- Logout -->
+    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">logout</span>
+      </div>
+      <span class="nav-label">ออกจากระบบ</span>
+    </button>
+
+  </aside>
+
+  <div class="app-main">
+
+<!--======================================================-->
+  <!-- HEADER                                                -->
+  <!--======================================================-->
+  <header class="app-header">
+  <div class="header-left">
+    <div class="header-system-name">
+      <div class="header-icon">
+        <span class="material-symbols-outlined">campaign</span>
+      </div>
+      จัดการประชาสัมพันธ์
+    </div>
+    <div class="header-subtitle">
+      การจัดการประกาศ · ข่าว · ประชาสัมพันธ์  </div>
+  </div>
+
+  <div class="header-right">
+    <div class="header-date-pill">
+      <span class="material-symbols-outlined">calendar_month</span>
+      <span id="headerDateText">—</span>
+    </div>
+
+    <div class="header-user">
+      <div class="header-user-avatar" id="userAvatar">
+        <span class="material-symbols-outlined">person</span>
+      </div>
+      <span class="header-user-name" data-user="display_name">-</span>
+    </div>
+  </div>
 </header>
 
-<!-- โหลด Nav ตาม Role -->
-<div id="navContainer"></div>      
-
+<div class="app-breadcrumb">
+  <a href="/index.html">
+    <span class="material-symbols-outlined">home</span>
+    หน้าหลัก
+  </a>
+  <span class="bc-sep">›</span>
+  <span class="bc-current">
+    <span class="material-symbols-outlined">campaign</span>
+        จัดการประชาสัมพันธ์
+  </span>
+</div>
+  
+  <!-- NAV Container (โหลดตาม role) -->
+  <div id="navContainer"></div>
+  
 <main class="admin-announce-page">
     <h1>
         <span class="material-symbols-outlined">campaign</span>
@@ -185,8 +313,61 @@
 <!-- 3. Page Script -->
 <script src="/js/pages/admin/Adminannouncements.js"></script>
 
-<!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+
+
+
 <script>
+  // ── Sidebar collapse toggle ──
+  const sidebar = document.getElementById('appSidebar');
+  const main = document.querySelector('.app-main');
+  const icon = document.getElementById('collapseIcon');
+
+  // ✅ Default: collapsed
+  sidebar.classList.add('collapsed');
+
+  function toggleSidebar() {
+    const isCollapsed = sidebar.classList.contains('collapsed');
+
+    if (isCollapsed) {
+      // → ขยาย
+      sidebar.classList.remove('collapsed');
+      sidebar.classList.add('expanded');
+      if (main) main.style.marginLeft = '220px';
+    } else {
+      // → ย่อ
+      sidebar.classList.remove('expanded');
+      sidebar.classList.add('collapsed');
+      if (main) main.style.marginLeft = '64px';
+    }
+  }
+
+  // ── Set active nav based on current URL ──
+  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    if (item.getAttribute('href') === window.location.pathname) {
+      document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    }
+  });
+
+  // ── Header date display ──
+  function updateHeaderDate() {
+    const el = document.getElementById('headerDateText');
+    if (!el) return;
+    const now = new Date();
+    el.textContent = now.toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+  updateHeaderDate();
+</script>
+
+
+
+
+<!-- ✅ โหลด nav + ดึง role จาก Supabase -->
+<!-- <script>
 async function loadNav(role) {
     const navFiles = {
         admin: "/pages/components/nav-admin.html",
@@ -302,7 +483,7 @@ async function initPage() {
 document.addEventListener("DOMContentLoaded", () => {
     waitForSupabaseClient(initPage);
 });
-</script>
+</script> -->
 
 </body>
 </html>

@@ -44,6 +44,7 @@ const ROLE_CONFIG = {
     allowedPages: [
       '/pages/dashboard/QcDashboard.html',
       '/pages/admin/adminQc.html',
+      
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -52,14 +53,14 @@ const ROLE_CONFIG = {
   // MANAGER — ดูรายงานและ dashboard ของตัวเอง
   // -------------------------------------------------------
   manager: {
-    defaultPage: '/pages/dashboard/managerDashboard.html',
+    defaultPage: '/index.html',
     allowedPages: [
-      '/pages/dashboard/managerDashboard.html',
+      '/index.html',
       '/pages/dashboard/RfmDashboard.html',
-      '/pages/components/rfmImport.html',
       '/pages/reports/reportTracker.html',
+      '/pages/components/rfmImport.html',
       '/pages/reports/reportManager.html',
-      '/index',
+      '/pages/dashboard/managerDashboard.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -68,10 +69,11 @@ const ROLE_CONFIG = {
   // EXECUTIVE — ดู dashboard ภาพรวมและรายงาน
   // -------------------------------------------------------
   executive: {
-    defaultPage: '/pages/executive/executiveHome.html',
+    defaultPage: '/pages/executive/executive-Dashboard.html',
     allowedPages: [
       '/pages/executive/executiveHome.html',
-      '/pages/executive/executiveDashboard.html',
+      '/pages/Qc-claim/claim-evaluation.html',
+      '/pages/executive/executive-Dashboard.html',
       '/pages/executive/rfmDashboard.html', 
       '/pages/manager/reportManager.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
@@ -82,7 +84,7 @@ const ROLE_CONFIG = {
   // SALES — หน้า sales ของตัวเอง
   // -------------------------------------------------------
   sales: {
-    defaultPage: '/pages/sales/salesDashboard.html',
+    defaultPage: '/index.html',
     allowedPages: [
       '/pages/sales/salesDashboard.html',
       '/pages/sales/salesReport.html',

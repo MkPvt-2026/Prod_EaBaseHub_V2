@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer & Product Dashboard | EABaseHub</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/base/bass-layout.css">
+  <link rel="stylesheet" href="/minipro/bass.css">
+</head>
+
+<body class="role-manager"> <!-- ใส่ class ตาม role เพื่อสลับธีม -->
+
+  <!--======================================================-->
+  <!-- HEADER                                                -->
+  <!--======================================================-->
+  <header class="app-header">
+    <div class="app-header-inner">
+
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo">
+        </div>
+
+        <div>
+          <h2>Customer &amp; Product Dashboard</h2>
+          <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร</p>
+        </div>
+      </div>
+
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+
+        <div class="user-info">
+          <div class="user-name" data-user="display_name">-</div>
+          <div class="user-role" data-user="role">-</div>
+        </div>
+
+        <button class="btn-logout" type="button" onclick="logout()">
+          ออกจากระบบ
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  
+      
+
+  <!-- NAV Container (โหลดตาม role) -->
+  <div id="navContainer"></div>
+
+  <!--======================================================-->
+  <!-- MAIN                                                  -->
+  <!--======================================================-->
+  <main>
+    <div class="container">
+      <!-- เนื้อหาหน้า -->
+    </div>
+  </main>
+
+  <!--======================================================-->
+  <!-- FOOTER                                                -->
+  <!--======================================================-->
+  <footer class="footer">
+    © 2026 EABaseHub | ระบบจัดการเคลมสินค้า
+  </footer>
+
+  <!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Core -->
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/userService.js"></script>
+<script src="/js/core/roleConfig.js"></script>
+<script src="/js/core/auth.js"></script>
+
+
+  <!-- Page -->
+  <script src="/minipro/nav-loader.js"></script>
+
+</body>
+</html>

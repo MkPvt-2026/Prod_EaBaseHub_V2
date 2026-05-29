@@ -38,6 +38,8 @@
   --header-bg:    #064e3b;
   --nav-bg:       #065f46;
   --header-bg1:   linear-gradient(135deg, #149684 0%, #3db8b1 100%);
+  --header-gradient: linear-gradient(135deg, #047857 0%, #10b981 100%);
+
   --nav-bg1:      #e5e7eb;
 }
 
@@ -68,7 +70,7 @@ body{
   top: 0;
   z-index: 1000;
   display: flex;
-  background: var(--header-bg1);
+  background: var(--header-gradient);
   padding: 10px 24px;
   height: 64px;  
   justify-content: space-between;

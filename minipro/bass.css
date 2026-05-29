@@ -1,0 +1,61 @@
+/* =====================================================
+   BASS.CSS — Page-specific styles
+   (override / เสริมจาก bass-layout.css)
+   ===================================================== */
+
+/* ----------- Reset & Base ----------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Kanit", "IBM Plex Sans Thai", sans-serif;
+  background: var(--page-bg);
+  color: var(--ink-2);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ============================================================
+   LAYOUT MAIN : HEADER สำหรับหน้านี้ (Executive/Admin theme)
+   เปลี่ยน gradient ตาม role ของหน้าได้
+============================================================ */
+/* .app-header {
+  background: var(--header-admin);
+} */
+
+/* ตัวอย่างการสลับธีมตาม role
+   ใส่ class ที่ <body> เช่น <body class="role-manager">
+*/
+/* body.role-admin     .app-header { background: var(--header-admin); }
+body.role-manager   .app-header { background: var(--header-manager); }
+body.role-executive .app-header { background: var(--header-executive); }
+body.role-sale      .app-header { background: var(--header-sale); }
+body.role-saleA     .app-header { background: var(--header-saleA); }
+body.role-adminQc   .app-header { background: var(--header-adminQc); }
+body.role-user      .app-header { background: var(--header-user); } */

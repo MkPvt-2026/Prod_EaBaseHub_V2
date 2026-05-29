@@ -1,5 +1,5 @@
 /* =====================================================
-   1. VARIABLES
+   1. BASE ADMIN
    ตัวแปรหลักของระบบ (Design System)
 
    ใช้เก็บสี เงา radius และ background
@@ -11,6 +11,10 @@
 
 /* ================= COLORS ================= */
 /* สีหลักของระบบ */
+
+--primary:          #2563EB;      /* สีหลัก */
+--primary-hover:    #1D4ED8;      /* hover สีหลัก */
+
 
 --primary-1:#3FB7AE;      /* สีหลัก teal */
 --Dark-Teal: #2FA39A;     /* teal เข้ม */

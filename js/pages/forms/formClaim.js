@@ -639,14 +639,31 @@ window.saveDraft = async function () {
   try {
     let claimId;
     if (window.currentDraftId) {
-      const updateData = { ...buildClaimData("draft"), updated_at: new Date().toISOString() };
+      const updateData = {
+  ...buildClaimData("draft"),
+  status: "draft",
+  qc_status: "draft",
+  picked_at: null,
+  updated_at: new Date().toISOString(),
+};
       delete updateData.created_at;
       const { error } = await supabaseClient.from("claims").update(updateData).eq("id", window.currentDraftId);
       if (error) throw error;
       claimId = window.currentDraftId;
       showToast("อัปเดท Draft สำเร็จ!");
     } else {
-      const { data, error } = await supabaseClient.from("claims").insert([buildClaimData("draft")]).select().single();
+      const draftData = {
+  ...buildClaimData("draft"),
+  status: "draft",
+  qc_status: "draft",
+  picked_at: null,
+};
+
+const { data, error } = await supabaseClient
+  .from("claims")
+  .insert([draftData])
+  .select()
+  .single();
       if (error) throw error;
       claimId = data.id;
       showToast("บันทึก Draft สำเร็จ!");
@@ -766,7 +783,16 @@ window.submitClaim = async function (draftId = null) {
       if (fetchErr) throw fetchErr;
       const newMediaUrls = await uploadMediaFiles(draftId);
       const allMediaUrls = [...(draft.media_urls ?? []), ...newMediaUrls];
-      const { error } = await supabaseClient.from("claims").update({ status: "submitted", media_urls: allMediaUrls, updated_at: new Date().toISOString() }).eq("id", draftId);
+      const { error } = await supabaseClient
+  .from("claims")
+  .update({
+    status: "submitted",
+    qc_status: "pending",
+    picked_at: null,
+    media_urls: allMediaUrls,
+    updated_at: new Date().toISOString(),
+  })
+  .eq("id", draftId);
       if (error) throw error;
       showToast(`ส่งเคลมสำเร็จ! 🎉\n${draft.product}`);
       await loadDrafts();
@@ -820,7 +846,28 @@ window.submitClaim = async function (draftId = null) {
 
 function buildClaimData(status) {
   const user = window.currentUser;
-  return { user_id: user.id, emp_name: user.display_name || user.full_name, area: user.area || user.zone, claim_date: document.getElementById("claimDate").value, customer: document.getElementById("customer").value, buy_date: document.getElementById("buyDate").value || null, mfg_date: document.getElementById("mfgDate").value || null, product: document.getElementById("product").value, qty: document.getElementById("qty").value, claim_types: getSelectedClaimTypes(), detail: document.getElementById("detail").value || "", status, created_at: new Date().toISOString() };
+
+  const isDraft = status === "draft";
+
+  return {
+    user_id: user.id,
+    emp_name: user.display_name || user.full_name,
+    area: user.area || user.zone,
+    claim_date: document.getElementById("claimDate").value,
+    customer: document.getElementById("customer").value,
+    buy_date: document.getElementById("buyDate").value || null,
+    mfg_date: document.getElementById("mfgDate").value || null,
+    product: document.getElementById("product").value,
+    qty: document.getElementById("qty").value,
+    claim_types: getSelectedClaimTypes(),
+    detail: document.getElementById("detail").value || "",
+
+    status: isDraft ? "draft" : "submitted",
+    qc_status: isDraft ? "draft" : "pending",
+    picked_at: null,
+
+    created_at: new Date().toISOString(),
+  };
 }
 
 function clearForm() {

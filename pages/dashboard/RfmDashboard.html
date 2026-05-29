@@ -2,36 +2,236 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Customer Dashboard | ผู้บริหาร</title>
+<title>Customer Dashboard | ฝ่ายบริหาร</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="/css/pages/dashboard/rfmDashboard.css">
-</head>
-<body>
 
-<header class="rfm-header">
-  <div class="rfm-header-inner">
-    <div>
-      <h1>Customer & Product Dashboard</h1>
-      <p class="subtitle">วิเคราะห์ลูกค้าและสินค้า · สำหรับผู้บริหาร</p>
-    </div>
-    <div class="user-box">
-      <div class="user-info">
-        <div class="user-name" data-user="display_name">-</div>
-        <div class="user-role" data-user="role">-</div>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
+
+
+<!-- <link rel="stylesheet" href="/css/base/bass-layout.css"> -->
+<link rel="stylesheet" href="/css/pages/dashboard/rfm-Dashboard.css">
+</head>
+<body class="role-manager">
+<div class="app-layout">
+
+  <aside class="app-sidebar collapsed" id="appSidebar">
+
+    <!-- Navigation Items -->
+    <nav class="sidebar-nav" id="sidebarNav">
+
+
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <span style="display:none">E</span>
       </div>
-      <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+       <div class="sidebar-brand-text">
+    <div class="sidebar-brand-title">EABaseHub</div>
+    <div class="sidebar-brand-sub">RFM System</div>
+  </div>
+    </div>
+
+
+    
+
+
+      <a href="/index.html"
+         class="sidebar-nav-item"
+         title="หน้าหลัก">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">home</span>
+        </div>
+        <span class="nav-label">หน้าหลัก</span>
+      </a>
+
+
+      <a href="/pages/dashboard/managerDashboard.html" class="sidebar-nav-item" title="Dashboard">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">empty_dashboard</span>
+        </div>
+        <span class="nav-label">Dashboard</span>     
+      </a>
+
+
+      
+      <a href="/pages/reports/reportTracker.html"
+         class="sidebar-nav-item"
+         title="รายงาน">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <span class="nav-label">รายงาน เข้าร้าน</span>
+      </a>
+
+      <a href="/pages/admin/Adminannouncements.html"
+         class="sidebar-nav-item"
+         title="ประกาศ">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">campaign</span>
+        </div>
+        <span class="nav-label">ประชาสัมพันธ์</span>
+      </a>
+
+      <a href="/UnderDev.html"
+         class="sidebar-nav-item"
+         title="ขออนุมัติ">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">approval_delegation</span>
+        </div>
+        <span class="nav-label">ขออนุมัติเอกสาร</span>
+      </a>
+
+      
+      <a href="/pages/dashboard/RfmDashboard.html"
+      class="sidebar-nav-item active"
+      title="วิเคราะห์(RFM)">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">bar_chart</span>
+      </div>
+      <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
+    </a>
+    
+    <!-- <a href="#"
+    class="sidebar-nav-item"
+    title="ทีมงาน">
+    <div class="nav-icon-wrap">
+      <span class="material-symbols-outlined">groups</span>
+    </div>
+    <span class="nav-label">ทีมงาน</span>
+  </a> -->
+  
+</nav>
+
+<!-- Collapse toggle button -->
+<div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
+</div>
+
+<div class="sidebar-divider"></div>
+    <!-- Logout -->
+    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">logout</span>
+      </div>
+      <span class="nav-label">ออกจากระบบ</span>
+    </button>
+
+  </aside>
+
+  <div class="app-main">
+
+<!--======================================================-->
+  <!-- HEADER                                                -->
+  <!--======================================================-->
+  <header class="app-header">
+  <div class="header-left">
+    <div class="header-system-name">
+      <div class="header-icon">
+        <span class="material-symbols-outlined">analytics</span>
+      </div>
+      Customer & Product Analysis
+    </div>
+    <div class="header-subtitle">
+      วิเคราะห์ลูกค้าและสินค้า · สำหรับฝ่ายบริหาร · RFM
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="header-date-pill">
+      <span class="material-symbols-outlined">calendar_month</span>
+      <span id="headerDateText">—</span>
+    </div>
+
+    <div class="header-user">
+      <div class="header-user-avatar" id="userAvatar">
+        <span class="material-symbols-outlined">person</span>
+      </div>
+      <span class="header-user-name" data-user="display_name">-</span>
     </div>
   </div>
 </header>
 
-<nav class="tab-nav">
-  <div class="tab-nav-inner">
-    <button class="tab-btn active" data-tab="rfm">🎯 RFM Customer Analysis</button>
-    <button class="tab-btn" data-tab="product">📦 Product Analytics</button>
-  </div>
-</nav>
+<div class="app-breadcrumb">
+  <a href="/index.html">
+    <span class="material-symbols-outlined">home</span>
+    หน้าหลัก
+  </a>
+  <span class="bc-sep">›</span>
+  <span class="bc-current">
+    <span class="material-symbols-outlined">analytics</span>
+    วิเคราะห์ข้อมูล (RMF)
+  </span>
+</div>
+  
+  <!-- NAV Container (โหลดตาม role) -->
+  <div id="navContainer"></div>
+  
+  <!--======================================================-->
+  <!-- END LAYOUT MAIN                                      -->
+  <!--======================================================-->
+  
+ <main class="app-content">
+  <div class="rfm-main">
 
-<main class="rfm-main">
+<div class="control-panel">
+
+  <nav class="tab-nav">
+    <div class="tab-nav-inner">
+      <button class="tab-btn active" data-tab="rfm">
+        🎯 RFM Customer Analysis
+      </button>
+
+      <button class="tab-btn" data-tab="product">
+        📦 Product Analytics
+      </button>
+    </div>
+
+
+    <!-- ✅ ปุ่ม Import Data ใหม่ -->
+  <a href="/pages/components/rfmImport.html" class="btn-import-data">
+    <span class="material-symbols-outlined">upload_file</span>
+    Import Data
+  </a>
+
+  </nav>
+
+
+<!-- Global Date Range Filter -->
+<div class="date-filter-bar">
+  <div class="date-filter-inner">
+    <span class="date-filter-label"><i class="fa-solid fa-calendar-days fa-xl" style="color: #0a6be9;"></i> ช่วงเวลาวิเคราะห์:</span>
+    <div class="date-presets">
+      <button class="preset-btn" data-preset="all">ทั้งหมด</button>
+      <button class="preset-btn" data-preset="ytd">ปีนี้ (YTD)</button>
+      <button class="preset-btn" data-preset="ly">ปีที่แล้ว</button>
+      <button class="preset-btn" data-preset="last12">12 เดือนล่าสุด</button>
+      <button class="preset-btn" data-preset="last6">6 เดือนล่าสุด</button>
+      <button class="preset-btn" data-preset="last3">3 เดือนล่าสุด</button>
+      <button class="preset-btn" data-preset="q1-25">Q1/2025</button>
+      <button class="preset-btn" data-preset="q2-25">Q2/2025</button>
+      <button class="preset-btn" data-preset="q3-25">Q3/2025</button>
+      <button class="preset-btn" data-preset="q4-25">Q4/2025</button>
+    </div>
+
+    
+    <div class="date-custom">
+      <input type="date" id="dateStart" class="date-input">
+      <span>ถึง</span>
+      <input type="date" id="dateEnd" class="date-input">
+      <button class="btn-primary-sm" onclick="DateFilter.apply()">ปรับใช้</button>
+      <button class="btn-secondary-sm" onclick="DateFilter.reset()">ล้าง</button>
+    
+    <div class="date-info" id="dateInfo"></div>
+  </div>
+</div>
+</div>
+  
+</div><!-- /.control-panel -->
 
   <div id="loadingBox" class="loading-box">
     <div class="spinner"></div>
@@ -43,20 +243,96 @@
   <!-- ===================== TAB 1: RFM ===================== -->
   <div id="tab-rfm" class="tab-content hidden">
 
-    <div class="meta-bar">
-      <span>อัปเดตล่าสุด: <strong id="lastUpdated">-</strong></span>
-      <span>ข้อมูลทั้งหมด: <strong id="totalRowsInfo">-</strong></span>
-      <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
-    </div>
 
-    <section class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">ลูกค้าทั้งหมด</div><div class="kpi-value" id="kpiCustomers">-</div></div>
-      <div class="kpi"><div class="kpi-label">รายได้รวม</div><div class="kpi-value" id="kpiRevenue">-</div></div>
-      <div class="kpi"><div class="kpi-label">รายได้เฉลี่ย/ลูกค้า</div><div class="kpi-value" id="kpiAov">-</div></div>
-      <div class="kpi"><div class="kpi-label">Champions</div><div class="kpi-value positive" id="kpiChampions">-</div></div>
-      <div class="kpi"><div class="kpi-label">ต้องการการดูแล</div><div class="kpi-value negative" id="kpiAtRisk">-</div></div>
-      <div class="kpi"><div class="kpi-label">ซื้อล่าสุดเฉลี่ย</div><div class="kpi-value" id="kpiRecency">-</div></div>
-    </section>
+
+<div class="meta-bar">
+  <span>อัปเดตล่าสุด: <strong id="lastUpdated">-</strong></span>
+  <span>ข้อมูลทั้งหมด: <strong id="totalRowsInfo">-</strong></span>
+
+
+  
+  <!-- 🔥 แสดง filter ที่ active อยู่ -->
+  <span id="activeFilterLabel"
+        style="display:none; background:#FAEEDA; color:#633806; padding:3px 10px; border-radius:6px; font-size:12px; font-weight:500;">
+  </span>
+
+  <!-- 🔥 ปุ่มล้างการเลือก -->
+  <button class="btn-secondary" onclick="RFM.resetInteraction()" style="font-size:12px;">🔄 ล้างการเลือก</button>
+
+  <button class="btn-refresh" onclick="RFM.reload()">🔄 รีเฟรช</button>
+</div>
+
+
+<!-- KPI Cards -->
+   <section class="kpi-grid">
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon green"><i class="fa-solid fa-users"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">ลูกค้าทั้งหมด</div>
+      <div class="kpi-number" id="kpiCustomers">-</div>
+      <div class="kpi-sub">ราย</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon emerald"><i class="fa-solid fa-sack-dollar"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">รายได้รวม</div>
+      <div class="kpi-number" id="kpiRevenue">-</div>
+      <div class="kpi-sub">บาท</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon blue"><i class="fa-solid fa-cart-shopping"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">รายได้เฉลี่ย/ลูกค้า</div>
+      <div class="kpi-number" id="kpiAov">-</div>
+      <div class="kpi-sub">บาท</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon gold"><i class="fa-solid fa-trophy"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">Champions</div>
+      <div class="kpi-number positive" id="kpiChampions">-</div>
+      <div class="kpi-sub">เปอร์เซ็นต์</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon orange"><i class="fa-solid fa-handshake-angle"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">ต้องการการดูแล</div>
+      <div class="kpi-number negative" id="kpiAtRisk">-</div>
+      <div class="kpi-sub">เปอร์เซ็นต์</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon purple"><i class="fa-solid fa-calendar-check"></i></span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">ซื้อล่าสุดเฉลี่ย</div>
+      <div class="kpi-number" id="kpiRecency">-</div>
+     <div class="kpi-sub">วัน</div>
+    </div>
+  </div>
+
+</section>
 
     <section class="charts-grid">
       <div class="chart-card">
@@ -112,8 +388,8 @@
         <table>
           <thead>
             <tr>
-              <th data-sort="client_id">รหัส</th>
-              <th data-sort="client_name">ชื่อลูกค้า</th>
+              <!-- <th data-sort="client_id">รหัส</th> -->
+              <th data-sort="client_name">ชื่อร้าน</th>
               <th data-sort="province">จังหวัด</th>
               <th data-sort="employee_name">พนักงาน</th>
               <th class="num" data-sort="recency_days">R (วัน)</th>
@@ -148,15 +424,87 @@
       </div>
     </section>
 
-    <section class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">SKU ทั้งหมด</div><div class="kpi-value" id="pKpiSkus">-</div></div>
-      <div class="kpi"><div class="kpi-label">หมวดสินค้า</div><div class="kpi-value" id="pKpiCategories">-</div></div>
-      <div class="kpi"><div class="kpi-label">หมวดขายดีสุด</div><div class="kpi-value" id="pKpiTopCategory" style="font-size: 15px;">-</div></div>
-      <div class="kpi"><div class="kpi-label">เติบโต YoY</div><div class="kpi-value" id="pKpiYoY">-</div></div>
-      <div class="kpi"><div class="kpi-label">เดือนขายดีสุด</div><div class="kpi-value" id="pKpiPeakMonth" style="font-size: 15px;">-</div></div>
-      <div class="kpi"><div class="kpi-label">Top SKU (รายได้)</div><div class="kpi-value" id="pKpiTopSku" style="font-size: 13px;">-</div></div>
-    </section>
+   <section class="kpi-grid">
 
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon blue">
+        <i class="fa-solid fa-boxes-stacked"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">SKU ทั้งหมด</div>
+      <div class="kpi-number" id="pKpiSkus">-</div>
+      <div class="kpi-sub">รายการ</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon green">
+        <i class="fa-solid fa-layer-group"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">หมวดสินค้า</div>
+      <div class="kpi-number" id="pKpiCategories">-</div>
+      <div class="kpi-sub">หมวด</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon gold">
+        <i class="fa-solid fa-crown"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">หมวดขายดีสุด</div>
+      <div class="kpi-number small-text" id="pKpiTopCategory">-</div>
+      <div class="kpi-sub">อันดับ 1</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon emerald">
+        <i class="fa-solid fa-chart-line"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">เติบโต YoY</div>
+      <div class="kpi-number" id="pKpiYoY">-</div>
+      <div class="kpi-sub">เทียบปีก่อน</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon orange">
+        <i class="fa-solid fa-star"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">เดือนขายดีสุด</div>
+      <div class="kpi-number small-text" id="pKpiPeakMonth">-</div>
+      <div class="kpi-sub">Best Month</div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-left">
+      <span class="kpi-icon purple">
+        <i class="fa-solid fa-gem"></i>
+      </span>
+    </div>
+    <div class="kpi-right">
+      <div class="kpi-title">Top SKU</div>
+      <div class="kpi-number mini-text" id="pKpiTopSku">-</div>
+      <div class="kpi-sub">รายได้สูงสุด</div>
+    </div>
+  </div>
+
+</section>
     <section class="chart-card" style="margin-bottom: 20px;">
       <h3>เทรนด์ยอดขายรายเดือน (2024 vs 2025)</h3>
       <div class="chart-wrap" style="height: 320px;"><canvas id="chartTrend" role="img" aria-label="เทรนด์ยอดขายรายเดือน"></canvas></div>
@@ -198,7 +546,7 @@
             <option value="category">หมวดสินค้า</option>
             <option value="brand">Brand</option>
             <option value="size">ขนาด (Size)</option>
-            <option value="product_code">รหัสสินค้า (SKU)</option>
+            <option value="product_code">ชื่อสินค้า</option>
           </select>
         </div>
         <div class="filter-field">
@@ -230,7 +578,7 @@
     <section class="filters">
       <div class="filter-field">
         <label>ค้นหาสินค้า</label>
-        <input type="text" id="productSearchInput" placeholder="รหัส / ชื่อสินค้า">
+        <input type="text" id="productSearchInput" placeholder="พิมพ์ชื่อ หรือ รหัสสินค้า">
       </div>
       <div class="filter-field">
         <label>หมวด</label>
@@ -254,7 +602,7 @@
           <thead>
             <tr>
               <th class="num" data-psort="revenue_rank">#</th>
-              <th data-psort="product_code">รหัสสินค้า</th>
+              <th data-psort="product_name">ชื่อสินค้า</th>
               <th data-psort="category">หมวด</th>
               <th data-psort="brand">Brand</th>
               <th data-psort="size">ขนาด</th>
@@ -262,6 +610,7 @@
               <th class="num" data-psort="total_units">จำนวน</th>
               <th class="num" data-psort="unique_clients">ลูกค้า</th>
               <th class="num" data-psort="avg_price">ราคาเฉลี่ย</th>
+              <th style="text-align:center;">ดูร้านค้า</th>
             </tr>
           </thead>
           <tbody id="productTableBody"></tbody>
@@ -279,34 +628,15 @@
 
 </main>
 
-<!-- Modal: ดูสินค้าของลูกค้า -->
+<!-- Modal: ดูสินค้าของลูกค้า v6 - มี date filter + drill-down -->
 <div id="clientProductsModal" class="modal hidden">
   <div class="modal-overlay" onclick="Product.closeModal()"></div>
-  <div class="modal-content">
+  <div class="modal-content modal-content-large">
     <div class="modal-header">
       <h3 id="modalTitle">สินค้าที่ลูกค้านี้ซื้อ</h3>
       <button class="modal-close" onclick="Product.closeModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <div id="modalSummary" class="modal-summary"></div>
-      <div class="table-wrap" style="max-height: 400px;">
-        <table>
-          <thead>
-            <tr>
-              <th>รหัสสินค้า</th>
-              <th>หมวด</th>
-              <th>Brand</th>
-              <th>ขนาด</th>
-              <th class="num">ครั้งที่ซื้อ</th>
-              <th class="num">จำนวน</th>
-              <th class="num">ยอดรวม</th>
-              <th>ซื้อล่าสุด</th>
-            </tr>
-          </thead>
-          <tbody id="modalTableBody"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="Product.exportClientProductsXLSX()">📥 Export Excel</button>
       <button class="btn-secondary" onclick="Product.closeModal()">ปิด</button>
@@ -323,12 +653,16 @@
 <script src="/js/core/roleConfig.js"></script>
 <script src="/js/core/auth.js"></script>
 
+<script src="/js/services/date-filter.js"></script>
+<script src="/js/services/selectionManager.js"></script>
+
 <script src="/js/pages/dashboard/rfmDashboard.js"></script>
 <script src="/js/pages/dashboard/productAnalytics.js"></script>
+<script src="/js/pages/dashboard/rfmDashboard-selection-patch.js"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', async () => {
-    await protectPage(['executive', 'manager', 'admin']);
+    await protectPage(['manager', 'admin']);
 
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -345,12 +679,92 @@
       });
     });
 
+    // Initialize Date Filter (ใช้ร่วมกับทั้ง 2 tabs)
+    if (typeof DateFilter !== 'undefined') {
+      await DateFilter.init();
+    }
+
     if (typeof RFM !== 'undefined') {
       RFM.init();
       document.getElementById('tab-rfm').classList.remove('hidden');
     }
   });
-</script>
 
+  //   // ═══════════════════════════════════════════════════════════
+  //   // NAV LOADER
+  //   // ═══════════════════════════════════════════════════════════
+  //   async function loadNav(role) {
+  //     const navFiles = {
+  //       admin: "/pages/components/nav-admin.html",
+  //       executive: "/pages/components/nav-executive.html",
+  //       manager: "/pages/components/nav-manager.html"
+  //     };
+
+  //     const file = navFiles[role];
+  //     if (!file) return;
+
+  //     try {
+  //       const res = await fetch(file);
+  //       if (!res.ok) return;
+  //       const html = await res.text();
+  //       document.getElementById("navContainer").innerHTML = html;
+  //       setActiveMenu();
+  //     } catch (err) {
+  //       console.error("Error loading nav:", err);
+  //     }
+  //   }
+
+  //   function setActiveMenu() {
+  //     const links = document.querySelectorAll(".app-nav a");
+  //     const current = window.location.pathname;
+  //     links.forEach(link => {
+  //       if (link.getAttribute("href") === current) {
+  //         link.classList.add("active");
+  //       }
+  //     });
+  //   }
+
+  //   async function getUserRole(userId) {
+  //     const { data, error } = await supabaseClient
+  //       .from("profiles")
+  //       .select("role")
+  //       .eq("id", userId)
+  //       .single();
+  //     return data?.role || null;
+  //   }
+
+  //   function waitForSupabaseAndLoadNav(maxAttempts = 50) {
+  //     let attempts = 0;
+
+  //     const check = async () => {
+  //       attempts++;
+
+  //       if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
+  //         try {
+  //           const { data: { session } } = await supabaseClient.auth.getSession();
+  //           if (session?.user) {
+  //             const role = await getUserRole(session.user.id);
+  //             if (role) loadNav(role);
+  //           }
+  //         } catch (err) {
+  //           console.error("Error loading nav:", err);
+  //         }
+  //       } else if (attempts < maxAttempts) {
+  //         setTimeout(check, 100);
+  //       }
+  //     };
+
+  //     check();
+  //   }
+
+  //   document.addEventListener("DOMContentLoaded", () => {
+  //     waitForSupabaseAndLoadNav();
+  //   });
+  // </script>
+  </div>
+</main>
+
+</div>
+</div>
 </body>
 </html>

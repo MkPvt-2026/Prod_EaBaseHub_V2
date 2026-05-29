@@ -408,6 +408,16 @@ body {
   white-space: nowrap;
 }
 
+.badge-reply{
+  background: rgba(147, 51, 234, .12);
+  color: #7c3aed;
+  border: 1px solid rgba(147, 51, 234, .25);
+}
+
+.badge-reply .material-symbols-outlined{
+  font-size: 14px;
+}
+
 .legend-row {
   display: flex;
   gap: 12px;
