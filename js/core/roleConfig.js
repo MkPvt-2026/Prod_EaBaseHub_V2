@@ -31,6 +31,7 @@ const ROLE_CONFIG = {
       '/pages/sales/salesReport.html',
       '/pages/executive/rfmDashboard.html',   // ← เพิ่มบรรทัดนี้
       '/pages/admin/rfmImport.html',           // ← เพิ่มบรรทัดนี้
+      '/pages/admin/Adminannouncements.html'
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -61,6 +62,7 @@ const ROLE_CONFIG = {
       '/pages/components/rfmImport.html',
       '/pages/reports/reportManager.html',
       '/pages/dashboard/managerDashboard.html',
+      '/pages/admin/Adminannouncements.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
