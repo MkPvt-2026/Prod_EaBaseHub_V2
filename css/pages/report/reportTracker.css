@@ -1859,8 +1859,8 @@ body {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 13px;
-  min-width: 860px;
+  font-size: 12px;
+  min-width: 1240px;
   table-layout: fixed;
 }
 
@@ -1877,14 +1877,14 @@ body {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  padding: 12px 14px;
+  padding: 10px 10px;
   text-align: left;
   border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 
 .sales-table tbody td {
-  padding: 12px 14px;
+  padding: 10px 10px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   color: var(--text);
@@ -2380,6 +2380,38 @@ body {
   font-size: 13px;
 }
 
+
+
+
+.comment-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:8px;
+}
+
+.comment-btn-edit,
+.comment-btn-delete{
+  border:none;
+  border-radius:8px;
+  padding:4px 10px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.comment-btn-edit{
+  background:#e0f2fe;
+  color:#0369a1;
+}
+
+.comment-btn-delete{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+
+
+
 /* =====================================================
    23. RESPONSIVE
    ===================================================== */
@@ -2481,4 +2513,111 @@ body {
 
 .comments-history .comment-text > div{
   margin-top: 0 !important;
+}
+
+
+
+
+.td-plan-shop {
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.plan-shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.plan-shop-list div {
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.sales-table {
+  min-width: 1040px;
+}
+
+
+/* ========================================
+   TABLET (768px - 1180px)
+======================================== */
+@media (min-width: 768px) and (max-width: 1180px){
+
+  .sales-table{
+    min-width: 100% !important;
+    table-layout: fixed;
+    font-size: 11px;
+  }
+
+  .sales-table th,
+  .sales-table td{
+    padding: 6px 4px;
+    font-size: 11px;
+    vertical-align: top;
+  }
+
+  /* วันที่ */
+  .sales-table th:nth-child(1),
+  .sales-table td:nth-child(1){
+    width: 70px;
+  }
+
+  /* ร้านค้า */
+  .sales-table th:nth-child(2),
+  .sales-table td:nth-child(2){
+    width: 110px;
+  }
+
+  /* จังหวัด */
+  .sales-table th:nth-child(3),
+  .sales-table td:nth-child(3){
+    width: 70px;
+  }
+
+  /* สินค้าที่จำหน่าย */
+  .sales-table th:nth-child(4),
+  .sales-table td:nth-child(4){
+    width: 90px;
+  }
+
+  /* สินค้าที่ลูกค้าแนะนำ */
+  .sales-table th:nth-child(5),
+  .sales-table td:nth-child(5){
+    width: 120px;
+  }
+
+  /* รายละเอียด */
+  .sales-table th:nth-child(6),
+  .sales-table td:nth-child(6){
+    width: 180px;
+  }
+
+  /* ร้านตามแผน */
+  .sales-table th:nth-child(7),
+  .sales-table td:nth-child(7){
+    width: 120px;
+  }
+
+  /* สถานะ */
+  .sales-table th:nth-child(8),
+  .sales-table td:nth-child(8){
+    width: 55px;
+    text-align:center;
+  }
+
+  /* comment */
+  .sales-table th:nth-child(9),
+  .sales-table td:nth-child(9){
+    width: 65px;
+    text-align:center;
+  }
+
+  .sales-table .material-symbols-outlined{
+    font-size:18px !important;
+  }
+
 }

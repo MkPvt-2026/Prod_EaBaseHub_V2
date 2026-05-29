@@ -16,6 +16,7 @@ let filteredGroups = []; // after filter
 let profilesMap = {};
 let shopsMap = {};
 let productsMap = {};
+let tripPlanMap = {};
 let commentCountsMap = {};
 let replyCountsMap = {};
 
@@ -45,7 +46,6 @@ function markRepliesAsRead(reportIds) {
 
   saveReplyReads(reads);
 }
-
 
 let isSavingComment = false;
 let isSavingPopupComment = false;
@@ -520,7 +520,6 @@ async function loadCommentCounts(reportIds) {
   }
 }
 
-
 async function loadReplyCounts(reportIds) {
   replyCountsMap = {};
   replyUnreadMap = {};
@@ -628,7 +627,6 @@ function getGroupCommentCount(group) {
   return total;
 }
 
-
 function getGroupReplyCount(group) {
   let total = 0;
 
@@ -678,10 +676,10 @@ async function loadReports() {
 
     const reportIds = allReports.map((r) => r.id);
 
-await Promise.all([
-  loadCommentCounts(reportIds),
-  loadReplyCounts(reportIds),
-]);
+    await Promise.all([
+      loadCommentCounts(reportIds),
+      loadReplyCounts(reportIds),
+    ]);
 
     groupedReports = groupReportRows(allReports);
     filteredGroups = [...groupedReports];
@@ -877,8 +875,12 @@ function switchView(view) {
     b.classList.toggle("active", b.dataset.view === view);
   });
 
-  document.getElementById("listView").classList.toggle("active", view === "list");
-  document.getElementById("tableView").classList.toggle("active", view === "table");
+  document
+    .getElementById("listView")
+    .classList.toggle("active", view === "list");
+  document
+    .getElementById("tableView")
+    .classList.toggle("active", view === "table");
 }
 
 // =====================================================
@@ -1039,8 +1041,8 @@ function renderReports() {
     }
 
     ${
-  replyCount > 0
-    ? `
+      replyCount > 0
+        ? `
   <span class="badge-comment badge-reply ${unreadReplyCount > 0 ? "has-new-reply" : ""}"
         title="${replyCount} การตอบกลับ${unreadReplyCount > 0 ? ` • ใหม่ ${unreadReplyCount}` : ""}">
     ${unreadReplyCount > 0 ? `<span class="reply-pulse-dot"></span>` : ""}
@@ -1050,8 +1052,8 @@ function renderReports() {
     ${replyCount}
   </span>
 `
-    : ""
-}
+        : ""
+    }
 
   </div>
 `;
@@ -1152,10 +1154,89 @@ function goToPage(page) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function getDateKey(dateValue) {
+  if (!dateValue) return "";
+  return String(dateValue).split("T")[0];
+}
+
+// =====================================================
+// 🆕 LOAD TRIP PLANS FOR A SALE
+// - ดึงข้อมูลจากตาราง trips โดยกรองด้วย user_id หรือ user_name (กรณีที่ profile ไม่มีชื่อ)
+// - สร้างแผนที่ tripPlanMap: { "2024-06-01": ["ร้าน A", "ร้าน B"], "2024-06-02": ["ร้าน C"] }
+// - ใช้ใน modal ตารางรายงานของเซลล์ เพื่อแสดงว่ามีแผนจะไปเยี่ยมร้านไหนบ้างในแต่ละวัน 
+
+
+async function loadTripPlansForSale(saleId) {
+  tripPlanMap = {};
+
+  const profile = profilesMap[saleId];
+  const saleName = String(profile?.display_name || "").trim();
+
+  console.log("🧑 saleId =", saleId);
+  console.log("🧑 saleName =", saleName);
+
+  const start = formatDateForInput(dateStart);
+  const end = formatDateForInput(dateEnd);
+
+  const { data, error } = await supabaseClient
+    .from("trips")
+    .select("id, user_id, user_name, trips, start_date, end_date, status, is_latest, created_at")
+    .lte("start_date", end)
+    .gte("end_date", start)
+    .order("created_at", { ascending: false });
+
+  console.log("🚌 trips raw =", data);
+  console.log("❌ trips error =", error);
+
+  if (error) return;
+
+  const matchedPlans = (data || []).filter((plan) => {
+    const dbName = String(plan.user_name || "").trim();
+
+    return (
+      plan.user_id === saleId ||
+      dbName === saleName ||
+      dbName.includes(saleName) ||
+      saleName.includes(dbName)
+    );
+  });
+
+  console.log("✅ matchedPlans =", matchedPlans);
+
+  matchedPlans.forEach((plan) => {
+    let rows = [];
+
+    if (Array.isArray(plan.trips)) {
+      rows = plan.trips;
+    } else if (plan.trips && typeof plan.trips === "object") {
+      rows = Array.isArray(plan.trips.rows) ? plan.trips.rows : [];
+    }
+
+    rows.forEach((t) => {
+      const dateKey = getDateKey(t.date);
+      if (!dateKey) return;
+
+      const shops = [t.shop1, t.shop2, t.shop3]
+        .map((v) => String(v || "").trim())
+        .filter((v) => v && v !== "-" && v !== "ชื่อร้าน");
+
+      if (!tripPlanMap[dateKey]) tripPlanMap[dateKey] = [];
+
+      shops.forEach((shop) => {
+        if (!tripPlanMap[dateKey].includes(shop)) {
+          tripPlanMap[dateKey].push(shop);
+        }
+      });
+    });
+  });
+
+  console.log("✅ tripPlanMap =", tripPlanMap);
+}
+
 // =====================================================
 // 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
 // =====================================================
-function openSalesTableModal(saleId) {
+async function openSalesTableModal(saleId) {
   const profile = profilesMap[saleId];
   if (!profile) {
     showToast("❌ ไม่พบข้อมูลเซลล์");
@@ -1183,7 +1264,11 @@ function openSalesTableModal(saleId) {
     subtitleEl.textContent = `ช่วงเวลา ${fmt(dateStart)} – ${fmt(dateEnd)}`;
   }
 
-  // Render table
+  console.log("🧑 saleId ที่ส่งมา =", saleId);
+console.log("🧑 profile =", profile);
+
+  // โหลดแผนการเดินทางของเซลล์ก่อน แล้วค่อย render ตาราง
+  await loadTripPlansForSale(saleId);
   renderSalesTable(saleId);
 
   // Show modal
@@ -1192,6 +1277,28 @@ function openSalesTableModal(saleId) {
     modal.classList.add("show");
     document.body.style.overflow = "hidden";
   }
+}
+
+
+function renderPlanShopsByDate(reportDate) {
+  const dateKey = getDateKey(reportDate);
+  const shops = tripPlanMap[dateKey] || [];
+
+  if (!shops.length) {
+    return `<span class="muted-text">—</span>`;
+  }
+
+  return `
+    <div class="plan-shop-list">
+      ${shops.map((shop) => `<div>${escapeHtml(shop)}</div>`).join("")}
+    </div>
+  `;
+}
+
+
+function getDateKey(dateValue) {
+  if (!dateValue) return "";
+  return String(dateValue).split("T")[0];
 }
 
 // =====================================================
@@ -1216,9 +1323,7 @@ function renderSalesTable(saleId) {
     groups.map((g) => shopsMap[g.shop_id]?.province).filter(Boolean),
   ).size;
   const unread = groups.filter((g) => !g.manager_acknowledged).length;
-  const commented = groups.filter(
-    (g) => getGroupCommentCount(g) > 0,
-  ).length;
+  const commented = groups.filter((g) => getGroupCommentCount(g) > 0).length;
 
   const setText = (id, val) => {
     const el = document.getElementById(id);
@@ -1250,6 +1355,9 @@ function renderSalesTable(saleId) {
       const shopName = shopData?.name || "—";
       const province = shopData?.province || "—";
       const isUnread = !g.manager_acknowledged;
+      const planShopHtml = renderPlanShopsByDate(
+        g.report_date || g.submitted_at,
+      );
 
       // สินค้าที่จำหน่าย (chips) — ห่อใน wrapper เพื่อไม่ให้ td flex กระทบ row height
       let productHtml = '<span class="muted-text">—</span>';
@@ -1315,6 +1423,9 @@ function renderSalesTable(saleId) {
         </td>
         <td class="td-note">
           ${noteHtml}
+          <td class="td-plan-shop">
+  ${planShopHtml}
+</td>
         </td>
         <td class="col-status">
           <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
@@ -1484,7 +1595,6 @@ async function savePopupComment() {
 
     await loadReplyCounts(allReports.map((r) => r.id));
 
-
     updateSummaryCards();
     renderReports();
   } catch (e) {
@@ -1563,10 +1673,10 @@ async function openGroupModal(groupKey) {
   }
 
   // mark ว่าอ่านแล้ว
-markRepliesAsRead(group.reportIds);
+  markRepliesAsRead(group.reportIds);
 
-// refresh badge
-renderReports();
+  // refresh badge
+  renderReports();
 
   currentGroupKey = groupKey;
   currentGroupRows = allReports.filter((r) => group.reportIds.includes(r.id));
@@ -1651,8 +1761,6 @@ renderReports();
   }
 }
 
-
-
 function renderCommentText(rawText) {
   const text = String(rawText || "");
 
@@ -1699,11 +1807,13 @@ function renderCommentText(rawText) {
         word-break:break-word;
       ">
        ${escapeHtml(replyLine)
-  .replace("Admin", "<strong style='color:#dc2626;'>Admin</strong>")
-  .replace("Executive", "<strong style='color:#f59e0b;'>Executive</strong>")
-  .replace("Manager", "<strong style='color:#0891b2;'>Manager</strong>")
-  .replace("Sale", "<strong style='color:#16a34a;'>Sale</strong>")
-}
+         .replace("Admin", "<strong style='color:#dc2626;'>Admin</strong>")
+         .replace(
+           "Executive",
+           "<strong style='color:#f59e0b;'>Executive</strong>",
+         )
+         .replace("Manager", "<strong style='color:#0891b2;'>Manager</strong>")
+         .replace("Sale", "<strong style='color:#16a34a;'>Sale</strong>")}
       </div>
 
       <div style="
@@ -1729,7 +1839,14 @@ async function loadCommentsIntoElement(reportIds, container) {
   try {
     const { data, error } = await supabaseClient
       .from("report_comments")
-      .select("comment, created_at, report_id, profiles(display_name, role)")
+      .select(`
+  id,
+  comment,
+  created_at,
+  report_id,
+  manager_id,
+  profiles(display_name, role)
+`)
       .in("report_id", reportIds)
       .order("created_at", { ascending: true });
 
@@ -1775,15 +1892,52 @@ async function loadCommentsIntoElement(reportIds, container) {
           }
         }
 
+        const canManage =
+  localUser &&
+  (
+    localUser.id === c.manager_id ||
+    ["admin", "executive"].includes(localUser.role)
+  );
+
         return `
-        <div class="comment-item ${roleClass}">
-          <div class="comment-meta">
-            <span class="comment-author">${escapeHtml(displayName)}</span>
-            <span class="comment-role-badge ${roleClass}">${roleBadge}</span>
-            <span class="comment-date">${formatDateTime(c.created_at)}</span>
-          </div>
-          <div class="comment-text">${renderCommentText(c.comment)}</div>
-        </div>`;
+<div class="comment-item ${roleClass}">
+
+  <div class="comment-meta">
+    <span class="comment-author">${escapeHtml(displayName)}</span>
+    <span class="comment-role-badge ${roleClass}">
+      ${roleBadge}
+    </span>
+    <span class="comment-date">
+      ${formatDateTime(c.created_at)}
+    </span>
+  </div>
+
+  <div class="comment-text">
+    ${renderCommentText(c.comment)}
+  </div>
+
+  ${
+    canManage
+      ? `
+      <div class="comment-actions">
+        <button
+          class="comment-btn-edit"
+          onclick="editComment('${c.id}')">
+          แก้ไข
+        </button>
+
+        <button
+          class="comment-btn-delete"
+          onclick="deleteComment('${c.id}')">
+          ลบ
+        </button>
+      </div>
+    `
+      : ""
+  }
+
+</div>`;
+
       })
       .join("");
   } catch (e) {
@@ -2124,6 +2278,119 @@ async function logout() {
     window.location.href = "/pages/auth/login.html";
   }
 }
+
+
+
+
+
+async function editComment(commentId) {
+  const { data, error } = await supabaseClient
+    .from("report_comments")
+    .select("comment")
+    .eq("id", commentId)
+    .single();
+
+  if (error || !data) {
+    showToast("❌ ไม่พบความคิดเห็น");
+    return;
+  }
+
+  const newText = prompt(
+    "แก้ไขความคิดเห็น",
+    data.comment || ""
+  );
+
+  if (newText === null) return;
+
+  const { error: updateError } = await supabaseClient
+    .from("report_comments")
+    .update({
+      comment: newText.trim()
+    })
+    .eq("id", commentId);
+
+  if (updateError) {
+    showToast("❌ แก้ไขไม่สำเร็จ");
+    return;
+  }
+
+  showToast("✅ แก้ไขแล้ว");
+
+  refreshComments();
+}
+
+
+
+
+
+async function deleteComment(commentId) {
+  if (!confirm("ต้องการลบความคิดเห็นนี้ใช่หรือไม่")) return;
+
+  const { data, error } = await supabaseClient
+    .from("report_comments")
+    .delete()
+    .eq("id", commentId)
+    .select("id");
+
+  if (error) {
+    console.error("deleteComment error:", error);
+    showToast("❌ ลบไม่สำเร็จ: " + error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    showToast("⚠️ ไม่มีสิทธิ์ลบ หรือไม่พบความคิดเห็นนี้");
+    return;
+  }
+
+  showToast("✅ ลบความคิดเห็นแล้ว");
+
+  await refreshComments();
+}
+
+
+
+
+
+async function refreshComments() {
+
+  if (currentPopupGroupKey) {
+    const group = groupedReports.find(
+      g => g.key === currentPopupGroupKey
+    );
+
+    if (group) {
+      await loadCommentsIntoElement(
+        group.reportIds,
+        document.getElementById("popupCommentsHistory")
+      );
+    }
+  }
+
+  if (currentGroupKey) {
+    const group = groupedReports.find(
+      g => g.key === currentGroupKey
+    );
+
+    if (group) {
+      await loadCommentsForGroup(group.reportIds);
+    }
+  }
+
+  await loadCommentCounts(
+    allReports.map(r => r.id)
+  );
+
+  renderReports();
+  updateSummaryCards();
+updateSalesGrid();
+updateSalesQuickPick();
+
+  if (currentSalesModalId) {
+    renderSalesTable(currentSalesModalId);
+  }
+}
+
 
 // =====================================================
 // 🌐 GLOBAL FUNCTIONS
