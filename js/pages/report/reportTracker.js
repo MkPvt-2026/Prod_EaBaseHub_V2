@@ -16,6 +16,7 @@ let filteredGroups = []; // after filter
 let profilesMap = {};
 let shopsMap = {};
 let productsMap = {};
+let tripPlanMap = {};
 let commentCountsMap = {};
 let replyCountsMap = {};
 
@@ -45,7 +46,6 @@ function markRepliesAsRead(reportIds) {
 
   saveReplyReads(reads);
 }
-
 
 let isSavingComment = false;
 let isSavingPopupComment = false;
@@ -520,7 +520,6 @@ async function loadCommentCounts(reportIds) {
   }
 }
 
-
 async function loadReplyCounts(reportIds) {
   replyCountsMap = {};
   replyUnreadMap = {};
@@ -628,7 +627,6 @@ function getGroupCommentCount(group) {
   return total;
 }
 
-
 function getGroupReplyCount(group) {
   let total = 0;
 
@@ -678,10 +676,10 @@ async function loadReports() {
 
     const reportIds = allReports.map((r) => r.id);
 
-await Promise.all([
-  loadCommentCounts(reportIds),
-  loadReplyCounts(reportIds),
-]);
+    await Promise.all([
+      loadCommentCounts(reportIds),
+      loadReplyCounts(reportIds),
+    ]);
 
     groupedReports = groupReportRows(allReports);
     filteredGroups = [...groupedReports];
@@ -877,8 +875,12 @@ function switchView(view) {
     b.classList.toggle("active", b.dataset.view === view);
   });
 
-  document.getElementById("listView").classList.toggle("active", view === "list");
-  document.getElementById("tableView").classList.toggle("active", view === "table");
+  document
+    .getElementById("listView")
+    .classList.toggle("active", view === "list");
+  document
+    .getElementById("tableView")
+    .classList.toggle("active", view === "table");
 }
 
 // =====================================================
@@ -1039,8 +1041,8 @@ function renderReports() {
     }
 
     ${
-  replyCount > 0
-    ? `
+      replyCount > 0
+        ? `
   <span class="badge-comment badge-reply ${unreadReplyCount > 0 ? "has-new-reply" : ""}"
         title="${replyCount} การตอบกลับ${unreadReplyCount > 0 ? ` • ใหม่ ${unreadReplyCount}` : ""}">
     ${unreadReplyCount > 0 ? `<span class="reply-pulse-dot"></span>` : ""}
@@ -1050,8 +1052,8 @@ function renderReports() {
     ${replyCount}
   </span>
 `
-    : ""
-}
+        : ""
+    }
 
   </div>
 `;
@@ -1152,10 +1154,66 @@ function goToPage(page) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function getDateKey(dateValue) {
+  if (!dateValue) return "";
+  return String(dateValue).split("T")[0];
+}
+
+async function loadTripPlansForSale(saleId) {
+  tripPlanMap = {};
+
+  const { data, error } = await supabaseClient
+    .from("trips")
+    .select("id, user_id, trips, start_date, end_date, created_at")
+    .eq("user_id", saleId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("❌ loadTripPlansForSale:", error);
+    return;
+  }
+
+  (data || []).forEach((plan) => {
+    const rows = Array.isArray(plan.trips) ? plan.trips : [];
+
+    rows.forEach((t) => {
+      const dateKey = getDateKey(t.date);
+      if (!dateKey) return;
+
+      const shops = [t.shop1, t.shop2, t.shop3].filter(
+        (v) => v && String(v).trim() && v !== "-" && v !== "ชื่อร้าน",
+      );
+
+      if (!tripPlanMap[dateKey]) tripPlanMap[dateKey] = [];
+
+      shops.forEach((shop) => {
+        if (!tripPlanMap[dateKey].includes(shop)) {
+          tripPlanMap[dateKey].push(shop);
+        }
+      });
+    });
+  });
+}
+
+function renderPlanShopsByDate(reportDate) {
+  const dateKey = getDateKey(reportDate);
+  const shops = tripPlanMap[dateKey] || [];
+
+  if (!shops.length) {
+    return `<span class="muted-text">—</span>`;
+  }
+
+  return `
+    <div class="plan-shop-list">
+      ${shops.map((shop) => `<div>${escapeHtml(shop)}</div>`).join("")}
+    </div>
+  `;
+}
+
 // =====================================================
 // 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
 // =====================================================
-function openSalesTableModal(saleId) {
+async function openSalesTableModal(saleId) {
   const profile = profilesMap[saleId];
   if (!profile) {
     showToast("❌ ไม่พบข้อมูลเซลล์");
@@ -1183,7 +1241,8 @@ function openSalesTableModal(saleId) {
     subtitleEl.textContent = `ช่วงเวลา ${fmt(dateStart)} – ${fmt(dateEnd)}`;
   }
 
-  // Render table
+  // โหลดแผนการเดินทางของเซลล์ก่อน แล้วค่อย render ตาราง
+  await loadTripPlansForSale(saleId);
   renderSalesTable(saleId);
 
   // Show modal
@@ -1216,9 +1275,7 @@ function renderSalesTable(saleId) {
     groups.map((g) => shopsMap[g.shop_id]?.province).filter(Boolean),
   ).size;
   const unread = groups.filter((g) => !g.manager_acknowledged).length;
-  const commented = groups.filter(
-    (g) => getGroupCommentCount(g) > 0,
-  ).length;
+  const commented = groups.filter((g) => getGroupCommentCount(g) > 0).length;
 
   const setText = (id, val) => {
     const el = document.getElementById(id);
@@ -1250,6 +1307,9 @@ function renderSalesTable(saleId) {
       const shopName = shopData?.name || "—";
       const province = shopData?.province || "—";
       const isUnread = !g.manager_acknowledged;
+      const planShopHtml = renderPlanShopsByDate(
+        g.report_date || g.submitted_at,
+      );
 
       // สินค้าที่จำหน่าย (chips) — ห่อใน wrapper เพื่อไม่ให้ td flex กระทบ row height
       let productHtml = '<span class="muted-text">—</span>';
@@ -1315,6 +1375,9 @@ function renderSalesTable(saleId) {
         </td>
         <td class="td-note">
           ${noteHtml}
+          <td class="td-plan-shop">
+  ${planShopHtml}
+</td>
         </td>
         <td class="col-status">
           <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
@@ -1484,7 +1547,6 @@ async function savePopupComment() {
 
     await loadReplyCounts(allReports.map((r) => r.id));
 
-
     updateSummaryCards();
     renderReports();
   } catch (e) {
@@ -1563,10 +1625,10 @@ async function openGroupModal(groupKey) {
   }
 
   // mark ว่าอ่านแล้ว
-markRepliesAsRead(group.reportIds);
+  markRepliesAsRead(group.reportIds);
 
-// refresh badge
-renderReports();
+  // refresh badge
+  renderReports();
 
   currentGroupKey = groupKey;
   currentGroupRows = allReports.filter((r) => group.reportIds.includes(r.id));
@@ -1651,8 +1713,6 @@ renderReports();
   }
 }
 
-
-
 function renderCommentText(rawText) {
   const text = String(rawText || "");
 
@@ -1699,11 +1759,13 @@ function renderCommentText(rawText) {
         word-break:break-word;
       ">
        ${escapeHtml(replyLine)
-  .replace("Admin", "<strong style='color:#dc2626;'>Admin</strong>")
-  .replace("Executive", "<strong style='color:#f59e0b;'>Executive</strong>")
-  .replace("Manager", "<strong style='color:#0891b2;'>Manager</strong>")
-  .replace("Sale", "<strong style='color:#16a34a;'>Sale</strong>")
-}
+         .replace("Admin", "<strong style='color:#dc2626;'>Admin</strong>")
+         .replace(
+           "Executive",
+           "<strong style='color:#f59e0b;'>Executive</strong>",
+         )
+         .replace("Manager", "<strong style='color:#0891b2;'>Manager</strong>")
+         .replace("Sale", "<strong style='color:#16a34a;'>Sale</strong>")}
       </div>
 
       <div style="
