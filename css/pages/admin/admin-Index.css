@@ -1,0 +1,461 @@
+/* ==========================================================
+   ADMINISTRATION CONSOLE STYLE
+   ใช้สำหรับหน้า Admin Console
+   ========================================================== */
+
+:root {
+  --admin-main: #0f766e;
+  --admin-dark: #064e52;
+  --admin-deep: #043f46;
+  --admin-soft: #ecfdf5;
+  --admin-border: #dbe7e5;
+
+  --bg: #f6fafb;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+
+  --radius-lg: 22px;
+  --radius-md: 16px;
+
+  --shadow-card: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* Reset เบื้องต้น */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ==========================================================
+   SIDEBAR
+   ========================================================== */
+
+.admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 260px;
+  background: linear-gradient(180deg, var(--admin-dark), var(--admin-deep));
+  color: #ffffff;
+  padding: 24px 14px;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 28px;
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+}
+
+.sidebar-brand h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.sidebar-brand p {
+  margin: 2px 0 0;
+  opacity: 0.85;
+}
+
+/* เมนูซ้าย */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-menu a {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 16px;
+}
+
+.sidebar-footer button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sidebar-footer small {
+  display: block;
+  text-align: center;
+  opacity: 0.75;
+  margin-top: 8px;
+}
+
+/* ==========================================================
+   MAIN CONTENT
+   ========================================================== */
+
+.admin-main {
+  margin-left: 260px;
+  padding: 32px;
+  min-height: 100vh;
+}
+
+/* Header */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.5px;
+}
+
+.admin-header p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ช่องค้นหา */
+.search-box {
+  width: 320px;
+  height: 54px;
+  background: #ffffff;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+.search-box input {
+  border: 0;
+  outline: 0;
+  width: 100%;
+  font-size: 14px;
+  background: transparent;
+}
+
+.search-box span {
+  color: var(--muted);
+}
+
+/* สถานะระบบ */
+.system-status,
+.admin-profile {
+  height: 54px;
+  background: #ffffff;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  box-shadow: var(--shadow-soft);
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.system-status small,
+.admin-profile small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--admin-main);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+/* ==========================================================
+   SUMMARY CARDS
+   ========================================================== */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.summary-card {
+  background: var(--card);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 150px;
+  box-shadow: var(--shadow-card);
+}
+
+.summary-card p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.summary-card h3 {
+  margin: 8px 0;
+  font-size: 34px;
+}
+
+.summary-card small {
+  color: var(--muted);
+}
+
+.summary-card small b {
+  color: var(--admin-main);
+}
+
+/* สี icon ของ summary */
+.summary-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+}
+
+.summary-icon span {
+  font-size: 38px;
+}
+
+.summary-icon.green {
+  background: #dcfce7;
+  color: #059669;
+}
+
+.summary-icon.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.summary-icon.purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.summary-icon.orange {
+  background: #ffedd5;
+  color: #f59e0b;
+}
+
+/* ==========================================================
+   MENU GROUPS
+   ========================================================== */
+
+.menu-layout {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.menu-section {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.menu-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.menu-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--admin-main);
+}
+
+.menu-section-title h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.menu-section-header a {
+  color: var(--admin-main);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* การ์ดเมนูด้านใน */
+.menu-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.menu-card {
+  border: 1px solid var(--admin-border);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  min-height: 170px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+  border-color: #99f6e4;
+}
+
+.menu-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--admin-soft);
+  color: var(--admin-main);
+  margin-bottom: 20px;
+}
+
+.menu-card-icon span {
+  font-size: 30px;
+}
+
+.menu-card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.menu-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* กรณีค้นหาแล้วไม่เจอ */
+.empty-state {
+  grid-column: 1 / -1;
+  background: #ffffff;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ==========================================================
+   RESPONSIVE
+   ========================================================== */
+
+@media (max-width: 1180px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .menu-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header {
+    flex-direction: column;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+  }
+
+  .admin-main {
+    margin-left: 0;
+    padding: 18px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header h1 {
+    font-size: 26px;
+  }
+}
