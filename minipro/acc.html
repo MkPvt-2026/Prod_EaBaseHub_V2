@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบขออนุมัติราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a1f5e;
+    --primary-light: #2d3494;
+    --accent: #6c63ff;
+    --accent2: #00c9a7;
+    --warning: #ff9800;
+    --danger: #e53935;
+    --success: #00c853;
+    --pending: #ff6d00;
+    --bg: #f0f2f8;
+    --card: #ffffff;
+    --border: #e0e4f0;
+    --text: #1a1f5e;
+    --text-muted: #6b7280;
+    --sidebar-w: 220px;
+    --header-h: 64px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== TOP PROGRESS BAR ===== */
+  .top-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 24px;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(26,31,94,0.18);
+  }
+
+  .top-header .brand {
+    display: flex; flex-direction: column; margin-right: 24px;
+  }
+  .top-header .brand h1 {
+    font-size: 20px; font-weight: 700; color: #fff; white-space: nowrap;
+  }
+  .top-header .brand p {
+    font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 1px;
+  }
+
+  .flow-steps {
+    display: flex; align-items: center; gap: 0; flex: 1;
+  }
+  .flow-step {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+  }
+  .flow-step.active { background: rgba(108,99,255,0.25); }
+  .flow-step:hover:not(.active) { background: rgba(255,255,255,0.08); }
+  .flow-step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    background: rgba(255,255,255,0.15); color: #fff;
+  }
+  .flow-step.active .flow-step-num { background: var(--accent); }
+  .flow-step.done .flow-step-num { background: var(--success); }
+  .flow-step-label { color: #fff; font-size: 13px; font-weight: 500; }
+  .flow-step-sub { color: rgba(255,255,255,0.55); font-size: 11px; }
+  .flow-arrow {
+    color: rgba(255,255,255,0.3); font-size: 18px; margin: 0 4px;
+  }
+  .flow-step.done .flow-step-label { color: var(--success); }
+
+  /* ===== LAYOUT ===== */
+  .layout {
+    display: flex;
+    padding-top: var(--header-h);
+    min-height: 100vh;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--primary);
+    position: fixed;
+    top: var(--header-h); left: 0;
+    bottom: 0;
+    display: flex; flex-direction: column;
+    padding: 16px 0;
+    z-index: 90;
+  }
+
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 8px;
+  }
+  .sidebar-logo .logo-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #fff; font-size: 16px;
+  }
+  .sidebar-logo span { color: #fff; font-weight: 700; font-size: 16px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 20px;
+    color: rgba(255,255,255,0.65);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+  .nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-item.active {
+    color: #fff; background: rgba(108,99,255,0.2);
+    border-left-color: var(--accent);
+  }
+  .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: var(--danger);
+    color: #fff; border-radius: 10px;
+    font-size: 11px; padding: 1px 6px; font-weight: 600;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 28px 32px;
+    min-height: calc(100vh - var(--header-h));
+  }
+
+  /* ===== TABS ===== */
+  .page-tabs {
+    display: flex; gap: 4px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(26,31,94,0.06);
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .tab-btn {
+    padding: 8px 20px; border-radius: 8px;
+    border: none; background: none;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab-btn.active {
+    background: var(--primary); color: #fff;
+    box-shadow: 0 2px 8px rgba(26,31,94,0.25);
+  }
+  .tab-btn:hover:not(.active) { color: var(--primary); background: var(--bg); }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(26,31,94,0.06);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-header h2 { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .card-number {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .card-body { padding: 20px; }
+
+  /* ===== FORM ELEMENTS ===== */
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: #fff;
+    transition: border-color 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  select.form-control { cursor: pointer; }
+
+  /* ===== SALE INFO BOX ===== */
+  .sale-info {
+    display: flex; justify-content: flex-end; align-items: flex-start; gap: 6px;
+    margin-bottom: 16px;
+  }
+  .sale-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .sale-name { font-weight: 600; font-size: 14px; }
+  .sale-role { font-size: 12px; color: var(--text-muted); }
+
+  /* ===== TABLE ===== */
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .data-table th {
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(108,99,255,0.03); }
+  .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .data-table .discount { color: var(--danger); font-weight: 600; }
+
+  .table-footer {
+    display: flex; justify-content: flex-end; gap: 32px;
+    padding: 14px 12px;
+    border-top: 2px solid var(--border);
+    background: var(--bg);
+    border-radius: 0 0 8px 8px;
+  }
+  .table-footer .total-label { font-size: 13px; color: var(--text-muted); }
+  .table-footer .total-val { font-size: 16px; font-weight: 700; color: var(--danger); }
+  .table-footer .disc-val { font-size: 16px; font-weight: 700; color: var(--danger); }
+
+  /* ===== REASON RADIO ===== */
+  .reason-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 12px;
+  }
+  .reason-option {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; font-size: 13px;
+  }
+  .reason-option input[type="radio"] { accent-color: var(--accent); }
+
+  .remark-area {
+    border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    font-family: inherit; font-size: 13px; width: 100%; resize: none;
+    height: 72px; outline: none; transition: border-color 0.2s;
+  }
+  .remark-area:focus { border-color: var(--accent); }
+
+  /* ===== SIGNATURE BOX ===== */
+  .sig-box {
+    border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 12px 16px;
+    text-align: center; min-height: 80px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .sig-box:hover { border-color: var(--accent); background: rgba(108,99,255,0.03); }
+  .sig-img { font-size: 28px; font-family: 'Dancing Script', cursive; color: var(--primary-light); font-weight: 700; letter-spacing: 1px; }
+  .sig-name { font-size: 12px; color: var(--text-muted); }
+  .sig-date { font-size: 11px; color: var(--text-muted); }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    padding: 10px 22px; border-radius: 8px;
+    border: none; font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,31,94,0.3); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { filter: brightness(1.05); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { filter: brightness(1.05); }
+  .btn-outline {
+    background: transparent; border: 1.5px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ===== STATUS BADGE ===== */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-waiting { background: rgba(255,109,0,0.12); color: var(--pending); }
+  .badge-approved { background: rgba(0,200,83,0.12); color: var(--success); }
+  .badge-rejected { background: rgba(229,57,53,0.12); color: var(--danger); }
+  .badge-done { background: rgba(108,99,255,0.12); color: var(--accent); }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ===== APPROVAL FLOW STATUS ===== */
+  .approval-flow {
+    display: flex; flex-direction: column; gap: 0;
+    margin: 16px 0;
+  }
+  .flow-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+    position: relative;
+  }
+  .flow-row:last-child { border-bottom: none; }
+  .flow-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .flow-dot.done { background: rgba(0,200,83,0.15); color: var(--success); border: 2px solid var(--success); }
+  .flow-dot.pending { background: rgba(255,109,0,0.15); color: var(--pending); border: 2px solid var(--pending); }
+  .flow-dot.waiting { background: rgba(107,114,128,0.1); color: var(--text-muted); border: 2px dashed var(--border); }
+  .flow-info { flex: 1; }
+  .flow-info .flow-role { font-size: 13px; font-weight: 600; }
+  .flow-info .flow-time { font-size: 11px; color: var(--text-muted); }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    display: flex; align-items: flex-start; justify-content: center;
+    gap: 0; margin: 20px 0;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 12px;
+  }
+  .tl-step {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    position: relative;
+  }
+  .tl-step:not(:last-child)::after {
+    content: '';
+    position: absolute; top: 20px; left: 50%;
+    width: 100px; height: 2px;
+    background: var(--border);
+  }
+  .tl-step.done:not(:last-child)::after { background: var(--success); }
+  .tl-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; z-index: 1;
+    background: #fff; border: 2px solid var(--border);
+  }
+  .tl-step.done .tl-circle { border-color: var(--success); background: rgba(0,200,83,0.08); }
+  .tl-step.active .tl-circle { border-color: var(--pending); background: rgba(255,109,0,0.08); }
+  .tl-label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+  .tl-date { font-size: 11px; color: var(--text-muted); }
+  .tl-time { font-size: 11px; color: var(--text-muted); }
+  .tl-step.done .tl-label { color: var(--success); }
+  .tl-step.active .tl-label { color: var(--pending); }
+  .tl-gap { width: 80px; height: 2px; background: var(--border); margin-top: 20px; align-self: flex-start; }
+  .tl-gap.done { background: var(--success); }
+
+  /* ===== INFO GRID ===== */
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px;
+    font-size: 13px;
+  }
+  .info-item { display: flex; gap: 6px; align-items: flex-start; }
+  .info-label { color: var(--text-muted); white-space: nowrap; }
+  .info-val { font-weight: 600; }
+  .info-highlight { color: var(--danger); }
+
+  /* ===== MANAGER COMMENT ===== */
+  .comment-box {
+    background: rgba(108,99,255,0.05);
+    border: 1px solid rgba(108,99,255,0.15);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ===== STATUS TABLE ===== */
+  .status-table-wrap { overflow-x: auto; }
+  .row-pending td:nth-child(5) { color: var(--pending); font-weight: 600; }
+  .row-approved td:nth-child(5) { color: var(--success); font-weight: 600; }
+  .row-rejected td:nth-child(5) { color: var(--danger); font-weight: 600; }
+
+  .avatar-sm {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  /* ===== METRICS ROW ===== */
+  .metrics {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    margin-bottom: 24px;
+  }
+  .metric-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(26,31,94,0.05);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .metric-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .metric-value { font-size: 26px; font-weight: 700; color: var(--primary); }
+  .metric-sub { font-size: 12px; color: var(--text-muted); }
+  .metric-card.c1 .metric-value { color: var(--accent); }
+  .metric-card.c2 .metric-value { color: var(--pending); }
+  .metric-card.c3 .metric-value { color: var(--success); }
+  .metric-card.c4 .metric-value { color: var(--danger); }
+
+  /* ===== PAGE VISIBILITY ===== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ===== A4 DOC PREVIEW ===== */
+  .a4-preview {
+    background: #fff;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px;
+    box-shadow: 0 4px 32px rgba(26,31,94,0.12);
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .a4-logo-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 24px;
+    padding-bottom: 16px; border-bottom: 2px solid var(--primary);
+  }
+  .a4-logo-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 18px;
+  }
+  .a4-company { font-weight: 700; font-size: 16px; }
+  .a4-title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .a4-title { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .a4-docnum { font-size: 13px; color: var(--text-muted); }
+  .a4-section { margin-bottom: 20px; }
+  .a4-section-title {
+    font-size: 13px; font-weight: 700; color: var(--primary);
+    border-bottom: 1.5px solid var(--border); padding-bottom: 6px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .a4-kv { display: flex; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+  .a4-k { color: var(--text-muted); min-width: 160px; }
+  .a4-v { font-weight: 500; }
+  .a4-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+  .a4-table th { background: var(--primary); color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+  .a4-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .a4-table tr:last-child td { border-bottom: none; }
+  .a4-total-row {
+    display: flex; justify-content: flex-end; gap: 24px;
+    padding: 10px 10px;
+    background: var(--bg);
+    border-radius: 6px;
+    font-size: 13px; margin-bottom: 16px;
+  }
+  .a4-sigs {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+  }
+  .a4-sig-box {
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px;
+    text-align: center;
+  }
+  .a4-sig-role { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+  .a4-sig-line { height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Dancing Script', cursive; font-size: 20px; color: var(--primary-light); font-weight: 700; }
+  .a4-sig-name { font-size: 12px; margin-top: 4px; }
+  .a4-sig-date { font-size: 11px; color: var(--text-muted); }
+  .a4-barcode {
+    text-align: right; margin-top: 24px;
+    padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted); letter-spacing: 2px;
+  }
+
+  /* ===== MANAGER PAGE LAYOUT ===== */
+  .mgr-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+
+  /* ===== SECTION SPACING ===== */
+  .section-space { margin-bottom: 20px; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .page.active { animation: fadeIn 0.25s ease; }
+
+  /* Responsive adjustments */
+  @media (max-width: 1100px) {
+    .mgr-layout { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="brand">
+    <h1>ระบบขออนุมัติราคาพิเศษ</h1>
+    <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p>
+  </div>
+  <div class="flow-steps">
+    <div class="flow-step done" onclick="showPage('sale')">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">1. Sale</div><div class="flow-step-sub">ส่งคำขอ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active" onclick="showPage('manager')">
+      <div class="flow-step-num">2</div>
+      <div><div class="flow-step-label">Manager</div><div class="flow-step-sub">ตรวจสอบและอนุมัติ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="showPage('executive')">
+      <div class="flow-step-num">3</div>
+      <div><div class="flow-step-label">Executive</div><div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="showPage('tracking')">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">Completed</div><div class="flow-step-sub">เก็บเป็นเอกสาร</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR + MAIN -->
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">A</div>
+      <span>APPROVAL</span>
+    </div>
+    <div class="nav-item" onclick="showPage('sale')">
+      <span class="nav-icon">🏠</span> หน้าหลัก
+    </div>
+    <div class="nav-item" onclick="showPage('tracking')">
+      <span class="nav-icon">💰</span> ของเงินเกิน
+    </div>
+    <div class="nav-item active" onclick="showPage('sale')">
+      <span class="nav-icon">📋</span> ขอราคาพิเศษ
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🏷️</span> ขอส่วนลด
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📦</span> รายการของออเดิร์
+    </div>
+    <div class="nav-item" onclick="showPage('tracking')">
+      <span class="nav-icon">📊</span> รายงาน
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> ตั้งค่า
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ======================== PAGE: SALE ======================== -->
+    <div class="page active" id="page-sale">
+      <div class="page-tabs">
+        <button class="tab-btn active">📝 หน้าส่งคำขอ (Sale)</button>
+        <button class="tab-btn" onclick="showPage('manager')">👔 Manager</button>
+        <button class="tab-btn" onclick="showPage('executive')">👑 Executive</button>
+        <button class="tab-btn" onclick="showPage('tracking')">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="showPage('doc')">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="card section-space">
+        <div class="card-header">
+          <div class="card-number">1</div>
+          <h2>หน้าส่งคำขอ (Sale)</h2>
+        </div>
+        <div class="card-body">
+          <!-- Sale info -->
+          <div class="sale-info">
+            <div>
+              <div class="sale-name">วีรากรณ์ สนใจ</div>
+              <div class="sale-role">Sale Executive</div>
+            </div>
+            <div class="sale-avatar">👩‍💼</div>
+          </div>
+
+          <!-- Customer info -->
+          <div style="background:var(--bg);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">ข้อมูลลูกค้า</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">ชื่อลูกค้า</label>
+                <select class="form-control">
+                  <option>บริษัท แสงทองกรุ๊ป จำกัด</option>
+                  <option>บริษัท เทคโนโลยีสยาม จำกัด</option>
+                  <option>ห้างหุ้นส่วน นนทบุรีวิศวกรรม</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">วันที่เอกสาร</label>
+                <input type="date" class="form-control" value="2024-05-27">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">เลขที่ใบเสนอราคา / SO</label>
+                <input type="text" class="form-control" value="QT-2024-0221">
+              </div>
+            </div>
+          </div>
+
+          <!-- Product table -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">รายการสินค้าที่ขออนุมัติราคาพิเศษ</div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ลำดับ</th>
+                    <th>รหัสสินค้า</th>
+                    <th>รายการสินค้า</th>
+                    <th class="num">จำนวน</th>
+                    <th>หน่วย</th>
+                    <th class="num">ราคาปกติ (ต่อหน่วย)</th>
+                    <th class="num">ราคาที่ขอ (ต่อหน่วย)</th>
+                    <th class="num">ส่วนลด (%)</th>
+                    <th class="num">ส่วนต่าง (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td><td>FG-001</td><td>ถุง PE 18x20</td>
+                    <td class="num">1,000</td><td>ชุด</td>
+                    <td class="num">120.00</td><td class="num">105.00</td>
+                    <td class="num discount">12.50%</td><td class="num discount">15,000.00</td>
+                  </tr>
+                  <tr>
+                    <td>2</td><td>FG-002</td><td>พีลิตฟิล์มพับพลาสก</td>
+                    <td class="num">500</td><td>ม้วน</td>
+                    <td class="num">80.00</td><td class="num">72.00</td>
+                    <td class="num discount">10.00%</td><td class="num discount">4,000.00</td>
+                  </tr>
+                  <tr>
+                    <td>3</td><td>FG-003</td><td>เทปกาว</td>
+                    <td class="num">500</td><td>ม้วน</td>
+                    <td class="num">45.00</td><td class="num">40.00</td>
+                    <td class="num discount">11.11%</td><td class="num discount">2,500.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-footer">
+              <div>
+                <div class="total-label">ยอดรวมส่วนต่าง</div>
+                <div class="total-val">21,500.00 บาท</div>
+              </div>
+              <div>
+                <div class="total-label">ส่วนลดเฉลี่ย</div>
+                <div class="disc-val">9.20%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reason -->
+          <div class="form-row">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">เหตุผลการขอราคาพิเศษ *</div>
+              <div class="reason-grid">
+                <label class="reason-option"><input type="radio" name="reason" checked> แข่งขันราคา</label>
+                <label class="reason-option"><input type="radio" name="reason"> ลูกค้าประจำ</label>
+                <label class="reason-option"><input type="radio" name="reason"> ปิดดีล / ยอดขาย</label>
+                <label class="reason-option"><input type="radio" name="reason"> โปรโมชันพิเศษ</label>
+                <label class="reason-option"><input type="radio" name="reason"> เคลียร์สต็อก</label>
+                <label class="reason-option"><input type="radio" name="reason"> อื่นๆ</label>
+              </div>
+              <textarea class="remark-area" placeholder="คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น">คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น</textarea>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ลายเซ็นผู้ (Sale) *</div>
+              <div class="sig-box">
+                <div class="sig-img">วีรากรณ์</div>
+                <div class="sig-name">ม.ส. วีรากรณ์ สนใจ</div>
+                <div class="sig-date">วันที่ 27/05/2024</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-actions">
+            <button class="btn btn-outline">💾 บันทึกร่าง</button>
+            <button class="btn btn-primary" onclick="showPage('manager')">📤 ส่งคำขออนุมัติ →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== PAGE: MANAGER ======================== -->
+    <div class="page" id="page-manager">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="showPage('sale')">📝 Sale</button>
+        <button class="tab-btn active">👔 หน้าผู้จัดการ (Manager)</button>
+        <button class="tab-btn" onclick="showPage('executive')">👑 Executive</button>
+        <button class="tab-btn" onclick="showPage('tracking')">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="showPage('doc')">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="mgr-layout">
+        <!-- LEFT -->
+        <div>
+          <div class="card section-space">
+            <div class="card-header">
+              <div class="card-number">2</div>
+              <h2>ผู้จัดการตรวจสอบและอนุมัติ (Manager)</h2>
+            </div>
+            <div class="card-body">
+              <div class="info-grid" style="margin-bottom:16px;">
+                <div class="info-item"><span class="info-label">เลขที่คำขอ :</span><span class="info-val">CRP-2024-0046</span></div>
+                <div class="info-item"><span class="info-label">วันที่ :</span><span class="info-val">27/05/2024</span></div>
+                <div class="info-item"><span class="info-label">ผู้ขอ :</span><span class="info-val">ม.ส. วีรากรณ์ สนใจ</span></div>
+                <div class="info-item"><span class="info-label">ลูกค้า :</span><span class="info-val">บริษัท แสงทองกรุ๊ป จำกัด</span></div>
+                <div class="info-item"><span class="info-label">ยอดรวมส่วนต่าง :</span><span class="info-val info-highlight">21,500.00 บาท</span></div>
+                <div class="info-item"><span class="info-label">ส่วนลดเฉลี่ย :</span><span class="info-val info-highlight">9.20%</span></div>
+              </div>
+
+              <!-- Products table -->
+              <div style="overflow-x:auto;margin-bottom:16px;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>รายการสินค้า</th>
+                      <th class="num">จำนวน</th>
+                      <th class="num">ราคาปกติ</th>
+                      <th class="num">ราคาที่ขอ</th>
+                      <th class="num">ส่วนลด</th>
+                      <th class="num">ส่วนต่าง</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>ถุง PE 18x20</td><td class="num">1,000</td>
+                      <td class="num">120.00</td><td class="num">105.00</td>
+                      <td class="num discount">12.50%</td><td class="num discount">15,000.00</td>
+                    </tr>
+                    <tr>
+                      <td>พีลิตฟิล์มพับพลาสก</td><td class="num">500</td>
+                      <td class="num">80.00</td><td class="num">72.00</td>
+                      <td class="num discount">10.00%</td><td class="num discount">4,000.00</td>
+                    </tr>
+                    <tr>
+                      <td>เทปกาว</td><td class="num">500</td>
+                      <td class="num">45.00</td><td class="num">40.00</td>
+                      <td class="num discount">11.11%</td><td class="num discount">2,500.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="table-footer" style="border-radius:8px;margin-bottom:0;">
+                <div><span class="total-label">ยอดรวมส่วนต่าง </span><span class="total-val"> 21,500.00 บาท</span></div>
+                <div><span class="total-label">ส่วนลดเฉลี่ย </span><span class="disc-val"> 9.20%</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manager analysis card -->
+          <div class="card section-space">
+            <div class="card-header"><h2>📊 ข้อมูลสำหรับพิจารณา</h2></div>
+            <div class="card-body">
+              <div class="form-row three" style="margin-bottom:12px;">
+                <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px;">
+                  <div style="font-size:11px;color:var(--text-muted);">ต้นทุนรวม</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--primary);">139,000</div>
+                  <div style="font-size:11px;color:var(--text-muted);">บาท</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:rgba(0,200,83,0.06);border-radius:8px;border:1px solid rgba(0,200,83,0.2);">
+                  <div style="font-size:11px;color:var(--text-muted);">Margin ปัจจุบัน</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--success);">20.15%</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:rgba(229,57,53,0.06);border-radius:8px;border:1px solid rgba(229,57,53,0.2);">
+                  <div style="font-size:11px;color:var(--text-muted);">Margin หลังปรับราคา</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--danger);">11.88%</div>
+                </div>
+              </div>
+              <div style="background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.25);border-radius:8px;padding:12px;font-size:13px;color:#e65100;">
+                ⚠️ <strong>ผลกระทบต่อกำไร:</strong> ลดลง <strong>9,000.00 บาท</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manager comment -->
+          <div class="card">
+            <div class="card-header"><h2>💬 ความเห็นผู้จัดการ *</h2></div>
+            <div class="card-body">
+              <textarea class="remark-area" style="height:90px;">เห็นควรอนุมัติ เนื่องจากลูกค้าประจำ และมีประวัติการชำระเงินดี</textarea>
+              <div style="margin-top:12px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">ลายเซ็นผู้จัดการ *</div>
+                <div class="sig-box">
+                  <div class="sig-img">นายธนวัณ</div>
+                  <div class="sig-name">นายธนวัณ ไชดี</div>
+                  <div class="sig-date">27/05/2024 11:35</div>
+                </div>
+              </div>
+              <div class="btn-actions">
+                <button class="btn btn-danger">✗ ไม่อนุมัติ (ปฏิเสธ)</button>
+                <button class="btn btn-success" onclick="showPage('executive')">✓ อนุมัติและส่งต่อ Executive →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+          <div class="card section-space">
+            <div class="card-header"><h2>📍 สถานะการอนุมัติ</h2></div>
+            <div class="card-body">
+              <div style="text-align:right;margin-bottom:12px;">
+                <span class="badge badge-waiting"><span class="badge-dot"></span> รอ Executive อนุมัติ</span>
+              </div>
+              <div class="approval-flow">
+                <div class="flow-row">
+                  <div class="flow-dot done">✓</div>
+                  <div class="flow-info">
+                    <div class="flow-role">Sale</div>
+                    <div class="flow-time">ส่งแล้ว</div>
+                  </div>
+                  <span class="badge badge-approved"><span class="badge-dot"></span> ส่งแล้ว</span>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-dot done">✓</div>
+                  <div class="flow-info">
+                    <div class="flow-role">Manager</div>
+                    <div class="flow-time">อนุมัติ</div>
+                  </div>
+                  <span class="badge badge-waiting"><span class="badge-dot"></span> อนุมัติ</span>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-dot waiting">…</div>
+                  <div class="flow-info">
+                    <div class="flow-role">Executive</div>
+                    <div class="flow-time">รอดำเนินการ</div>
+                  </div>
+                  <span style="font-size:12px;color:var(--text-muted);">รออนุมัติขั้นสุดท้าย</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="card">
+            <div class="card-header"><h2>⏱ Timeline CRP-2024-0046</h2></div>
+            <div class="card-body">
+              <div style="display:flex;align-items:flex-start;gap:0;justify-content:space-between;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,200,83,0.1);border:2px solid var(--success);display:flex;align-items:center;justify-content:center;font-size:16px;">👩‍💼</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--success);">Sale</div>
+                  <div style="font-size:10px;color:var(--text-muted);">27/05/2024</div>
+                  <div style="font-size:10px;color:var(--text-muted);">ส่งคำขอ 10:20</div>
+                </div>
+                <div style="flex:1;height:2px;background:var(--success);margin-top:18px;"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,109,0,0.1);border:2px solid var(--pending);display:flex;align-items:center;justify-content:center;font-size:16px;">👔</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--pending);">Manager</div>
+                  <div style="font-size:10px;color:var(--text-muted);">27/05/2024</div>
+                  <div style="font-size:10px;color:var(--text-muted);">อนุมัติแล้ว 11:35</div>
+                </div>
+                <div style="flex:1;height:2px;background:var(--border);margin-top:18px;"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(107,114,128,0.08);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;">👑</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text-muted);">Executive</div>
+                  <div style="font-size:10px;color:var(--text-muted);">รออนุมัติ</div>
+                  <div style="font-size:10px;color:var(--text-muted);">14:10 -</div>
+                </div>
+                <div style="flex:1;height:2px;background:var(--border);margin-top:18px;"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(107,114,128,0.08);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;">✅</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text-muted);">Completed</div>
+                  <div style="font-size:10px;color:var(--text-muted);">-</div>
+                  <div style="font-size:10px;color:var(--text-muted);">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== PAGE: EXECUTIVE ======================== -->
+    <div class="page" id="page-executive">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="showPage('sale')">📝 Sale</button>
+        <button class="tab-btn" onclick="showPage('manager')">👔 Manager</button>
+        <button class="tab-btn active">👑 ผู้บริหาร (Executive)</button>
+        <button class="tab-btn" onclick="showPage('tracking')">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="showPage('doc')">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="mgr-layout">
+        <div>
+          <div class="card section-space">
+            <div class="card-header">
+              <div class="card-number">3</div>
+              <h2>ผู้บริหารอนุมัติขั้นสุดท้าย (Executive)</h2>
+            </div>
+            <div class="card-body">
+              <div class="info-grid" style="margin-bottom:16px;">
+                <div class="info-item"><span class="info-label">เลขที่คำขอ :</span><span class="info-val">CRP-2024-0046</span></div>
+                <div class="info-item"><span class="info-label">วันที่ :</span><span class="info-val">27/05/2024</span></div>
+                <div class="info-item"><span class="info-label">ผู้ขอ :</span><span class="info-val">ม.ส. วีรากรณ์ สนใจ</span></div>
+                <div class="info-item"><span class="info-label">ลูกค้า :</span><span class="info-val">บริษัท แสงทองกรุ๊ป จำกัด</span></div>
+                <div class="info-item"><span class="info-label">ยอดรวมส่วนต่าง :</span><span class="info-val info-highlight">21,500.00 บาท</span></div>
+                <div class="info-item"><span class="info-label">วันที่ :</span><span class="info-val">27/05/2024</span></div>
+              </div>
+
+              <!-- Manager comment review -->
+              <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ความเห็น Manager</div>
+                <div class="comment-box">
+                  เห็นควรอนุมัติ เนื่องจากลูกค้าประจำ และมีประวัติการชำระเงินดี
+                </div>
+              </div>
+
+              <!-- Executive sig -->
+              <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ลายเซ็น Executive *</div>
+                <div class="sig-box">
+                  <div class="sig-img">นายสมชาย</div>
+                  <div class="sig-name">นายสมชาย วัฒนอนันต์</div>
+                  <div class="sig-date">27/05/2024 14:10</div>
+                </div>
+              </div>
+
+              <div class="btn-actions">
+                <button class="btn btn-danger">✗ ไม่อนุมัติ</button>
+                <button class="btn btn-success" onclick="showPage('tracking')">✓ อนุมัติขั้นสุดท้าย →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card section-space">
+            <div class="card-header"><h2>📍 สถานะการอนุมัติ</h2></div>
+            <div class="card-body">
+              <div style="text-align:right;margin-bottom:12px;">
+                <span class="badge badge-waiting"><span class="badge-dot"></span> รอ Executive อนุมัติ</span>
+              </div>
+              <div class="approval-flow">
+                <div class="flow-row">
+                  <div class="flow-dot done">✓</div>
+                  <div class="flow-info"><div class="flow-role">Sale</div><div class="flow-time">ส่งแล้ว</div></div>
+                  <span class="badge badge-approved"><span class="badge-dot"></span> ส่งแล้ว</span>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-dot done">✓</div>
+                  <div class="flow-info"><div class="flow-role">Manager</div><div class="flow-time">อนุมัติแล้ว 11:35</div></div>
+                  <span class="badge badge-approved"><span class="badge-dot"></span> อนุมัติแล้ว</span>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-dot pending">!</div>
+                  <div class="flow-info"><div class="flow-role">Executive</div><div class="flow-time">รออนุมัติ</div></div>
+                  <span class="badge badge-waiting"><span class="badge-dot"></span> รออนุมัติ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2>📊 สรุปสำหรับ Executive</h2></div>
+            <div class="card-body">
+              <div style="display:grid;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:8px;">
+                  <span style="font-size:13px;color:var(--text-muted);">ส่วนลดรวม</span>
+                  <span style="font-weight:700;color:var(--danger);">21,500 บาท</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:8px;">
+                  <span style="font-size:13px;color:var(--text-muted);">Margin หลังปรับ</span>
+                  <span style="font-weight:700;color:var(--danger);">11.88%</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(0,200,83,0.06);border-radius:8px;border:1px solid rgba(0,200,83,0.2);">
+                  <span style="font-size:13px;color:var(--text-muted);">Manager แนะนำ</span>
+                  <span style="font-weight:700;color:var(--success);">✓ อนุมัติ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== PAGE: TRACKING ======================== -->
+    <div class="page" id="page-tracking">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="showPage('sale')">📝 Sale</button>
+        <button class="tab-btn" onclick="showPage('manager')">👔 Manager</button>
+        <button class="tab-btn" onclick="showPage('executive')">👑 Executive</button>
+        <button class="tab-btn active">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="showPage('doc')">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card c1">
+          <div class="metric-label">คำขอทั้งหมด</div>
+          <div class="metric-value">24</div>
+          <div class="metric-sub">เดือนนี้</div>
+        </div>
+        <div class="metric-card c2">
+          <div class="metric-label">รอดำเนินการ</div>
+          <div class="metric-value">6</div>
+          <div class="metric-sub">คำขอ</div>
+        </div>
+        <div class="metric-card c3">
+          <div class="metric-label">อนุมัติแล้ว</div>
+          <div class="metric-value">15</div>
+          <div class="metric-sub">คำขอ</div>
+        </div>
+        <div class="metric-card c4">
+          <div class="metric-label">ไม่อนุมัติ</div>
+          <div class="metric-value">3</div>
+          <div class="metric-sub">คำขอ</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-number">4</div>
+          <h2>ติดตามสถานะคำขอ</h2>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <input type="text" class="form-control" placeholder="🔍 ค้นหา..." style="width:180px;font-size:13px;">
+            <select class="form-control" style="width:140px;font-size:13px;">
+              <option>ทุกสถานะ</option>
+              <option>รอ Manager</option>
+              <option>รอ Executive</option>
+              <option>อนุมัติแล้ว</option>
+              <option>ไม่อนุมัติ</option>
+            </select>
+          </div>
+        </div>
+        <div class="status-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>เลขที่คำขอ</th>
+                <th>ประเภท</th>
+                <th>ลูกค้า</th>
+                <th class="num">ยอดส่วนต่าง</th>
+                <th>สถานะ</th>
+                <th>วันที่ล่าสุด</th>
+                <th>ผู้รับผิดชอบ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="row-pending">
+                <td><a href="#" style="color:var(--accent);font-weight:600;" onclick="showPage('executive')">CRP-2024-0046</a></td>
+                <td>ราคาพิเศษ</td><td>แสงทองกรุ๊ป</td>
+                <td class="num">21,500.00</td>
+                <td><span class="badge badge-waiting"><span class="badge-dot"></span> รอ Executive</span></td>
+                <td>27/05/2024</td>
+                <td><div class="avatar-sm">👩‍💼</div></td>
+              </tr>
+              <tr class="row-approved">
+                <td><a href="#" style="color:var(--accent);font-weight:600;">CRP-2024-0045</a></td>
+                <td>ราคาพิเศษ</td><td>โยคโซโลอลัสกัง</td>
+                <td class="num">15,000.00</td>
+                <td><span class="badge badge-approved"><span class="badge-dot"></span> อนุมัติแล้ว</span></td>
+                <td>26/05/2024</td>
+                <td><div class="avatar-sm">👨‍💼</div></td>
+              </tr>
+              <tr class="row-pending">
+                <td><a href="#" style="color:var(--accent);font-weight:600;">CRD-2024-0044</a></td>
+                <td>ของส่วนลด</td><td>กนกวัลย์กฤษฎ์</td>
+                <td class="num">35,000.00</td>
+                <td><span class="badge badge-waiting" style="background:rgba(255,152,0,0.12);color:var(--warning);"><span class="badge-dot"></span> รอ Manager</span></td>
+                <td>26/05/2024</td>
+                <td><div class="avatar-sm">👩‍💼</div></td>
+              </tr>
+              <tr class="row-rejected">
+                <td><a href="#" style="color:var(--accent);font-weight:600;">CRP-2024-0043</a></td>
+                <td>ราคาพิเศษ</td><td>ไทยผู้แพก</td>
+                <td class="num">8,000.00</td>
+                <td><span class="badge badge-rejected"><span class="badge-dot"></span> ไม่อนุมัติ</span></td>
+                <td>25/05/2024</td>
+                <td><div class="avatar-sm">👨‍💼</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== PAGE: A4 DOC ======================== -->
+    <div class="page" id="page-doc">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="showPage('sale')">📝 Sale</button>
+        <button class="tab-btn" onclick="showPage('manager')">👔 Manager</button>
+        <button class="tab-btn" onclick="showPage('executive')">👑 Executive</button>
+        <button class="tab-btn" onclick="showPage('tracking')">📋 ติดตามสถานะ</button>
+        <button class="tab-btn active">📄 ตัวอย่างเอกสาร A4</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:16px;">
+        <button class="btn btn-outline">🖨️ พิมพ์</button>
+        <button class="btn btn-primary">⬇️ ดาวน์โหลด PDF</button>
+      </div>
+
+      <div class="a4-preview">
+        <!-- Header -->
+        <div class="a4-logo-row">
+          <div class="a4-logo-icon">C</div>
+          <div>
+            <div class="a4-company">COMPANY</div>
+            <div style="font-size:11px;color:var(--text-muted);">บริษัท ตัวอย่าง จำกัด</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div style="font-size:18px;font-weight:800;color:var(--primary);">แบบฟอร์มขออนุมัติราคาพิเศษ</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">เลขที่เอกสาร: CRP-2024-0046 &nbsp;|&nbsp; วันที่: 27/05/2024</div>
+          </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="a4-section">
+          <div class="a4-section-title">1. ข้อมูลลูกค้า</div>
+          <div class="a4-kv"><span class="a4-k">ชื่อลูกค้า :</span><span class="a4-v">บริษัท แสงทองกรุ๊ป จำกัด</span></div>
+          <div class="a4-kv"><span class="a4-k">เลขที่ใบเสนอราคา / SO :</span><span class="a4-v">QT-2024-0221</span></div>
+          <div class="a4-kv"><span class="a4-k">ผู้ขอ (Sale) :</span><span class="a4-v">ม.ส. วีรากรณ์ สนใจ</span></div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="a4-section">
+          <div class="a4-section-title">2. รายการสินค้าที่ขออนุมัติราคาพิเศษ</div>
+          <table class="a4-table">
+            <thead>
+              <tr>
+                <th>ลำดับ</th><th>รายการสินค้า</th><th>จำนวน</th><th>หน่วย</th>
+                <th>ราคาปกติ</th><th>ราคาที่ขอ</th><th>ส่วนลด (%)</th><th>ส่วนต่าง (บาท)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>ถุง PE 18x20</td><td>1,000</td><td>ชุด</td><td>120.00</td><td>105.00</td><td>12.50%</td><td>15,000.00</td></tr>
+              <tr><td>2</td><td>พีลิตฟิล์มพับพลาสก</td><td>500</td><td>ม้วน</td><td>80.00</td><td>72.00</td><td>10.00%</td><td>4,000.00</td></tr>
+              <tr><td>3</td><td>เทปกาว</td><td>500</td><td>ม้วน</td><td>45.00</td><td>40.00</td><td>11.11%</td><td>2,500.00</td></tr>
+            </tbody>
+          </table>
+          <div class="a4-total-row">
+            <span>ยอดรวมส่วนต่าง: <strong style="color:var(--danger);">21,500.00 บาท</strong></span>
+            <span>ส่วนลดเฉลี่ย: <strong style="color:var(--danger);">9.20%</strong></span>
+          </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="a4-section">
+          <div class="a4-section-title">3. เหตุผลการขอราคาพิเศษ</div>
+          <div style="padding:8px;background:var(--bg);border-radius:6px;font-size:13px;">
+            คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น
+          </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="a4-section">
+          <div class="a4-section-title">4. การอนุมัติ</div>
+          <div class="a4-sigs">
+            <div class="a4-sig-box">
+              <div class="a4-sig-role">ผู้ขอ (Sale)</div>
+              <div class="a4-sig-line">วีรากรณ์</div>
+              <div class="a4-sig-name">ม.ส. วีรากรณ์ สนใจ</div>
+              <div class="a4-sig-date">วันที่ 27/05/2024 10:20</div>
+            </div>
+            <div class="a4-sig-box">
+              <div class="a4-sig-role">ผู้จัดการ (Manager)</div>
+              <div class="a4-sig-line">ธนวัณ</div>
+              <div class="a4-sig-name">นายธนวัณ ไชดี</div>
+              <div class="a4-sig-date">วันที่ 27/05/2024 11:35</div>
+              <div style="font-size:11px;color:var(--success);margin-top:4px;">เห็นควรอนุมัติ เนื่องจากลูกค้าประจำ</div>
+            </div>
+            <div class="a4-sig-box">
+              <div class="a4-sig-role">ผู้บริหาร (Executive)</div>
+              <div class="a4-sig-line">สมชาย</div>
+              <div class="a4-sig-name">นายสมชาย วัฒนอนันต์</div>
+              <div class="a4-sig-date">วันที่ 27/05/2024 14:10</div>
+              <div style="font-size:11px;color:var(--success);margin-top:4px;">อนุมัติ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="a4-section">
+          <div class="a4-section-title">5. หมายเหตุ</div>
+          <div style="height:40px;border-bottom:1px solid var(--border);"></div>
+        </div>
+
+        <div class="a4-barcode">
+          ||| || | ||| |||| | ||| || | ||| ||<br>
+          CRP-2024-0046
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function showPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+
+    // Update flow steps in header
+    const steps = document.querySelectorAll('.flow-step');
+    const map = { sale: 0, manager: 1, executive: 2, tracking: 3, doc: 3 };
+    steps.forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i < (map[page] ?? 0)) s.classList.add('done');
+      else if (i === (map[page] ?? 0)) s.classList.add('active');
+    });
+
+    // Update sidebar active
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  }
+
+  // Init
+  showPage('sale');
+</script>
+</body>
+</html>
