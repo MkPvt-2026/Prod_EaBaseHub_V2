@@ -298,6 +298,7 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
+  margin-top: 20px;
 }
 
 /* =====================================================
@@ -338,6 +339,19 @@ button:disabled {
 .green { 
   background: var(--sage-500); 
 }
+
+.yellow { 
+  background: #ffe600; 
+}
+
+.orange { 
+  background: #f07000; 
+}
+
+.form-icon .material-symbols-outlined {
+  font-size: 28px;
+}
+
 
 /* =====================================================
    CARD TEXT
