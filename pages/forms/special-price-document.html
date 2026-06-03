@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตัวอย่างเอกสาร A4 ราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/special-price-document.css">
+</head>
+<body>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบขออนุมัติราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/Price-Exception-Request.css">
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div>
+  <div class="brand">
+    <h1>ระบบขออนุมัติราคาพิเศษ</h1>
+    <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p>
+  </div>
+  <div class="flow-steps">
+    <div class="flow-step done" onclick="location.href='special-price-sale.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">1. Sale</div><div class="flow-step-sub">ส่งคำขอ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active" onclick="location.href='special-price-manager.html'">
+      <div class="flow-step-num">2</div>
+      <div><div class="flow-step-label">Manager</div><div class="flow-step-sub">ตรวจสอบและอนุมัติ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-executive.html'">
+      <div class="flow-step-num">3</div>
+      <div><div class="flow-step-label">Executive</div><div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-tracking.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">Completed</div><div class="flow-step-sub">เก็บเป็นเอกสาร</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR + MAIN -->
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <!-- <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div> -->
+      <span>EABaseHub</span>
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">🏠</span> หน้าหลัก
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">💰</span> ของเงินเกิน
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">📋</span> ขอราคาพิเศษ
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🏷️</span> ขอส่วนลด
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📦</span> รายการของออเดิร์
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">📊</span> รายงาน
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> ตั้งค่า
+    </div>
+  </nav>
+
+  <main class="main">
+<div class="page active">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="location.href='special-price-sale.html'">📝 Sale</button>
+        <button class="tab-btn" onclick="location.href='special-price-manager.html'">👔 Manager</button>
+        <button class="tab-btn" onclick="location.href='special-price-executive.html'">👑 Executive</button>
+        <button class="tab-btn" onclick="location.href='special-price-tracking.html'">📋 ติดตามสถานะ</button>
+        <button class="tab-btn active">📄 ตัวอย่างเอกสาร A4</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:16px;">
+        <button class="btn btn-outline">🖨️ พิมพ์</button>
+        <button class="btn btn-primary">⬇️ ดาวน์โหลด PDF</button>
+      </div>
+
+
+      <div class="a4-preview">
+        <!-- Header -->
+        <div class="a4-logo-row">
+          <div class="a4-logo-icon">
+            <img src="/assets/icons/logo-pvt.png" alt="Logo-PVT">
+          </div>
+          <div>
+            <div class="a4-company">บริษัท พี.วี.ที.แอนด์ ที.พลาส จำกัด</div>
+            <div style="font-size:10px;color:var(--text-muted);">P.V.T AND T.PLAS. Co.,Ltd.</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div style="font-size:18px;font-weight:800;color:var(--primary);">ขออนุมัติราคาพิเศษ</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">เลขที่เอกสาร: CRP-2024-0046 &nbsp;|&nbsp; วันที่: 27/05/2024</div>
+          </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="a4-section">
+          <div class="a4-section-title">1. ข้อมูลลูกค้า</div>
+          <div class="a4-kv"><span class="a4-k">ชื่อลูกค้า :</span><span class="a4-v">บริษัท แสงทองกรุ๊ป จำกัด</span></div>
+          <div class="a4-kv"><span class="a4-k">เลขที่ใบเสนอราคา / SO :</span><span class="a4-v">QT-2024-0221</span></div>
+          <div class="a4-kv"><span class="a4-k">ผู้ขอ (Sale) :</span><span class="a4-v">ม.ส. วีรากรณ์ สนใจ</span></div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="a4-section">
+          <div class="a4-section-title">2. รายการสินค้าที่ขออนุมัติราคาพิเศษ</div>
+          <table class="a4-table">
+            <thead>
+              <tr>
+                <th>ลำดับ</th><th>รายการสินค้า</th><th>จำนวน</th><th>หน่วย</th>
+                <th>ราคาปกติ</th><th>ราคาที่ขอ</th><th>ส่วนลด (%)</th><th>ส่วนต่าง (บาท)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>ถุง PE 18x20</td><td>1,000</td><td>ชุด</td><td>120.00</td><td>105.00</td><td>12.50%</td><td>15,000.00</td></tr>
+              <tr><td>2</td><td>พีลิตฟิล์มพับพลาสก</td><td>500</td><td>ม้วน</td><td>80.00</td><td>72.00</td><td>10.00%</td><td>4,000.00</td></tr>
+              <tr><td>3</td><td>เทปกาว</td><td>500</td><td>ม้วน</td><td>45.00</td><td>40.00</td><td>11.11%</td><td>2,500.00</td></tr>
+            </tbody>
+          </table>
+          <div class="a4-total-row">
+            <span>ยอดรวมส่วนต่าง: <strong style="color:var(--danger);">21,500.00 บาท</strong></span>
+            <span>ส่วนลดเฉลี่ย: <strong style="color:var(--danger);">9.20%</strong></span>
+          </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="a4-section">
+          <div class="a4-section-title">3. เหตุผลการขอราคาพิเศษ</div>
+          <div style="padding:8px;background:var(--bg);border-radius:6px;font-size:13px;">
+            คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น
+          </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="a4-section">
+          <div class="a4-section-title">4. การอนุมัติ</div>
+          <div class="a4-sigs">
+            <div class="a4-sig-box">
+              <div class="a4-sig-role">ผู้ขอ (Sale)</div>
+              <div class="a4-sig-line">วีรากรณ์</div>
+              <div class="a4-sig-name">ม.ส. วีรากรณ์ สนใจ</div>
+              <div class="a4-sig-date">วันที่ 27/05/2024 10:20</div>
+            </div>
+            <div class="a4-sig-box">
+              <div class="a4-sig-role">ผู้จัดการ (Manager)</div>
+              <div class="a4-sig-line">ธนวัณ</div>
+              <div class="a4-sig-name">นายธนวัณ ไชดี</div>
+              <div class="a4-sig-date">วันที่ 27/05/2024 11:35</div>
+              <div style="font-size:11px;color:var(--success);margin-top:4px;">เห็นควรอนุมัติ เนื่องจากลูกค้าประจำ</div>
+            </div>
+            <div class="a4-sig-box">
+              <div class="a4-sig-role">ผู้บริหาร (Executive)</div>
+              <div class="a4-sig-line">สมชาย</div>
+              <div class="a4-sig-name">นายสมชาย วัฒนอนันต์</div>
+              <div class="a4-sig-date">วันที่ 27/05/2024 14:10</div>
+              <div style="font-size:11px;color:var(--success);margin-top:4px;">อนุมัติ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="a4-section">
+          <div class="a4-section-title">5. หมายเหตุ</div>
+          <div style="height:40px;border-bottom:1px solid var(--border);"></div>
+        </div>
+
+        <div class="a4-barcode">
+          ||| || | ||| |||| | ||| || | ||| ||<br>
+          CRP-2024-0046
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/pages/forms/special-price-document.js"></script>
+</body>
+</html>

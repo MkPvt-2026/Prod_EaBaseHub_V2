@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หน้าผู้บริหารอนุมัติราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/special-price-executive.css">
+</head>
+<body>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบขออนุมัติราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/Price-Exception-Request.css">
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div>
+  <div class="brand">
+    <h1>ระบบขออนุมัติราคาพิเศษ</h1>
+    <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p>
+  </div>
+  <div class="flow-steps">
+    <div class="flow-step done" onclick="location.href='special-price-sale.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">1. Sale</div><div class="flow-step-sub">ส่งคำขอ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active" onclick="location.href='special-price-manager.html'">
+      <div class="flow-step-num">2</div>
+      <div><div class="flow-step-label">Manager</div><div class="flow-step-sub">ตรวจสอบและอนุมัติ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-executive.html'">
+      <div class="flow-step-num">3</div>
+      <div><div class="flow-step-label">Executive</div><div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-tracking.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">Completed</div><div class="flow-step-sub">เก็บเป็นเอกสาร</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR + MAIN -->
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <!-- <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div> -->
+      <span>EABaseHub</span>
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">🏠</span> หน้าหลัก
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">💰</span> ของเงินเกิน
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">📋</span> ขอราคาพิเศษ
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🏷️</span> ขอส่วนลด
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📦</span> รายการของออเดิร์
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">📊</span> รายงาน
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> ตั้งค่า
+    </div>
+  </nav>
+
+  <main class="main">
+<div class="page active">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="location.href='special-price-sale.html'">📝 Sale</button>
+        <button class="tab-btn" onclick="location.href='special-price-manager.html'">👔 Manager</button>
+        <button class="tab-btn active">👑 ผู้บริหาร (Executive)</button>
+        <button class="tab-btn" onclick="location.href='special-price-tracking.html'">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="location.href='special-price-document.html'">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="mgr-layout">
+        <div>
+          <div class="card section-space">
+            <div class="card-header">
+              <div class="card-number">3</div>
+              <h2>ผู้บริหารอนุมัติขั้นสุดท้าย (Executive)</h2>
+            </div>
+            <div class="card-body">
+              <div class="info-grid" style="margin-bottom:16px;">
+                <div class="info-item"><span class="info-label">เลขที่คำขอ :</span><span class="info-val">CRP-2024-0046</span></div>
+                <div class="info-item"><span class="info-label">วันที่ :</span><span class="info-val">27/05/2024</span></div>
+                <div class="info-item"><span class="info-label">ผู้ขอ :</span><span class="info-val">ม.ส. วีรากรณ์ สนใจ</span></div>
+                <div class="info-item"><span class="info-label">ลูกค้า :</span><span class="info-val">บริษัท แสงทองกรุ๊ป จำกัด</span></div>
+                <div class="info-item"><span class="info-label">ยอดรวมส่วนต่าง :</span><span class="info-val info-highlight">21,500.00 บาท</span></div>
+                <div class="info-item"><span class="info-label">วันที่ :</span><span class="info-val">27/05/2024</span></div>
+              </div>
+
+              <!-- Manager comment review -->
+              <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ความเห็น Manager</div>
+                <div class="comment-box">
+                  เห็นควรอนุมัติ เนื่องจากลูกค้าประจำ และมีประวัติการชำระเงินดี
+                </div>
+              </div>
+
+              <!-- Executive sig -->
+              <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ลายเซ็น Executive *</div>
+                <div class="sig-box">
+                  <div class="sig-img">นายสมชาย</div>
+                  <div class="sig-name">นายสมชาย วัฒนอนันต์</div>
+                  <div class="sig-date">27/05/2024 14:10</div>
+                </div>
+              </div>
+
+              <div class="btn-actions">
+                <button class="btn btn-danger">✗ ไม่อนุมัติ</button>
+                <button class="btn btn-success" onclick="location.href='special-price-tracking.html'">✓ อนุมัติขั้นสุดท้าย →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card section-space">
+            <div class="card-header"><h2>📍 สถานะการอนุมัติ</h2></div>
+            <div class="card-body">
+              <div style="text-align:right;margin-bottom:12px;">
+                <span class="badge badge-waiting"><span class="badge-dot"></span> รอ Executive อนุมัติ</span>
+              </div>
+              <div class="approval-flow">
+                <div class="flow-row">
+                  <div class="flow-dot done">✓</div>
+                  <div class="flow-info"><div class="flow-role">Sale</div><div class="flow-time">ส่งแล้ว</div></div>
+                  <span class="badge badge-approved"><span class="badge-dot"></span> ส่งแล้ว</span>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-dot done">✓</div>
+                  <div class="flow-info"><div class="flow-role">Manager</div><div class="flow-time">อนุมัติแล้ว 11:35</div></div>
+                  <span class="badge badge-approved"><span class="badge-dot"></span> อนุมัติแล้ว</span>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-dot pending">!</div>
+                  <div class="flow-info"><div class="flow-role">Executive</div><div class="flow-time">รออนุมัติ</div></div>
+                  <span class="badge badge-waiting"><span class="badge-dot"></span> รออนุมัติ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2>📊 สรุปสำหรับ Executive</h2></div>
+            <div class="card-body">
+              <div style="display:grid;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:8px;">
+                  <span style="font-size:13px;color:var(--text-muted);">ส่วนลดรวม</span>
+                  <span style="font-weight:700;color:var(--danger);">21,500 บาท</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:8px;">
+                  <span style="font-size:13px;color:var(--text-muted);">Margin หลังปรับ</span>
+                  <span style="font-weight:700;color:var(--danger);">11.88%</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(0,200,83,0.06);border-radius:8px;border:1px solid rgba(0,200,83,0.2);">
+                  <span style="font-size:13px;color:var(--text-muted);">Manager แนะนำ</span>
+                  <span style="font-weight:700;color:var(--success);">✓ อนุมัติ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/pages/forms/special-price-executive.js"></script>
+</body>
+</html>

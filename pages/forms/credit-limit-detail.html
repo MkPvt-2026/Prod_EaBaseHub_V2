@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ระบบขออนุมัติวงเงินเกิน - รายละเอียดคำขอ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&amp;family=Noto+Serif+Thai:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/pages/forms/credit-limit-detail.css" />
+</head>
+<body>
+<!-- SIGNATURE MODAL -->
+<div class="modal-overlay" id="sigModal">
+<div class="modal-box">
+<div class="modal-head">
+<h3>✍️ เซ็นชื่อผู้ขออนุมัติ (Sale01)</h3>
+<button class="modal-close" onclick="closeSigModal()">✕</button>
+</div>
+<div class="modal-body">
+<p class="modal-sub">กรุณาเซ็นลายเซ็นในช่องด้านล่าง</p>
+<div class="sig-container" style="margin-bottom:12px;">
+<canvas class="sig-canvas" height="160" id="sigCanvas" width="440"></canvas>
+<div class="sig-hint" id="sigHint">วาดลายเซ็นที่นี่</div>
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn btn-ghost" onclick="clearSig()">🗑️ ล้างลายเซ็น</button>
+<button class="btn btn-primary" onclick="saveSig()">✓ บันทึกลายเซ็น</button>
+</div>
+</div>
+</div>
+<div class="app">
+<!-- SIDEBAR -->
+<nav class="sidebar">
+<div class="sidebar-brand">
+<div class="brand-diamond"></div>
+<span class="brand-name">Company</span>
+</div>
+<div class="nav-section">
+<div class="nav-item" onclick="goPage('sale')"><span class="nav-icon">🏠</span>หน้าหลัก</div>
+<div class="nav-item"><span class="nav-icon">👥</span>ลูกค้า</div>
+<div class="nav-item"><span class="nav-icon">📄</span>ใบเสนอราคา</div>
+<div class="nav-item"><span class="nav-icon">📦</span>ใบสั่งขาย</div>
+<div class="nav-item active" id="nav-credit" onclick="goPage('sale')"><span class="nav-icon">💳</span>ขออนุมัติวงเงินเกิน<span class="nav-badge">2</span></div>
+<div class="nav-item" onclick="goPage('approval')"><span class="nav-icon">✅</span>อนุมัติคำขอ</div>
+<div class="nav-item" onclick="goPage('tracking')"><span class="nav-icon">📊</span>รายงาน</div>
+<div class="nav-item"><span class="nav-icon">⚙️</span>ตั้งค่า</div>
+</div>
+<div class="sidebar-user">
+<div class="user-avatar">S1</div>
+<div><div class="user-name">Sale01</div><div class="user-role">จิรารัตน์</div></div>
+<span style="margin-left:auto;font-size:14px;cursor:pointer;color:var(--gray-400);">↩</span>
+</div>
+</nav>
+<div class="main-area">
+<!-- TOP BAR -->
+<div class="topbar">
+<div class="topbar-title" id="topTitle">ขออนุมัติวงเงินเกิน <span id="topSub">หน้าส่งคำขอ</span></div>
+<button class="notif-btn" onclick="goPage('tracking')">🔔<span class="notif-dot"></span></button>
+<div style="display:flex;align-items:center;gap:8px;">
+<div class="user-avatar" style="width:30px;height:30px;font-size:12px;">S1</div>
+<span style="font-size:13px;font-weight:600;">Sale01</span>
+</div>
+</div>
+<!-- CONTENT -->
+<div class="content">
+<!-- ══════════ PAGE 1: SALE FORM ══════════ -->
+
+<!-- ══════════ PAGE 2: A4 DOCUMENT ══════════ -->
+
+<!-- ══════════ PAGE 3: SIGN PAGE ══════════ -->
+
+<!-- ══════════ PAGE 4: DETAIL (AFTER SUBMIT) ══════════ -->
+<div class="page active" id="page-detail">
+<div class="section-badge" style="margin-bottom:20px;"><div class="section-num">4</div>หน้ารายละเอียดคำขอ (หลังส่ง)</div>
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;">
+<div>
+<div class="card">
+<div class="card-head" style="justify-content:space-between;">
+<h3>CRD-2024-00045</h3>
+<div style="display:flex;gap:8px;align-items:center;">
+<span class="badge badge-orange"><span class="badge-dot"></span>สถานะ: รอการเงินตรวจสอบ</span>
+<button class="btn btn-ghost btn-sm">···</button>
+</div>
+</div>
+<div class="card-body">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+<div>
+<div style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;margin-bottom:8px;">ข้อมูลลูกค้า</div>
+<div class="kv-grid">
+<div class="kv-item"><span class="kv-k">บริษัท :</span><span class="kv-v">แสงทองสศรณ์ จำกัด</span></div>
+<div class="kv-item"><span class="kv-k">รหัส :</span><span class="kv-v">CUST-00025</span></div>
+<div class="kv-item"><span class="kv-k">SO :</span><span class="kv-v">SO-2024-0587</span></div>
+<div class="kv-item"><span class="kv-k">ยอดบิล :</span><span class="kv-v" style="color:var(--red);">135,000.00 บาท</span></div>
+</div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;margin-bottom:8px;">สถานการดำเนินการ</div>
+<div class="status-flow">
+<div class="sflow-item">
+<div class="sflow-dot done">✓</div>
+<div class="sflow-info">
+<div class="sflow-role">ส่งคำขอ (Sale)</div>
+<div class="sflow-time">27/05/2024 14:35</div>
+</div>
+</div>
+<div class="sflow-item">
+<div class="sflow-dot pending">!</div>
+<div class="sflow-info">
+<div class="sflow-role">การเงินตรวจสอบ</div>
+<div class="sflow-time">รอดำเนินการ</div>
+</div>
+</div>
+<div class="sflow-item">
+<div class="sflow-dot waiting">…</div>
+<div class="sflow-info">
+<div class="sflow-role">ผู้จัดการอนุมัติ</div>
+<div class="sflow-time">รอดำเนินการ</div>
+</div>
+</div>
+<div class="sflow-item">
+<div class="sflow-dot waiting">…</div>
+<div class="sflow-info">
+<div class="sflow-role">ผู้บริหารอนุมัติ</div>
+<div class="sflow-time">รอดำเนินการ</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="divider"></div>
+<div style="display:flex;align-items:center;gap:10px;">
+<div class="user-avatar">S1</div>
+<div>
+<div style="font-weight:600;font-size:13px;">ผู้ขอ: จิรารัตน์ สนใจ (Sale01)</div>
+<div class="sig-name-text" style="font-size:12px;color:var(--gray-400);">วันที่: 27/05/2024 14:35</div>
+</div>
+<div style="margin-left:auto;font-size:24px;font-family:'Noto Serif Thai',serif;font-weight:700;color:var(--gray-700);">จิรารัตน์</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="card" style="margin-bottom:12px;">
+<div class="card-head"><h3>📋 ข้อมูลเอกสาร</h3></div>
+<div class="card-body">
+<div class="kv-item" style="margin-bottom:8px;"><span class="kv-k">เลขที่คำขอ :</span><span class="kv-v">CRD-2024-00045</span></div>
+<div class="kv-item" style="margin-bottom:8px;"><span class="kv-k">วันที่ :</span><span class="kv-v">27/05/2024</span></div>
+<div class="kv-item" style="margin-bottom:8px;"><span class="kv-k">ประเภท :</span><span class="kv-v"><span class="badge badge-purple">วงเงินเกิน</span></span></div>
+<div class="divider"></div>
+<div style="display:flex;gap:8px;">
+<button class="btn btn-outline btn-sm" onclick="goPage('a4')" style="flex:1;">📄 ดูเอกสาร A4</button>
+<button class="btn btn-primary btn-sm" onclick="goPage('finance')" style="flex:1;">💰 ข้อมูลการเงิน</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══════════ PAGE 5: FINANCE ══════════ -->
+
+<!-- ══════════ PAGE 6: APPROVAL ══════════ -->
+
+<!-- ══════════ PAGE: TRACKING ══════════ -->
+
+</div><!-- /content -->
+</div><!-- /main-area -->
+</div><!-- /app -->
+<!-- QUICK NAV BOTTOM BAR -->
+<div style="position:fixed;bottom:20px;right:24px;display:flex;flex-direction:column;gap:6px;z-index:300;">
+<button class="btn btn-primary btn-sm" onclick="goPage('sale')" title="ฟอร์ม">📝</button>
+<button class="btn btn-outline btn-sm" onclick="goPage('a4')" title="เอกสาร A4">📄</button>
+<button class="btn btn-outline btn-sm" onclick="goPage('detail')" title="รายละเอียด">📋</button>
+<button class="btn btn-outline btn-sm" onclick="goPage('finance')" title="การเงิน">💰</button>
+<button class="btn btn-outline btn-sm" onclick="goPage('approval')" title="อนุมัติ">✅</button>
+<button class="btn btn-outline btn-sm" onclick="goPage('tracking')" title="ติดตาม">📊</button>
+</div>
+
+<script src="/js/pages/forms/credit-limit-detail.js"></script></body>
+</html>

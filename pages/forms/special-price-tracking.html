@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หน้าติดตามสถานะราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/special-price-tracking.css">
+</head>
+<body>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบขออนุมัติราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/Price-Exception-Request.css">
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div>
+  <div class="brand">
+    <h1>ระบบขออนุมัติราคาพิเศษ</h1>
+    <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p>
+  </div>
+  <div class="flow-steps">
+    <div class="flow-step done" onclick="location.href='special-price-sale.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">1. Sale</div><div class="flow-step-sub">ส่งคำขอ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active" onclick="location.href='special-price-manager.html'">
+      <div class="flow-step-num">2</div>
+      <div><div class="flow-step-label">Manager</div><div class="flow-step-sub">ตรวจสอบและอนุมัติ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-executive.html'">
+      <div class="flow-step-num">3</div>
+      <div><div class="flow-step-label">Executive</div><div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-tracking.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">Completed</div><div class="flow-step-sub">เก็บเป็นเอกสาร</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR + MAIN -->
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <!-- <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div> -->
+      <span>EABaseHub</span>
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">🏠</span> หน้าหลัก
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">💰</span> ของเงินเกิน
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">📋</span> ขอราคาพิเศษ
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🏷️</span> ขอส่วนลด
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📦</span> รายการของออเดิร์
+    </div>
+    <div class="nav-item active" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">📊</span> รายงาน
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> ตั้งค่า
+    </div>
+  </nav>
+
+  <main class="main">
+<div class="page active">
+      <div class="page-tabs">
+        <button class="tab-btn" onclick="location.href='special-price-sale.html'">📝 Sale</button>
+        <button class="tab-btn" onclick="location.href='special-price-manager.html'">👔 Manager</button>
+        <button class="tab-btn" onclick="location.href='special-price-executive.html'">👑 Executive</button>
+        <button class="tab-btn active">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="location.href='special-price-document.html'">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card c1">
+          <div class="metric-label">คำขอทั้งหมด</div>
+          <div class="metric-value">24</div>
+          <div class="metric-sub">เดือนนี้</div>
+        </div>
+        <div class="metric-card c2">
+          <div class="metric-label">รอดำเนินการ</div>
+          <div class="metric-value">6</div>
+          <div class="metric-sub">คำขอ</div>
+        </div>
+        <div class="metric-card c3">
+          <div class="metric-label">อนุมัติแล้ว</div>
+          <div class="metric-value">15</div>
+          <div class="metric-sub">คำขอ</div>
+        </div>
+        <div class="metric-card c4">
+          <div class="metric-label">ไม่อนุมัติ</div>
+          <div class="metric-value">3</div>
+          <div class="metric-sub">คำขอ</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-number">4</div>
+          <h2>ติดตามสถานะคำขอ</h2>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <input type="text" class="form-control" placeholder="🔍 ค้นหา..." style="width:180px;font-size:13px;">
+            <select class="form-control" style="width:140px;font-size:13px;">
+              <option>ทุกสถานะ</option>
+              <option>รอ Manager</option>
+              <option>รอ Executive</option>
+              <option>อนุมัติแล้ว</option>
+              <option>ไม่อนุมัติ</option>
+            </select>
+          </div>
+        </div>
+        <div class="status-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>เลขที่คำขอ</th>
+                <th>ประเภท</th>
+                <th>ลูกค้า</th>
+                <th class="num">ยอดส่วนต่าง</th>
+                <th>สถานะ</th>
+                <th>วันที่ล่าสุด</th>
+                <th>ผู้รับผิดชอบ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="row-pending">
+                <td><a href="#" style="color:var(--accent);font-weight:600;" onclick="location.href='special-price-executive.html'">CRP-2024-0046</a></td>
+                <td>ราคาพิเศษ</td><td>แสงทองกรุ๊ป</td>
+                <td class="num">21,500.00</td>
+                <td><span class="badge badge-waiting"><span class="badge-dot"></span> รอ Executive</span></td>
+                <td>27/05/2024</td>
+                <td><div class="avatar-sm">👩‍💼</div></td>
+              </tr>
+              <tr class="row-approved">
+                <td><a href="#" style="color:var(--accent);font-weight:600;">CRP-2024-0045</a></td>
+                <td>ราคาพิเศษ</td><td>โยคโซโลอลัสกัง</td>
+                <td class="num">15,000.00</td>
+                <td><span class="badge badge-approved"><span class="badge-dot"></span> อนุมัติแล้ว</span></td>
+                <td>26/05/2024</td>
+                <td><div class="avatar-sm">👨‍💼</div></td>
+              </tr>
+              <tr class="row-pending">
+                <td><a href="#" style="color:var(--accent);font-weight:600;">CRD-2024-0044</a></td>
+                <td>ของส่วนลด</td><td>กนกวัลย์กฤษฎ์</td>
+                <td class="num">35,000.00</td>
+                <td><span class="badge badge-waiting" style="background:rgba(255,152,0,0.12);color:var(--warning);"><span class="badge-dot"></span> รอ Manager</span></td>
+                <td>26/05/2024</td>
+                <td><div class="avatar-sm">👩‍💼</div></td>
+              </tr>
+              <tr class="row-rejected">
+                <td><a href="#" style="color:var(--accent);font-weight:600;">CRP-2024-0043</a></td>
+                <td>ราคาพิเศษ</td><td>ไทยผู้แพก</td>
+                <td class="num">8,000.00</td>
+                <td><span class="badge badge-rejected"><span class="badge-dot"></span> ไม่อนุมัติ</span></td>
+                <td>25/05/2024</td>
+                <td><div class="avatar-sm">👨‍💼</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/pages/forms/special-price-tracking.js"></script>
+</body>
+</html>
