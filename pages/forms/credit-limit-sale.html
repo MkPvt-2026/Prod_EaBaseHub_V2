@@ -1,283 +1,527 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="th">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ระบบขออนุมัติวงเงินเกิน - หน้าส่งคำขอ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&amp;family=Noto+Serif+Thai:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/css/pages/forms/credit-limit-sale.css" />
-</head>
-<body>
-    <!-- TOP HEADER -->
-<div class="top-header">
-  <div class="logo-icon">
-        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+  <head>
+    <!-- =========================================================
+      META / TITLE / FONT / CSS
+    ========================================================== -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบขออนุมัติวงเงินเกิน - หน้าส่งคำขอ</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="/css/pages/forms/credit-limit-sale.css" />
+  </head>
+
+  <body>
+    <!-- =========================================================
+      SIGNATURE MODAL
+      - ใช้สำหรับเซ็นลายเซ็นผู้ขออนุมัติ
+    ========================================================== -->
+    <div class="modal-overlay" id="sigModal">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h3>✍️ เซ็นชื่อผู้ขออนุมัติ (Sale01)</h3>
+          <button class="modal-close" type="button" onclick="closeSigModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-sub">กรุณาเซ็นลายเซ็นในช่องด้านล่าง</p>
+
+          <div class="sig-container" style="margin-bottom: 12px">
+            <canvas
+              class="sig-canvas"
+              id="sigCanvas"
+              width="440"
+              height="160"
+            ></canvas>
+            <div class="sig-hint" id="sigHint">วาดลายเซ็นที่นี่</div>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn btn-ghost" type="button" onclick="clearSig()">
+            🗑️ ล้างลายเซ็น
+          </button>
+          <button class="btn btn-primary" type="button" onclick="saveSig()">
+            ✓ บันทึกลายเซ็น
+          </button>
+        </div>
       </div>
-  <div class="brand">
-    <h1>ระบบขออนุมัติราคาพิเศษ</h1>
-    <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p>
-  </div>
-  <div class="flow-steps">
-    <div class="flow-step done" onclick="location.href='special-price-sale.html'">
-      <div class="flow-step-num">✓</div>
-      <div><div class="flow-step-label">1. Sale</div><div class="flow-step-sub">ส่งคำขอ</div></div>
     </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step active" onclick="location.href='special-price-manager.html'">
-      <div class="flow-step-num">2</div>
-      <div><div class="flow-step-label">Manager</div><div class="flow-step-sub">ตรวจสอบและอนุมัติ</div></div>
+
+    <!-- =========================================================
+      APP WRAPPER
+    ========================================================== -->
+    <div class="app">
+      <!-- =======================================================
+        SIDEBAR
+      ======================================================== -->
+      <nav class="sidebar">
+        <!-- Brand -->
+        <div class="sidebar-brand">
+          <div class="logo-icon">
+            <img src="/assets/icons/logo-192.png" alt="EABaseHub" />
+          </div>
+          <span class="brand-name">EABaseHub</span>
+        </div>
+
+        <!-- Menu -->
+        <div class="nav-section">
+          <div class="nav-item" onclick="goPage('sale')">
+            <span class="nav-icon">🏠</span>
+            หน้าหลัก
+          </div>
+
+          <div class="nav-item">
+            <span class="nav-icon">👥</span>
+            ลูกค้า
+          </div>
+
+          <div class="nav-item">
+            <span class="nav-icon">📄</span>
+            ใบเสนอราคา
+          </div>
+
+          <div class="nav-item">
+            <span class="nav-icon">📦</span>
+            ใบสั่งขาย
+          </div>
+
+          <div class="nav-item active" id="nav-credit" onclick="goPage('sale')">
+            <span class="nav-icon">💳</span>
+            ขออนุมัติวงเงินเกิน
+            <span class="nav-badge">2</span>
+          </div>
+
+          <div class="nav-item" onclick="goPage('approval')">
+            <span class="nav-icon">✅</span>
+            อนุมัติคำขอ
+          </div>
+
+          <div class="nav-item" onclick="goPage('tracking')">
+            <span class="nav-icon">📊</span>
+            รายงาน
+          </div>
+
+          <div class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            ตั้งค่า
+          </div>
+        </div>
+
+        <!-- Sidebar User -->
+        <div class="sidebar-user">
+          <div class="user-avatar">S1</div>
+
+          <div>
+            <div class="user-name">Sale01</div>
+            <div class="user-role">จิรารัตน์</div>
+          </div>
+
+          <span
+            style="
+              margin-left: auto;
+              font-size: 14px;
+              cursor: pointer;
+              color: var(--gray-400);
+            "
+          >
+            ↩
+          </span>
+        </div>
+      </nav>
+
+      <!-- =======================================================
+        MAIN AREA
+      ======================================================== -->
+      <div class="main-area">
+        <!-- =====================================================
+          TOP BAR
+        ====================================================== -->
+        <header class="topbar">
+          <div class="topbar-title" id="topTitle">
+            ขออนุมัติวงเงินเกิน <span id="topSub"></span>
+          </div>
+
+          <button class="notif-btn" type="button" onclick="goPage('tracking')">
+            🔔
+            <span class="notif-dot"></span>
+          </button>
+
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div
+              class="user-avatar"
+              style="width: 30px; height: 30px; font-size: 12px"
+            >
+              S1
+            </div>
+            <span style="font-size: 13px; font-weight: 600">Sale01</span>
+          </div>
+        </header>
+
+        <!-- =====================================================
+          CONTENT
+        ====================================================== -->
+        <main class="content">
+          <!-- ===================================================
+            PAGE 1: SALE FORM
+          ==================================================== -->
+          <section class="page active" id="page-sale">
+            <!-- ===============================================
+              APPROVAL FLOW
+              - เหลือ 3 Step: ส่งคำขอ > ตรวจสอบ > อนุมัติ
+            ================================================ -->
+            <div class="approval-flow-card">
+              <div class="flow-steps">
+                <div class="flow-step done">
+                  <div class="flow-step-num">1</div>
+                  <div class="flow-step-sub">ส่งคำขอ</div>
+                </div>
+
+                <div class="flow-step active">
+                  <div class="flow-step-num">2</div>
+                  <div class="flow-step-sub">กำลังตรวจสอบ</div>
+                </div>
+
+                <div class="flow-step">
+                  <div class="flow-step-num">3</div>
+                  <div class="flow-step-sub">อนุมัติ</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===============================================
+              CARD 1: CUSTOMER INFO
+            ================================================ -->
+            <div class="card">
+              <div class="card-head">
+                <div class="step-circle">1</div>
+                <h3>ข้อมูลลูกค้า</h3>
+              </div>
+
+              <div class="card-body">
+                <div class="form-grid">
+                  <!-- Customer Name -->
+                  <div class="field">
+                    <label class="field-label">
+                      ชื่อลูกค้า <span class="required">*</span>
+                    </label>
+
+                    <div class="input-wrap">
+                      <input
+                        class="field-input has-icon"
+                        type="text"
+                        value="บริษัท แสงทองลกษณ์ จำกัด"
+                      />
+                      <span class="input-icon">🔍</span>
+                    </div>
+                  </div>
+
+                  <!-- Customer Code -->
+                  <div class="field">
+                    <label class="field-label">รหัสลูกค้า</label>
+                    <input
+                      class="field-input"
+                      type="text"
+                      value="CUST-00025"
+                      readonly
+                      style="background: var(--gray-50); color: var(--gray-500)"
+                    />
+                  </div>
+
+                  <!-- Sale Owner -->
+                  <div class="field">
+                    <label class="field-label">Sales ผู้รับผิดชอบ</label>
+                    <select class="field-input">
+                      <option selected>Sale01 - จิรารัตน์</option>
+                      <option>Sale02 - สมชาย</option>
+                    </select>
+                  </div>
+
+                  <!-- Credit Limit -->
+                  <div class="field">
+                    <label class="field-label">วงเงิน</label>
+                    <input
+                      class="field-input"
+                      type="text"
+                      value="100,000.00 บาท"
+                      readonly
+                      style="background: var(--gray-50); color: var(--gray-500)"
+                    />
+                  </div>
+
+                  <!-- Credit Term -->
+                  <div class="field">
+                    <label class="field-label">เครดิต</label>
+                    <input
+                      class="field-input"
+                      type="text"
+                      value="90 วัน"
+                      readonly
+                      style="background: var(--gray-50); color: var(--gray-500)"
+                    />
+                  </div>
+
+                  <!-- Payment Method -->
+                  <div class="field">
+                    <label class="field-label">
+                      วิธีการชำระเงิน <span class="required">*</span>
+                    </label>
+
+                    <div class="checkbox-group">
+                      <label class="checkbox-item">
+                        <input
+                          type="checkbox"
+                          name="payment_method"
+                          value="โอนเงิน"
+                        />
+                        โอนเงิน
+                      </label>
+
+                      <label class="checkbox-item">
+                        <input
+                          type="checkbox"
+                          name="payment_method"
+                          value="เช็ค"
+                        />
+                        เช็ค
+                      </label>
+
+                      <label class="checkbox-item">
+                        <input
+                          type="checkbox"
+                          name="payment_method"
+                          value="เงินสด"
+                        />
+                        เงินสด
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===============================================
+              CARD 2: SALES INFO
+            ================================================ -->
+            <div class="card">
+              <div class="card-head">
+                <div class="step-circle">2</div>
+                <h3>ข้อมูลการขาย</h3>
+              </div>
+
+              <div class="card-body">
+                <div class="form-grid">
+                  <!-- Sales Order -->
+                  <div class="field">
+                    <label class="field-label">เลขที่ใบสั่งขาย/ใบกำกับ</label>
+                    <select class="field-input">
+                      <option>SO-2024-0587</option>
+                      <option>SO-2024-0588</option>
+                    </select>
+                  </div>
+
+                  <!-- Date -->
+                  <div class="field">
+                    <label class="field-label">วันที่</label>
+
+                    <div class="input-wrap">
+                      <input
+                        class="field-input has-icon"
+                        type="date"
+                        value="2024-05-27"
+                      />
+                      <span
+                        class="input-icon"
+                        style="right: 10px; top: 50%; transform: translateY(-50%)"
+                      >
+                        📅
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Amount -->
+                  <div class="field form-full">
+                    <label class="field-label">ยอดที่ต้องการเปิดบิล (รวมภาษี)</label>
+
+                    <div class="amount-input-wrap">
+                      <input
+                        class="field-input"
+                        type="text"
+                        value="135,000.00"
+                        style="
+                          padding-right: 48px;
+                          font-weight: 700;
+                          font-size: 15px;
+                          color: var(--gray-900);
+                        "
+                      />
+                      <span class="amount-unit">บาท</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===============================================
+              CARD 3: REASON
+            ================================================ -->
+            <div class="card">
+              <div class="card-head">
+                <div class="step-circle">3</div>
+                <h3>เหตุผลการขออนุมัติ</h3>
+              </div>
+
+              <div class="card-body">
+                <div class="field">
+                  <label class="field-label">
+                    เหตุผล <span class="required">*</span>
+                  </label>
+
+                  <textarea
+                    class="field-input"
+                    id="reasonText"
+                    oninput="updateCount()"
+                  >ลูกค้ามีออเดอร์จำนวนมาก ต้องการสต็อกสินค้าเพิ่ม และมีประวัติการชำระเงินสม่ำเสมอ</textarea>
+
+                  <div class="char-count">
+                    <span id="charCount">82</span>/500
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===============================================
+              CARD 4: SIGNATURE
+            ================================================ -->
+            <div class="card">
+              <div class="card-head">
+                <div class="step-circle">4</div>
+                <h3>ลายเซ็นผู้ขอ (เซลล์)</h3>
+              </div>
+
+              <div class="card-body">
+                <div class="note-tip">⚠️ เซลล์ต้องเซ็นลายเซ็นก่อนส่ง</div>
+
+                <!-- Signature Preview -->
+                <div id="sigDisplayWrap" style="display: none">
+                  <div class="sig-container">
+                    <canvas
+                      id="sigDisplay"
+                      width="600"
+                      height="120"
+                      onclick="openSigModal()"
+                      style="display: block; width: 100%; cursor: pointer"
+                    ></canvas>
+
+                    <div class="sig-info">
+                      <span class="sig-name-text">จิรารัตน์ สนใจ (Sale01)</span>
+                      <span class="sig-date-text">27/05/2024 14:35</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Signature Placeholder -->
+                <div id="sigPlaceholder">
+                  <div
+                    class="sig-container"
+                    onclick="openSigModal()"
+                    style="
+                      height: 120px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                    "
+                  >
+                    <div style="text-align: center; color: var(--gray-400)">
+                      <div style="font-size: 28px; margin-bottom: 4px">✍️</div>
+                      <div style="font-size: 13px">คลิกเพื่อเซ็นลายเซ็น</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Clear Signature Button -->
+                <div style="margin-top: 10px; display: flex; justify-content: flex-end">
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    onclick="clearDisplaySig()"
+                  >
+                    🗑️ ล้างลายเซ็น
+                  </button>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="btn-row">
+                  <button class="btn btn-outline" type="button">
+                    💾 บันทึกร่าง
+                  </button>
+
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    onclick="goPage('detail')"
+                  >
+                    📤 ส่งคำขออนุมัติ →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===================================================
+            PAGE 2: A4 DOCUMENT
+            - เพิ่ม section ของเอกสาร A4 ภายหลังได้ที่นี่
+          ==================================================== -->
+
+          <!-- ===================================================
+            PAGE 3: SIGN PAGE
+            - เพิ่มหน้าลายเซ็นภายหลังได้ที่นี่
+          ==================================================== -->
+
+          <!-- ===================================================
+            PAGE 4: DETAIL AFTER SUBMIT
+            - เพิ่มหน้ารายละเอียดหลังส่งคำขอภายหลังได้ที่นี่
+          ==================================================== -->
+
+          <!-- ===================================================
+            PAGE 5: FINANCE
+            - เพิ่มหน้าตรวจสอบการเงินภายหลังได้ที่นี่
+          ==================================================== -->
+
+          <!-- ===================================================
+            PAGE 6: APPROVAL
+            - เพิ่มหน้าอนุมัติภายหลังได้ที่นี่
+          ==================================================== -->
+
+          <!-- ===================================================
+            PAGE 7: TRACKING
+            - เพิ่มหน้าติดตามสถานะภายหลังได้ที่นี่
+          ==================================================== -->
+        </main>
+      </div>
     </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step" onclick="location.href='special-price-executive.html'">
-      <div class="flow-step-num">3</div>
-      <div><div class="flow-step-label">Executive</div><div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div></div>
+
+    <!-- =========================================================
+      QUICK NAV BOTTOM BAR
+      - เปิดใช้เมื่อต้องการปุ่มทดสอบเปลี่ยนหน้าเร็ว ๆ
+    ========================================================== -->
+    <!--
+    <div style="position: fixed; bottom: 20px; right: 24px; display: flex; flex-direction: column; gap: 6px; z-index: 300">
+      <button class="btn btn-primary btn-sm" onclick="goPage('sale')" title="ฟอร์ม">📝</button>
+      <button class="btn btn-outline btn-sm" onclick="goPage('a4')" title="เอกสาร A4">📄</button>
+      <button class="btn btn-outline btn-sm" onclick="goPage('detail')" title="รายละเอียด">📋</button>
+      <button class="btn btn-outline btn-sm" onclick="goPage('finance')" title="การเงิน">💰</button>
+      <button class="btn btn-outline btn-sm" onclick="goPage('approval')" title="อนุมัติ">✅</button>
+      <button class="btn btn-outline btn-sm" onclick="goPage('tracking')" title="ติดตาม">📊</button>
     </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step" onclick="location.href='special-price-tracking.html'">
-      <div class="flow-step-num">✓</div>
-      <div><div class="flow-step-label">Completed</div><div class="flow-step-sub">เก็บเป็นเอกสาร</div></div>
-    </div>
-  </div>
-</div>
+    -->
 
-
-<!-- SIGNATURE MODAL -->
-<div class="modal-overlay" id="sigModal">
-<div class="modal-box">
-<div class="modal-head">
-<h3>✍️ เซ็นชื่อผู้ขออนุมัติ (Sale01)</h3>
-<button class="modal-close" onclick="closeSigModal()">✕</button>
-</div>
-<div class="modal-body">
-<p class="modal-sub">กรุณาเซ็นลายเซ็นในช่องด้านล่าง</p>
-<div class="sig-container" style="margin-bottom:12px;">
-<canvas class="sig-canvas" height="160" id="sigCanvas" width="440"></canvas>
-<div class="sig-hint" id="sigHint">วาดลายเซ็นที่นี่</div>
-</div>
-</div>
-<div class="modal-foot">
-<button class="btn btn-ghost" onclick="clearSig()">🗑️ ล้างลายเซ็น</button>
-<button class="btn btn-primary" onclick="saveSig()">✓ บันทึกลายเซ็น</button>
-</div>
-</div>
-</div>
-<div class="app">
-<!-- SIDEBAR -->
-<nav class="sidebar">
-<div class="sidebar-brand">
-<div class="brand-diamond"></div>
-<span class="brand-name">Company</span>
-</div>
-<div class="nav-section">
-<div class="nav-item" onclick="goPage('sale')"><span class="nav-icon">🏠</span>หน้าหลัก</div>
-<div class="nav-item"><span class="nav-icon">👥</span>ลูกค้า</div>
-<div class="nav-item"><span class="nav-icon">📄</span>ใบเสนอราคา</div>
-<div class="nav-item"><span class="nav-icon">📦</span>ใบสั่งขาย</div>
-<div class="nav-item active" id="nav-credit" onclick="goPage('sale')"><span class="nav-icon">💳</span>ขออนุมัติวงเงินเกิน<span class="nav-badge">2</span></div>
-<div class="nav-item" onclick="goPage('approval')"><span class="nav-icon">✅</span>อนุมัติคำขอ</div>
-<div class="nav-item" onclick="goPage('tracking')"><span class="nav-icon">📊</span>รายงาน</div>
-<div class="nav-item"><span class="nav-icon">⚙️</span>ตั้งค่า</div>
-</div>
-<div class="sidebar-user">
-<div class="user-avatar">S1</div>
-<div><div class="user-name">Sale01</div><div class="user-role">จิรารัตน์</div></div>
-<span style="margin-left:auto;font-size:14px;cursor:pointer;color:var(--gray-400);">↩</span>
-</div>
-</nav>
-<div class="main-area">
-<!-- TOP BAR -->
-<div class="topbar">
-<div class="topbar-title" id="topTitle">ขออนุมัติวงเงินเกิน <span id="topSub">หน้าส่งคำขอ</span></div>
-<button class="notif-btn" onclick="goPage('tracking')">🔔<span class="notif-dot"></span></button>
-<div style="display:flex;align-items:center;gap:8px;">
-<div class="user-avatar" style="width:30px;height:30px;font-size:12px;">S1</div>
-<span style="font-size:13px;font-weight:600;">Sale01</span>
-</div>
-</div>
-<!-- CONTENT -->
-<div class="content">
-<!-- ══════════ PAGE 1: SALE FORM ══════════ -->
-<div class="page active" id="page-sale">
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-<div class="section-badge"><div class="section-num">1</div>หน้าฟอร์ม กรอกข้อมูลขออนุมัติวงเงินเกิน (สำหรับเซลล์)</div>
-<span style="font-size:12px;background:#fef9c3;color:#854d0e;padding:4px 12px;border-radius:20px;font-weight:600;">เซลล์กรอกข้อมูลเบื้องต้นเพื่อขออนุมัติเท่านั้น</span>
-</div>
-<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;">
-<span class="badge badge-orange"><span class="badge-dot"></span>สถานะ: รอส่งอนุมัติ</span>
-</div>
-<!-- Customer Info -->
-<div class="card">
-<div class="card-head">
-<div class="step-circle">1</div>
-<h3>ข้อมูลลูกค้า</h3>
-</div>
-<div class="card-body">
-<class class="form-grid">
-<div class="field">
-<label class="field-label">ชื่อลูกค้า <span class="required">*</span></label>
-<div class="input-wrap">
-<input class="field-input has-icon" type="text" value="บริษัท แสงทองลกษณ์ จำกัด"/>
-<span class="input-icon">🔍</span>
-</div>
-</div>
-<div class="field">
-<label class="field-label">รหัสลูกค้า</label>
-<input class="field-input" readonly="" style="background:var(--gray-50);color:var(--gray-500);" type="text" value="CUST-00025"/>
-</div>
-<!-- <div class="field form-full"> -->
-<div class="field">
-<label class="field-label">Sales ผู้รับผิดชอบ</label>
-<select class="field-input">
-<option selected="">Sale01 - จิรารัตน์</option>
-<option>Sale02 - สมชาย</option>
-</select>
-</div>
-
-<div class="field">
-<label class="field-label">วงเงิน</label>
-<input class="field-input" readonly="" style="background:var(--gray-50);color:var(--gray-500);" type="text" value="100,000.00 บาท"/>
-</div>
-
-<div class="field">
-<label class="field-label">เครดิต</label>
-<input class="field-input" readonly="" style="background:var(--gray-50);color:var(--gray-500);" type="text" value="90 วัน" />
-</div>
-
-<div class="field">
-  <label class="field-label">
-    วิธีการชำระเงิน <span class="required">*</span>
-  </label>
-
-  <div class="checkbox-group">
-    <label class="checkbox-item">
-      <input type="checkbox" name="payment_method" value="โอนเงิน">
-      โอนเงิน
-    </label>
-
-    <label class="checkbox-item">
-      <input type="checkbox" name="payment_method" value="เช็ค">
-      เช็ค
-    </label>
-
-    <label class="checkbox-item">
-      <input type="checkbox" name="payment_method" value="เงินสด">
-      เงินสด
-    </label>
-  </div>
-</div>
-
-</class>
-</div>
-</div>
-</div>
-</div>
-<!-- Sales Info -->
-<div class="card">
-<div class="card-head">
-<div class="step-circle">2</div>
-<h3>ข้อมูลการขาย</h3>
-</div>
-<div class="card-body">
-<div class="form-grid">
-<div class="field">
-<label class="field-label">เลขที่ใบสั่งขาย/ใบกำกับ</label>
-<select class="field-input">
-<option>SO-2024-0587</option>
-<option>SO-2024-0588</option>
-</select>
-</div>
-<div class="field">
-<label class="field-label">วันที่</label>
-<div class="input-wrap">
-<input class="field-input has-icon" type="date" value="2024-05-27"/>
-<span class="input-icon" style="right:10px;top:50%;transform:translateY(-50%);">📅</span>
-</div>
-</div>
-<div class="field form-full">
-<label class="field-label">ยอดที่ต้องการเปิดบิล (รวมภาษี)</label>
-<div class="amount-input-wrap">
-<input class="field-input" style="padding-right:48px;font-weight:700;font-size:15px;color:var(--gray-900);" type="text" value="135,000.00"/>
-<span class="amount-unit">บาท</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Reason -->
-<div class="card">
-<div class="card-head">
-<div class="step-circle">3</div>
-<h3>เหตุผลการขออนุมัติ</h3>
-</div>
-<div class="card-body">
-<div class="field">
-<label class="field-label">เหตุผล <span class="required">*</span></label>
-<textarea class="field-input" id="reasonText" oninput="updateCount()">ลูกค้ามีออเดอร์จำนวนมาก ต้องการสต็อกสินค้าเพิ่ม และมีประวัติการชำระเงินสม่ำเสมอ</textarea>
-<div class="char-count"><span id="charCount">82</span>/500</div>
-</div>
-</div>
-</div>
-
-<!-- Signature -->
-<div class="card">
-<div class="card-head">
-<div class="step-circle">4</div>
-<h3>ลายเซ็นผู้ขอ (เซลล์)</h3>
-</div>
-<div class="card-body">
-<div class="note-tip">⚠️ เซลล์ต้องเซ็นลายเซ็นก่อนส่ง</div>
-<div id="sigDisplayWrap" style="display:none;">
-<div class="sig-container">
-<canvas height="120" id="sigDisplay" onclick="openSigModal()" style="display:block;width:100%;cursor:pointer;" width="600"></canvas>
-<div class="sig-info">
-<span class="sig-name-text">จิรารัตน์ สนใจ (Sale01)</span>
-<span class="sig-date-text">27/05/2024 14:35</span>
-</div>
-</div>
-</div>
-<div id="sigPlaceholder">
-<div class="sig-container" onclick="openSigModal()" style="height:120px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-<div style="text-align:center;color:var(--gray-400);">
-<div style="font-size:28px;margin-bottom:4px;">✍️</div>
-<div style="font-size:13px;">คลิกเพื่อเซ็นลายเซ็น</div>
-</div>
-</div>
-</div>
-<div style="margin-top:10px;display:flex;justify-content:flex-end;">
-<button class="btn btn-ghost btn-sm" onclick="clearDisplaySig()">🗑️ ล้างลายเซ็น</button>
-</div>
-<div class="btn-row">
-<button class="btn btn-outline">💾 บันทึกร่าง</button>
-<button class="btn btn-primary" onclick="goPage('detail')">📤 ส่งคำขออนุมัติ →</button>
-</div>
-</div>
-</div>
-</div>
-<!-- ══════════ PAGE 2: A4 DOCUMENT ══════════ -->
-
-<!-- ══════════ PAGE 3: SIGN PAGE ══════════ -->
-
-<!-- ══════════ PAGE 4: DETAIL (AFTER SUBMIT) ══════════ -->
-
-<!-- ══════════ PAGE 5: FINANCE ══════════ -->
-
-<!-- ══════════ PAGE 6: APPROVAL ══════════ -->
-
-<!-- ══════════ PAGE: TRACKING ══════════ -->
-
-</div><!-- /content -->
-</div><!-- /main-area -->
-</div><!-- /app -->
-<!-- QUICK NAV BOTTOM BAR -->
-<!-- <div style="position:fixed;bottom:20px;right:24px;display:flex;flex-direction:column;gap:6px;z-index:300;">
-<button class="btn btn-primary btn-sm" onclick="goPage('sale')" title="ฟอร์ม">📝</button>
-<button class="btn btn-outline btn-sm" onclick="goPage('a4')" title="เอกสาร A4">📄</button>
-<button class="btn btn-outline btn-sm" onclick="goPage('detail')" title="รายละเอียด">📋</button>
-<button class="btn btn-outline btn-sm" onclick="goPage('finance')" title="การเงิน">💰</button>
-<button class="btn btn-outline btn-sm" onclick="goPage('approval')" title="อนุมัติ">✅</button>
-<button class="btn btn-outline btn-sm" onclick="goPage('tracking')" title="ติดตาม">📊</button>
-</div> -->
-
-<script src="./credit-limit-sale.js"></script></body>
+    <!-- Page JS -->
+    <script src="/js/pages/forms/credit-limit-sale.js"></script>
+  </body>
 </html>
