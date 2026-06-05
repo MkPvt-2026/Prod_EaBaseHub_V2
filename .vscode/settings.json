@@ -4,5 +4,16 @@
         "markdown",
         "latex",
         "plaintext"
+    ],
+    "folder-color.favoriteColors": [],
+    "folder-color.pathColors": [
+        {
+            "folderPath": "Prod_Ea_Base_Hub_v.2\\pages\\forms\\",
+            "color": "foldercolorizer.color_d7af00"
+        },
+        {
+            "folderPath": "Prod_Ea_Base_Hub_v.2\\css\\pages\\auth\\",
+            "color": "foldercolorizer.color_ff0087"
+        }
     ]
 }
