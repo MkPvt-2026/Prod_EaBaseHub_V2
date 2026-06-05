@@ -2745,6 +2745,24 @@ function exportSalesVisitExcel() {
   showToast("✅ Export Excel สำเร็จ");
 }
 
+
+function printSalesVisitReport() {
+
+  const groups = getSalesExportGroups();
+
+  if (!groups.length) {
+    showToast("⚠️ ไม่มีข้อมูลสำหรับพิมพ์");
+    return;
+  }
+
+  const reportWindow = buildReportWindow(); // ฟังก์ชันสร้าง HTML เดียวกับ PDF
+
+  reportWindow.onload = () => {
+    reportWindow.print();
+  };
+
+}
+
 // =====================================================
 // 🌐 GLOBAL FUNCTIONS
 // =====================================================
