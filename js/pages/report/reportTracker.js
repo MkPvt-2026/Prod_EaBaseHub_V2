@@ -2137,6 +2137,485 @@ function exportCSV() {
   showToast("📥 Export สำเร็จ");
 }
 
+
+/* =====================================================
+   SECTION C: JavaScript Helper สำหรับ Export / Print
+   ตำแหน่งวาง:
+   - วางหลัง function exportCSV()
+   - หรือวางก่อน // 🔧 SETUP EVENT LISTENERS
+   ===================================================== */
+
+function getSalesExportGroups() {
+  if (!currentSalesModalId) {
+    showToast("⚠️ กรุณาเลือกเซลล์ก่อน Export");
+    return [];
+  }
+
+  return groupedReports
+    .filter((g) => g.sale_id === currentSalesModalId)
+    .sort((a, b) => {
+      const da = new Date(a.report_date || a.submitted_at || a.created_at || 0);
+      const db = new Date(b.report_date || b.submitted_at || b.created_at || 0);
+      return da - db;
+    });
+}
+
+function getPlanShopText(reportDate) {
+  const dateKey = getDateKey(reportDate);
+  const shops = tripPlanMap[dateKey] || [];
+  return shops.length ? shops.join(" / ") : "—";
+}
+
+function getExportSummary(groups) {
+  const provinces = new Set(
+    groups.map((g) => shopsMap[g.shop_id]?.province).filter(Boolean),
+  );
+
+  const hasNote = groups.filter((g) => g.note && String(g.note).trim()).length;
+
+  const planCount = groups.filter((g) => {
+    const dateKey = getDateKey(g.report_date || g.submitted_at);
+    return (tripPlanMap[dateKey] || []).length > 0;
+  }).length;
+
+  return {
+    total: groups.length,
+    provinces: provinces.size,
+    note: hasNote,
+    plan: planCount,
+  };
+}
+
+function getReportRangeText() {
+  return `${formatDate(dateStart)} - ${formatDate(dateEnd)}`;
+}
+
+function getPrintDateText() {
+  return formatDate(new Date());
+}
+
+/* =====================================================
+   SECTION D: สร้าง HTML กลาง สำหรับ PDF และ Print
+   หมายเหตุ:
+   - A4 แนวนอน
+   - ไม่มีกล่องกรอบใหญ่รอบกระดาษ
+   - บีบ font / margin / padding ให้รายเดือนอยู่ประมาณไม่เกิน 2 หน้า
+   - คอลัมน์: วันที่เข้า / ร้านค้า / จังหวัด / หมายเหตุ / ร้านตามแผน
+   ===================================================== */
+
+function generateSalesVisitReportHTML(options = {}) {
+  const groups = getSalesExportGroups();
+  const profile = profilesMap[currentSalesModalId];
+  const salesName = profile?.display_name || "—";
+  const summary = getExportSummary(groups);
+  const autoPrint = options.autoPrint === true;
+
+  const rowsHtml = groups
+    .map((g) => {
+      const shop = shopsMap[g.shop_id];
+
+      return `
+        <tr>
+          <td>${formatDateShort(g.report_date || g.submitted_at)}</td>
+          <td>${escapeHtml(shop?.name || "—")}</td>
+          <td>${escapeHtml(shop?.province || "—")}</td>
+          <td>${escapeHtml(g.note || "—")}</td>
+          <td>${escapeHtml(getPlanShopText(g.report_date || g.submitted_at))}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงานเข้าร้านค้า</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  @page {
+    size: A4 landscape;
+    margin: 7mm 9mm;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Kanit", sans-serif;
+    margin: 0;
+    color: #111827;
+    background: #ffffff;
+  }
+
+  .page {
+    width: 100%;
+    padding: 0;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    line-height: 1;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .top {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    font-size: 11px;
+    margin-bottom: 8px;
+    color: #111827;
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  .blue-line {
+    border-top: 2px solid #1e3a8a;
+    margin: 6px 0 10px;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr 1fr 1.2fr;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .summary-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+
+  .summary-item {
+    text-align: center;
+    border-right: 1px solid #94a3b8;
+    white-space: nowrap;
+  }
+
+  .summary-item:last-child {
+    border-right: none;
+  }
+
+  .num {
+    font-size: 19px;
+    font-weight: 700;
+    color: #1e3a8a;
+    padding: 0 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 9.5px;
+  }
+
+  th {
+    background: #0b3b91;
+    color: #ffffff;
+    border: 1px solid #d1d5db;
+    padding: 4px 5px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  td {
+    border: 1px solid #d1d5db;
+    padding: 3px 5px;
+    vertical-align: top;
+    line-height: 1.22;
+    height: 18px;
+    overflow-wrap: anywhere;
+  }
+
+  th:nth-child(1), td:nth-child(1) {
+    width: 11%;
+    text-align: center;
+  }
+
+  th:nth-child(2), td:nth-child(2) {
+    width: 21%;
+  }
+
+  th:nth-child(3), td:nth-child(3) {
+    width: 11%;
+    text-align: center;
+  }
+
+  th:nth-child(4), td:nth-child(4) {
+    width: 28%;
+  }
+
+  th:nth-child(5), td:nth-child(5) {
+    width: 29%;
+  }
+
+  .note {
+    margin-top: 8px;
+    font-size: 9.5px;
+    color: #1e3a8a;
+    font-weight: 500;
+  }
+
+  .no-print-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .toolbar-btn {
+    border: 1px solid #1e3a8a;
+    background: #ffffff;
+    color: #1e3a8a;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-family: "Kanit", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .toolbar-btn:hover {
+    background: #eff6ff;
+  }
+
+  @media print {
+    html,
+    body {
+      width: 297mm;
+      min-height: 210mm;
+    }
+
+    .no-print-toolbar {
+      display: none !important;
+    }
+
+    tr {
+      page-break-inside: avoid;
+    }
+
+    table {
+      page-break-inside: auto;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="no-print-toolbar">
+    <button class="toolbar-btn" onclick="window.print()">พิมพ์</button>
+    <button class="toolbar-btn" onclick="window.close()">ปิด</button>
+  </div>
+
+  <div class="page">
+    <h1>รายงานเข้าร้านค้า (สรุป)</h1>
+
+    <div class="top">
+      <div>ชื่อเซลล์ : ${escapeHtml(salesName)}</div>
+      <div>ช่วงรายงาน : ${getReportRangeText()}</div>
+      <div class="right">วันที่พิมพ์ : ${getPrintDateText()}</div>
+    </div>
+
+    <div class="blue-line"></div>
+
+    <div class="summary">
+      <div class="summary-title">สรุปภาพรวม</div>
+      <div class="summary-item">เข้าร้านทั้งหมด <span class="num">${summary.total}</span> ร้าน</div>
+      <div class="summary-item">จังหวัด <span class="num">${summary.provinces}</span> จังหวัด</div>
+      <div class="summary-item">มีหมายเหตุ <span class="num">${summary.note}</span> ร้าน</div>
+      <div class="summary-item">ร้านตามแผน (Trip) <span class="num">${summary.plan}</span> ร้าน</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>วันที่เข้า</th>
+          <th>ร้านค้า</th>
+          <th>จังหวัด</th>
+          <th>หมายเหตุ</th>
+          <th>ร้านตามแผน (Trip)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+
+    <div class="note">
+      หมายเหตุ: รายงานนี้เป็นข้อมูลสรุปการเข้าร้านค้า เฉพาะร้านที่มีการเข้าร้านในช่วงเวลาที่เลือก
+    </div>
+  </div>
+
+  ${autoPrint ? `<script>window.onload = () => setTimeout(() => window.print(), 300);</script>` : ""}
+</body>
+</html>
+`;
+}
+
+/* =====================================================
+   SECTION E: เปิดหน้ารายงาน PDF
+   ใช้งาน:
+   - เปิดหน้าใหม่
+   - มีปุ่มพิมพ์/ปิดด้านบน
+   - ผู้ใช้เลือก Save as PDF ได้จากหน้าพิมพ์
+   ===================================================== */
+
+function exportSalesVisitPDF() {
+  const groups = getSalesExportGroups();
+
+  if (!groups.length) {
+    showToast("⚠️ ไม่มีข้อมูลสำหรับ Export");
+    return;
+  }
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    showToast("⚠️ Browser บล็อก popup กรุณาอนุญาต popup ก่อน");
+    return;
+  }
+
+  win.document.open();
+  win.document.write(generateSalesVisitReportHTML({ autoPrint: false }));
+  win.document.close();
+
+  showToast("✅ เปิดหน้า Export PDF แล้ว");
+}
+
+/* =====================================================
+   SECTION F: ปุ่มพิมพ์โดยตรง
+   ใช้งาน:
+   - เปิดหน้าใหม่
+   - เรียก print อัตโนมัติ
+   ===================================================== */
+
+function printSalesVisitReport() {
+  const groups = getSalesExportGroups();
+
+  if (!groups.length) {
+    showToast("⚠️ ไม่มีข้อมูลสำหรับพิมพ์");
+    return;
+  }
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    showToast("⚠️ Browser บล็อก popup กรุณาอนุญาต popup ก่อน");
+    return;
+  }
+
+  win.document.open();
+  win.document.write(generateSalesVisitReportHTML({ autoPrint: true }));
+  win.document.close();
+
+  showToast("🖨️ เปิดหน้าพิมพ์แล้ว");
+}
+
+/* =====================================================
+   SECTION G: Export Excel
+   หมายเหตุ:
+   - ใช้ .xls แบบ HTML Table เพื่อให้เปิดใน Excel ง่าย
+   - รองรับภาษาไทยด้วย BOM
+   ===================================================== */
+
+function exportSalesVisitExcel() {
+  const groups = getSalesExportGroups();
+
+  if (!groups.length) {
+    showToast("⚠️ ไม่มีข้อมูลสำหรับ Export Excel");
+    return;
+  }
+
+  const profile = profilesMap[currentSalesModalId];
+  const salesName = profile?.display_name || "—";
+
+  const tableRows = groups
+    .map((g) => {
+      const shop = shopsMap[g.shop_id];
+
+      return `
+        <tr>
+          <td>${formatDateShort(g.report_date || g.submitted_at)}</td>
+          <td>${escapeHtml(shop?.name || "—")}</td>
+          <td>${escapeHtml(shop?.province || "—")}</td>
+          <td>${escapeHtml(g.note || "—")}</td>
+          <td>${escapeHtml(getPlanShopText(g.report_date || g.submitted_at))}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const excelHtml = `
+    <html>
+    <head>
+      <meta charset="UTF-8">
+    </head>
+    <body>
+      <table border="1">
+        <tr>
+          <th colspan="5">รายงานเข้าร้านค้า (สรุป)</th>
+        </tr>
+        <tr>
+          <td colspan="5">ชื่อเซลล์ : ${escapeHtml(salesName)}</td>
+        </tr>
+        <tr>
+          <td colspan="5">ช่วงรายงาน : ${getReportRangeText()}</td>
+        </tr>
+        <tr>
+          <th>วันที่เข้า</th>
+          <th>ร้านค้า</th>
+          <th>จังหวัด</th>
+          <th>หมายเหตุ</th>
+          <th>ร้านตามแผน (Trip)</th>
+        </tr>
+        ${tableRows}
+      </table>
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob(["\uFEFF" + excelHtml], {
+    type: "application/vnd.ms-excel;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = `รายงานเข้าร้านค้า_${salesName}_${formatDateForInput(dateStart)}_${formatDateForInput(dateEnd)}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+  showToast("✅ Export Excel สำเร็จ");
+}
+
+
+
 // =====================================================
 // 🔧 SETUP EVENT LISTENERS
 // =====================================================
