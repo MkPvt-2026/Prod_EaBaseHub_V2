@@ -2621,3 +2621,80 @@ body {
   }
 
 }
+
+
+.export-report-btn {
+  border: 1px solid #1e3a8a;
+  background: #ffffff;
+  color: #1e3a8a;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-family: "Kanit", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.export-report-btn:hover {
+  background: #eff6ff;
+}
+
+.export-report-btn.excel {
+  border-color: #15803d;
+  color: #15803d;
+}
+
+.export-report-btn.excel:hover {
+  background: #f0fdf4;
+}
+
+/* =====================================================
+   SECTION B: เพิ่ม CSS
+   ตำแหน่งแนะนำ:
+   - วางท้ายไฟล์ reportTracker.css
+   ===================================================== */
+
+
+.sales-export-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.export-report-btn {
+  border: 1px solid #1e3a8a;
+  background: #ffffff;
+  color: #1e3a8a;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-family: "Kanit", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 95px;
+  transition: 0.15s ease;
+}
+
+.export-report-btn:hover {
+  background: #eff6ff;
+}
+
+.export-report-btn.print {
+  border-color: #334155;
+  color: #334155;
+}
+
+.export-report-btn.print:hover {
+  background: #f8fafc;
+}
+
+.export-report-btn.excel {
+  border-color: #15803d;
+  color: #15803d;
+}
+
+.export-report-btn.excel:hover {
+  background: #f0fdf4;
+}
+

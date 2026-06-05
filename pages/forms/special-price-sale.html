@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หน้าส่งคำขอราคาพิเศษ (Sale)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/special-price-sale.css">
+</head>
+<body>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบขออนุมัติราคาพิเศษ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/forms/Price-Exception-Request.css">
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div>
+  <div class="brand">
+    <h1>ระบบขออนุมัติราคาพิเศษ</h1>
+    <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p>
+  </div>
+  <div class="flow-steps">
+    <div class="flow-step done" onclick="location.href='special-price-sale.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">1. Sale</div><div class="flow-step-sub">ส่งคำขอ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active" onclick="location.href='special-price-manager.html'">
+      <div class="flow-step-num">2</div>
+      <div><div class="flow-step-label">Manager</div><div class="flow-step-sub">ตรวจสอบและอนุมัติ</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-executive.html'">
+      <div class="flow-step-num">3</div>
+      <div><div class="flow-step-label">Executive</div><div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div></div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" onclick="location.href='special-price-tracking.html'">
+      <div class="flow-step-num">✓</div>
+      <div><div class="flow-step-label">Completed</div><div class="flow-step-sub">เก็บเป็นเอกสาร</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR + MAIN -->
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <!-- <div class="logo-icon">
+        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+      </div> -->
+      <span>EABaseHub</span>
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">🏠</span> หน้าหลัก
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">💰</span> ของเงินเกิน
+    </div>
+    <div class="nav-item active" onclick="location.href='special-price-sale.html'">
+      <span class="nav-icon">📋</span> ขอราคาพิเศษ
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🏷️</span> ขอส่วนลด
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📦</span> รายการของออเดิร์
+    </div>
+    <div class="nav-item" onclick="location.href='special-price-tracking.html'">
+      <span class="nav-icon">📊</span> รายงาน
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> ตั้งค่า
+    </div>
+  </nav>
+
+  <main class="main">
+<div class="page active">
+      <div class="page-tabs">
+        <button class="tab-btn active">📝 หน้าส่งคำขอ (Sale)</button>
+        <button class="tab-btn" onclick="location.href='special-price-manager.html'">👔 Manager</button>
+        <button class="tab-btn" onclick="location.href='special-price-executive.html'">👑 Executive</button>
+        <button class="tab-btn" onclick="location.href='special-price-tracking.html'">📋 ติดตามสถานะ</button>
+        <button class="tab-btn" onclick="location.href='special-price-document.html'">📄 เอกสาร A4</button>
+      </div>
+
+      <div class="card section-space">
+        <div class="card-header">
+          <div class="card-number">1</div>
+          <h2>หน้าส่งคำขอ (Sale)</h2>
+        </div>
+        <div class="card-body">
+          <!-- Sale info -->
+          <div class="sale-info">
+            <div>
+              <div class="sale-name">วีรากรณ์ สนใจ</div>
+              <div class="sale-role">Sale Executive</div>
+            </div>
+            <div class="sale-avatar">👩‍💼</div>
+          </div>
+
+          <!-- Customer info -->
+          <div style="background:var(--bg);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">ข้อมูลลูกค้า</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">ชื่อลูกค้า</label>
+                <select class="form-control">
+                  <option>บริษัท แสงทองกรุ๊ป จำกัด</option>
+                  <option>บริษัท เทคโนโลยีสยาม จำกัด</option>
+                  <option>ห้างหุ้นส่วน นนทบุรีวิศวกรรม</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">วันที่เอกสาร</label>
+                <input type="date" class="form-control" value="2024-05-27">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">เลขที่ใบเสนอราคา / SO</label>
+                <input type="text" class="form-control" value="QT-2024-0221">
+              </div>
+            </div>
+          </div>
+
+          <!-- Product table -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">รายการสินค้าที่ขออนุมัติราคาพิเศษ</div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ลำดับ</th>
+                    <th>รหัสสินค้า</th>
+                    <th>รายการสินค้า</th>
+                    <th class="num">จำนวน</th>
+                    <th>หน่วย</th>
+                    <th class="num">ราคาปกติ (ต่อหน่วย)</th>
+                    <th class="num">ราคาที่ขอ (ต่อหน่วย)</th>
+                    <th class="num">ส่วนลด (%)</th>
+                    <th class="num">ส่วนต่าง (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td><td>FG-001</td><td>ถุง PE 18x20</td>
+                    <td class="num">1,000</td><td>ชุด</td>
+                    <td class="num">120.00</td><td class="num">105.00</td>
+                    <td class="num discount">12.50%</td><td class="num discount">15,000.00</td>
+                  </tr>
+                  <tr>
+                    <td>2</td><td>FG-002</td><td>พีลิตฟิล์มพับพลาสก</td>
+                    <td class="num">500</td><td>ม้วน</td>
+                    <td class="num">80.00</td><td class="num">72.00</td>
+                    <td class="num discount">10.00%</td><td class="num discount">4,000.00</td>
+                  </tr>
+                  <tr>
+                    <td>3</td><td>FG-003</td><td>เทปกาว</td>
+                    <td class="num">500</td><td>ม้วน</td>
+                    <td class="num">45.00</td><td class="num">40.00</td>
+                    <td class="num discount">11.11%</td><td class="num discount">2,500.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-footer">
+              <div>
+                <div class="total-label">ยอดรวมส่วนต่าง</div>
+                <div class="total-val">21,500.00 บาท</div>
+              </div>
+              <div>
+                <div class="total-label">ส่วนลดเฉลี่ย</div>
+                <div class="disc-val">9.20%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reason -->
+          <div class="form-row">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">เหตุผลการขอราคาพิเศษ *</div>
+              <div class="reason-grid">
+                <label class="reason-option"><input type="radio" name="reason" checked> แข่งขันราคา</label>
+                <label class="reason-option"><input type="radio" name="reason"> ลูกค้าประจำ</label>
+                <label class="reason-option"><input type="radio" name="reason"> ปิดดีล / ยอดขาย</label>
+                <label class="reason-option"><input type="radio" name="reason"> โปรโมชันพิเศษ</label>
+                <label class="reason-option"><input type="radio" name="reason"> เคลียร์สต็อก</label>
+                <label class="reason-option"><input type="radio" name="reason"> อื่นๆ</label>
+              </div>
+              <textarea class="remark-area" placeholder="คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น">คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น</textarea>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">ลายเซ็นผู้ (Sale) *</div>
+              <div class="sig-box">
+                <div class="sig-img">วีรากรณ์</div>
+                <div class="sig-name">ม.ส. วีรากรณ์ สนใจ</div>
+                <div class="sig-date">วันที่ 27/05/2024</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-actions">
+            <button class="btn btn-outline">💾 บันทึกร่าง</button>
+            <button class="btn btn-primary" onclick="location.href='special-price-manager.html'">📤 ส่งคำขออนุมัติ →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/pages/forms/special-price-sale.js"></script>
+</body>
+</html>

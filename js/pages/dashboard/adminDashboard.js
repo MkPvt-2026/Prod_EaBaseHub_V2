@@ -1,3 +1,238 @@
+/* ==========================================================
+   ADMINISTRATION CONSOLE SCRIPT
+   ใช้ render เมนูจาก Array เพื่อให้เพิ่ม/ลบ/แก้เมนูง่าย
+   ========================================================== */
+
+
+/* ----------------------------------------------------------
+   1) ข้อมูลเมนูทั้งหมด
+   ถ้าต้องการเพิ่มเมนูใหม่ ให้เพิ่ม item ใน array นี้ได้เลย
+   ---------------------------------------------------------- */
+
+const adminMenus = [
+  {
+    group: "User & Access",
+    icon: "group",
+    items: [
+      {
+        title: "จัดการผู้ใช้งาน",
+        desc: "เพิ่ม / แก้ไข / ปิดใช้งานบัญชีผู้ใช้งานในระบบ",
+        icon: "person",
+        url: "/pages/admin/admintor.html"
+      },
+      {
+        title: "กำหนดสิทธิ์ Role",
+        desc: "จัดการสิทธิ์การเข้าถึงของแต่ละบทบาท",
+        icon: "admin_panel_settings",
+        url: "/pages/admin/admintor.html"
+      },
+      {
+        title: "ประวัติการเข้าใช้งาน",
+        desc: "ตรวจสอบกิจกรรมการเข้าใช้งานของผู้ใช้",
+        icon: "history",
+        url: "admin-login-log.html"
+      }
+    ]
+  },
+
+  {
+    group: "Master Data",
+    icon: "widgets",
+    items: [
+      {
+        title: "จัดการร้านค้า",
+        desc: "ข้อมูลร้านค้า เขตพื้นที่ และเซลผู้ดูแล",
+        icon: "storefront",
+        url: "admin-shops.html"
+      },
+      {
+        title: "จัดการสินค้า",
+        desc: "หมวดหมู่สินค้า / รายการสินค้า / Attribute",
+        icon: "inventory_2",
+        url: "admin-products.html"
+      },
+      {
+        title: "จัดการพื้นที่ขาย",
+        desc: "โซน จังหวัด และเขตการขาย",
+        icon: "location_on",
+        url: "admin-areas.html"
+      }
+    ]
+  },
+
+  {
+    group: "Workflow Settings",
+    icon: "account_tree",
+    items: [
+      {
+        title: "ตั้งค่าการอนุมัติ",
+        desc: "กำหนดลำดับการอนุมัติ Manager → Executive",
+        icon: "account_tree",
+        url: "admin-approval.html"
+      },
+      {
+        title: "ตั้งค่าเอกสาร",
+        desc: "เลขที่เอกสาร / เวอร์ชัน / รูปแบบฟอร์ม",
+        icon: "description",
+        url: "admin-documents.html"
+      },
+      {
+        title: "ตั้งค่าการแจ้งเตือน",
+        desc: "LINE / Email / Reminder แจ้งเตือนในระบบ",
+        icon: "notifications",
+        url: "admin-notifications.html"
+      }
+    ]
+  },
+
+  {
+    group: "System Tools",
+    icon: "construction",
+    items: [
+      {
+        title: "นำเข้า / ส่งออกข้อมูล",
+        desc: "CSV / Excel / Backup ข้อมูลระบบ",
+        icon: "upload_file",
+        url: "admin-import-export.html"
+      },
+      {
+        title: "Audit Log",
+        desc: "ประวัติการแก้ไขข้อมูลสำคัญในระบบ",
+        icon: "fact_check",
+        url: "admin-audit-log.html"
+      },
+      {
+        title: "System Config",
+        desc: "ตั้งค่าระบบเพิ่มเติม และการเชื่อมต่อ",
+        icon: "settings",
+        url: "admin-config.html"
+      }
+    ]
+  }
+];
+
+
+/* ----------------------------------------------------------
+   2) Render เมนูทั้งหมดลงหน้า HTML
+   ---------------------------------------------------------- */
+
+function renderAdminMenus(keyword = "") {
+  const container = document.getElementById("adminMenuContainer");
+  if (!container) return;
+
+  const searchText = keyword.trim().toLowerCase();
+
+  let html = "";
+  let foundCount = 0;
+
+  adminMenus.forEach(section => {
+    // กรองเมนูตามคำค้นหา
+    const filteredItems = section.items.filter(item => {
+      return (
+        item.title.toLowerCase().includes(searchText) ||
+        item.desc.toLowerCase().includes(searchText) ||
+        section.group.toLowerCase().includes(searchText)
+      );
+    });
+
+    // ถ้าไม่มีเมนูในหมวดนี้ ให้ข้าม
+    if (filteredItems.length === 0) return;
+
+    foundCount += filteredItems.length;
+
+    html += `
+      <div class="menu-section">
+        <div class="menu-section-header">
+          <div class="menu-section-title">
+            <span class="material-symbols-outlined">${section.icon}</span>
+            <h2>${section.group}</h2>
+          </div>
+          <a href="#">ดูทั้งหมด ›</a>
+        </div>
+
+        <div class="menu-card-grid">
+          ${filteredItems.map(item => `
+            <article class="menu-card" data-url="${item.url}">
+              <div class="menu-card-icon">
+                <span class="material-symbols-outlined">${item.icon}</span>
+              </div>
+              <h3>${item.title}</h3>
+              <p>${item.desc}</p>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  });
+
+  // ถ้าค้นหาแล้วไม่เจอ
+  if (foundCount === 0) {
+    html = `
+      <div class="empty-state">
+        <h3>ไม่พบเมนูที่ค้นหา</h3>
+        <p>ลองค้นหาด้วยคำอื่น เช่น ผู้ใช้งาน, ร้านค้า, เอกสาร, แจ้งเตือน</p>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  bindMenuCardClick();
+}
+
+
+/* ----------------------------------------------------------
+   3) คลิกการ์ดแล้วเปลี่ยนหน้า
+   ---------------------------------------------------------- */
+
+function bindMenuCardClick() {
+  const cards = document.querySelectorAll(".menu-card");
+
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      const url = card.dataset.url;
+
+      if (!url) return;
+
+      // ถ้ายังไม่อยากให้เปลี่ยนหน้าจริง ให้เปลี่ยนเป็น console.log(url)
+      window.location.href = url;
+    });
+  });
+}
+
+
+/* ----------------------------------------------------------
+   4) ค้นหาเมนูแบบ real-time
+   ---------------------------------------------------------- */
+
+function setupSearch() {
+  const searchInput = document.getElementById("menuSearch");
+  if (!searchInput) return;
+
+  searchInput.addEventListener("input", event => {
+    renderAdminMenus(event.target.value);
+  });
+}
+
+
+/* ----------------------------------------------------------
+   5) เริ่มทำงานเมื่อโหลดหน้าเสร็จ
+   ---------------------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderAdminMenus();
+  setupSearch();
+});
+
+
+
+
+
+
+
+
+
+
 /* ===========================================
    adminDashboard.js
    path: /js/pages/dashboard/adminDashboard.js
@@ -6,6 +241,217 @@
    - profiles  : id, username, display_name, role, status, area
    - shops     : id, sale_id, shop_code, shop_name, status
 =========================================== */
+/**
+ * sidebar-header.js — Executive Layout Behaviors
+ * ครอบคลุม: sidebar collapse/expand, header date, header user, logout
+ * วิธีใช้: <script src="/js/core/sidebar-header.js"></script>
+ *          เรียกใช้หลัง DOM โหลดเสร็จ (DOMContentLoaded)
+ */
+
+/* ════════════════════════════════════════════════════
+   SIDEBAR TOGGLE
+════════════════════════════════════════════════════ */
+
+/**
+ * สลับ collapsed / expanded ของ sidebar
+ * อัปเดต margin-left ของ .app-main ตาม
+ */
+function toggleSidebar() {
+  const sidebar = document.getElementById('appSidebar');
+  const main    = document.querySelector('.app-main');
+  if (!sidebar) return;
+
+  const isCollapsed = sidebar.classList.contains('collapsed');
+
+  if (isCollapsed) {
+    // → ขยาย
+    sidebar.classList.remove('collapsed');
+    sidebar.classList.add('expanded');
+    if (main) main.style.marginLeft = '220px';
+  } else {
+    // → ย่อ
+    sidebar.classList.remove('expanded');
+    sidebar.classList.add('collapsed');
+    if (main) main.style.marginLeft = '';
+  }
+}
+
+/**
+ * ทำ nav item ตรงกับ URL ปัจจุบัน active อัตโนมัติ
+ */
+function setActiveNavItem() {
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    const href = item.getAttribute('href') || '';
+    if (href && currentPath.endsWith(href.split('/').pop())) {
+      document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   HEADER — DATE
+════════════════════════════════════════════════════ */
+
+/**
+ * แสดงวันที่ไทยใน element id="headerDateText"
+ */
+function updateHeaderDate() {
+  const el = document.getElementById('headerDateText');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleDateString('th-TH', {
+    weekday: 'long',
+    day:     'numeric',
+    month:   'long',
+    year:    'numeric',
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   HEADER — USER (ต้องการ supabaseClient)
+════════════════════════════════════════════════════ */
+
+/**
+ * โหลดชื่อผู้ใช้และแสดงใน header
+ * ต้องมี supabaseClient ใน global scope แล้ว
+ */
+async function renderHeaderUser() {
+  const nameEl   = document.getElementById('userName');
+  const avatarEl = document.getElementById('userAvatar');
+  if (!nameEl || !avatarEl) return;
+
+  // รอ supabaseClient พร้อม (ไม่เกิน 5 วิ)
+  let retries = 0;
+  while (typeof supabaseClient === 'undefined' && retries < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    retries++;
+  }
+  if (typeof supabaseClient === 'undefined') {
+    nameEl.textContent = 'Executive';
+    avatarEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>';
+    return;
+  }
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const name =
+      user?.user_metadata?.display_name ||
+      user?.user_metadata?.full_name    ||
+      user?.email?.split('@')[0]        ||
+      'Executive';
+    nameEl.textContent = name;
+    // avatar แสดงตัวอักษรแรก
+    avatarEl.innerHTML = '';
+    avatarEl.textContent = name.charAt(0).toUpperCase();
+  } catch (err) {
+    console.warn('[Header] renderHeaderUser:', err);
+    nameEl.textContent = 'Executive';
+    avatarEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>';
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   LOGOUT
+════════════════════════════════════════════════════ */
+
+/**
+ * ออกจากระบบ — sign out จาก Supabase แล้ว redirect ไปหน้า login
+ * @param {string} [redirectTo='/index.html'] — URL ที่จะ redirect
+ */
+async function logout(redirectTo = '/index.html') {
+  try {
+    if (typeof supabaseClient !== 'undefined') {
+      await supabaseClient.auth.signOut();
+    }
+  } catch (err) {
+    console.warn('[Sidebar] logout error:', err);
+  } finally {
+    window.location.href = redirectTo;
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   TOAST HELPER (global)
+════════════════════════════════════════════════════ */
+
+/**
+ * แสดง toast notification
+ * @param {string} message — ข้อความ
+ * @param {'success'|'danger'|'info'|'warning'} [type='success']
+ * @param {number} [duration=3000] — ms
+ */
+function showToast(message, type = 'success', duration = 3000) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+
+  const colorMap = {
+    success: '#10b981',
+    danger:  '#ef4444',
+    info:    '#3b82f6',
+    warning: '#f59e0b',
+  };
+
+  toast.textContent = message;
+  toast.style.background = colorMap[type] || colorMap.success;
+  toast.classList.add('show');
+
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+/* ════════════════════════════════════════════════════
+   INIT — รวม init ทุกอย่างในที่เดียว
+════════════════════════════════════════════════════ */
+
+/**
+ * เรียกฟังก์ชันนี้ใน DOMContentLoaded หรือ script inline
+ * เพื่อ init sidebar + header ทั้งหมด
+ */
+function initExecutiveLayout() {
+  // 1) Default sidebar: collapsed
+  const sidebar = document.getElementById('appSidebar');
+  if (sidebar && !sidebar.classList.contains('expanded')) {
+    sidebar.classList.add('collapsed');
+  }
+
+  // 2) Active nav item
+  setActiveNavItem();
+
+  // 3) Header date
+  updateHeaderDate();
+
+  // 4) Header user (async)
+  renderHeaderUser();
+
+  // 5) Collapse toggle button
+  const collapseBtn = document.querySelector('.sidebar-collapse-btn');
+  if (collapseBtn && !collapseBtn.dataset.bound) {
+    collapseBtn.dataset.bound = '1';
+    collapseBtn.addEventListener('click', toggleSidebar);
+  }
+
+  // 6) Logout button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn && !logoutBtn.dataset.bound) {
+    logoutBtn.dataset.bound = '1';
+    logoutBtn.addEventListener('click', () => logout());
+  }
+}
+
+// Auto-init เมื่อ DOM พร้อม
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initExecutiveLayout);
+} else {
+  initExecutiveLayout();
+}
+
+// ================= END TEMPLATE ================= //
+
+
+
+
+
 
 
 /* ── ดึง supabase client instance (ไม่ใช่ library) ── */
@@ -125,7 +571,7 @@ function renderSalesTable(salesProfiles, shopCountBySaleId) {
       <td><span class="username-badge">${s.username || '-'}</span></td>
       <td><strong>${s.display_name || '-'}</strong></td>
       <td>
-        <span style="background:#e8f0fe;color:#1a73e8;border-radius:6px;padding:2px 10px;font-size:0.75rem;font-weight:600;">
+        <span class="area-badge">
           ${s.area || '-'}
         </span>
       </td>
