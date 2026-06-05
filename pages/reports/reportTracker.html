@@ -604,19 +604,20 @@
             </div>
           </div>
           <div class="modal-badges">
-<div class="export-actions">
-  <button onclick="exportSalesVisitPDF()" class="export-report-btn">
-    📄 Export PDF
+<div class="sales-export-actions">
+  <button type="button" class="export-report-btn" onclick="exportSalesVisitPDF()">
+    Export PDF
   </button>
 
-  <button onclick="printSalesVisitReport()" class="export-report-btn">
-    🖨️ พิมพ์
+  <button type="button" class="export-report-btn print" onclick="printSalesVisitReport()">
+    พิมพ์
   </button>
 
-  <button onclick="exportSalesVisitExcel()" class="export-report-btn excel">
-    📊 Export Excel
+  <button type="button" class="export-report-btn excel" onclick="exportSalesVisitExcel()">
+    Export Excel
   </button>
 </div>
+
             <span class="badge badge-info" id="salesModalCount">— ร้าน</span>
           </div>
         </div>
