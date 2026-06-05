@@ -1,15 +1,3 @@
-// ============================================================
-// approval-document.js  (v2 — Compact, Synced with executive-approval.js)
-//
-// ใช้กับหน้า external-claims และ internal-claims เพื่อ "ดูเอกสารอนุมัติ"
-// เอกสารใช้รูปแบบเดียวกันกับ executive-approval.js (consistent)
-//
-// แก้ปัญหา:
-//  1) Decision banner เล็กลง อยู่มุมขวาบนเป็น badge
-//  2) ตาราง Grade เพิ่ม checkbox + จัดให้พอดี
-//  3) Render ลายเซ็นเป็น <img> (ไม่ใช่ raw base64 text)
-//  4) ดึงชื่อ CEO จาก profiles.display_name (ผ่าน claim.exec_by)
-// ============================================================
 (function () {
   "use strict";
 

@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   await protectPage(["admin","sales","manager","user"]);
@@ -84,3 +85,6 @@ function setupLogout() {
   });
 
 }
+
+
+ 

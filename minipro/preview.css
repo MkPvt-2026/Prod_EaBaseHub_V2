@@ -75,7 +75,7 @@ a { text-decoration: none; }
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-size: 20px;
   line-height: 1 !important;
-  color: var(--muted-strong);
+  color: var(--info-bg);
   user-select: none;
   flex-shrink: 0;
   display: inline-flex !important;
@@ -95,7 +95,7 @@ a { text-decoration: none; }
 .app-main {
   flex: 1;
   margin-left: 64px; /* collapsed sidebar width */
-  display: flex;
+  display: block;
   flex-direction: column;
   min-height: 100vh;
   transition: margin-left var(--t-base) var(--ease);
