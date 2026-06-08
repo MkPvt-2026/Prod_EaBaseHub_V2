@@ -14,6 +14,113 @@
         {
             "folderPath": "Prod_Ea_Base_Hub_v.2\\css\\pages\\auth\\",
             "color": "foldercolorizer.color_ff0087"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-a4-document.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-approval.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-detail.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-finance.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-sale.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-signature.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-tracking.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\Credit-Limit.html",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-a4-document.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-approval.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-detail.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-finance.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-sale.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-signature.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-tracking.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\Credit-Limit.js",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-a4-document.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-approval.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-detail.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-finance.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-sale.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-signature.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-tracking.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\Credit-Limit.css",
+            "color": "foldercolorizer.color_ffff00"
+        },
+        {
+            "folderPath": "Prod_EaBaseHub_V2\\css\\pages\\dashboard\\",
+            "color": "foldercolorizer.color_ffd7ff"
+        },
+        {
+            "folderPath": "Prod_EaBaseHub_V2\\css\\pages\\dashboard\\",
+            "isFolderOnly": true,
+            "color": "foldercolorizer.color_ffffff"
         }
-    ]
+    ],
+    "editor.defaultFormatter": null,
+    "blockman.n03MaxDepth": 10
 }

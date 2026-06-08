@@ -90,6 +90,10 @@ const ROLE_CONFIG = {
     allowedPages: [
       '/pages/sales/salesDashboard.html',
       '/pages/sales/salesReport.html',
+      '/pages/forms/formActual.html',
+      '/pages/forms/formHub.html',
+      '/pages/forms/formClaim.html',
+      '/pages/forms/credit-limit-sale.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
