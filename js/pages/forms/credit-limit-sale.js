@@ -121,7 +121,7 @@ function renderCurrentUser() {
   setText("topbarAvatar", avatarText);
   setText("topbarUsername", username);
 
-  setText("saleOwner", `${username} - ${displayName}`);
+  setValue("saleOwner", `${username} - ${displayName}`);
 
   setText("sigModalTitle", `✍️ เซ็นชื่อผู้ขออนุมัติ (${username})`);
   setText("sigNameText", `${displayName} (${username})`);
@@ -186,12 +186,25 @@ function onShopChange() {
   const shopId = document.getElementById("shopSelect")?.value || "";
   selectedShop = currentShops.find((shop) => shop.id === shopId) || null;
 
-  // ระบบกรอกให้อัตโนมัติจากตาราง shops
+  // ดึงจากตาราง shops อัตโนมัติ
   setValue("shopCode", selectedShop?.shop_code || "");
   setValue("shopProvince", selectedShop?.province || "");
 
-  // ช่องอื่นให้ผู้ใช้กรอกเอง ไม่ดึงจาก shops
+  // ดึงข้อมูล Sale ผู้รับผิดชอบอัตโนมัติจาก profiles
+  const saleDisplay =
+    currentProfile?.display_name ||
+    currentProfile?.username ||
+    currentProfile?.email ||
+    "";
+
+  setValue("saleOwner", saleDisplay);
+
+  // ช่องนี้ให้ Sale กรอกเอง
+  setValue("currentCreditLimit", "");
+  setValue("creditTerm", "");
 }
+// ช่องอื่นให้ผู้ใช้กรอกเอง ไม่ดึงจาก shops
+
 
 /* =========================================================
    CHAR COUNT
@@ -363,11 +376,17 @@ function collectFormData(status = "pending") {
   ).map((input) => input.value);
 
   return {
-    request_type: "credit_limit_temp",
-    status,
+  request_type: "credit_limit_temp",
+  request_title: "ขออนุมัติวงเงินเกิน",
+  request_detail: getValue("reasonText"),
+  request_status: status,
+
+  status,
+
 
     sale_id: currentUser.id,
     created_by: currentUser.id,
+    request_by: currentUser.id,
 
     shop_id: shop?.id || null,
     shop_code: shop?.shop_code || null,
@@ -485,13 +504,11 @@ async function submitRequest(evt) {
     if (error) throw error;
 
     localStorage.removeItem(getDraftKey());
+
     alert("ส่งคำขออนุมัติเรียบร้อยแล้ว");
 
-    if (inserted?.id) {
-      window.location.href = `credit-limit-detail.html?id=${inserted.id}`;
-    } else {
-      window.location.href = "credit-limit-tracking.html";
-    }
+    showRequestPreview(inserted?.id, data);
+
   } catch (err) {
     console.error("Submit error:", err);
     alert("ส่งคำขอไม่สำเร็จ: " + (err.message || err));
@@ -500,9 +517,9 @@ async function submitRequest(evt) {
   }
 }
 
-/* =========================================================
-   DRAFT RESTORE
-========================================================= */
+/* ========================================================= */
+/*   DRAFT RESTORE
+/* ========================================================= */
 function restoreDraft() {
   const raw = localStorage.getItem(getDraftKey());
   if (!raw) return;
@@ -539,6 +556,78 @@ function restoreDraft() {
 
 function getDraftKey() {
   return `creditLimitDraft:${currentUser?.id || "unknown"}`;
+}
+
+
+
+
+
+
+
+
+function showRequestPreview(insertedId, formData) {
+  const card = document.getElementById("requestPreviewCard");
+  if (!card) return;
+
+  card.classList.remove("hidden");
+
+  const now = new Date();
+
+  const docNo = insertedId
+    ? `CRD-${String(insertedId)
+        .replace(/-/g, "")
+        .substring(0, 8)
+        .toUpperCase()}`
+    : "CRD-NEW";
+
+  const amount =
+    formData.request_amount
+      ? Number(formData.request_amount)
+          .toLocaleString("th-TH", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }) + " บาท"
+      : "-";
+
+  const creator =
+    formData.sale_name ||
+    currentProfile?.display_name ||
+    currentProfile?.username ||
+    "-";
+
+  const createdAt =
+    formatThaiDateTime(now);
+
+  setText("previewDocNo", docNo);
+  setText("previewShopName", formData.shop_name || "-");
+  setText("previewShopCode", formData.shop_code || "-");
+  setText("previewSaleOrderNo", formData.sale_order_no || "-");
+  setText("previewRequestAmount", amount);
+
+  setText(
+    "previewCreator",
+    `ผู้ขอ: ${creator}`
+  );
+
+  setText(
+    "previewCreatedAt",
+    createdAt
+  );
+
+  setText(
+    "previewCreatedAtFooter",
+    `วันที่: ${createdAt}`
+  );
+
+  setText(
+    "previewAvatar",
+    creator.substring(0, 1).toUpperCase()
+  );
+
+  card.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
 /* =========================================================

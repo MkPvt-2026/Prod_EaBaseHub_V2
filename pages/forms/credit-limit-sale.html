@@ -1,515 +1,533 @@
 <!doctype html>
 <html lang="th">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ระบบขออนุมัติวงเงินเกิน - หน้าส่งคำขอ</title>
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบขออนุมัติวงเงินเกิน - หน้าส่งคำขอ</title>
 
-    <link rel="stylesheet" href="/css/pages/forms/credit-limit-sale.css" />
-  </head>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
 
-  <body>
-    <!-- =====================================================
+  <link rel="stylesheet" href="/css/pages/forms/credit-limit-sale.css" />
+</head>
+
+<body>
+  <!-- =====================================================
       SIGNATURE MODAL
     ====================================================== -->
-    <div class="modal-overlay" id="sigModal">
-      <div class="modal-box">
-        <div class="modal-head">
-          <!-- FIX: id="sigModalTitle" เพื่อให้ renderCurrentUser() setText ได้ -->
-          <h3 id="sigModalTitle">✍️ เซ็นชื่อผู้ขออนุมัติ</h3>
-          <button class="modal-close" type="button" onclick="closeSigModal()">
-            ✕
-          </button>
+  <div class="modal-overlay" id="sigModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <!-- FIX: id="sigModalTitle" เพื่อให้ renderCurrentUser() setText ได้ -->
+        <h3 id="sigModalTitle">✍️ เซ็นชื่อผู้ขออนุมัติ</h3>
+        <button class="modal-close" type="button" onclick="closeSigModal()">
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-sub">กรุณาเซ็นลายเซ็นในช่องด้านล่าง</p>
+
+        <div class="sig-container" style="margin-bottom: 12px">
+          <canvas class="sig-canvas" id="sigCanvas" width="440" height="160"></canvas>
+          <div class="sig-hint" id="sigHint">วาดลายเซ็นที่นี่</div>
         </div>
+      </div>
 
-        <div class="modal-body">
-          <p class="modal-sub">กรุณาเซ็นลายเซ็นในช่องด้านล่าง</p>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" onclick="clearSig()">
+          🗑️ ล้างลายเซ็น
+        </button>
+        <button class="btn btn-primary" type="button" onclick="saveSig()">
+          ✓ บันทึกลายเซ็น
+        </button>
+      </div>
+    </div>
+  </div>
 
-          <div class="sig-container" style="margin-bottom: 12px">
-            <canvas
-              class="sig-canvas"
-              id="sigCanvas"
-              width="440"
-              height="160"
-            ></canvas>
-            <div class="sig-hint" id="sigHint">วาดลายเซ็นที่นี่</div>
+  <!-- =====================================================
+      APP WRAPPER
+    ====================================================== -->
+  <div class="app">
+    <!-- ===================================================
+        SIDEBAR
+      ==================================================== -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="EABaseHub logo" />
+        </div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-brand-title">EABaseHub</div>
+          <div class="sidebar-brand-sub">Hub System</div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-item" onclick="location.href = 'index.html'">
+          <span class="material-symbols-outlined">home</span>หน้าหลัก
+        </div>
+        <div class="nav-item" onclick="location.href = 'formPlan.html'">
+          <span class="material-symbols-outlined">emoji_transportation</span>ใบแผนการเดินทาง
+        </div>
+        <div class="nav-item" onclick="location.href = 'formActual.html'">
+          <span class="material-symbols-outlined">payments</span>ใบเดินทางจริง
+        </div>
+        <div class="nav-item active" onclick="location.href = 'credit-limit-sale.html'">
+          <span class="material-symbols-outlined">credit_card</span>ขออนุมัติวงเงินเกิน
+        </div>
+        <div class="nav-item" onclick="location.href = 'special-price-sale.html'">
+          <span class="material-symbols-outlined">sell</span>ขอราคาพิเศษ
+        </div>
+        <div class="nav-item">
+          <span class="material-symbols-outlined">settings</span>ตั้งค่า
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <!-- FIX: id="sidebarAvatar" ให้ตรงกับ renderCurrentUser() -->
+        <div class="user-avatar" id="sidebarAvatar" data-user-avatar>S</div>
+        <div class="user-info">
+          <!-- FIX: id="sidebarDisplayName" / id="sidebarUsername" -->
+          <div class="user-name" id="sidebarDisplayName" data-user-name>
+            Sale
+          </div>
+          <div class="user-role" id="sidebarUsername" data-user-role>
+            sale
+          </div>
+        </div>
+        <button class="sidebar-logout" id="logoutBtn" onclick="logout && logout()" title="ออกจากระบบ" type="button">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ===================================================
+        MAIN AREA
+      ==================================================== -->
+    <div class="main-area">
+      <!-- -------------------------------------------------
+          TOP BAR
+        ------------------------------------------------- -->
+      <header class="topbar">
+        <div class="topbar-title-wrap">
+          <h1 class="topbar-title">ขออนุมัติวงเงินเกิน</h1>
+          <div class="topbar-subtitle">
+            Temporary Credit Limit Approval Request
           </div>
         </div>
 
-        <div class="modal-foot">
-          <button class="btn btn-ghost" type="button" onclick="clearSig()">
-            🗑️ ล้างลายเซ็น
+        <div class="topbar-actions">
+          <button class="notif-btn" type="button">
+            🔔<span class="notif-dot"></span>
           </button>
-          <button class="btn btn-primary" type="button" onclick="saveSig()">
-            ✓ บันทึกลายเซ็น
-          </button>
+          <div class="topbar-user">
+            <!-- FIX: id="topbarAvatar" / id="topbarUsername" -->
+            <div class="user-avatar" id="topbarAvatar">S</div>
+            <span id="topbarUsername">Sale</span>
+          </div>
         </div>
+      </header>
+
+      <!-- -------------------------------------------------
+          CONTENT
+        ------------------------------------------------- -->
+      <main class="content">
+       <!-- ===== REQUEST DETAIL PREVIEW CARD ===== -->
+<section
+  class="detail-preview-card hidden"
+  id="requestPreviewCard"
+>
+  <div class="detail-preview-head">
+    <div class="section-badge purple">
+      <span class="section-num"></span>
+      หน้ารายละเอียดคำขอ (หลังส่ง)
+    </div>
+
+    <span
+      class="status-pill warning"
+      id="previewStatus"
+    >
+      ● สถานะ: รอการเงินตรวจสอบ
+    </span>
+  </div>
+
+  <div class="request-card">
+    <!-- HEADER -->
+    <div class="request-top">
+      <h3 id="previewDocNo">CRD-000000</h3>
+
+      <button
+        class="more-btn"
+        type="button"
+      >
+        ⋯
+      </button>
+    </div>
+
+    <!-- BODY -->
+    <div class="request-body">
+
+      <!-- LEFT -->
+      <div class="info-left">
+        <p class="group-title">ข้อมูลลูกค้า</p>
+
+        <div class="info-grid">
+
+          <span class="label">บริษัท :</span>
+          <strong id="previewShopName">-</strong>
+
+          <span class="label">รหัส :</span>
+          <strong id="previewShopCode">-</strong>
+
+          <span class="label">SO :</span>
+          <strong id="previewSaleOrderNo">-</strong>
+
+          <span class="label">ยอดบิล :</span>
+          <strong
+            class="text-red"
+            id="previewRequestAmount"
+          >
+            -
+          </strong>
+
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="timeline-box">
+        <p class="group-title">สถานะการดำเนินการ</p>
+
+        <!-- STEP 1 -->
+        <div class="timeline-item done">
+          <span class="dot">✓</span>
+
+          <div>
+            <strong>ส่งคำขอ (Sale)</strong>
+            <small id="previewCreatedAt">
+              -
+            </small>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div
+          class="timeline-item active"
+          id="financeStep"
+        >
+          <span class="dot">!</span>
+
+          <div>
+            <strong>การเงินตรวจสอบ</strong>
+            <small>
+              รอดำเนินการ
+            </small>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div
+          class="timeline-item wait"
+          id="managerStep"
+        >
+          <span class="dot">...</span>
+
+          <div>
+            <strong>ผู้จัดการอนุมัติ</strong>
+            <small>
+              รอดำเนินการ
+            </small>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div
+          class="timeline-item wait"
+          id="executiveStep"
+        >
+          <span class="dot">...</span>
+
+          <div>
+            <strong>ผู้บริหารอนุมัติ</strong>
+            <small>
+              รอดำเนินการ
+            </small>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- =====================================================
-      APP WRAPPER
-    ====================================================== -->
-    <div class="app">
-      <!-- ===================================================
-        SIDEBAR
-      ==================================================== -->
-      <nav class="sidebar">
-        <div class="sidebar-logo">
-          <div class="sidebar-logo-circle">
-            <img src="/assets/icons/icon-192.png" alt="EABaseHub logo" />
-          </div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-title">EABaseHub</div>
-            <div class="sidebar-brand-sub">Hub System</div>
-          </div>
+    <!-- FOOTER -->
+    <div class="request-footer">
+      <div class="creator">
+
+        <div
+          class="avatar-mini"
+          id="previewAvatar"
+        >
+          S
         </div>
 
-        <div class="nav-section">
-          <div class="nav-item" onclick="location.href = 'index.html'">
-            <span class="material-symbols-outlined">home</span>หน้าหลัก
-          </div>
-          <div class="nav-item" onclick="location.href = 'formPlan.html'">
-            <span class="material-symbols-outlined">emoji_transportation</span
-            >ใบแผนการเดินทาง
-          </div>
-          <div class="nav-item" onclick="location.href = 'formActual.html'">
-            <span class="material-symbols-outlined">payments</span>ใบเดินทางจริง
-          </div>
-          <div
-            class="nav-item active"
-            onclick="location.href = 'credit-limit-sale.html'"
-          >
-            <span class="material-symbols-outlined">credit_card</span
-            >ขออนุมัติวงเงินเกิน
-          </div>
-          <div
-            class="nav-item"
-            onclick="location.href = 'special-price-sale.html'"
-          >
-            <span class="material-symbols-outlined">sell</span>ขอราคาพิเศษ
-          </div>
-          <div class="nav-item">
-            <span class="material-symbols-outlined">settings</span>ตั้งค่า
-          </div>
+        <div>
+          <strong id="previewCreator">
+            ผู้ขอ: -
+          </strong>
+
+          <small id="previewCreatedAtFooter">
+            วันที่: -
+          </small>
         </div>
 
-        <div class="sidebar-user">
-          <!-- FIX: id="sidebarAvatar" ให้ตรงกับ renderCurrentUser() -->
-          <div class="user-avatar" id="sidebarAvatar" data-user-avatar>S</div>
-          <div class="user-info">
-            <!-- FIX: id="sidebarDisplayName" / id="sidebarUsername" -->
-            <div class="user-name" id="sidebarDisplayName" data-user-name>
-              Sale
-            </div>
-            <div class="user-role" id="sidebarUsername" data-user-role>
-              sale
-            </div>
-          </div>
-          <button
-            class="sidebar-logout"
-            id="logoutBtn"
-            onclick="logout && logout()"
-            title="ออกจากระบบ"
-            type="button"
-          >
-            <span class="material-symbols-outlined">logout</span>
-          </button>
-        </div>
-      </nav>
+      </div>
 
-      <!-- ===================================================
-        MAIN AREA
-      ==================================================== -->
-      <div class="main-area">
-        <!-- -------------------------------------------------
-          TOP BAR
-        ------------------------------------------------- -->
-        <header class="topbar">
-          <div class="topbar-title-wrap">
-            <h1 class="topbar-title">ขออนุมัติวงเงินเกิน</h1>
-            <div class="topbar-subtitle">
-              Temporary Credit Limit Approval Request
-            </div>
-          </div>
+      <div
+        class="signature-name"
+        id="previewSignatureName"
+      >
+      </div>
+    </div>
+  </div>
+</section>
 
-          <div class="topbar-actions">
-            <button class="notif-btn" type="button">
-              🔔<span class="notif-dot"></span>
-            </button>
-            <div class="topbar-user">
-              <!-- FIX: id="topbarAvatar" / id="topbarUsername" -->
-              <div class="user-avatar" id="topbarAvatar">S</div>
-              <span id="topbarUsername">Sale</span>
-            </div>
-          </div>
-        </header>
-
-        <!-- -------------------------------------------------
-          CONTENT
-        ------------------------------------------------- -->
-        <main class="content">
-          <section class="page active" id="page-sale">
-            <!-- Approval Flow -->
-            <div class="approval-flow-card">
-              <div class="flow-steps">
-                <div class="flow-step done">
-                  <div class="flow-step-num">1</div>
-                  <div class="flow-step-sub">ส่งคำขอ</div>
-                </div>
-                <div class="flow-step active">
-                  <div class="flow-step-num">2</div>
-                  <div class="flow-step-sub">กำลังตรวจสอบ</div>
-                </div>
-                <div class="flow-step">
-                  <div class="flow-step-num">3</div>
-                  <div class="flow-step-sub">อนุมัติ</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- =============================================
+          <!-- =============================================
               CARD 1: CUSTOMER INFO
             ============================================== -->
-            <div class="card">
-              <div class="card-head">
-                <div class="step-circle">1</div>
-                <h3>ข้อมูลลูกค้า</h3>
-              </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="step-circle">1</div>
+              <h3>ข้อมูลลูกค้า</h3>
+            </div>
 
-              <div class="card-body">
-                <div class="form-grid">
-                  <!-- FIX: เปลี่ยนจาก <input> customerName เป็น <select id="shopSelect"> ให้ตรงกับ JS -->
-                  <div class="field form-full">
-                    <label class="field-label">
-                      ชื่อลูกค้า <span class="required">*</span>
+            <div class="card-body">
+              <div class="form-grid">
+                <!-- FIX: เปลี่ยนจาก <input> customerName เป็น <select id="shopSelect"> ให้ตรงกับ JS -->
+                <div class="field form-full">
+                  <label class="field-label">
+                    ชื่อลูกค้า <span class="required">*</span>
+                  </label>
+                  <div class="input-wrap">
+                    <select class="field-input has-icon" id="shopSelect" onchange="onShopChange()">
+                      <option value="">-- เลือกลูกค้า --</option>
+                    </select>
+                    <span class="input-icon">🔍</span>
+                  </div>
+                </div>
+
+                <!-- FIX: id="shopCode" ให้ตรงกับ onShopChange() -->
+                <div class="field">
+                  <label class="field-label">รหัสลูกค้า</label>
+                  <input class="field-input" id="shopCode" type="text" placeholder="ระบบเติมอัตโนมัติ" readonly
+                    style="background: var(--gray-50); color: var(--gray-500)" />
+                </div>
+
+                <!-- FIX: id="shopProvince" -->
+                <div class="field">
+                  <label class="field-label">จังหวัด</label>
+                  <input class="field-input" id="shopProvince" type="text" placeholder="ระบบเติมอัตโนมัติ" readonly
+                    style="background: var(--gray-50); color: var(--gray-500)" />
+                </div>
+
+                <!-- saleOwner — ดึงอัตโนมัติจาก profiles -->
+                <div class="field">
+                  <label class="field-label">Sales ผู้รับผิดชอบ</label>
+                  <input class="field-input" id="saleOwner" type="text" readonly
+                    style="background: var(--gray-50); color: var(--gray-500)" />
+                </div>
+
+                <!-- ให้ Sale กรอกเอง -->
+                <div class="field">
+                  <label class="field-label">วงเงินปัจจุบัน</label>
+                  <input class="field-input" id="currentCreditLimit" type="text" placeholder="0.00 บาท" />
+                </div>
+
+                <!-- ให้ Sale กรอกเอง -->
+                <div class="field">
+                  <label class="field-label">เครดิต</label>
+                  <input class="field-input" id="creditTerm" type="text" placeholder="- วัน" />
+                </div>
+
+                <!-- Payment Method -->
+                <div class="field form-full">
+                  <label class="field-label">
+                    วิธีการชำระเงิน <span class="required">*</span>
+                  </label>
+                  <div class="payment-options">
+                    <label class="payment-option">
+                      <input type="checkbox" name="payment_method" value="โอนเงิน" />
+                      <span class="payment-check"></span><span>โอนเงิน</span>
                     </label>
-                    <div class="input-wrap">
-                      <select
-                        class="field-input has-icon"
-                        id="shopSelect"
-                        onchange="onShopChange()"
-                      >
-                        <option value="">-- เลือกลูกค้า --</option>
-                      </select>
-                      <span class="input-icon">🔍</span>
-                    </div>
-                  </div>
-
-                  <!-- FIX: id="shopCode" ให้ตรงกับ onShopChange() -->
-                  <div class="field">
-                    <label class="field-label">รหัสลูกค้า</label>
-                    <input
-                      class="field-input"
-                      id="shopCode"
-                      type="text"
-                      placeholder="ระบบเติมอัตโนมัติ"
-                      readonly
-                      style="background: var(--gray-50); color: var(--gray-500)"
-                    />
-                  </div>
-
-                  <!-- FIX: id="shopProvince" -->
-                  <div class="field">
-                    <label class="field-label">จังหวัด</label>
-                    <input
-                      class="field-input"
-                      id="shopProvince"
-                      type="text"
-                      placeholder="ระบบเติมอัตโนมัติ"
-                      readonly
-                      style="background: var(--gray-50); color: var(--gray-500)"
-                    />
-                  </div>
-
-                  <!-- saleOwner — JS set ค่าผ่าน setText('saleOwner', ...) -->
-                  <div class="field">
-                    <label class="field-label">Sales ผู้รับผิดชอบ</label>
-                    <input
-                      class="field-input"
-                      id="saleOwner"
-                      type="text"
-                      readonly
-                      style="background: var(--gray-50); color: var(--gray-500)"
-                    />
-                  </div>
-
-                  <!-- FIX: เพิ่ม id="currentCreditLimit" ที่ JS ต้องการ -->
-                  <div class="field">
-                    <label class="field-label">วงเงินปัจจุบัน</label>
-                    <input
-                      class="field-input"
-                      id="currentCreditLimit"
-                      type="text"
-                      placeholder="0.00 บาท"
-                      readonly
-                      style="background: var(--gray-50); color: var(--gray-500)"
-                    />
-                  </div>
-
-                  <!-- creditTerm — JS restore draft ใช้ id="creditTerm" -->
-                  <div class="field">
-                    <label class="field-label">เครดิต</label>
-                    <input
-                      class="field-input"
-                      id="creditTerm"
-                      type="text"
-                      placeholder="- วัน"
-                      readonly
-                      style="background: var(--gray-50); color: var(--gray-500)"
-                    />
-                  </div>
-
-                  <!-- Payment Method -->
-                  <div class="field form-full">
-                    <label class="field-label">
-                      วิธีการชำระเงิน <span class="required">*</span>
+                    <label class="payment-option">
+                      <input type="checkbox" name="payment_method" value="เช็ค" />
+                      <span class="payment-check"></span><span>เช็ค</span>
                     </label>
-                    <div class="payment-options">
-                      <label class="payment-option">
-                        <input
-                          type="checkbox"
-                          name="payment_method"
-                          value="โอนเงิน"
-                        />
-                        <span class="payment-check"></span><span>โอนเงิน</span>
-                      </label>
-                      <label class="payment-option">
-                        <input
-                          type="checkbox"
-                          name="payment_method"
-                          value="เช็ค"
-                        />
-                        <span class="payment-check"></span><span>เช็ค</span>
-                      </label>
-                      <label class="payment-option">
-                        <input
-                          type="checkbox"
-                          name="payment_method"
-                          value="เงินสด"
-                        />
-                        <span class="payment-check"></span><span>เงินสด</span>
-                      </label>
-                    </div>
+                    <label class="payment-option">
+                      <input type="checkbox" name="payment_method" value="เงินสด" />
+                      <span class="payment-check"></span><span>เงินสด</span>
+                    </label>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- =============================================
+          <!-- =============================================
               CARD 2: SALES INFO
             ============================================== -->
-            <div class="card">
-              <div class="card-head">
-                <div class="step-circle">2</div>
-                <h3>ข้อมูลการขาย</h3>
-              </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="step-circle">2</div>
+              <h3>ข้อมูลการขาย</h3>
+            </div>
 
-              <div class="card-body">
-                <div class="form-grid">
-                  <!-- FIX: id="saleOrderNo" ให้ตรงกับ collectFormData() getValue('saleOrderNo') -->
-                  <div class="field">
-                    <label class="field-label">เลขที่ใบสั่งขาย/ใบกำกับ</label>
-                    <input
-                      class="field-input"
-                      id="saleOrderNo"
-                      type="text"
-                      placeholder="เลขที่ใบสั่งขาย/ใบกำกับ"
-                    />
-                  </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <!-- FIX: id="saleOrderNo" ให้ตรงกับ collectFormData() getValue('saleOrderNo') -->
+                <div class="field">
+                  <label class="field-label">เลขที่ใบสั่งขาย/ใบกำกับ</label>
+                  <input class="field-input" id="saleOrderNo" type="text" placeholder="เลขที่ใบสั่งขาย/ใบกำกับ" />
+                </div>
 
-                  <div class="field">
-                    <label class="field-label">วันที่</label>
-                    <div class="input-wrap">
-                      <input
-                        class="field-input has-icon"
-                        id="requestDate"
-                        type="date"
-                      />
-                      <span
-                        class="input-icon"
-                        style="
+                <div class="field">
+                  <label class="field-label">วันที่</label>
+                  <div class="input-wrap">
+                    <input class="field-input has-icon" id="requestDate" type="date" />
+                    <span class="input-icon" style="
                           right: 10px;
                           top: 50%;
                           transform: translateY(-50%);
-                        "
-                        >📅</span
-                      >
-                    </div>
+                        ">📅</span>
                   </div>
+                </div>
 
-                  <div class="field form-full">
-                    <label class="field-label"
-                      >ยอดที่ต้องการเปิดบิล (รวมภาษี)</label
-                    >
-                    <div class="amount-input-wrap">
-                      <input
-                        class="field-input"
-                        id="requestAmount"
-                        type="text"
-                        placeholder="0.00"
-                        style="
+                <div class="field form-full">
+                  <label class="field-label">ยอดที่ต้องการเปิดบิล (รวมภาษี)</label>
+                  <div class="amount-input-wrap">
+                    <input class="field-input" id="requestAmount" type="text" placeholder="0.00" style="
                           padding-right: 48px;
                           font-weight: 700;
                           font-size: 15px;
                           color: var(--gray-900);
-                        "
-                      />
-                      <span class="amount-unit">บาท</span>
-                    </div>
+                        " />
+                    <span class="amount-unit">บาท</span>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- =============================================
+          <!-- =============================================
               CARD 3: REASON
             ============================================== -->
-            <div class="card">
-              <div class="card-head">
-                <div class="step-circle">3</div>
-                <h3>เหตุผลการขออนุมัติ</h3>
-              </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="step-circle">3</div>
+              <h3>เหตุผลการขออนุมัติ</h3>
+            </div>
 
-              <div class="card-body">
-                <div class="field">
-                  <label class="field-label"
-                    >เหตุผล <span class="required">*</span></label
-                  >
-                  <textarea
-                    class="field-input"
-                    id="reasonText"
-                    maxlength="500"
-                    oninput="updateCount()"
-                    placeholder="กรอกเหตุผลการขออนุมัติ"
-                  ></textarea>
-                  <div class="char-count">
-                    <span id="charCount">0</span>/500
-                  </div>
+            <div class="card-body">
+              <div class="field">
+                <label class="field-label">เหตุผล <span class="required">*</span></label>
+                <textarea class="field-input" id="reasonText" maxlength="500" oninput="updateCount()"
+                  placeholder="กรอกเหตุผลการขออนุมัติ"></textarea>
+                <div class="char-count">
+                  <span id="charCount">0</span>/500
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- =============================================
+          <!-- =============================================
               CARD 4: SIGNATURE
             ============================================== -->
-            <div class="card">
-              <div class="card-head">
-                <div class="step-circle">4</div>
-                <h3>ลายเซ็นผู้ขอ (เซลล์)</h3>
-              </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="step-circle">4</div>
+              <h3>ลายเซ็นผู้ขอ (เซลล์)</h3>
+            </div>
 
-              <div class="card-body">
-                <div class="note-tip">⚠️ เซลล์ต้องเซ็นลายเซ็นก่อนส่ง</div>
+            <div class="card-body">
+              <div class="note-tip">⚠️ เซลล์ต้องเซ็นลายเซ็นก่อนส่ง</div>
 
-                <!-- Signature Preview -->
-                <div id="sigDisplayWrap" style="display: none">
-                  <div class="sig-container">
-                    <canvas
-                      id="sigDisplay"
-                      width="600"
-                      height="120"
-                      onclick="openSigModal()"
-                      style="display: block; width: 100%; cursor: pointer"
-                    ></canvas>
-                    <div class="sig-info">
-                      <span class="sig-name-text" id="sigNameText">-</span>
-                      <span class="sig-date-text" id="sigDateText">-</span>
-                    </div>
+              <!-- Signature Preview -->
+              <div id="sigDisplayWrap" style="display: none">
+                <div class="sig-container">
+                  <canvas id="sigDisplay" width="600" height="120" onclick="openSigModal()"
+                    style="display: block; width: 100%; cursor: pointer"></canvas>
+                  <div class="sig-info">
+                    <span class="sig-name-text" id="sigNameText">-</span>
+                    <span class="sig-date-text" id="sigDateText">-</span>
                   </div>
                 </div>
+              </div>
 
-                <!-- Signature Placeholder -->
-                <div id="sigPlaceholder">
-                  <div
-                    class="sig-container"
-                    onclick="openSigModal()"
-                    style="
+              <!-- Signature Placeholder -->
+              <div id="sigPlaceholder">
+                <div class="sig-container" onclick="openSigModal()" style="
                       height: 120px;
                       display: flex;
                       align-items: center;
                       justify-content: center;
                       cursor: pointer;
-                    "
-                  >
-                    <div style="text-align: center; color: var(--gray-400)">
-                      <div style="font-size: 28px; margin-bottom: 4px">✍️</div>
-                      <div style="font-size: 13px">คลิกเพื่อเซ็นลายเซ็น</div>
-                    </div>
+                    ">
+                  <div style="text-align: center; color: var(--gray-400)">
+                    <div style="font-size: 28px; margin-bottom: 4px">✍️</div>
+                    <div style="font-size: 13px">คลิกเพื่อเซ็นลายเซ็น</div>
                   </div>
                 </div>
+              </div>
 
-                <div
-                  style="
+              <div style="
                     margin-top: 10px;
                     display: flex;
                     justify-content: flex-end;
-                  "
-                >
-                  <button
-                    class="btn btn-ghost btn-sm"
-                    type="button"
-                    onclick="clearDisplaySig()"
-                  >
-                    🗑️ ล้างลายเซ็น
-                  </button>
-                </div>
+                  ">
+                <button class="btn btn-ghost btn-sm" type="button" onclick="clearDisplaySig()">
+                  🗑️ ล้างลายเซ็น
+                </button>
+              </div>
 
-                <div class="btn-row">
-                  <!-- FIX: เปลี่ยนจาก saveDraftRequest() → saveDraft() -->
-                  <button
-                    class="btn btn-outline"
-                    type="button"
-                    onclick="saveDraft()"
-                  >
-                    💾 บันทึกร่าง
-                  </button>
-                  <!-- FIX: เปลี่ยนจาก submitCreditLimitRequest() → submitRequest() -->
-                  <button
-                    class="btn btn-primary"
-                    type="button"
-                    onclick="submitRequest(event)"
-                  >
-                    📤 ส่งคำขออนุมัติ →
-                  </button>
-                </div>
+              <div class="btn-row">
+                <!-- FIX: เปลี่ยนจาก saveDraftRequest() → saveDraft() -->
+                <button class="btn btn-outline" type="button" onclick="saveDraft()">
+                  💾 บันทึกร่าง
+                </button>
+                <!-- FIX: เปลี่ยนจาก submitCreditLimitRequest() → submitRequest() -->
+                <button class="btn btn-primary" type="button" onclick="submitRequest(event)">
+                  📤 ส่งคำขออนุมัติ →
+                </button>
               </div>
             </div>
-          </section>
-        </main>
-      </div>
+          </div>
+        </section>
+      </main>
     </div>
+  </div>
 
-    <!-- =====================================================
+  <!-- =====================================================
       SCRIPTS — โหลด supabase ก่อน แล้วค่อย load JS อื่น
     ====================================================== -->
-    <!-- FIX: เพิ่ม supabase CDN ให้โหลดก่อน supabaseClient.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- FIX: เพิ่ม supabase CDN ให้โหลดก่อน supabaseClient.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="/js/core/supabaseClient.js"></script>
-    <script src="/js/core/roleConfig.js"></script>
-    <script src="/js/core/auth.js"></script>
-    <script src="/js/core/userService.js"></script>
-    <script src="/js/services/shopService.js"></script>
-    <script src="/js/services/categoryService.js"></script>
-    <script src="/js/services/reportService.js"></script>
-    
+  <script src="/js/core/supabaseClient.js"></script>
+  <script src="/js/core/roleConfig.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/userService.js"></script>
+  <script src="/js/services/shopService.js"></script>
+  <script src="/js/services/categoryService.js"></script>
+  <script src="/js/services/reportService.js"></script>
 
-    <script src="/js/pages/forms/credit-limit-sale.js"></script>
-    <script src="/js/core/splash.js"></script>
-    <script src="/js/core/loadingSplash.js"></script>
-  </body>
+
+  <script src="/js/pages/forms/credit-limit-sale.js"></script>
+  <script src="/js/core/splash.js"></script>
+  <script src="/js/core/loadingSplash.js"></script>
+</body>
+
 </html>
