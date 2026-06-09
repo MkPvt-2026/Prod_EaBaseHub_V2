@@ -1,11 +1,7 @@
 /* =========================================================
-   CREDIT LIMIT SALE PAGE  (fixed)
-   ─ แก้ไข:
-     1. element IDs ให้ตรงกับ HTML (shopSelect, shopCode, shopProvince,
-        currentCreditLimit, saleOrderNo, sidebarAvatar, sidebarDisplayName,
-        sidebarUsername, topbarAvatar, topbarUsername)
-     2. submitRequest รับ event เป็น parameter แทน global event
-     3. renderCurrentUser อ้าง ID ที่มีในหน้าจริง
+   CREDIT LIMIT SALE PAGE
+   ใช้กับตาราง shops ปัจจุบัน:
+   shops: id, shop_code, shop_name, province, sale_id, status, created_at
 ========================================================= */
 
 "use strict";
@@ -14,11 +10,11 @@
    PAGE NAVIGATION
 ========================================================= */
 const pageLinks = {
-  sale:     "credit-limit-sale.html",
-  a4:       "credit-limit-a4-document.html",
-  sign:     "credit-limit-signature.html",
-  detail:   "credit-limit-detail.html",
-  finance:  "credit-limit-finance.html",
+  sale: "credit-limit-sale.html",
+  a4: "credit-limit-a4-document.html",
+  sign: "credit-limit-signature.html",
+  detail: "credit-limit-detail.html",
+  finance: "credit-limit-finance.html",
   approval: "credit-limit-approval.html",
   tracking: "credit-limit-tracking.html"
 };
@@ -35,11 +31,11 @@ function showPage(id) {
 /* =========================================================
    STATE
 ========================================================= */
-let currentUser    = null;
+let currentUser = null;
 let currentProfile = null;
-let currentShops   = [];
-let selectedShop   = null;
-let sigData        = null;
+let currentShops = [];
+let selectedShop = null;
+let sigData = null;
 
 /* =========================================================
    INIT
@@ -70,7 +66,11 @@ async function initAuthAndProfile() {
     throw new Error("supabaseClient ยังไม่พร้อมใช้งาน");
   }
 
-  const { data: { session }, error: sessionError } = await db.auth.getSession();
+  const {
+    data: { session },
+    error: sessionError
+  } = await db.auth.getSession();
+
   if (sessionError) throw sessionError;
 
   if (!session?.user) {
@@ -96,7 +96,7 @@ async function initAuthAndProfile() {
 
   if (!["sale", "sales"].includes(role)) {
     alert("ไม่มีสิทธิ์เข้าใช้งานหน้านี้ เฉพาะ Sale เท่านั้น");
-    window.location.href = "/pages/index.html";
+    window.location.href = "/index.html";
     return;
   }
 
@@ -110,26 +110,21 @@ async function initAuthAndProfile() {
   renderCurrentUser();
 }
 
-
-
 function renderCurrentUser() {
-  const username    = currentProfile.username     || currentProfile.email || "Sale";
+  const username = currentProfile.username || currentProfile.email || "Sale";
   const displayName = currentProfile.display_name || username;
-  const avatarText  = getAvatarText(displayName   || username);
+  const avatarText = getAvatarText(displayName || username);
 
-  // FIX: ใช้ IDs ที่มีอยู่ใน HTML จริง
-  setText("sidebarAvatar",      avatarText);
+  setText("sidebarAvatar", avatarText);
   setText("sidebarDisplayName", displayName);
-  setText("sidebarUsername",    username);
-  setText("topbarAvatar",       avatarText);
-  setText("topbarUsername",     username);
+  setText("sidebarUsername", username);
+  setText("topbarAvatar", avatarText);
+  setText("topbarUsername", username);
 
-  // ค่าในฟอร์ม
   setText("saleOwner", `${username} - ${displayName}`);
 
-  // Modal title + sig info
   setText("sigModalTitle", `✍️ เซ็นชื่อผู้ขออนุมัติ (${username})`);
-  setText("sigNameText",   `${displayName} (${username})`);
+  setText("sigNameText", `${displayName} (${username})`);
 }
 
 function getAvatarText(value) {
@@ -139,7 +134,9 @@ function getAvatarText(value) {
 }
 
 /* =========================================================
-   LOAD SHOPS  (กรองด้วย sale_id = currentUser.id)
+   LOAD SHOPS
+   ดึงอัตโนมัติจาก shops เฉพาะ:
+   shop_name / shop_code / province
 ========================================================= */
 async function loadSaleShops() {
   const db = window.supabaseClient;
@@ -151,7 +148,7 @@ async function loadSaleShops() {
 
   const { data, error } = await db
     .from("shops")
-    .select("id, shop_code, shop_name, province, sale_id, credit_limit, credit_term, status")
+    .select("id, shop_code, shop_name, province, sale_id, status")
     .eq("sale_id", currentProfile.id)
     .ilike("status", "active")
     .order("shop_name", { ascending: true });
@@ -161,7 +158,6 @@ async function loadSaleShops() {
   currentShops = data || [];
   renderShopOptions(currentShops);
 }
-
 
 function renderShopOptions(shops) {
   const select = document.getElementById("shopSelect");
@@ -175,28 +171,26 @@ function renderShopOptions(shops) {
   }
 
   shops.forEach((shop) => {
-    const option   = document.createElement("option");
-    option.value   = shop.id;
-    const code     = shop.shop_code ? `${shop.shop_code} - ` : "";
-    const province = shop.province  ? ` (${shop.province})`  : "";
+    const option = document.createElement("option");
+    option.value = shop.id;
+
+    const code = shop.shop_code ? `${shop.shop_code} - ` : "";
+    const province = shop.province ? ` (${shop.province})` : "";
+
     option.textContent = `${code}${shop.shop_name || "-"}${province}`;
     select.appendChild(option);
   });
 }
 
 function onShopChange() {
-  const shopId  = document.getElementById("shopSelect")?.value || "";
-  selectedShop  = currentShops.find((shop) => shop.id === shopId) || null;
+  const shopId = document.getElementById("shopSelect")?.value || "";
+  selectedShop = currentShops.find((shop) => shop.id === shopId) || null;
 
-  // FIX: ใช้ IDs ที่มีใน HTML (shopCode, shopProvince, currentCreditLimit, creditTerm)
-  setValue("shopCode",           selectedShop?.shop_code     || "");
-  setValue("shopProvince",       selectedShop?.province      || "");
-  setValue("currentCreditLimit", selectedShop?.credit_limit  != null
-    ? Number(selectedShop.credit_limit).toLocaleString("th-TH", { minimumFractionDigits: 2 })
-    : "");
-  setValue("creditTerm",         selectedShop?.credit_term   != null
-    ? `${selectedShop.credit_term} วัน`
-    : "");
+  // ระบบกรอกให้อัตโนมัติจากตาราง shops
+  setValue("shopCode", selectedShop?.shop_code || "");
+  setValue("shopProvince", selectedShop?.province || "");
+
+  // ช่องอื่นให้ผู้ใช้กรอกเอง ไม่ดึงจาก shops
 }
 
 /* =========================================================
@@ -217,26 +211,27 @@ function setupCanvas(canvasId, hintId) {
 
   const ctx = canvas.getContext("2d");
   ctx.strokeStyle = "#1a1a2e";
-  ctx.lineWidth   = 2.5;
-  ctx.lineCap     = "round";
-  ctx.lineJoin    = "round";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
   let drawing = false;
 
   function getPos(e) {
-    const r     = canvas.getBoundingClientRect();
-    const scaleX = canvas.width  / r.width;
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
     const scaleY = canvas.height / r.height;
 
     if (e.touches?.[0]) {
       return [
         (e.touches[0].clientX - r.left) * scaleX,
-        (e.touches[0].clientY - r.top)  * scaleY
+        (e.touches[0].clientY - r.top) * scaleY
       ];
     }
+
     return [
       (e.clientX - r.left) * scaleX,
-      (e.clientY - r.top)  * scaleY
+      (e.clientY - r.top) * scaleY
     ];
   }
 
@@ -260,37 +255,58 @@ function setupCanvas(canvasId, hintId) {
     ctx.stroke();
   });
 
-  canvas.addEventListener("mouseup",    () => { drawing = false; });
-  canvas.addEventListener("mouseleave", () => { drawing = false; });
+  canvas.addEventListener("mouseup", () => {
+    drawing = false;
+  });
 
-  canvas.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    drawing = true;
-    const [x, y] = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    hideHint();
-  }, { passive: false });
+  canvas.addEventListener("mouseleave", () => {
+    drawing = false;
+  });
 
-  canvas.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-    if (!drawing) return;
-    const [x, y] = getPos(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  }, { passive: false });
+  canvas.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+      drawing = true;
+      const [x, y] = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      hideHint();
+    },
+    { passive: false }
+  );
 
-  canvas.addEventListener("touchend", () => { drawing = false; });
+  canvas.addEventListener(
+    "touchmove",
+    (e) => {
+      e.preventDefault();
+      if (!drawing) return;
+      const [x, y] = getPos(e);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    },
+    { passive: false }
+  );
+
+  canvas.addEventListener("touchend", () => {
+    drawing = false;
+  });
 
   return { ctx, canvas };
 }
 
-function openSigModal()  { document.getElementById("sigModal")?.classList.add("open"); }
-function closeSigModal() { document.getElementById("sigModal")?.classList.remove("open"); }
+function openSigModal() {
+  document.getElementById("sigModal")?.classList.add("open");
+}
+
+function closeSigModal() {
+  document.getElementById("sigModal")?.classList.remove("open");
+}
 
 function clearSig() {
   const c = document.getElementById("sigCanvas");
   if (!c) return;
+
   c.getContext("2d").clearRect(0, 0, c.width, c.height);
   document.getElementById("sigHint")?.classList.remove("hidden");
 }
@@ -304,16 +320,18 @@ function saveSig() {
   const disp = document.getElementById("sigDisplay");
   if (disp) {
     const dCtx = disp.getContext("2d");
-    const img  = new Image();
+    const img = new Image();
+
     img.onload = () => {
       dCtx.clearRect(0, 0, disp.width, disp.height);
       dCtx.drawImage(img, 0, 0, disp.width, disp.height);
     };
+
     img.src = sigData;
   }
 
-  setDisplay("sigPlaceholder",  "none");
-  setDisplay("sigDisplayWrap",  "block");
+  setDisplay("sigPlaceholder", "none");
+  setDisplay("sigDisplayWrap", "block");
   setText("sigDateText", formatThaiDateTime(new Date()));
 
   closeSigModal();
@@ -321,11 +339,14 @@ function saveSig() {
 
 function clearDisplaySig() {
   const disp = document.getElementById("sigDisplay");
-  if (disp) disp.getContext("2d").clearRect(0, 0, disp.width, disp.height);
+  if (disp) {
+    disp.getContext("2d").clearRect(0, 0, disp.width, disp.height);
+  }
 
   setDisplay("sigPlaceholder", "block");
   setDisplay("sigDisplayWrap", "none");
   setText("sigDateText", "-");
+
   sigData = null;
   clearSig();
 }
@@ -334,9 +355,8 @@ function clearDisplaySig() {
    FORM DATA COLLECTION
 ========================================================= */
 function collectFormData(status = "pending") {
-  // FIX: ใช้ shopSelect / saleOrderNo / currentCreditLimit ให้ตรงกับ HTML
   const shopId = getValue("shopSelect");
-  const shop   = currentShops.find((item) => item.id === shopId) || null;
+  const shop = currentShops.find((item) => item.id === shopId) || null;
 
   const paymentMethods = Array.from(
     document.querySelectorAll('input[name="payment_method"]:checked')
@@ -346,38 +366,38 @@ function collectFormData(status = "pending") {
     request_type: "credit_limit_temp",
     status,
 
-    sale_id:    currentUser.id,
+    sale_id: currentUser.id,
     created_by: currentUser.id,
 
-    shop_id:   shop?.id         || null,
-    shop_code: shop?.shop_code  || null,
-    shop_name: shop?.shop_name  || null,
-    province:  shop?.province   || null,
+    shop_id: shop?.id || null,
+    shop_code: shop?.shop_code || null,
+    shop_name: shop?.shop_name || null,
+    province: shop?.province || null,
 
-    sale_name: currentProfile.display_name
-               || currentProfile.username
-               || currentProfile.email,
+    sale_name:
+      currentProfile.display_name ||
+      currentProfile.username ||
+      currentProfile.email,
 
     current_credit_limit: toNumber(getValue("currentCreditLimit")),
-    credit_term:          getValue("creditTerm") || null,
-    payment_methods:      paymentMethods,
+    credit_term: getValue("creditTerm") || null,
+    payment_methods: paymentMethods,
 
-    // FIX: id ตรงกับ HTML
-    sale_order_no:  getValue("saleOrderNo")  || null,
-    request_date:   getValue("requestDate")  || null,
+    sale_order_no: getValue("saleOrderNo") || null,
+    request_date: getValue("requestDate") || null,
     request_amount: toNumber(getValue("requestAmount")),
 
-    reason:    getValue("reasonText"),
+    reason: getValue("reasonText"),
     signature: sigData,
 
     payload: {
       profile: {
-        id:           currentProfile.id,
-        username:     currentProfile.username,
+        id: currentProfile.id,
+        username: currentProfile.username,
         display_name: currentProfile.display_name,
-        email:        currentProfile.email,
-        role:         currentProfile.role,
-        area:         currentProfile.area
+        email: currentProfile.email,
+        role: currentProfile.role,
+        area: currentProfile.area
       },
       shop,
       form_version: "credit-limit-sale-v1"
@@ -390,22 +410,37 @@ function validateForm(data, requireSignature = true) {
     alert("กรุณาเลือกลูกค้า");
     return false;
   }
+
+  if (!data.current_credit_limit || data.current_credit_limit <= 0) {
+    alert("กรุณากรอกวงเงินปัจจุบัน");
+    return false;
+  }
+
+  if (!data.credit_term) {
+    alert("กรุณากรอกเครดิต");
+    return false;
+  }
+
   if (!data.request_amount || data.request_amount <= 0) {
     alert("กรุณากรอกยอดที่ต้องการเปิดบิล / ขออนุมัติวงเงิน");
     return false;
   }
+
   if (!data.payment_methods?.length) {
     alert("กรุณาเลือกวิธีการชำระเงินอย่างน้อย 1 รายการ");
     return false;
   }
+
   if (!data.reason || data.reason.trim().length < 5) {
     alert("กรุณากรอกเหตุผลอย่างน้อย 5 ตัวอักษร");
     return false;
   }
+
   if (requireSignature && !data.signature) {
     alert("กรุณาเซ็นลายเซ็นก่อนส่งคำขอ");
     return false;
   }
+
   return true;
 }
 
@@ -431,7 +466,6 @@ async function saveDraft() {
 
 /* =========================================================
    SUBMIT REQUEST
-   FIX: รับ event เป็น parameter แทนการใช้ global event
 ========================================================= */
 async function submitRequest(evt) {
   const submitBtn = evt?.currentTarget || evt?.target || null;
@@ -442,7 +476,7 @@ async function submitRequest(evt) {
 
     setButtonLoading(submitBtn, true, "กำลังส่ง...");
 
-    const { data: inserted, error } = window.supabaseClient
+    const { data: inserted, error } = await window.supabaseClient
       .from("approval_requests")
       .insert(data)
       .select("id")
@@ -476,18 +510,21 @@ function restoreDraft() {
   try {
     const draft = JSON.parse(raw);
     if (!draft) return;
-    if (!confirm("พบข้อมูลร่างที่เคยบันทึกไว้ ต้องการโหลดกลับมาหรือไม่?")) return;
 
-    // FIX: ใช้ IDs ตรงกับ HTML
-    setValue("shopSelect",       draft.shop_id              || "");
+    if (!confirm("พบข้อมูลร่างที่เคยบันทึกไว้ ต้องการโหลดกลับมาหรือไม่?")) {
+      return;
+    }
+
+    setValue("shopSelect", draft.shop_id || "");
     onShopChange();
 
     setValue("currentCreditLimit", draft.current_credit_limit || "");
-    setValue("creditTerm",         draft.credit_term          || "");
-    setValue("saleOrderNo",        draft.sale_order_no        || "");
-    setValue("requestDate",        draft.request_date         || "");
-    setValue("requestAmount",      draft.request_amount       || "");
-    setValue("reasonText",         draft.reason               || "");
+    setValue("creditTerm", draft.credit_term || "");
+    setValue("saleOrderNo", draft.sale_order_no || "");
+    setValue("requestDate", draft.request_date || "");
+    setValue("requestAmount", draft.request_amount || "");
+    setValue("reasonText", draft.reason || "");
+
     updateCount();
 
     document.querySelectorAll('input[name="payment_method"]').forEach((input) => {
@@ -512,9 +549,10 @@ function setToday() {
   if (!input || input.value) return;
 
   const today = new Date();
-  const yyyy  = today.getFullYear();
-  const mm    = String(today.getMonth() + 1).padStart(2, "0");
-  const dd    = String(today.getDate()).padStart(2, "0");
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+
   input.value = `${yyyy}-${mm}-${dd}`;
 }
 
@@ -539,30 +577,39 @@ function setDisplay(id, value) {
 
 function toNumber(value) {
   if (value === null || value === undefined) return null;
+
   const cleaned = String(value)
     .replace(/,/g, "")
     .replace(/[^\d.-]/g, "")
     .trim();
+
   if (!cleaned) return null;
+
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : null;
 }
 
 function formatThaiDateTime(date) {
   return new Intl.DateTimeFormat("th-TH", {
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit"
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
   }).format(date);
 }
 
 function setButtonLoading(button, loading, text) {
   if (!button) return;
+
   if (loading) {
     button.dataset.oldText = button.innerHTML;
-    button.disabled        = true;
-    button.innerHTML       = text || "กำลังโหลด...";
+    button.disabled = true;
+    button.innerHTML = text || "กำลังโหลด...";
   } else {
-    button.disabled  = false;
-    if (button.dataset.oldText) button.innerHTML = button.dataset.oldText;
+    button.disabled = false;
+    if (button.dataset.oldText) {
+      button.innerHTML = button.dataset.oldText;
+    }
   }
 }
