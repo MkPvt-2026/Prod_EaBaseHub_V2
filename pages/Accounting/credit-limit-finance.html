@@ -1,20 +1,29 @@
 <!doctype html>
 <html lang="th">
 <head>
+  <!-- ================= META / PAGE SETUP ================= -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Accounting Review - ตรวจสอบคำขอวงเงินเกิน</title>
+
+  <!-- ================= FONTS / ICONS ================= -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- ================= PAGE CSS ================= -->
   <link rel="stylesheet" href="/css/pages/Accounting/credit-limit-finance.css" />
 </head>
+
 <body>
   <div class="app">
 
-    <!-- Backdrop for mobile sidebar -->
+    <!-- ================= MOBILE SIDEBAR BACKDROP ================= -->
     <button class="sidebar-backdrop" type="button" onclick="closeSidebar()" aria-label="ปิด sidebar"></button>
 
+    <!-- ================= SIDEBAR ================= -->
     <aside class="sidebar" id="mainSidebar">
+
+      <!-- Logo / Brand -->
       <div class="sidebar-logo">
         <div class="sidebar-logo-circle">
           <img src="/assets/icons/icon-192.png" alt="EABaseHub" />
@@ -25,21 +34,25 @@
         </div>
       </div>
 
+      <!-- Navigation -->
       <nav class="nav-section">
         <a class="nav-item" href="/index.html">
           <span class="material-symbols-outlined" aria-hidden="true">home</span>
           หน้าหลัก
         </a>
+
         <a class="nav-item active" href="credit-limit-finance.html">
           <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
           ตรวจวงเงินเกิน
         </a>
+
         <a class="nav-item" href="credit-limit-tracking.html">
           <span class="material-symbols-outlined" aria-hidden="true">query_stats</span>
           ติดตามคำขอ
         </a>
       </nav>
 
+      <!-- Current user / Logout -->
       <div class="sidebar-user">
         <div class="user-avatar" id="sidebarAvatar">A</div>
         <div class="user-info">
@@ -52,9 +65,11 @@
       </div>
     </aside>
 
+    <!-- ================= MAIN AREA ================= -->
     <main class="main-area">
+
+      <!-- Topbar -->
       <header class="topbar">
-        <!-- Mobile menu button -->
         <button class="topbar-menu-btn" type="button" onclick="openSidebar()" aria-label="เปิดเมนู">
           <span class="material-symbols-outlined" aria-hidden="true">menu</span>
         </button>
@@ -70,29 +85,33 @@
         </div>
       </header>
 
+      <!-- Page content -->
       <section class="content">
 
-        <!-- Summary cards -->
+        <!-- ================= SUMMARY CARDS ================= -->
         <section class="summary-grid">
           <article class="summary-card active" data-filter="accounting_review" onclick="setFilter('accounting_review')" role="button" tabindex="0">
             <span>รอตรวจสอบ</span>
             <strong id="countPending">0</strong>
           </article>
+
           <article class="summary-card" data-filter="manager_review" onclick="setFilter('manager_review')" role="button" tabindex="0">
             <span>ส่งต่อผู้จัดการแล้ว</span>
             <strong id="countForwarded">0</strong>
           </article>
+
           <article class="summary-card" data-filter="revision_required" onclick="setFilter('revision_required')" role="button" tabindex="0">
             <span>ส่งกลับแก้ไข</span>
             <strong id="countRevision">0</strong>
           </article>
+
           <article class="summary-card" data-filter="all" onclick="setFilter('all')" role="button" tabindex="0">
             <span>ทั้งหมด</span>
             <strong id="countAll">0</strong>
           </article>
         </section>
 
-        <!-- Toolbar -->
+        <!-- ================= SEARCH / REFRESH ================= -->
         <section class="toolbar-card">
           <div class="search-box">
             <span class="material-symbols-outlined" aria-hidden="true">search</span>
@@ -104,13 +123,15 @@
               autocomplete="off"
             />
           </div>
+
           <button class="btn btn-outline" type="button" onclick="loadAccountingRequests()">
             <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
             รีเฟรช
           </button>
         </section>
 
-        <!-- Request list — populated by JS renderRequests() -->
+        <!-- ================= REQUEST LIST ================= -->
+        <!-- JS จะนำข้อมูลจาก approval_requests มา render ใส่ตรงนี้ -->
         <section id="requestList" aria-live="polite" aria-atomic="false">
           <div class="empty-state">กำลังโหลดข้อมูล...</div>
         </section>
@@ -119,13 +140,21 @@
     </main>
   </div>
 
-  <!-- Toast notification (injected by JS) -->
+  <!-- ================= TOAST MESSAGE ================= -->
   <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
+  <!-- ================= SCRIPTS ================= -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Core system -->
   <script src="/js/core/supabaseClient.js"></script>
   <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/auth.js"></script>
+
+  <!-- PDF.js: ใช้อ่านข้อความจาก PDF แบบฟรี 100% -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- Page logic: โหลดคำขอ / อัปโหลด PDF / อ่าน PDF / คำนวณวงเงิน -->
   <script src="/js/pages/Accounting/credit-limit-finance.js"></script>
 </body>
 </html>
