@@ -479,7 +479,7 @@ body {
 
 .request-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns:1fr 1fr;
   gap: 36px;
   align-items: start;
 }
@@ -493,10 +493,11 @@ body {
 
 .info-grid {
   display: grid;
-  grid-template-columns: 70px 1fr 55px 1fr;
-  column-gap: 14px;
-  row-gap: 18px;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
   align-items: start;
+  margin-bottom: 18px;
+  position: relative;
 }
 
 .info-grid .label {
@@ -517,8 +518,12 @@ body {
   color: #ef4444 !important;
 }
 
-.timeline-box {
+
+
+/* .timeline-box {
   padding-left: 6px;
+   max-width: 260px;
+  margin: 0 auto;
 }
 
 .timeline-item {
@@ -526,7 +531,7 @@ body {
   grid-template-columns: 30px 1fr;
   gap: 12px;
   align-items: start;
-  margin-bottom: 18px;
+  margin-bottom: 28px;
   position: relative;
 }
 
@@ -538,6 +543,10 @@ body {
   width: 2px;
   height: calc(100% + 2px);
   background: #e5e7eb;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
 }
 
 .timeline-item .dot {
@@ -576,7 +585,75 @@ body {
 .timeline-item small {
   font-size: 12px;
   color: #94a3b8;
+} */
+
+
+
+
+.approval-progress{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-top:24px;
+    padding:0 40px;
 }
+
+.progress-line{
+    position:absolute;
+    top:18px;
+    left:70px;
+    right:70px;
+    height:3px;
+    background:#e5e7eb;
+}
+
+.progress-step{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    width:120px;
+}
+
+.step-dot{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 10px;
+    font-weight:700;
+}
+
+.done .step-dot{
+    background:#10b981;
+    color:#fff;
+}
+
+.active .step-dot{
+    background:#f59e0b;
+    color:#fff;
+}
+
+.wait .step-dot{
+    background:#e5e7eb;
+    color:#94a3b8;
+}
+
+.step-label{
+    font-size:13px;
+    font-weight:700;
+}
+
+
+
+
+
+
+
+
+
 
 .request-footer {
   margin-top: 26px;
@@ -1287,4 +1364,1285 @@ textarea.field-input {
   color: #fff;
   font-size: 11px;
   font-weight: 800;
+}
+
+/* =========================================================
+   FINAL RESPONSIVE FIX PATCH
+   เพิ่มส่วนนี้ท้ายไฟล์ เพื่อแก้ layout ให้ครบ desktop / tablet / mobile
+========================================================= */
+
+.hidden {
+  display: none !important;
+}
+
+body {
+  min-width: 320px;
+}
+
+button,
+select,
+input,
+textarea {
+  max-width: 100%;
+}
+
+.topbar {
+  backdrop-filter: blur(10px);
+}
+
+.topbar-menu-btn,
+.sidebar-backdrop {
+  display: none;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.section-badge.purple::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sale);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--gray-50);
+  color: var(--gray-700);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pill.warning {
+  background: var(--orange-soft);
+  color: #92400e;
+}
+
+.more-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--gray-500);
+  cursor: pointer;
+}
+
+.more-btn:hover {
+  border-color: var(--sale);
+  color: var(--sale);
+}
+
+.form-section {
+  width: 100%;
+}
+
+.sig-canvas,
+#sigDisplay {
+  width: 100% !important;
+  max-width: 100%;
+  height: auto;
+}
+
+.modal-box .sig-canvas {
+  height: 160px;
+}
+
+/* Desktop กว้างมาก */
+@media (min-width: 1280px) {
+  .content {
+    max-width: 1120px;
+  }
+}
+
+/* iPad / Tablet landscape */
+@media (max-width: 1180px) {
+  .content {
+    max-width: none;
+    padding: 20px;
+  }
+
+  .request-card {
+    padding: 22px;
+  }
+
+  .request-body {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 24px;
+  }
+}
+
+/* Tablet แนวตั้งและหน้าจอเล็ก: ย่อ sidebar เป็น icon */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-w: 76px;
+    --header-h: 62px;
+  }
+
+  .sidebar-brand-text,
+  .nav-item:not(.active) .nav-badge,
+  .sidebar-user .user-info {
+    display: none;
+  }
+
+  .sidebar-logo {
+    min-height: 96px;
+    padding: 18px 10px 14px;
+  }
+
+  .sidebar-logo-circle {
+    width: 46px;
+    height: 46px;
+  }
+
+  .nav-section {
+    padding: 20px 0;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 12px 8px;
+    gap: 0;
+  }
+
+  .nav-item .material-symbols-outlined,
+  .nav-item .nav-icon {
+    width: auto;
+    font-size: 21px;
+  }
+
+  .sidebar-user {
+    justify-content: center;
+    margin: 8px;
+    padding: 10px;
+  }
+
+  .sidebar-logout {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .topbar-title {
+    font-size: 20px;
+  }
+
+  .request-body {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-box {
+    padding-left: 0;
+  }
+
+  .info-grid {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+}
+
+/* มือถือ / หน้าจอแคบ: sidebar เป็น drawer */
+@media (max-width: 760px) {
+  :root {
+    --sidebar-w: 250px;
+    --header-h: 58px;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .app {
+    display: block;
+  }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    z-index: 1200;
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    border: 0;
+    background: rgba(15, 23, 42, 0.42);
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    display: block;
+  }
+
+  .sidebar-brand-text,
+  .sidebar-user .user-info {
+    display: block;
+  }
+
+  .sidebar-logo {
+    min-height: 116px;
+    padding: 24px 16px 16px;
+  }
+
+  .nav-section {
+    padding: 18px 0;
+  }
+
+  .nav-item {
+    justify-content: flex-start;
+    padding: 11px 22px;
+    gap: 12px;
+  }
+
+  .nav-item .material-symbols-outlined,
+  .nav-item .nav-icon {
+    width: 22px;
+    font-size: 20px;
+  }
+
+  .sidebar-user {
+    justify-content: flex-start;
+  }
+
+  .sidebar-logout {
+    display: flex;
+  }
+
+  .main-area {
+    margin-left: 0;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: var(--header-h);
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  .topbar-menu-btn {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: var(--gray-100);
+    color: var(--gray-700);
+    cursor: pointer;
+  }
+
+  .topbar-menu-btn .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  .topbar-title {
+    font-size: 17px;
+  }
+
+  .topbar-subtitle {
+    display: none;
+  }
+
+  .topbar-user span {
+    display: none;
+  }
+
+  .notif-btn,
+  .topbar-user .user-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .content {
+    padding: 14px 12px 24px;
+  }
+
+  .detail-preview-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .status-pill {
+    white-space: normal;
+  }
+
+  .request-card {
+    border-radius: 14px;
+    padding: 18px 16px;
+  }
+
+  .request-top {
+    margin-bottom: 18px;
+  }
+
+  .request-top h3 {
+    font-size: 16px;
+  }
+
+  .request-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .info-grid {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .card {
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .card-head {
+    padding: 12px 14px;
+  }
+
+  .card-body {
+    padding: 14px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .payment-options {
+    gap: 7px;
+  }
+
+  .payment-option {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .btn-row {
+    flex-direction: column;
+  }
+
+  .btn-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-end;
+  }
+
+  .modal-box {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modal-head,
+  .modal-body,
+  .modal-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modal-foot {
+    flex-direction: column-reverse;
+  }
+
+  .modal-foot .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-box .sig-canvas {
+    height: 140px;
+  }
+}
+
+/* จอเล็กมาก */
+@media (max-width: 390px) {
+  .content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .topbar-title {
+    font-size: 15.5px;
+  }
+
+  .card-body {
+    padding: 12px;
+  }
+
+  .info-grid {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .timeline-item {
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+  }
+
+  .timeline-item .dot {
+    width: 28px;
+    height: 28px;
+  }
+
+  .timeline-item:not(:last-child)::after {
+    left: 13px;
+  }
+}
+
+
+@media (max-width:900px){
+
+  .request-body{
+      grid-template-columns:1fr;
+  }
+
+  .approval-progress{
+      padding:0;
+  }
+
+  .progress-step{
+      width:auto;
+      flex:1;
+  }
+
+}
+
+/* =========================================================
+   3 STEP PREVIEW LAYOUT PATCH
+   - บล็อกบน: 2 คอลัมน์ ข้อมูลลูกค้า / สถานะ
+   - บล็อกล่าง: Timeline แนวนอน 3 สถานะ
+========================================================= */
+
+.detail-preview-card {
+  width: 100%;
+  max-width: 980px;
+}
+
+.request-card {
+  position: relative;
+}
+
+.request-top {
+  width: 100%;
+  margin-bottom: 22px;
+  padding-bottom: 0;
+}
+
+.request-body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr) !important;
+  gap: 32px !important;
+  align-items: start;
+}
+
+.info-left,
+.status-summary-box {
+  min-width: 0;
+}
+
+.info-grid {
+  grid-template-columns: 62px minmax(0, 1fr) !important;
+  column-gap: 12px;
+  row-gap: 12px;
+}
+
+.status-summary-box {
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+}
+
+.status-summary-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.status-summary-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 34px;
+  width: 2px;
+  height: calc(100% + 2px);
+  background: #e5e7eb;
+}
+
+.status-summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.status-dot {
+  position: relative;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.status-summary-item.done .status-dot {
+  background: #10b981;
+  color: #fff;
+}
+
+.status-summary-item.active .status-dot {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.status-summary-item.wait .status-dot {
+  background: #e5e7eb;
+  color: #94a3b8;
+}
+
+.status-summary-item strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.status-summary-item small {
+  display: block;
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.approval-progress {
+  position: relative;
+  width: 100%;
+  margin: 28px 0 8px;
+  padding: 0 42px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.progress-line,
+.progress-line-fill {
+  position: absolute;
+  top: 18px;
+  left: 82px;
+  right: 82px;
+  height: 3px;
+  border-radius: 999px;
+}
+
+.progress-line {
+  background: #e5e7eb;
+}
+
+.progress-line-fill {
+  right: 50%;
+  background: #10b981;
+}
+
+.progress-step {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  text-align: center;
+}
+
+.step-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 9px;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 0 0 7px #fff;
+}
+
+.progress-step.done .step-dot {
+  background: #10b981;
+  color: #fff;
+}
+
+.progress-step.active .step-dot {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.progress-step.wait .step-dot {
+  background: #e5e7eb;
+  color: #94a3b8;
+}
+
+.step-label {
+  display: block;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+/* override old timeline classes if cache/html still has old markup */
+.timeline-box {
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  padding-left: 0;
+}
+
+.timeline-item {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+.timeline-item .dot {
+  width: 34px;
+  height: 34px;
+}
+
+/* iPad landscape */
+@media (max-width: 1180px) {
+  .request-card {
+    padding: 22px 24px;
+  }
+
+  .request-body {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.85fr) !important;
+    gap: 28px !important;
+  }
+
+  .approval-progress {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .progress-line,
+  .progress-line-fill {
+    left: 70px;
+    right: 70px;
+  }
+}
+
+/* tablet portrait */
+@media (max-width: 900px) {
+  .request-body {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .status-summary-box,
+  .timeline-box {
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .approval-progress {
+    padding: 0 18px;
+  }
+
+  .progress-line,
+  .progress-line-fill {
+    left: 50px;
+    right: 50px;
+  }
+}
+
+/* mobile */
+@media (max-width: 760px) {
+  .request-card {
+    padding: 18px 16px;
+  }
+
+  .request-body {
+    gap: 22px !important;
+  }
+
+  .info-grid {
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+  }
+
+  .approval-progress {
+    margin-top: 24px;
+    padding: 0 4px;
+  }
+
+  .progress-line,
+  .progress-line-fill {
+    top: 17px;
+    left: 38px;
+    right: 38px;
+  }
+
+  .step-dot {
+    width: 34px;
+    height: 34px;
+    box-shadow: 0 0 0 5px #fff;
+  }
+
+  .step-label {
+    font-size: 11.5px;
+  }
+
+  .status-summary-item {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .status-dot {
+    width: 32px;
+    height: 32px;
+  }
+
+  .status-summary-item:not(:last-child)::after {
+    left: 15px;
+    top: 32px;
+  }
+}
+
+@media (max-width: 390px) {
+  .approval-progress {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .step-label {
+    font-size: 10.5px;
+  }
+}
+
+
+/* =========================================================
+   FIX V2: Preview layout
+   - ลบช่อง Timeline แนวตั้งด้านขวาออก
+   - ข้อมูลลูกค้าเรียง 2 คอลัมน์ด้านบน
+   - Timeline แนวนอนอยู่ด้านล่าง และเส้นไม่เกินจุดสุดท้าย
+========================================================= */
+.request-card {
+  position: relative;
+}
+
+.request-body {
+  display: block !important;
+  width: 100%;
+}
+
+.info-left {
+  width: 100%;
+  min-width: 0;
+}
+
+.info-grid {
+  display: grid !important;
+  grid-template-columns: 72px minmax(0, 1fr) 72px minmax(0, 1fr) !important;
+  column-gap: 12px !important;
+  row-gap: 12px !important;
+  align-items: start;
+}
+
+.info-grid .label {
+  white-space: nowrap;
+}
+
+.info-grid strong {
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* ซ่อนกล่องสถานะแนวตั้ง หากยังมี HTML เก่าค้างอยู่ */
+.status-summary-box,
+.timeline-box {
+  display: none !important;
+}
+
+.approval-progress {
+  position: relative !important;
+  width: 100% !important;
+  margin: 34px 0 10px !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start !important;
+}
+
+.progress-line,
+.progress-line-fill {
+  position: absolute !important;
+  top: 19px !important;
+  height: 3px !important;
+  border-radius: 999px !important;
+  z-index: 0 !important;
+}
+
+/* เส้นเริ่มที่จุดที่ 1 และจบที่จุดที่ 3 ไม่ลากเลยออกไปทางขวา */
+.progress-line {
+  left: 16.666% !important;
+  right: 16.666% !important;
+  background: #e5e7eb !important;
+}
+
+/* สีเขียวถึงจุดกำลังตรวจสอบ */
+.progress-line-fill {
+  left: 16.666% !important;
+  width: 33.333% !important;
+  right: auto !important;
+  background: #10b981 !important;
+}
+
+.progress-step {
+  position: relative !important;
+  z-index: 2 !important;
+  min-width: 0 !important;
+  text-align: center !important;
+}
+
+.step-dot {
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 auto 9px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 0 7px #fff !important;
+}
+
+.progress-step.done .step-dot {
+  background: #10b981 !important;
+  color: #fff !important;
+}
+
+.progress-step.active .step-dot {
+  background: #f59e0b !important;
+  color: #fff !important;
+}
+
+.progress-step.wait .step-dot {
+  background: #e5e7eb !important;
+  color: #94a3b8 !important;
+}
+
+.step-label {
+  display: block !important;
+  color: #111827 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+@media (max-width: 900px) {
+  .info-grid {
+    grid-template-columns: 68px minmax(0, 1fr) !important;
+  }
+
+  .approval-progress {
+    margin-top: 28px !important;
+  }
+
+  .progress-line {
+    left: 16.666% !important;
+    right: 16.666% !important;
+  }
+
+  .progress-line-fill {
+    left: 16.666% !important;
+    width: 33.333% !important;
+  }
+
+  .step-label {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .step-dot {
+    width: 34px !important;
+    height: 34px !important;
+    box-shadow: 0 0 0 5px #fff !important;
+  }
+
+  .progress-line,
+  .progress-line-fill {
+    top: 17px !important;
+  }
+
+  .step-label {
+    font-size: 11.5px !important;
+  }
+}
+
+/* =========================================================
+   STATUS FLOW DASHBOARD - FINAL PATCH
+   คำขอที่กำลังดำเนินการ + ประวัติคำขอ + 3 Step Horizontal Timeline
+========================================================= */
+.request-dashboard {
+  max-width: 980px;
+  margin: 0 auto 22px;
+}
+
+.request-list {
+  display: grid;
+  gap: 16px;
+}
+
+.request-card-active {
+  margin-bottom: 0;
+}
+
+.request-subtitle {
+  margin-top: 4px;
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.request-body-compact {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 28px !important;
+  align-items: start;
+}
+
+.info-grid-wide {
+  grid-template-columns: 74px minmax(0, 1fr) !important;
+}
+
+/* ปิด timeline แนวตั้งเดิม ถ้ายังมี markup เก่าค้างในหน้า */
+.timeline-box,
+.timeline-item {
+  display: none !important;
+}
+
+.approval-progress {
+  width: 100%;
+  position: relative;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  align-items: start;
+  margin: 28px 0 4px;
+  padding: 0 64px;
+}
+
+.progress-line,
+.progress-line-fill {
+  position: absolute;
+  top: 18px;
+  left: calc(64px + 18px);
+  right: calc(64px + 18px);
+  height: 3px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.progress-line {
+  background: var(--gray-200);
+  z-index: 0;
+}
+
+.progress-line-fill {
+  width: auto;
+  right: auto;
+  max-width: calc(100% - 164px);
+  background: #10b981;
+  z-index: 1;
+}
+
+.progress-step {
+  position: relative;
+  z-index: 2;
+  width: auto !important;
+  min-width: 0;
+  text-align: center;
+}
+
+.step-dot {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 9px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 0 0 6px #fff;
+}
+
+.progress-step.done .step-dot {
+  background: #10b981;
+  color: #fff;
+}
+
+.progress-step.active .step-dot {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.progress-step.wait .step-dot {
+  background: #e5e7eb;
+  color: #94a3b8;
+}
+
+.progress-step.rejected .step-dot {
+  background: #ef4444;
+  color: #fff;
+}
+
+.step-label {
+  display: block;
+  color: var(--gray-900);
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.empty-state {
+  padding: 20px;
+  border: 1px dashed var(--gray-300);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--gray-500);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.request-history {
+  margin-top: 8px;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.history-item strong,
+.history-item small {
+  display: block;
+}
+
+.history-item small {
+  margin-top: 3px;
+  color: var(--gray-500);
+  font-size: 12px;
+}
+
+.history-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: right;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.status-pill.success {
+  background: var(--green-soft);
+  color: #047857;
+}
+
+.status-pill.danger {
+  background: var(--red-soft);
+  color: #b91c1c;
+}
+
+@media (max-width: 1024px) {
+  .request-body-compact {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .approval-progress {
+    padding: 0 30px;
+  }
+
+  .progress-line,
+  .progress-line-fill {
+    left: calc(30px + 18px);
+    right: calc(30px + 18px);
+  }
+
+  .progress-line-fill {
+    max-width: calc(100% - 96px);
+  }
+}
+
+@media (max-width: 760px) {
+  .request-dashboard {
+    margin-bottom: 16px;
+  }
+
+  .request-body-compact {
+    grid-template-columns: 1fr !important;
+  }
+
+  .info-grid-wide {
+    grid-template-columns: 68px minmax(0, 1fr) !important;
+  }
+
+  .approval-progress {
+    padding: 0 8px;
+  }
+
+  .progress-line,
+  .progress-line-fill {
+    left: 26px;
+    right: 26px;
+  }
+
+  .progress-line-fill {
+    max-width: calc(100% - 52px);
+  }
+
+  .step-dot {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .step-label {
+    font-size: 11.5px;
+  }
+
+  .history-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-right {
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+
+.customer-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:10px;
+}
+
+.customer-item{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px 14px;
+}
+
+.customer-item label{
+  display:block;
+  margin-bottom:4px;
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:600;
+}
+
+.customer-item strong{
+  display:block;
+  color:#0f172a;
+  font-size:15px;
+  font-weight:700;
+}
+
+.customer-item .text-red{
+  color:#ef4444;
+}
+
+
+.request-accordion-head {
+  width: 100%;
+  padding: 0 0 16px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.request-accordion-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.expand-icon {
+  width: 26px;
+  height: 26px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 800;
+  transition: transform 0.2s ease;
+}
+
+.request-accordion-content {
+  max-height: 1500px;
+  overflow: hidden;
+  transition: max-height 0.28s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.request-card.collapsed .request-accordion-content {
+  max-height: 0;
+  opacity: 0;
+}
+
+.request-card.collapsed .expand-icon {
+  transform: rotate(-90deg);
+}
+
+.request-card.collapsed .request-accordion-head {
+  padding-bottom: 0;
+}
+
+.request-card.collapsed {
+  padding-bottom: 20px;
 }

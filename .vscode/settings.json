@@ -28,7 +28,7 @@
             "color": "foldercolorizer.color_ffff00"
         },
         {
-            "filePath": "Prod_EaBaseHub_V2\\pages\\forms\\credit-limit-finance.html",
+            "filePath": "Prod_EaBaseHub_V2\\pages\\Acconting\\credit-limit-finance2.html",
             "color": "foldercolorizer.color_ffff00"
         },
         {
@@ -60,7 +60,7 @@
             "color": "foldercolorizer.color_ffff00"
         },
         {
-            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\forms\\credit-limit-finance.js",
+            "filePath": "Prod_EaBaseHub_V2\\js\\pages\\Acconting\\credit-limit-finance2.js",
             "color": "foldercolorizer.color_ffff00"
         },
         {
@@ -92,7 +92,7 @@
             "color": "foldercolorizer.color_ffff00"
         },
         {
-            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\forms\\credit-limit-finance.css",
+            "filePath": "Prod_EaBaseHub_V2\\css\\pages\\Acconting\\credit-limit-finance2.css",
             "color": "foldercolorizer.color_ffff00"
         },
         {
@@ -119,8 +119,21 @@
             "folderPath": "Prod_EaBaseHub_V2\\css\\pages\\dashboard\\",
             "isFolderOnly": true,
             "color": "foldercolorizer.color_ffffff"
+        },
+        {
+            "folderPath": "Prod_EaBaseHub_V2\\minipro\\",
+            "color": "foldercolorizer.color_0087ff"
         }
     ],
     "editor.defaultFormatter": null,
-    "blockman.n03MaxDepth": 10
+    "blockman.n03MaxDepth": 10,
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
 }

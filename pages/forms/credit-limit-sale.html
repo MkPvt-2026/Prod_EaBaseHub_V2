@@ -6,13 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ระบบขออนุมัติวงเงินเกิน - หน้าส่งคำขอ</title>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
   <link rel="stylesheet" href="/css/pages/forms/credit-limit-sale.css" />
 </head>
@@ -139,163 +135,21 @@
           CONTENT
         ------------------------------------------------- -->
       <main class="content">
-       <!-- ===== REQUEST DETAIL PREVIEW CARD ===== -->
-<section
-  class="detail-preview-card hidden"
-  id="requestPreviewCard"
->
-  <div class="detail-preview-head">
-    <div class="section-badge purple">
-      <span class="section-num"></span>
-      หน้ารายละเอียดคำขอ (หลังส่ง)
-    </div>
-
-    <span
-      class="status-pill warning"
-      id="previewStatus"
-    >
-      ● สถานะ: รอการเงินตรวจสอบ
-    </span>
-  </div>
-
-  <div class="request-card">
-    <!-- HEADER -->
-    <div class="request-top">
-      <h3 id="previewDocNo">CRD-000000</h3>
-
-      <button
-        class="more-btn"
-        type="button"
-      >
-        ⋯
-      </button>
-    </div>
-
-    <!-- BODY -->
-    <div class="request-body">
-
-      <!-- LEFT -->
-      <div class="info-left">
-        <p class="group-title">ข้อมูลลูกค้า</p>
-
-        <div class="info-grid">
-
-          <span class="label">บริษัท :</span>
-          <strong id="previewShopName">-</strong>
-
-          <span class="label">รหัส :</span>
-          <strong id="previewShopCode">-</strong>
-
-          <span class="label">SO :</span>
-          <strong id="previewSaleOrderNo">-</strong>
-
-          <span class="label">ยอดบิล :</span>
-          <strong
-            class="text-red"
-            id="previewRequestAmount"
-          >
-            -
-          </strong>
-
-        </div>
-      </div>
-
-      <!-- RIGHT -->
-      <div class="timeline-box">
-        <p class="group-title">สถานะการดำเนินการ</p>
-
-        <!-- STEP 1 -->
-        <div class="timeline-item done">
-          <span class="dot">✓</span>
-
-          <div>
-            <strong>ส่งคำขอ (Sale)</strong>
-            <small id="previewCreatedAt">
-              -
-            </small>
+       <!-- ===== REQUEST STATUS DASHBOARD ===== -->
+        <section class="request-dashboard" id="activeRequestsSection">
+          <div class="detail-preview-head">
+            <div class="section-badge purple">
+              คำขอที่กำลังดำเนินการ
+            </div>
+            <span class="status-pill warning" id="activeRequestCount">0 รายการ</span>
           </div>
-        </div>
 
-        <!-- STEP 2 -->
-        <div
-          class="timeline-item active"
-          id="financeStep"
-        >
-          <span class="dot">!</span>
-
-          <div>
-            <strong>การเงินตรวจสอบ</strong>
-            <small>
-              รอดำเนินการ
-            </small>
+          <div class="request-list" id="activeRequestsList">
+            <div class="empty-state">ยังไม่มีคำขอที่กำลังดำเนินการ</div>
           </div>
-        </div>
+        </section>
 
-        <!-- STEP 3 -->
-        <div
-          class="timeline-item wait"
-          id="managerStep"
-        >
-          <span class="dot">...</span>
-
-          <div>
-            <strong>ผู้จัดการอนุมัติ</strong>
-            <small>
-              รอดำเนินการ
-            </small>
-          </div>
-        </div>
-
-        <!-- STEP 4 -->
-        <div
-          class="timeline-item wait"
-          id="executiveStep"
-        >
-          <span class="dot">...</span>
-
-          <div>
-            <strong>ผู้บริหารอนุมัติ</strong>
-            <small>
-              รอดำเนินการ
-            </small>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="request-footer">
-      <div class="creator">
-
-        <div
-          class="avatar-mini"
-          id="previewAvatar"
-        >
-          S
-        </div>
-
-        <div>
-          <strong id="previewCreator">
-            ผู้ขอ: -
-          </strong>
-
-          <small id="previewCreatedAtFooter">
-            วันที่: -
-          </small>
-        </div>
-
-      </div>
-
-      <div
-        class="signature-name"
-        id="previewSignatureName"
-      >
-      </div>
-    </div>
-  </div>
-</section>
-
+        
           <!-- =============================================
               CARD 1: CUSTOMER INFO
             ============================================== -->
@@ -316,7 +170,7 @@
                     <select class="field-input has-icon" id="shopSelect" onchange="onShopChange()">
                       <option value="">-- เลือกลูกค้า --</option>
                     </select>
-                    <span class="input-icon">🔍</span>
+                    <span class="input-icon"></span>
                   </div>
                 </div>
 
@@ -506,6 +360,20 @@
             </div>
           </div>
         </section>
+
+        <section class="request-dashboard request-history" id="historyRequestsSection">
+          <div class="detail-preview-head">
+            <div class="section-badge purple">
+              ประวัติการส่งคำขอ
+            </div>
+            <span class="status-pill" id="historyRequestCount">0 รายการ</span>
+          </div>
+
+          <div class="history-list" id="historyRequestsList">
+            <div class="empty-state">ยังไม่มีประวัติคำขอ</div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>

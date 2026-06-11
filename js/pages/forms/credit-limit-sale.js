@@ -16,7 +16,7 @@ const pageLinks = {
   detail: "credit-limit-detail.html",
   finance: "credit-limit-finance.html",
   approval: "credit-limit-approval.html",
-  tracking: "credit-limit-tracking.html"
+  tracking: "credit-limit-tracking.html",
 };
 
 function goPage(id) {
@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await initAuthAndProfile();
     await loadSaleShops();
+    await loadRequestCards();
 
     restoreDraft();
   } catch (err) {
@@ -68,7 +69,7 @@ async function initAuthAndProfile() {
 
   const {
     data: { session },
-    error: sessionError
+    error: sessionError,
   } = await db.auth.getSession();
 
   if (sessionError) throw sessionError;
@@ -94,8 +95,18 @@ async function initAuthAndProfile() {
   const role = String(profile.role || "").toLowerCase();
   const status = String(profile.status || "").toLowerCase();
 
-  if (!["sale", "sales"].includes(role)) {
-    alert("ไม่มีสิทธิ์เข้าใช้งานหน้านี้ เฉพาะ Sale เท่านั้น");
+  const allowRoles = [
+    "sale",
+    "sales",
+    "accounting",
+    "manager",
+    "executive",
+    "admin",
+    "adminqc",
+  ];
+
+  if (!allowRoles.includes(role)) {
+    alert("ไม่มีสิทธิ์เข้าใช้งานหน้านี้");
     window.location.href = "/index.html";
     return;
   }
@@ -116,10 +127,10 @@ function renderCurrentUser() {
   const avatarText = getAvatarText(displayName || username);
 
   setText("sidebarAvatar", avatarText);
-  setText("sidebarDisplayName", displayName);
+  setText("sidebarDisplayName", username);
   setText("sidebarUsername", username);
   setText("topbarAvatar", avatarText);
-  setText("topbarUsername", username);
+  setText("topbarUsername", displayName);
 
   setValue("saleOwner", `${username} - ${displayName}`);
 
@@ -205,7 +216,6 @@ function onShopChange() {
 }
 // ช่องอื่นให้ผู้ใช้กรอกเอง ไม่ดึงจาก shops
 
-
 /* =========================================================
    CHAR COUNT
 ========================================================= */
@@ -238,14 +248,11 @@ function setupCanvas(canvasId, hintId) {
     if (e.touches?.[0]) {
       return [
         (e.touches[0].clientX - r.left) * scaleX,
-        (e.touches[0].clientY - r.top) * scaleY
+        (e.touches[0].clientY - r.top) * scaleY,
       ];
     }
 
-    return [
-      (e.clientX - r.left) * scaleX,
-      (e.clientY - r.top) * scaleY
-    ];
+    return [(e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY];
   }
 
   function hideHint() {
@@ -286,7 +293,7 @@ function setupCanvas(canvasId, hintId) {
       ctx.moveTo(x, y);
       hideHint();
     },
-    { passive: false }
+    { passive: false },
   );
 
   canvas.addEventListener(
@@ -298,7 +305,7 @@ function setupCanvas(canvasId, hintId) {
       ctx.lineTo(x, y);
       ctx.stroke();
     },
-    { passive: false }
+    { passive: false },
   );
 
   canvas.addEventListener("touchend", () => {
@@ -372,17 +379,16 @@ function collectFormData(status = "pending") {
   const shop = currentShops.find((item) => item.id === shopId) || null;
 
   const paymentMethods = Array.from(
-    document.querySelectorAll('input[name="payment_method"]:checked')
+    document.querySelectorAll('input[name="payment_method"]:checked'),
   ).map((input) => input.value);
 
   return {
-  request_type: "credit_limit_temp",
-  request_title: "ขออนุมัติวงเงินเกิน",
-  request_detail: getValue("reasonText"),
-  request_status: status,
+    request_type: "credit_limit_temp",
+    request_title: "ขออนุมัติวงเงินเกิน",
+    request_detail: getValue("reasonText"),
+    request_status: status,
 
-  status,
-
+    status,
 
     sale_id: currentUser.id,
     created_by: currentUser.id,
@@ -416,11 +422,11 @@ function collectFormData(status = "pending") {
         display_name: currentProfile.display_name,
         email: currentProfile.email,
         role: currentProfile.role,
-        area: currentProfile.area
+        area: currentProfile.area,
       },
       shop,
-      form_version: "credit-limit-sale-v1"
-    }
+      form_version: "credit-limit-sale-v1",
+    },
   };
 }
 
@@ -490,7 +496,7 @@ async function submitRequest(evt) {
   const submitBtn = evt?.currentTarget || evt?.target || null;
 
   try {
-    const data = collectFormData("pending");
+    const data = collectFormData("accounting_review");
     if (!validateForm(data, true)) return;
 
     setButtonLoading(submitBtn, true, "กำลังส่ง...");
@@ -507,8 +513,8 @@ async function submitRequest(evt) {
 
     alert("ส่งคำขออนุมัติเรียบร้อยแล้ว");
 
-    showRequestPreview(inserted?.id, data);
-
+    await loadRequestCards();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (err) {
     console.error("Submit error:", err);
     alert("ส่งคำขอไม่สำเร็จ: " + (err.message || err));
@@ -544,11 +550,13 @@ function restoreDraft() {
 
     updateCount();
 
-    document.querySelectorAll('input[name="payment_method"]').forEach((input) => {
-      input.checked = Array.isArray(draft.payment_methods)
-        ? draft.payment_methods.includes(input.value)
-        : false;
-    });
+    document
+      .querySelectorAll('input[name="payment_method"]')
+      .forEach((input) => {
+        input.checked = Array.isArray(draft.payment_methods)
+          ? draft.payment_methods.includes(input.value)
+          : false;
+      });
   } catch (err) {
     console.warn("Restore draft failed:", err);
   }
@@ -558,12 +566,309 @@ function getDraftKey() {
   return `creditLimitDraft:${currentUser?.id || "unknown"}`;
 }
 
+/* =========================================================
+   REQUEST STATUS / HISTORY CARDS
+========================================================= */
+const ACTIVE_STATUSES = [
+  "pending",
+  "accounting_review",
+  "finance_review",
+  "manager_review",
+  "executive_review",
+  "waiting_manager",
+  "waiting_ceo",
+  "waiting_approval",
+];
+
+const FINAL_STATUSES = [
+  "approved",
+  "rejected",
+  "exec_approved",
+  "exec_rejected",
+];
+
+function isSaleRole() {
+  const role = String(currentProfile?.role || "").toLowerCase();
+  return ["sale", "sales"].includes(role);
+}
+
+async function loadRequestCards() {
+  if (!currentUser || !currentProfile) return;
+
+  try {
+    const [activeRows, historyRows] = await Promise.all([
+      fetchApprovalRequests(ACTIVE_STATUSES),
+      fetchApprovalRequests(FINAL_STATUSES),
+    ]);
+
+    renderActiveRequests(activeRows);
+    renderHistoryRequests(historyRows);
+  } catch (err) {
+    console.warn("Load request cards failed:", err);
+  }
+}
+
+async function fetchApprovalRequests(statuses) {
+  const db = window.supabaseClient;
+  let query = db
+    .from("approval_requests")
+    .select("*")
+    .eq("request_type", "credit_limit_temp")
+    .in("status", statuses)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  // Sale เห็นเฉพาะรายการของตัวเองเท่านั้น
+  // Manager / Executive / Admin / Accounting ให้ RLS ฝั่ง Supabase คุมสิทธิ์เพิ่มเติม
+  if (isSaleRole()) {
+    query = query.eq("sale_id", currentUser.id);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+function renderActiveRequests(rows) {
+  const list = document.getElementById("activeRequestsList");
+  const count = document.getElementById("activeRequestCount");
+  if (!list) return;
+
+  setText("activeRequestCount", `${rows.length} รายการ`);
+
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty-state">ยังไม่มีคำขอที่กำลังดำเนินการ</div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map(renderActiveRequestCard).join("");
+}
+
+function renderHistoryRequests(rows) {
+  const section = document.getElementById("historyRequestsSection");
+  const list = document.getElementById("historyRequestsList");
+  if (!section || !list) return;
+
+  setText("historyRequestCount", `${rows.length} รายการ`);
+
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty-state">ยังไม่มีประวัติคำขอ</div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map(renderHistoryItem).join("");
+}
+
+function renderActiveRequestCard(row, index = 0) {
+  const docNo = getDocNo(row);
+  const amount = formatMoney(row.request_amount);
+  const creator = escapeHtml(
+    row.sale_name ||
+      currentProfile?.display_name ||
+      currentProfile?.username ||
+      "-"
+  );
+  const createdAt = formatDateText(row.created_at || row.request_date);
+  const statusText = getStatusText(row.status);
+  const progress = getProgressState(row.status);
+  const avatar = getAvatarText(creator);
+
+  const collapsedClass = index === 0 ? "" : "collapsed";
+
+  return `
+    <article class="request-card request-card-active ${collapsedClass}">
+      <button class="request-accordion-head" type="button" onclick="toggleRequestCard(this)">
+        <div class="request-accordion-left">
+          <span class="expand-icon">⌄</span>
+          <div>
+            <h3>${docNo}</h3>
+            <p class="request-subtitle">${statusText}</p>
+          </div>
+        </div>
+
+        <span class="status-pill ${getStatusClass(row.status)}">● ${statusText}</span>
+      </button>
+
+      <div class="request-accordion-content">
+        <div class="request-body request-body-compact">
+          <div class="info-left">
+            <p class="group-title">ข้อมูลลูกค้า</p>
+
+            <div class="customer-grid">
+              <div class="customer-item">
+                <label>บริษัท</label>
+                <strong>${escapeHtml(row.shop_name || "-")}</strong>
+              </div>
+
+              <div class="customer-item">
+                <label>รหัสลูกค้า</label>
+                <strong>${escapeHtml(row.shop_code || "-")}</strong>
+              </div>
+
+              <div class="customer-item">
+                <label>เลขที่บิล</label>
+                <strong>${escapeHtml(row.sale_order_no || "-")}</strong>
+              </div>
+
+              <div class="customer-item">
+                <label>ยอดบิล</label>
+                <strong class="text-red">${amount}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="approval-progress" aria-label="สถานะคำขอ">
+          <div class="progress-line"></div>
+          <div class="progress-line-fill" style="width:${progress.fill}%"></div>
+
+          <div class="progress-step ${progress.step1}">
+            <span class="step-dot">✓</span>
+            <span class="step-label">ส่งคำขอ</span>
+          </div>
+
+          <div class="progress-step ${progress.step2}">
+            <span class="step-dot">!</span>
+            <span class="step-label">กำลังตรวจสอบ</span>
+          </div>
+
+          <div class="progress-step ${progress.step3}">
+            <span class="step-dot">${progress.finalIcon}</span>
+            <span class="step-label">อนุมัติ / ไม่อนุมัติ</span>
+          </div>
+        </div>
+
+        <div class="request-footer">
+          <div class="creator">
+            <div class="avatar-mini">${avatar}</div>
+            <div>
+              <strong>ผู้ขอ: ${creator}</strong>
+              <small>วันที่: ${createdAt}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+
+function toggleRequestCard(button) {
+  const card = button.closest(".request-card");
+  if (!card) return;
+
+  card.classList.toggle("collapsed");
+}
 
 
 
+function renderHistoryItem(row) {
+  const statusText = getStatusText(row.status);
+  return `
+    <article class="history-item">
+      <div>
+        <strong>${getDocNo(row)}</strong>
+        <small>${escapeHtml(row.shop_name || "-")} • ${formatDateText(row.created_at || row.request_date)}</small>
+      </div>
+      <div class="history-right">
+        <strong class="text-red">${formatMoney(row.request_amount)}</strong>
+        <span class="status-pill ${getStatusClass(row.status)}">${statusText}</span>
+      </div>
+    </article>
+  `;
+}
 
+function getProgressState(status) {
+  const value = String(status || "").toLowerCase();
 
+  if (["approved", "exec_approved"].includes(value)) {
+    return {
+      fill: 100,
+      step1: "done",
+      step2: "done",
+      step3: "done",
+      finalIcon: "✓",
+    };
+  }
 
+  if (["rejected", "exec_rejected"].includes(value)) {
+    return {
+      fill: 100,
+      step1: "done",
+      step2: "done",
+      step3: "rejected",
+      finalIcon: "✕",
+    };
+  }
+
+  return {
+    fill: 50,
+    step1: "done",
+    step2: "active",
+    step3: "wait",
+    finalIcon: "...",
+  };
+}
+
+function getStatusText(status) {
+  const value = String(status || "pending").toLowerCase();
+  const map = {
+    draft: "แบบร่าง",
+    pending: "รอดำเนินการ",
+    accounting_review: "รอดำเนินการ",
+    finance_review: "รอดำเนินการ",
+    manager_review: "รอผู้จัดการอนุมัติ",
+    waiting_manager: "รอผู้จัดการอนุมัติ",
+    executive_review: "รอผู้บริหารอนุมัติ",
+    waiting_ceo: "รอผู้บริหารอนุมัติ",
+    waiting_approval: "รออนุมัติ",
+    approved: "อนุมัติแล้ว",
+    exec_approved: "อนุมัติแล้ว",
+    rejected: "ไม่อนุมัติ",
+    exec_rejected: "ไม่อนุมัติ",
+  };
+  return map[value] || value;
+}
+
+function getStatusClass(status) {
+  const value = String(status || "").toLowerCase();
+  if (["approved", "exec_approved"].includes(value)) return "success";
+  if (["rejected", "exec_rejected"].includes(value)) return "danger";
+  return "warning";
+}
+
+function getDocNo(row) {
+  const id = row?.id || row?.request_no || "NEW";
+  if (row?.doc_no) return escapeHtml(row.doc_no);
+  return `CRD-${String(id).replace(/-/g, "").substring(0, 8).toUpperCase()}`;
+}
+
+function formatMoney(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n) || n <= 0) return "-";
+  return (
+    n.toLocaleString("th-TH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + " บาท"
+  );
+}
+
+function formatDateText(value) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return formatThaiDateTime(d);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function showRequestPreview(insertedId, formData) {
   const card = document.getElementById("requestPreviewCard");
@@ -580,14 +885,12 @@ function showRequestPreview(insertedId, formData) {
         .toUpperCase()}`
     : "CRD-NEW";
 
-  const amount =
-    formData.request_amount
-      ? Number(formData.request_amount)
-          .toLocaleString("th-TH", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }) + " บาท"
-      : "-";
+  const amount = formData.request_amount
+    ? Number(formData.request_amount).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + " บาท"
+    : "-";
 
   const creator =
     formData.sale_name ||
@@ -595,8 +898,7 @@ function showRequestPreview(insertedId, formData) {
     currentProfile?.username ||
     "-";
 
-  const createdAt =
-    formatThaiDateTime(now);
+  const createdAt = formatThaiDateTime(now);
 
   setText("previewDocNo", docNo);
   setText("previewShopName", formData.shop_name || "-");
@@ -604,29 +906,17 @@ function showRequestPreview(insertedId, formData) {
   setText("previewSaleOrderNo", formData.sale_order_no || "-");
   setText("previewRequestAmount", amount);
 
-  setText(
-    "previewCreator",
-    `ผู้ขอ: ${creator}`
-  );
+  setText("previewCreator", `ผู้ขอ: ${creator}`);
 
-  setText(
-    "previewCreatedAt",
-    createdAt
-  );
+  setText("previewCreatedAt", createdAt);
 
-  setText(
-    "previewCreatedAtFooter",
-    `วันที่: ${createdAt}`
-  );
+  setText("previewCreatedAtFooter", `วันที่: ${createdAt}`);
 
-  setText(
-    "previewAvatar",
-    creator.substring(0, 1).toUpperCase()
-  );
+  setText("previewAvatar", creator.substring(0, 1).toUpperCase());
 
   card.scrollIntoView({
     behavior: "smooth",
-    block: "start"
+    block: "start",
   });
 }
 
@@ -684,7 +974,7 @@ function formatThaiDateTime(date) {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   }).format(date);
 }
 
