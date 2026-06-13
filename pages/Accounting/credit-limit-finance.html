@@ -769,6 +769,51 @@
       </div>
     </template>
 
+
+    <!-- ── Template: forward confirmation modal ── -->
+<template id="tpl-forward-confirm">
+  <div class="modal-overlay forward-confirm-modal js-forward-modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>
+          <span class="material-symbols-outlined" style="vertical-align:-4px;font-size:20px;color:#D97706">warning</span>
+          ยืนยันส่งต่อผู้จัดการ
+        </h3>
+        <button class="modal-close js-forward-close" type="button" aria-label="ปิด">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:#64748B;font-size:13px;margin-bottom:14px">
+          กรุณาตรวจสอบข้อมูลด้านล่างก่อนส่งต่อ — แก้ไขได้ในหน้านี้หากพบข้อผิดพลาด
+        </p>
+        <div class="confirm-summary-grid">
+          <div class="confirm-row"><span>ยอดคงค้างรวม</span><strong data-bind="cs-total" class="text-red"></strong></div>
+          <div class="confirm-row"><span>ค้างเกิน 30 วัน</span><strong data-bind="cs-overdue30"></strong></div>
+          <div class="confirm-row"><span>ค้างเกิน 30 วัน (%)</span><strong data-bind="cs-overduePct" class="js-cs-pct"></strong></div>
+          <div class="confirm-row"><span>ค้างนานสุด</span><strong data-bind="cs-oldest" class="js-cs-oldest"></strong></div>
+          <div class="confirm-row"><span>วงเงินที่ตรวจสอบแล้ว</span><strong data-bind="cs-credit"></strong></div>
+          <div class="confirm-row"><span>วงเงินคงเหลือ</span><strong data-bind="cs-remaining" class="js-cs-remaining"></strong></div>
+          <div class="confirm-row"><span>ระดับความเสี่ยง</span><strong data-bind="cs-risk" class="js-cs-risk"></strong></div>
+          <div class="confirm-row"><span>สถานะวงเงิน</span><strong data-bind="cs-status" class="js-cs-status"></strong></div>
+        </div>
+        <div class="confirm-remark-box">
+          <label>ข้อเสนอแนะที่จะส่งให้ผู้จัดการ</label>
+          <p data-bind="cs-recommend" class="confirm-remark-text"></p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline js-forward-cancel" type="button">แก้ไขข้อมูล</button>
+        <button class="btn btn-primary js-forward-confirm" type="button">
+          <span class="material-symbols-outlined" style="font-size:17px">send</span>
+          ยืนยันส่งต่อผู้จัดการ
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+
+
     <!-- ================================================================
        SCRIPTS
   ================================================================ -->

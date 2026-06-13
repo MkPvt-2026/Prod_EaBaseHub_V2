@@ -1460,26 +1460,18 @@ function cleanCustomerName(name) {
 }
 
 function findOldestOverdueDays(text) {
-  const lines = String(text || "")
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
+  const raw = String(text || "");
   const days = [];
 
-  lines.forEach((line) => {
-    /*
-      จับบรรทัดที่เป็นรายการบิล เช่น มีวันที่ + เลขเอกสาร + จำนวนเงิน + วันค้าง
-    */
-    if (!/\d{2}\/\d{2}\/\d{2}/.test(line)) return;
-    if (!/[A-Z]{2,}\d+/.test(line)) return;
+  // จับทุก pattern: ยอดเงิน (####.00) ตามด้วย จำนวนวันค้าง (integer)
+  // แต่ข้าม segment ที่มียอดติดลบ (-####.00 ตามด้วยตัวเลข) = credit note
+  const cleaned = raw.replace(/-[\d,]+\.\d{2}\s+\d+/g, "SKIP");
 
-    const nums = line.match(/\b\d{1,3}\b/g)?.map(Number) || [];
-
-    nums.forEach((n) => {
-      if (n >= 1 && n <= 120) days.push(n);
-    });
-  });
+  const matches = cleaned.matchAll(/[\d,]+\.\d{2}\s+(\d{1,3})(?=\s)/g);
+  for (const m of matches) {
+    const n = Number(m[1]);
+    if (n >= 1 && n <= 500) days.push(n);
+  }
 
   return days.length ? Math.max(...days) : 0;
 }
