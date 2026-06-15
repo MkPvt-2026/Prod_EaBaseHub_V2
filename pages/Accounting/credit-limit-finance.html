@@ -186,6 +186,36 @@
       aria-atomic="true"
     ></div>
 
+
+    <!-- Success Modal -->
+<div id="successModal" class="success-modal hidden">
+  <div class="success-modal-box">
+
+    <div class="success-icon">
+      <span class="material-symbols-outlined">
+        check_circle
+      </span>
+    </div>
+
+    <h3 id="successTitle">
+      สำเร็จ
+    </h3>
+
+    <p id="successMessage">
+      ระบบดำเนินการเรียบร้อยแล้ว
+    </p>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      onclick="closeSuccessModal()"
+    >
+      ตกลง
+    </button>
+
+  </div>
+</div>
+
     <!-- ================================================================
        TEMPLATES — ไม่ render บนหน้าจอ, JS clone ไปใช้งาน
        แก้ UI ที่นี่ได้เลย ได้ syntax highlight / Emmet ครบ
@@ -204,16 +234,21 @@
           <div class="request-head-left">
             <span class="expand-icon" aria-hidden="true">⌄</span>
             <div class="request-title">
-              <h3 data-bind="docNo"></h3>
-              <p>
-                <span data-bind="shopName"></span> ·
-                <span data-bind="saleOrderNo"></span>
-              </p>
-            </div>
-          </div>
-          <span class="status-pill" data-bind="statusPill"
-            >● <span data-bind="statusText"></span
-          ></span>
+
+  <!-- ชื่อร้าน + เลขที่บิล -->
+  <h3>
+    <span data-bind="shopName"></span>
+    <span class="bill-separator">•</span>
+    <span data-bind="saleOrderNo"></span>
+  </h3>
+
+  <!-- เลขที่เอกสาร -->
+  <p class="doc-no">
+    เลขที่เอกสาร :
+    <span data-bind="docNo"></span>
+  </p>
+
+</div>
         </button>
 
         <!-- Accordion body -->
@@ -222,8 +257,12 @@
             <div class="review-layout">
               <!-- ── Left column ─────────────────────────────── -->
               <div class="left-stack">
-                <!-- Request info -->
-                <section class="panel">
+                <!-- =======================================================
+                     SECTION : ข้อมูลคำขอ
+                     class: panel-request
+                     ใช้สำหรับแยกสี / style เฉพาะส่วนข้อมูลคำขอ
+                ======================================================= -->
+                <section class="panel panel-request">
                   <div class="panel-head">
                     <div class="panel-title">
                       <span class="material-symbols-outlined" aria-hidden="true"
@@ -269,8 +308,12 @@
                   </div>
                 </section>
 
-                <!-- Accounting assessment -->
-                <section class="panel">
+                <!-- =======================================================
+                     SECTION : ข้อมูลฝ่ายบัญชี
+                     class: panel-accounting
+                     ใช้สำหรับแยกสี / style เฉพาะส่วนกรอกข้อมูลบัญชี
+                ======================================================= -->
+                <section class="panel panel-accounting">
                   <div class="panel-head">
                     <div class="panel-title">
                       <span class="material-symbols-outlined" aria-hidden="true"
@@ -330,8 +373,12 @@
                   </div>
                 </section>
 
-                <!-- PDF analysis result panel (hidden until analysis runs) -->
-                <section class="panel js-analysis-panel" style="display: none">
+                <!-- =======================================================
+                     SECTION : ผลวิเคราะห์จาก PDF
+                     class: panel-analysis
+                     ซ่อนอยู่ก่อน และจะแสดงเมื่ออ่าน/วิเคราะห์ PDF สำเร็จ
+                ======================================================= -->
+                <section class="panel panel-analysis js-analysis-panel" style="display: none">
                   <div class="panel-head">
                     <div class="panel-title">
                       <span class="material-symbols-outlined" aria-hidden="true"
@@ -348,8 +395,12 @@
 
               <!-- ── Right sticky column ──────────────────── -->
               <aside class="right-sticky">
-                <!-- Approval flow (ขั้นตอนที่ 1–4) -->
-                <section class="panel">
+                <!-- =======================================================
+                     SECTION : ลำดับการดำเนินการ
+                     class: panel-flow
+                     ใช้สำหรับแสดงขั้นตอน Sale → บัญชี → Manager → ผู้บริหาร
+                ======================================================= -->
+                <section class="panel panel-flow">
                   <div class="panel-head">
                     <div class="panel-title">
                       <span class="material-symbols-outlined" aria-hidden="true"
@@ -359,96 +410,57 @@
                     </div>
                   </div>
                   <div class="panel-body">
-                    <div class="mini-flow">
-                      <!-- Step 1: always done -->
-                      <div class="mini-flow-row">
-                        <div class="mini-flow-card done">
-                          <span class="mini-flow-icon">
-                            <span class="material-symbols-outlined"
-                              >storefront</span
-                            >
-                          </span>
-                          <div class="mini-flow-label">
-                            <span class="mini-flow-sub">ขั้นตอนที่ 1</span>
-                            <strong>Sale ส่งคำขอ</strong>
-                          </div>
-                        </div>
-                        <div class="mini-flow-track">
-                          <span class="mini-flow-indicator done">
-                            <span class="material-symbols-outlined">check</span>
-                          </span>
-                          <span class="mini-flow-line"></span>
-                        </div>
-                      </div>
+                    <div class="flow-vertical">
 
-                      <!-- Step 2: accounting -->
-                      <div class="mini-flow-row">
-                        <div class="mini-flow-card js-flow-accounting">
-                          <span class="mini-flow-icon">
-                            <span class="material-symbols-outlined"
-                              >calculate</span
-                            >
-                          </span>
-                          <div class="mini-flow-label">
-                            <span class="mini-flow-sub">ขั้นตอนที่ 2</span>
-                            <strong>บัญชีตรวจสอบ</strong>
-                          </div>
-                        </div>
-                        <div class="mini-flow-track">
-                          <span
-                            class="mini-flow-indicator js-flow-accounting-dot"
-                          ></span>
-                          <span class="mini-flow-line"></span>
-                        </div>
-                      </div>
+  <div class="flow-step done">
+    <div class="flow-dot">
+      <span class="material-symbols-outlined">check</span>
+    </div>
 
-                      <!-- Step 3: manager -->
-                      <div class="mini-flow-row">
-                        <div class="mini-flow-card js-flow-manager">
-                          <span class="mini-flow-icon">
-                            <span class="material-symbols-outlined"
-                              >manage_accounts</span
-                            >
-                          </span>
-                          <div class="mini-flow-label">
-                            <span class="mini-flow-sub">ขั้นตอนที่ 3</span>
-                            <strong>ผู้จัดการอนุมัติ</strong>
-                          </div>
-                        </div>
-                        <div class="mini-flow-track">
-                          <span
-                            class="mini-flow-indicator js-flow-manager-dot"
-                          ></span>
-                          <span class="mini-flow-line"></span>
-                        </div>
-                      </div>
+    <div class="flow-content">
+      <strong>Sale ส่งคำขอ</strong>
+      <span>ส่งคำขอเรียบร้อยแล้ว</span>
+    </div>
+  </div>
 
-                      <!-- Step 4: executive (last — no line below) -->
-                      <div class="mini-flow-row">
-                        <div class="mini-flow-card js-flow-final">
-                          <span class="mini-flow-icon">
-                            <span class="material-symbols-outlined"
-                              >verified_user</span
-                            >
-                          </span>
-                          <div class="mini-flow-label">
-                            <span class="mini-flow-sub">ขั้นตอนที่ 4</span>
-                            <strong>ผู้บริหารอนุมัติ</strong>
-                          </div>
-                        </div>
-                        <div class="mini-flow-track">
-                          <span
-                            class="mini-flow-indicator js-flow-final-dot"
-                          ></span>
-                        </div>
-                      </div>
-                    </div>
+  <div class="flow-step active">
+    <div class="flow-dot"></div>
+
+    <div class="flow-content">
+      <strong>บัญชีตรวจสอบ</strong>
+      <span>กำลังดำเนินการ</span>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="flow-dot"></div>
+
+    <div class="flow-content">
+      <strong>ผู้จัดการอนุมัติ</strong>
+      <span>รอดำเนินการ</span>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="flow-dot"></div>
+
+    <div class="flow-content">
+      <strong>ผู้บริหารอนุมัติ</strong>
+      <span>รอดำเนินการ</span>
+    </div>
+  </div>
+
+</div>
                   </div>
                 </section>
                 <!-- /approval flow -->
 
-                <!-- PDF upload -->
-                <section class="panel">
+                <!-- =======================================================
+                     SECTION : เอกสารข้อมูลการเงินภายใน / PDF Upload
+                     class: panel-pdf
+                     ใช้สำหรับอัปโหลด เปิด ลบ และอ่านข้อมูลจาก PDF
+                ======================================================= -->
+                <section class="panel panel-pdf">
                   <div class="panel-head">
                     <div class="panel-title">
                       <span class="material-symbols-outlined" aria-hidden="true"
@@ -538,8 +550,12 @@
                 </section>
                 <!-- /pdf upload -->
 
-                <!-- Accounting signature -->
-                <section class="panel signature-panel">
+                <!-- =======================================================
+                     SECTION : ลายเซ็นผู้ตรวจสอบฝ่ายบัญชี
+                     class: panel-signature
+                     ใช้สำหรับแยกสี / style เฉพาะส่วนลายเซ็น
+                ======================================================= -->
+                <section class="panel panel-signature signature-panel">
                   <div class="panel-head">
                     <div class="panel-title">
                       <span class="material-symbols-outlined" aria-hidden="true"
@@ -813,27 +829,6 @@
 
 
 
-<!-- Success Modal -->
-<div id="successModal" class="success-modal hidden">
-  <div class="success-modal-box">
-    <div class="success-icon">
-      <span class="material-symbols-outlined">check_circle</span>
-    </div>
-
-    <h3 id="successTitle">บันทึกสำเร็จ</h3>
-
-    <p id="successMessage">
-      ระบบบันทึกข้อมูลเรียบร้อยแล้ว
-    </p>
-
-    <button
-      class="btn btn-primary"
-      onclick="closeSuccessModal()"
-    >
-      ตกลง
-    </button>
-  </div>
-</div>
 
 
 

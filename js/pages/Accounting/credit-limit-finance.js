@@ -552,7 +552,11 @@ async function saveAccountingDraft(requestId, card) {
     }
 
     updateSummaryCounts();
-    showToast("บันทึกข้อมูลบัญชีเรียบร้อยแล้ว ✓", "success");
+    showSuccessModal(
+  "บันทึกข้อมูลสำเร็จ",
+  "ระบบบันทึกข้อมูลฝ่ายบัญชีเรียบร้อยแล้ว"
+);
+    // showToast("บันทึกข้อมูลบัญชีเรียบร้อยแล้ว ✓", "success");
   } catch (err) {
     console.error("Save draft error:", err);
     showToast("บันทึกไม่สำเร็จ: " + (err.message || err), "error");
@@ -669,7 +673,7 @@ async function _doForwardToManager(requestId, card, payload) {
       })
       .eq("id", requestId);
     if (error) throw error;
-    showToast("ส่งต่อผู้จัดการเรียบร้อยแล้ว ✓", "success");
+    showSuccessModal("ส่งต่อผู้จัดการเรียบร้อยแล้ว ✓", "success");
     await loadAccountingRequests();
   } catch (err) {
     console.error("Forward to manager error:", err);
@@ -972,7 +976,10 @@ async function analyzePdfWithClaude(requestId, card) {
       .eq("id", requestId);
     if (error) throw error;
 
-    showToast("อ่าน PDF และคำนวณเรียบร้อยแล้ว ✓", "success");
+    showSuccessModal(
+  "อ่าน PDF สำเร็จ",
+  "ระบบอ่าน PDF และคำนวณข้อมูลเรียบร้อยแล้ว"
+);
   } catch (err) {
     console.error(err);
     showToast("อ่าน PDF ไม่สำเร็จ: " + (err.message || err), "error");
