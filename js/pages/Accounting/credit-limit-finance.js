@@ -235,11 +235,6 @@ function renderRequests() {
    ทุก UI อยู่ใน <template id="tpl-request-card"> ในไฟล์ .html
 ================================================================ */
 
-/**
- * clone <template id="tpl-request-card">
- * fill ข้อมูลผ่าน data-bind / data-field
- * wire event listeners
- */
 function buildRequestCard(row, index = 0) {
   const tpl = document.getElementById("tpl-request-card");
   const card = tpl.content.cloneNode(true).querySelector(".request-card");
@@ -361,20 +356,15 @@ function buildRequestCard(row, index = 0) {
 
   applyMiniFlow(card, row.status);
 
-  if (row.financial_analysis?.total_outstanding) {
-    const completed = completeFinancialAnalysis(
-      row.id,
-      card,
-      row.financial_analysis
-    );
-
+  /* ── FIX: เช็ค financial_analysis มีข้อมูลที่อ่านได้ ไม่ใช่แค่ total_outstanding ── */
+  const fa = row.financial_analysis;
+  if (fa && (fa.total_outstanding != null || fa.customer_name)) {
+    const completed = completeFinancialAnalysis(row.id, card, fa);
     renderAnalysisInCard(card, completed);
   }
 
   return card;
 }
-
-
 
 
 /* ── Accordion toggle ──────────────────────────────────────── */
@@ -415,7 +405,6 @@ function applyMiniFlow(card, status) {
 
     if (dotEl) {
       dotEl.className = `mini-flow-indicator ${state}`;
-      // ใส่ checkmark เฉพาะ done, ล้างออกถ้าไม่ใช่
       if (state === "done") {
         dotEl.innerHTML = `<span class="material-symbols-outlined">check</span>`;
       } else {
@@ -485,8 +474,6 @@ async function uploadFinancialPdf(requestId, card) {
   }
 }
 
-
-
 async function deleteFinancialPdf(requestId) {
   const row = allRequests.find((r) => r.id === requestId);
 
@@ -529,11 +516,6 @@ async function deleteFinancialPdf(requestId) {
   }
 }
 
-
-
-
-
-
 function setPdfNameInCard(card, text) {
   const el = card.querySelector("[data-bind='pdfName']");
   if (el) el.textContent = text;
@@ -554,8 +536,23 @@ async function saveAccountingDraft(requestId, card) {
       })
       .eq("id", requestId);
     if (error) throw error;
+
+    /* ── FIX: อัปเดต allRequests ใน memory ให้ตรงกับที่เพิ่ง save ──
+       ไม่ต้อง reload ทั้งหน้า — แค่ sync ข้อมูลใน cache แล้ว re-render
+       เฉพาะ card นี้ เพื่อไม่ให้ analysis panel หาย                   */
+    const rowIdx = allRequests.findIndex((r) => r.id === requestId);
+    if (rowIdx !== -1) {
+      allRequests[rowIdx] = {
+        ...allRequests[rowIdx],
+        ...payload,
+        status: "accounting_review",
+        accounting_status: "draft",
+        accounting_checked_by: currentUser.id,
+      };
+    }
+
+    updateSummaryCounts();
     showToast("บันทึกข้อมูลบัญชีเรียบร้อยแล้ว ✓", "success");
-    await loadAccountingRequests();
   } catch (err) {
     console.error("Save draft error:", err);
     showToast("บันทึกไม่สำเร็จ: " + (err.message || err), "error");
@@ -566,16 +563,100 @@ async function saveAccountingDraft(requestId, card) {
 async function forwardToManager(requestId, card) {
   const payload = collectAccountingPayload(requestId, card);
 
-  if (!payload.accounting_summary?.trim()) {
-    showToast("กรุณากรอกสรุปผลจากบัญชีก่อนส่งต่อ", "warn");
-    return;
-  }
   if (!payload.accounting_recommendation?.trim()) {
-    showToast("กรุณากรอกความคิดเห็น / ข้อเสนอแนะก่อนส่งต่อ", "warn");
+    showToast("กรุณากรอกข้อเสนอแนะจากฝ่ายบัญชีก่อนส่งต่อ", "warn");
     return;
   }
-  if (!confirmAction("ยืนยันส่งต่อคำขอนี้ให้ผู้จัดการใช่ไหม?")) return;
 
+  /* ── เปิด forward-confirm modal แทน window.confirm ── */
+  showForwardConfirmModal(requestId, card, payload);
+}
+
+/* ── Forward confirm modal ─────────────────────────────────── */
+function showForwardConfirmModal(requestId, card, payload) {
+  const tpl = document.getElementById("tpl-forward-confirm");
+  if (!tpl) {
+    /* fallback ถ้าไม่มี template */
+    _doForwardToManager(requestId, card, payload);
+    return;
+  }
+
+  const modal = tpl.content.cloneNode(true).querySelector(".forward-confirm-modal");
+
+  const fa = payload.financial_analysis || {};
+
+  const totalOutstanding = Number(fa.total_outstanding || 0);
+  const overdue30 = Number(fa.overdue_30_plus || 0);
+  const overdue60 = Number(fa.overdue_60_plus || 0);
+  const overdue30Total = overdue30 + overdue60;
+  const overduePct = totalOutstanding > 0
+    ? ((overdue30Total / totalOutstanding) * 100).toFixed(1) + "%"
+    : "-";
+
+  const verifiedCredit = Number(payload.accounting_verified_credit_limit || 0);
+  const creditRemaining = payload.credit_remaining;
+  const riskLevel = payload.accounting_risk_level || fa.risk_level || "";
+  const riskLabel = { low: "ต่ำ", medium: "ปานกลาง", high: "สูง" }[riskLevel] || riskLevel || "-";
+  const creditStatus = payload.credit_status || fa.credit_status || "-";
+  const oldest = fa.oldest_overdue_days ? fa.oldest_overdue_days + " วัน" : "-";
+
+  bindModal(modal, "cs-total", formatMoney(totalOutstanding));
+  bindModal(modal, "cs-overdue30", formatMoney(overdue30Total));
+  bindModal(modal, "cs-overduePct", overduePct);
+  bindModal(modal, "cs-oldest", oldest);
+  bindModal(modal, "cs-credit", verifiedCredit ? Number(verifiedCredit).toLocaleString("th-TH") + " บาท" : "-");
+  bindModal(modal, "cs-remaining", creditRemaining != null ? Number(creditRemaining).toLocaleString("th-TH") + " บาท" : "-");
+  bindModal(modal, "cs-risk", riskLabel);
+  bindModal(modal, "cs-status", creditStatus);
+
+  const recommendEl = modal.querySelector("[data-bind='cs-recommend']");
+  if (recommendEl) recommendEl.textContent = payload.accounting_recommendation || "-";
+
+  /* color coding */
+  const pctEl = modal.querySelector(".js-cs-pct");
+  if (pctEl && parseFloat(overduePct) > 30) pctEl.classList.add("text-red");
+
+  const oldestEl = modal.querySelector(".js-cs-oldest");
+  if (oldestEl && Number(fa.oldest_overdue_days || 0) > 60) oldestEl.classList.add("text-red");
+
+  const remEl = modal.querySelector(".js-cs-remaining");
+  if (remEl) remEl.classList.add(Number(creditRemaining || 0) < 0 ? "text-red" : "text-green");
+
+  const riskEl = modal.querySelector(".js-cs-risk");
+  if (riskEl) {
+    riskEl.classList.add(
+      riskLevel === "high" ? "text-red" : riskLevel === "medium" ? "text-orange" : "text-green"
+    );
+  }
+
+  const statusEl = modal.querySelector(".js-cs-status");
+  if (statusEl) {
+    statusEl.classList.add(
+      Number(creditRemaining || 0) < 0 ? "text-red" :
+      creditStatus === "ใกล้เต็มวงเงิน" ? "text-orange" : "text-green"
+    );
+  }
+
+  modal.querySelector(".js-forward-close")?.addEventListener("click", () => modal.remove());
+  modal.querySelector(".js-forward-cancel")?.addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
+
+  modal.querySelector(".js-forward-confirm")?.addEventListener("click", async () => {
+    modal.remove();
+    await _doForwardToManager(requestId, card, payload);
+  });
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add("show"));
+}
+
+function bindModal(root, key, value) {
+  root.querySelectorAll(`[data-bind="${key}"]`).forEach((el) => {
+    el.textContent = value ?? "";
+  });
+}
+
+async function _doForwardToManager(requestId, card, payload) {
   try {
     const { error } = await window.supabaseClient
       .from("approval_requests")
@@ -664,6 +745,23 @@ function collectAccountingPayload(requestId, card) {
     safeTotalOutstanding,
   );
 
+  /* ── FIX: preserve ทุก field จาก financial_analysis เดิม ──
+     spread row.financial_analysis ก่อน แล้วค่อย override
+     ที่เปลี่ยนแปลงจาก form — ป้องกัน total_outstanding และ
+     ข้อมูล aging อื่นๆ หายหลัง save                          */
+  const mergedAnalysis = {
+    ...(row.financial_analysis || {}),
+    verified_credit_limit: verifiedCreditLimit,
+    credit_remaining: creditRemaining,
+    risk_level: risk || row.financial_analysis?.risk_level || null,
+    summary,
+    recommendation,
+    accounting_signature_data: signatureData,
+    updated_at: new Date().toISOString(),
+    updated_by: currentUser?.id || null,
+    credit_status: creditStatus,
+  };
+
   return {
     credit_status: creditStatus,
     accounting_verified_credit_limit: verifiedCreditLimit,
@@ -671,18 +769,7 @@ function collectAccountingPayload(requestId, card) {
     accounting_risk_level: risk || null,
     accounting_summary: summary || null,
     accounting_recommendation: recommendation || null,
-    financial_analysis: {
-      ...(row.financial_analysis || {}),
-      verified_credit_limit: verifiedCreditLimit,
-      credit_remaining: creditRemaining,
-      risk_level: risk || null,
-      summary,
-      recommendation,
-      accounting_signature_data: signatureData,
-      updated_at: new Date().toISOString(),
-      updated_by: currentUser?.id || null,
-      credit_status: creditStatus,
-    },
+    financial_analysis: mergedAnalysis,
   };
 }
 
@@ -813,7 +900,6 @@ function sanitizeFileName(name) {
   return `${base || "file_" + Date.now()}.pdf`;
 }
 
-/** fill data-bind="key" elements inside a root node */
 function bind(root, key, value) {
   root.querySelectorAll(`[data-bind="${key}"]`).forEach((el) => {
     el.textContent = value ?? "";
@@ -860,6 +946,19 @@ async function analyzePdfWithClaude(requestId, card) {
     renderAnalysisInCard(card, completed);
     autoFillAccountingFields(card, completed);
 
+    /* ── อัปเดต allRequests cache ทันทีหลัง analyze ──
+       เพื่อให้ buildRequestCard ครั้งต่อไปได้ข้อมูลครบ  */
+    const rowIdx = allRequests.findIndex((r) => r.id === requestId);
+    if (rowIdx !== -1) {
+      allRequests[rowIdx] = {
+        ...allRequests[rowIdx],
+        financial_analysis: completed,
+        accounting_risk_level: completed.risk_level,
+        credit_status: completed.credit_status,
+        credit_remaining: completed.credit_remaining,
+      };
+    }
+
     const { error } = await window.supabaseClient
       .from("approval_requests")
       .update({
@@ -901,7 +1000,7 @@ function parseAgingText(text) {
 
   const clean = raw
     .replace(/,/g, "")
-    .replace(/[□■�]/g, "")
+    .replace(/[□■\uFFFD]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -989,86 +1088,24 @@ function parseAgingText(text) {
 
 function cleanCustomerName(name) {
   return String(name || "-")
-    .replace(/[□■�]/g, "")
+    .replace(/[□■\uFFFD]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 function findOldestOverdueDays(text) {
-  const lines = String(text || "")
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
+  const raw = String(text || "");
   const days = [];
 
-  lines.forEach((line) => {
-    if (!/\d{2}\/\d{2}\/\d{2}/.test(line)) return;
-    if (!/[A-Z]{1,}\d+/i.test(line)) return;
+  const cleaned = raw.replace(/-[\d,]+\.\d{2}\s+\d+/g, "SKIP");
 
-    const nums = line.match(/\b\d{1,3}\b/g)?.map(Number) || [];
-
-    nums.forEach((n) => {
-      if (n >= 1 && n <= 120) {
-        days.push(n);
-      }
-    });
-  });
+  const matches = cleaned.matchAll(/[\d,]+\.\d{2}\s+(\d{1,3})(?=\s)/g);
+  for (const m of matches) {
+    const n = Number(m[1]);
+    if (n >= 1 && n <= 500) days.push(n);
+  }
 
   return days.length ? Math.max(...days) : 0;
-}
-
-function completeFinancialAnalysis(requestId, card, data) {
-  const row = allRequests.find((r) => r.id === requestId) || {};
-
-  const verifiedInput = toNumber(
-    card.querySelector("[data-field='verifiedCredit']")?.value || "",
-  );
-
-  const verifiedCredit =
-    verifiedInput ||
-    Number(row.current_credit_limit || 0) ||
-    Number(data.verified_credit_limit || 0) ||
-    null;
-
-  const totalOutstanding = Number(data.total_outstanding || 0);
-
-  const creditRemaining =
-    verifiedCredit !== null ? verifiedCredit - totalOutstanding : null;
-
-  const creditStatus = getCreditStatus(
-    creditRemaining,
-    verifiedCredit,
-    totalOutstanding,
-  );
-
-  const risk = getRiskLevelFromAnalysis({
-    ...data,
-    verified_credit_limit: verifiedCredit,
-    credit_remaining: creditRemaining,
-    total_outstanding: totalOutstanding,
-  });
-
-  return {
-    ...data,
-    verified_credit_limit: verifiedCredit,
-    credit_remaining: creditRemaining,
-    credit_status: creditStatus,
-
-    risk_level: risk.level,
-    risk_label: risk.label,
-    risk_reason: risk.reason,
-  };
-}
-
-function findText(text, regex) {
-  return text.match(regex)?.[1]?.trim() || "";
-}
-function countInvoices(text) {
-  return (text.match(/\bIV\d{7}\b/g) || []).length;
-}
-function countPartialPayments(text) {
-  return (text.match(/\?IV\d{7}/g) || []).length;
 }
 
 function completeFinancialAnalysis(requestId, card, data) {
@@ -1107,14 +1144,20 @@ function completeFinancialAnalysis(requestId, card, data) {
   };
 }
 
+function findText(text, regex) {
+  return text.match(regex)?.[1]?.trim() || "";
+}
+function countInvoices(text) {
+  return (text.match(/\bIV\d{7}\b/g) || []).length;
+}
+function countPartialPayments(text) {
+  return (text.match(/\?IV\d{7}/g) || []).length;
+}
+
 /* ================================================================
    TEMPLATE CLONING — analysis body
-   แทน renderAnalysisBody() ที่ return HTML string
 ================================================================ */
 
-/**
- * fill analysis panel ภายใน card จาก <template id="tpl-analysis-body">
- */
 function renderAnalysisInCard(card, data) {
   const panel = card.querySelector(".js-analysis-panel");
   const body = card.querySelector(".js-analysis-body");
@@ -1282,6 +1325,7 @@ function autoFillAccountingFields(card, data) {
   if (sumEl && data.summary_th && !sumEl.value.trim())
     sumEl.value = data.summary_th;
 }
+
 /* ── Accounting signature canvas ────────────────────────── */
 function initSignatureSection(card, row) {
   const modal = card.querySelector(".js-signature-modal");
@@ -1452,33 +1496,27 @@ function isCanvasBlank(canvas) {
   return !pixels.some((value) => value !== 0);
 }
 
-function cleanCustomerName(name) {
-  return String(name || "-")
-    .replace(/[□■�]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+
+
+function showSuccessModal(title, message) {
+  document.getElementById("successTitle").textContent = title;
+  document.getElementById("successMessage").textContent = message;
+
+  document
+    .getElementById("successModal")
+    .classList.remove("hidden");
 }
 
-function findOldestOverdueDays(text) {
-  const raw = String(text || "");
-  const days = [];
-
-  // จับทุก pattern: ยอดเงิน (####.00) ตามด้วย จำนวนวันค้าง (integer)
-  // แต่ข้าม segment ที่มียอดติดลบ (-####.00 ตามด้วยตัวเลข) = credit note
-  const cleaned = raw.replace(/-[\d,]+\.\d{2}\s+\d+/g, "SKIP");
-
-  const matches = cleaned.matchAll(/[\d,]+\.\d{2}\s+(\d{1,3})(?=\s)/g);
-  for (const m of matches) {
-    const n = Number(m[1]);
-    if (n >= 1 && n <= 500) days.push(n);
-  }
-
-  return days.length ? Math.max(...days) : 0;
+function closeSuccessModal() {
+  document
+    .getElementById("successModal")
+    .classList.add("hidden");
 }
+
+
 
 /* ── Small DOM helpers ─────────────────────────────────────── */
 
-/** สร้าง .empty-state div โดยไม่ใช้ innerHTML */
 function makeEmptyState(message) {
   const el = document.createElement("div");
   el.className = "empty-state";
@@ -1486,10 +1524,6 @@ function makeEmptyState(message) {
   return el;
 }
 
-/**
- * set icon + label ของปุ่มที่มี .material-symbols-outlined
- * แทน innerHTML = `<span ...>icon</span>label`
- */
 function setButtonContent(btn, iconName, label) {
   btn.textContent = "";
   const icon = document.createElement("span");
