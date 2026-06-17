@@ -255,51 +255,53 @@
         <div class="request-content">
           <div class="request-body">
             <div class="review-layout">
-              <!-- ── Left column ─────────────────────────────── -->
+              <!-- ── Left column: ข้อมูลหลัก + งานที่บัญชีรับผิดชอบ ─────────────── -->
               <div class="left-stack">
                 <!-- =======================================================
                      SECTION : ข้อมูลคำขอ
                      class: panel-request
-                     ใช้สำหรับแยกสี / style เฉพาะส่วนข้อมูลคำขอ
+                     ใช้สำหรับแสดงข้อมูลคำขอจาก Sale
                 ======================================================= -->
                 <section class="panel panel-request">
                   <div class="panel-head">
                     <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >receipt_long</span
-                      >
+                      <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
                       ข้อมูลคำขอ
                     </div>
                   </div>
+
                   <div class="panel-body">
                     <div class="customer-grid">
                       <div class="customer-item">
                         <label>บริษัท</label>
                         <strong data-bind="shopName2"></strong>
                       </div>
+
                       <div class="customer-item">
                         <label>รหัสลูกค้า</label>
                         <strong data-bind="shopCode"></strong>
                       </div>
+
                       <div class="customer-item">
                         <label>เลขที่บิล</label>
                         <strong data-bind="saleOrderNo2"></strong>
                       </div>
+
                       <div class="customer-item">
                         <label>ยอดคำขอ</label>
-                        <strong
-                          class="text-red"
-                          data-bind="requestAmount"
-                        ></strong>
+                        <strong class="text-red" data-bind="requestAmount"></strong>
                       </div>
+
                       <div class="customer-item">
                         <label>วงเงินเครดิต</label>
                         <strong data-bind="currentCreditLimit"></strong>
                       </div>
+
                       <div class="customer-item">
                         <label>Sale</label>
                         <strong data-bind="saleName"></strong>
                       </div>
+
                       <div class="customer-item">
                         <label>วันที่ส่งคำขอ</label>
                         <strong data-bind="createdAt"></strong>
@@ -309,19 +311,35 @@
                 </section>
 
                 <!-- =======================================================
+                     SECTION : ผลวิเคราะห์จาก PDF
+                     class: panel-analysis
+                     ซ่อนอยู่ก่อน และจะแสดงเมื่ออ่าน/วิเคราะห์ PDF สำเร็จ
+                ======================================================= -->
+                <section class="panel panel-analysis js-analysis-panel" style="display: none">
+                  <div class="panel-head">
+                    <div class="panel-title">
+                      <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+                      ผลวิเคราะห์จาก PDF
+                    </div>
+                    <span class="analysis-badge js-analysis-badge"></span>
+                  </div>
+
+                  <div class="panel-body js-analysis-body"></div>
+                </section>
+
+                <!-- =======================================================
                      SECTION : ข้อมูลฝ่ายบัญชี
                      class: panel-accounting
-                     ใช้สำหรับแยกสี / style เฉพาะส่วนกรอกข้อมูลบัญชี
+                     รวมข้อมูลที่บัญชีกรอก + ลายเซ็นผู้ตรวจสอบ
                 ======================================================= -->
                 <section class="panel panel-accounting">
                   <div class="panel-head">
                     <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >edit_note</span
-                      >
+                      <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
                       ข้อมูลฝ่ายบัญชี
                     </div>
                   </div>
+
                   <div class="panel-body">
                     <div class="accounting-grid">
                       <div class="field">
@@ -335,9 +353,7 @@
                       </div>
 
                       <div class="field">
-                        <label data-label-for="verifiedCredit"
-                          >วงเงินจริงที่บัญชีตรวจสอบแล้ว (บาท)</label
-                        >
+                        <label data-label-for="verifiedCredit">วงเงินที่ตรวจสอบ (บาท)</label>
                         <input
                           data-field="verifiedCredit"
                           type="text"
@@ -347,125 +363,124 @@
                       </div>
 
                       <div class="field full">
-                        <label data-label-for="recommend"
-                          >ข้อเสนอแนะจากฝ่ายบัญชี</label
-                        >
+                        <label data-label-for="recommend">ข้อเสนอแนะจากฝ่ายบัญชี</label>
                         <textarea
                           data-field="recommend"
                           maxlength="1000"
                           placeholder="เช่น แนะนำอนุมัติวงเงินชั่วคราวไม่เกิน ..."
                         ></textarea>
-                        <span class="small-note"
-                          >ข้อความนี้ใช้สำหรับ Manager / Executive —
-                          ไม่แสดงในหน้า Sale</span
-                        >
+                        <span class="small-note">
+                          ข้อความนี้ใช้สำหรับ Manager / Executive — ไม่แสดงในหน้า Sale
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- ปุ่มบันทึกข้อมูลบัญชี -->
+                    <div class="panel-footer">
+                      <button class="btn btn-outline js-btn-save" type="button">
+                        <span class="material-symbols-outlined" aria-hidden="true">save</span>
+                        บันทึกข้อมูลบัญชี
+                      </button>
+                    </div>
+
+                    <!-- ลายเซ็นอยู่ในการ์ดข้อมูลฝ่ายบัญชี ตามที่บัญชีรับผิดชอบ -->
+                    <div class="accounting-signature-box">
+                      <div class="signature-title">
+                        <span class="material-symbols-outlined" aria-hidden="true">draw</span>
+                        ลายเซ็นผู้ตรวจสอบ (ฝ่ายบัญชี)
                       </div>
 
-                      <!-- <div class="field full">
-                        <label data-label-for="summary">สรุปผลจากบัญชี</label>
-                        <textarea
-                          data-field="summary"
-                          maxlength="1000"
-                          placeholder="สรุปเฉพาะข้อมูลที่ต้องการให้ Manager / Executive เห็น"
-                        ></textarea>
-                      </div> -->
-                    </div>
-                  </div>
-                </section>
+                      <div class="signature-preview-card">
+                        <div class="signature-empty js-signature-empty">
+                          <span class="material-symbols-outlined" aria-hidden="true">gesture</span>
+                          <strong>ยังไม่ได้บันทึกลายเซ็น</strong>
+                          <span>กดปุ่มด้านล่างเพื่อเซ็นชื่อผู้ตรวจสอบ</span>
+                        </div>
 
-                <!-- =======================================================
-                     SECTION : ผลวิเคราะห์จาก PDF
-                     class: panel-analysis
-                     ซ่อนอยู่ก่อน และจะแสดงเมื่ออ่าน/วิเคราะห์ PDF สำเร็จ
-                ======================================================= -->
-                <section class="panel panel-analysis js-analysis-panel" style="display: none">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >insights</span
-                      >
-                      ผลวิเคราะห์จาก PDF
+                        <div class="signature-image-wrap js-signature-image-wrap hidden">
+                          <img
+                            class="signature-image js-signature-image"
+                            alt="ลายเซ็นผู้ตรวจสอบฝ่ายบัญชี"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="signature-actions">
+                        <button class="btn btn-outline js-open-signature" type="button">
+                          <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                          เซ็นลายเซ็น
+                        </button>
+
+                        <button class="btn btn-danger js-clear-signature-display" type="button">
+                          <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                          ลบลายเซ็น
+                        </button>
+                      </div>
                     </div>
-                    <span class="analysis-badge js-analysis-badge"></span>
                   </div>
-                  <div class="panel-body js-analysis-body"></div>
                 </section>
               </div>
               <!-- /left-stack -->
 
-              <!-- ── Right sticky column ──────────────────── -->
+              <!-- ── Right sticky column: ขั้นตอน + PDF + ส่งต่อ ──────────────────── -->
               <aside class="right-sticky">
                 <!-- =======================================================
                      SECTION : ลำดับการดำเนินการ
-                     class: panel-flow
-                     ใช้สำหรับแสดงขั้นตอน Sale → บัญชี → Manager → ผู้บริหาร
                 ======================================================= -->
                 <section class="panel panel-flow">
                   <div class="panel-head">
                     <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >timeline</span
-                      >
+                      <span class="material-symbols-outlined" aria-hidden="true">timeline</span>
                       ลำดับการดำเนินการ
                     </div>
                   </div>
+
                   <div class="panel-body">
                     <div class="flow-vertical">
+                      <div class="flow-step done">
+                        <div class="flow-dot">
+                          <span class="material-symbols-outlined">check</span>
+                        </div>
+                        <div class="flow-content">
+                          <strong>Sale ส่งคำขอ</strong>
+                          <span>ส่งคำขอเรียบร้อยแล้ว</span>
+                        </div>
+                      </div>
 
-  <div class="flow-step done">
-    <div class="flow-dot">
-      <span class="material-symbols-outlined">check</span>
-    </div>
+                      <div class="flow-step active">
+                        <div class="flow-dot"></div>
+                        <div class="flow-content">
+                          <strong>บัญชีตรวจสอบ</strong>
+                          <span>กำลังดำเนินการ</span>
+                        </div>
+                      </div>
 
-    <div class="flow-content">
-      <strong>Sale ส่งคำขอ</strong>
-      <span>ส่งคำขอเรียบร้อยแล้ว</span>
-    </div>
-  </div>
+                      <div class="flow-step">
+                        <div class="flow-dot"></div>
+                        <div class="flow-content">
+                          <strong>ผู้จัดการอนุมัติ</strong>
+                          <span>รอดำเนินการ</span>
+                        </div>
+                      </div>
 
-  <div class="flow-step active">
-    <div class="flow-dot"></div>
-
-    <div class="flow-content">
-      <strong>บัญชีตรวจสอบ</strong>
-      <span>กำลังดำเนินการ</span>
-    </div>
-  </div>
-
-  <div class="flow-step">
-    <div class="flow-dot"></div>
-
-    <div class="flow-content">
-      <strong>ผู้จัดการอนุมัติ</strong>
-      <span>รอดำเนินการ</span>
-    </div>
-  </div>
-
-  <div class="flow-step">
-    <div class="flow-dot"></div>
-
-    <div class="flow-content">
-      <strong>ผู้บริหารอนุมัติ</strong>
-      <span>รอดำเนินการ</span>
-    </div>
-  </div>
-
-</div>
+                      <div class="flow-step">
+                        <div class="flow-dot"></div>
+                        <div class="flow-content">
+                          <strong>ผู้บริหารอนุมัติ</strong>
+                          <span>รอดำเนินการ</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </section>
-                <!-- /approval flow -->
 
                 <!-- =======================================================
                      SECTION : เอกสารข้อมูลการเงินภายใน / PDF Upload
-                     class: panel-pdf
-                     ใช้สำหรับอัปโหลด เปิด ลบ และอ่านข้อมูลจาก PDF
                 ======================================================= -->
                 <section class="panel panel-pdf">
                   <div class="panel-head">
                     <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >picture_as_pdf</span
-                      >
+                      <span class="material-symbols-outlined" aria-hidden="true">picture_as_pdf</span>
                       เอกสารข้อมูลการเงินภายใน
                     </div>
                   </div>
@@ -488,9 +503,7 @@
                             .click()
                         "
                       >
-                        <span class="material-symbols-outlined upload-icon"
-                          >cloud_upload</span
-                        >
+                        <span class="material-symbols-outlined upload-icon">cloud_upload</span>
                         <strong>ลากไฟล์ PDF มาวางที่นี่</strong>
                         <span>หรือคลิกเพื่อเลือกไฟล์</span>
                       </button>
@@ -502,15 +515,11 @@
 
                       <div class="uploaded-file-card">
                         <div class="file-icon-pdf">
-                          <span class="material-symbols-outlined"
-                            >picture_as_pdf</span
-                          >
+                          <span class="material-symbols-outlined">picture_as_pdf</span>
                         </div>
 
                         <div class="uploaded-file-info">
-                          <strong data-bind="pdfName"
-                            >ยอดคงค้าง คอนเซอร์เทก.pdf</strong
-                          >
+                          <strong data-bind="pdfName">ยอดคงค้าง คอนเซอร์เทก.pdf</strong>
                           <span>Private Storage</span>
 
                           <a
@@ -537,162 +546,29 @@
                         type="button"
                         style="display: none"
                       >
-                        <span class="material-symbols-outlined"
-                          >auto_awesome</span
-                        >
+                        <span class="material-symbols-outlined">auto_awesome</span>
                         อ่านข้อมูลจาก PDF
                       </button>
-                      <span class="small-note js-no-pdf-note"
-                        >อัปโหลด PDF ก่อนเพื่ออ่านข้อมูล</span
-                      >
+
+                      <span class="small-note js-no-pdf-note">
+                        อัปโหลด PDF ก่อนเพื่ออ่านข้อมูล
+                      </span>
                     </div>
                   </div>
                 </section>
-                <!-- /pdf upload -->
 
                 <!-- =======================================================
-                     SECTION : ลายเซ็นผู้ตรวจสอบฝ่ายบัญชี
-                     class: panel-signature
-                     ใช้สำหรับแยกสี / style เฉพาะส่วนลายเซ็น
+                     SECTION : Action buttons
                 ======================================================= -->
-                <section class="panel panel-signature signature-panel">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >draw</span
-                      >
-                      ลายเซ็นผู้ตรวจสอบ (ฝ่ายบัญชี)
-                    </div>
-                  </div>
-
-                  <div class="panel-body">
-                    <div class="signature-preview-card">
-                      <div class="signature-empty js-signature-empty">
-                        <span
-                          class="material-symbols-outlined"
-                          aria-hidden="true"
-                          >gesture</span
-                        >
-                        <strong>ยังไม่ได้บันทึกลายเซ็น</strong>
-                        <span>กดปุ่มด้านล่างเพื่อเซ็นชื่อผู้ตรวจสอบ</span>
-                      </div>
-
-                      <div
-                        class="signature-image-wrap js-signature-image-wrap hidden"
-                      >
-                        <img
-                          class="signature-image js-signature-image"
-                          alt="ลายเซ็นผู้ตรวจสอบฝ่ายบัญชี"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="signature-actions">
-                      <button
-                        class="btn btn-outline js-open-signature"
-                        type="button"
-                      >
-                        <span
-                          class="material-symbols-outlined"
-                          aria-hidden="true"
-                          >edit</span
-                        >
-                        เซ็นลายเซ็น
-                      </button>
-                      <button
-                        class="btn btn-danger js-clear-signature-display"
-                        type="button"
-                      >
-                        <span
-                          class="material-symbols-outlined"
-                          aria-hidden="true"
-                          >delete</span
-                        >
-                        ลบลายเซ็น
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Signature modal: อยู่ในแต่ละ card เพื่อไม่ให้ id ซ้ำ -->
-                  <div class="modal-overlay signature-modal js-signature-modal">
-                    <div class="modal-box signature-modal-box">
-                      <div class="modal-head">
-                        <h3>เซ็นชื่อผู้ตรวจสอบบัญชี</h3>
-                        <button
-                          class="modal-close js-close-signature"
-                          type="button"
-                          aria-label="ปิดหน้าต่างลายเซ็น"
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      <div class="modal-body">
-                        <p class="modal-sub">กรุณาเซ็นลายเซ็นในช่องด้านล่าง</p>
-
-                        <div class="sig-container">
-                          <canvas
-                            class="sig-canvas js-signature-canvas"
-                            height="180"
-                            width="520"
-                          ></canvas>
-                          <div class="sig-hint js-signature-hint">
-                            วาดลายเซ็นที่นี่
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="modal-foot">
-                        <button
-                          class="btn btn-outline js-clear-signature"
-                          type="button"
-                        >
-                          <span
-                            class="material-symbols-outlined"
-                            aria-hidden="true"
-                            >mop</span
-                          >
-                          ล้างลายเซ็น
-                        </button>
-                        <button
-                          class="btn btn-primary js-save-signature"
-                          type="button"
-                        >
-                          <span
-                            class="material-symbols-outlined"
-                            aria-hidden="true"
-                            >check</span
-                          >
-                          บันทึกลายเซ็น
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-                <!-- /accounting signature -->
-
-                <!-- Action buttons -->
                 <section class="action-box">
                   <h4>การดำเนินการ</h4>
                   <div class="action-row">
-                    <button class="btn btn-outline js-btn-save" type="button">
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >save</span
-                      >
-                      บันทึกข้อมูลบัญชี
-                    </button>
-                    <button
-                      class="btn btn-primary js-btn-forward"
-                      type="button"
-                    >
-                      <span class="material-symbols-outlined" aria-hidden="true"
-                        >send</span
-                      >
+                    <button class="btn btn-primary js-btn-forward" type="button">
+                      <span class="material-symbols-outlined" aria-hidden="true">send</span>
                       ส่งต่อผู้จัดการ
                     </button>
                   </div>
                 </section>
-                <!-- /action-box -->
               </aside>
               <!-- /right-sticky -->
             </div>

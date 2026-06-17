@@ -1,0 +1,595 @@
+:root {
+  /* PREMIUM PURPLE */
+  --purple-900: #201c58;
+  --purple-800: #2b2372;
+  --purple-700: #3831a0;
+  --purple-600: #483fcd;
+  --purple-500: #5754fa;
+  --purple-300: #938dff;
+  --purple-200: #c1bdff;
+  --purple-50: #f0effe;
+
+  /* BUNDLE BLUE */
+  --blue-900: #002d64;
+  --blue-800: #002f73;
+  --blue-700: #0052a1;
+  --blue-600: #006ac8;
+  --blue-500: #0097fc;
+  --blue-300: #73b8f0;
+  --blue-200: #a2d0ff;
+  --blue-50: #d0e7ff;
+
+  /* GOOD TO GO GREEN */
+  --green-900: #013c33;
+  --green-800: #02594c;
+  --green-700: #007765;
+  --green-600: #089c7c;
+  --green-500: #20b09f;
+  --green-300: #5cc2b4;
+  --green-200: #8ccdc9;
+  --green-50: #d1eee9;
+
+  /* GET QUOTES GOLD */
+  --gold-900: #9c540b;
+  --gold-800: #b6680f;
+  --gold-700: #d17700;
+  --gold-600: #e79302;
+  --gold-500: #fea530;
+  --gold-300: #ffc96e;
+  --gold-200: #ffdc9c;
+  --gold-50: #ffe1ba;
+
+  /* RISKY RED */
+  --red-900: #740127;
+  --red-800: #990031;
+  --red-700: #bf0039;
+  --red-600: #df0048;
+  --red-500: #f43f70;
+  --red-300: #ff75a1;
+  --red-200: #ffa1c0;
+  --red-50: #ffd1df;
+
+  /* COMMON */
+  --white: #ffffff;
+  --text-dark: #1f2937;
+  --text-muted: #64748b;
+  --border-soft: #e5e7eb;
+  --bg-soft: #f8fafc;
+}
+
+:root {
+  --primary: #0289d0;
+  --primary-hover: #00579a;
+
+  --success: #689e38;
+  --success-light: #c4e0a5;
+
+  --warning: #f4d916;
+  --warning-light: #fde68c;
+
+  --danger: #d32e2e;
+  --danger-light: #ef9a9a;
+
+  --executive: #7b1fa2;
+  --executive-light: #ce92d9;
+
+  --sale: #0196a7;
+  --sale-light: #81deeb;
+
+  --admin: #0d47a1;
+  --admin-light: #90caf9;
+
+  --bg: #f8fafc;
+  --card: #ffffff;
+
+  --text: #1b1a1b;
+  --text-muted: #78909c;
+
+  --border: #e7e6e7;
+}
+
+:root {
+  /* ==================================================
+     ORANGE
+  ================================================== */
+  --orange-900: #e65001;
+  --orange-800: #f57001;
+  --orange-700: #fea727;
+  --orange-600: #fecd80;
+  --orange-500: #fef3e1;
+
+  /* ==================================================
+     YELLOW
+  ================================================== */
+  --yellow-900: #fac02c;
+  --yellow-800: #f4d916;
+  --yellow-700: #fad53e;
+  --yellow-600: #fde68c;
+  --yellow-500: #fef9e3;
+
+  /* ==================================================
+     BLUE
+  ================================================== */
+  --blue-900: #00579a;
+  --blue-800: #0289d0;
+  --blue-700: #26a69a;
+  --blue-600: #81d5fb;
+  --blue-500: #e0f5ff;
+
+  /* ==================================================
+     CYAN
+  ================================================== */
+  --cyan-900: #006165;
+  --cyan-800: #0196a7;
+  --cyan-700: #27c7da;
+  --cyan-600: #81deeb;
+  --cyan-500: #e0f7fa;
+
+  /* ==================================================
+     GRAY
+  ================================================== */
+  --gray-900: #1b1a1b;
+  --gray-800: #4c4d4c;
+  --gray-700: #818180;
+  --gray-600: #b2b3b2;
+  --gray-500: #e7e6e7;
+
+  --slate-900: #273239;
+  --slate-800: #445a65;
+  --slate-700: #78909c;
+  --slate-600: #b1bfc5;
+  --slate-500: #eceef0;
+
+  /* ==================================================
+     PURPLE
+  ================================================== */
+  --purple-900: #4a158d;
+  --purple-800: #7b1fa2;
+  --purple-700: #aa47bd;
+  --purple-600: #ce92d9;
+  --purple-500: #f2e5f4;
+
+  --indigo-900: #301a92;
+  --indigo-800: #502ca8;
+  --indigo-700: #7e57c2;
+  --indigo-600: #b29cdb;
+  --indigo-500: #ede7f6;
+
+  /* ==================================================
+     RED
+  ================================================== */
+  --red-900: #b71d1d;
+  --red-800: #d32e2e;
+  --red-700: #ee5351;
+  --red-600: #ef9a9a;
+  --red-500: #ffebee;
+
+  /* ==================================================
+     GREEN
+  ================================================== */
+  --green-900: #33681f;
+  --green-800: #689e38;
+  --green-700: #9ccd64;
+  --green-600: #c4e0a5;
+  --green-500: #f1f9e8;
+
+  /* ==================================================
+     PINK
+  ================================================== */
+  --pink-900: #890f4f;
+  --pink-800: #c2185b;
+  --pink-700: #ed4f7a;
+  --pink-600: #f48fb1;
+  --pink-500: #fde5ec;
+
+  /* ==================================================
+     LIME
+  ================================================== */
+  --lime-900: #827717;
+  --lime-800: #aeb42a;
+  --lime-700: #d4e056;
+  --lime-600: #e6ef9d;
+  --lime-500: #f9fbe7;
+
+  /* ==================================================
+     ROYAL BLUE
+  ================================================== */
+  --royal-900: #0d47a1;
+  --royal-800: #1876d3;
+  --royal-700: #43a5f4;
+  --royal-600: #90caf9;
+  --royal-500: #e2f2fc;
+}
+
+:root {
+  /* ==================================================
+     BAHAMA BLUE
+  ================================================== */
+
+  --blue-50: #f0f9ff;
+  --blue-100: #dff3ff;
+  --blue-200: #b9e7fe;
+  --blue-300: #7bd6fe;
+  --blue-400: #34c2fc;
+  --blue-500: #0aabed;
+  --blue-600: #0089cb;
+  --blue-700: #00699e;
+  --blue-800: #055c87;
+  --blue-900: #044c70;
+  --blue-950: #07304a;
+
+  /* ==================================================
+     SYSTEM COLORS
+  ================================================== */
+
+  --primary: var(--blue-500);
+  --primary-hover: var(--blue-600);
+  --primary-active: var(--blue-700);
+
+  --secondary: var(--blue-300);
+
+  --success: #16a34a;
+  --success-light: #dcfce7;
+
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+
+  --danger: #dc2626;
+  --danger-light: #fee2e2;
+
+  --info: var(--blue-500);
+  --info-light: var(--blue-100);
+
+  /* ==================================================
+     BACKGROUND
+  ================================================== */
+
+  --bg-body: #f8fafc;
+  --bg-page: #ffffff;
+  --bg-card: #ffffff;
+  --bg-soft: var(--blue-50);
+
+  /* ==================================================
+     TEXT
+  ================================================== */
+
+  --text-main: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --text-white: #ffffff;
+
+  /* ==================================================
+     BORDER
+  ================================================== */
+
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --border-focus: var(--blue-400);
+
+  /* ==================================================
+     SHADOW
+  ================================================== */
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+
+  /* ==================================================
+     ROLE COLORS
+  ================================================== */
+
+  --role-sale: #0aabed;
+  --role-sale-bg: #dff3ff;
+
+  --role-accounting: #00699e;
+  --role-accounting-bg: #b9e7fe;
+
+  --role-manager: #16a34a;
+  --role-manager-bg: #dcfce7;
+
+  --role-executive: #7c3aed;
+  --role-executive-bg: #ede9fe;
+
+  --role-admin: #f59e0b;
+  --role-admin-bg: #fef3c7;
+
+  --role-qc: #ec4899;
+  --role-qc-bg: #fce7f3;
+}
+
+:root {
+  /* ==========================================
+     ROSE PALETTE
+  ========================================== */
+
+  --rose-950: #590d22;
+  --rose-900: #800f2f;
+  --rose-800: #a4133c;
+  --rose-700: #c9184a;
+  --rose-600: #ff4d6d;
+  --rose-500: #ff758f;
+  --rose-400: #ff8fa3;
+  --rose-300: #ffb3c1;
+  --rose-200: #ffccd5;
+  --rose-100: #fff0f3;
+
+  /* ==========================================
+     SEMANTIC
+  ========================================== */
+
+  --primary: #c9184a;
+  --primary-hover: #a4133c;
+  --primary-active: #800f2f;
+
+  --primary-light: #ffccd5;
+  --primary-soft: #fff0f3;
+
+  --accent: #ff4d6d;
+  --accent-light: #ff8fa3;
+
+  --danger: #c9184a;
+  --danger-light: #ffccd5;
+}
+
+:root {
+  /* ==========================================
+     BURGUNDY / WINE
+  ========================================== */
+
+  --wine-950: #050103;
+  --wine-900: #1b050d;
+  --wine-850: #360a1a;
+  --wine-800: #541029;
+
+  --wine-700: #701537;
+  --wine-650: #81183f;
+  --wine-600: #9b1e4c;
+
+  --wine-500: #b2255b;
+  --wine-450: #c62661;
+
+  --wine-400: #d12866;
+  --wine-350: #d93974;
+
+  --wine-300: #de5487;
+  --wine-250: #e05e8e;
+
+  --wine-200: #e89aac;
+  --wine-150: #edb9bb;
+
+  --wine-100: #f4c4d6;
+  --wine-50: #fae4ec;
+
+  --wine-25: #fff5f7;
+}
+
+:root {
+  /* ==========================================
+     PRIMARY
+  ========================================== */
+  --primary: #0f6cbd;
+  --primary-hover: #115ea3;
+  --primary-light: #dbeafe;
+
+  /* ==========================================
+     ROLE COLORS
+  ========================================== */
+
+  /* Sale */
+  --sale: #0891b2;
+  --sale-light: #cffafe;
+
+  /* Accounting */
+  --accounting: #1e40af;
+  --accounting-light: #dbeafe;
+
+  /* QC */
+  --qc: #ea580c;
+  --qc-light: #ffedd5;
+
+  /* Manager */
+  --manager: #15803d;
+  --manager-light: #dcfce7;
+
+  /* Executive */
+  --executive: #541029;
+  --executive-light: #fae4ec;
+
+  /* Admin */
+  --admin: #6b7280;
+  --admin-light: #f3f4f6;
+
+  /* ==========================================
+     STATUS
+  ========================================== */
+
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+
+  --info: #0284c7;
+  --info-bg: #e0f2fe;
+
+  /* ==========================================
+     BACKGROUND
+  ========================================== */
+
+  --body-bg: #f8fafc;
+  --page-bg: #f1f5f9;
+  --card-bg: #ffffff;
+  --card-hover: #f8fafc;
+
+  /* ==========================================
+     TEXT
+  ========================================== */
+
+  --text-main: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+  --text-white: #ffffff;
+
+  /* ==========================================
+     BORDER
+  ========================================== */
+
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: #0f6cbd;
+
+  /* ==========================================
+     SIDEBAR
+  ========================================== */
+
+  --sidebar-bg: #0f172a;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #0f6cbd;
+  --sidebar-text: #e2e8f0;
+
+  /* ==========================================
+     HEADER
+  ========================================== */
+
+  --header-bg: #ffffff;
+  --header-border: #e2e8f0;
+
+  /* ==========================================
+     SHADOW
+  ========================================== */
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.12);
+
+  /* ==========================================
+     RADIUS
+  ========================================== */
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* ==========================================
+    1. SAP Style ⭐ นิยมมากสุด โทนฟ้า + เทา + ขาว
+  ========================================== */
+:root {
+  --primary: #0f6cbd;
+  --primary-dark: #0a4d88;
+
+  --success: #107c10;
+  --warning: #ffb900;
+  --danger: #d13438;
+
+  --bg: #f5f7fa;
+  --card: #ffffff;
+
+  --text: #323130;
+  --border: #e1dfdd;
+
+  /* ==========================================
+     ✅ ERP
+✅ Accounting
+✅ Production
+✅ Warehouse
+  ========================================== */
+}
+
+/* ==========================================
+     2. Microsoft Dynamics 365 Style ⭐⭐⭐  โทน Navy Blue
+  ========================================== */
+
+:root {
+  --primary: #0078d4;
+  --primary-dark: #005a9e;
+
+  --sidebar: #0f172a;
+
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+
+  --bg: #f8fafc;
+
+  /* ==========================================
+     RADIUS
+  ========================================== */
+}
+
+/* ==========================================
+   3. Odoo Style  ม่วงเข้ม
+  ========================================== */
+
+:root {
+  --primary: #714b67;
+  --primary-dark: #5c3d54;
+
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+
+  --bg: #f6f7f9;
+
+  /* ==========================================
+    ✅ ERP
+✅ CRM
+✅ Sales
+  ========================================== */
+}
+
+/* ==========================================
+     4. ERPNext Styleเขียว + เทา
+  ========================================== */
+
+:root {
+  --primary: #2490ef;
+
+  --success: #28a745;
+  --warning: #ffa00a;
+  --danger: #e24c4b;
+
+  --sidebar: #2c3e50;
+  --bg: #f7fafc;
+
+  /* ==========================================
+     ✅ โรงงาน
+✅ สต๊อก
+✅ วางแผนผลิต
+  ========================================== */
+}
+
+/* ==========================================
+     5. Industrial Factory Style ⭐⭐⭐⭐⭐แนวโรงงานยุคใหม่
+  ========================================== */
+
+:root {
+  --primary: #0284c7;
+
+  --production: #0f766e;
+  --warehouse: #1d4ed8;
+  --quality: #ea580c;
+  --maintenance: #7c3aed;
+
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  --sidebar: #0f172a;
+
+  --bg: #f8fafc;
+  --card: #ffffff;
+
+  /* ==========================================
+    - Smart Factory
+- Manufacturing
+- MES
+- Production Monitoring
+  ========================================== */
+}

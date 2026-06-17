@@ -5,6 +5,98 @@
 
 /* ── Design tokens ──────────────────────────────────────────── */
 :root {
+  
+    /* PREMIUM PURPLE */
+    --purple-900: #201c58;
+    --purple-800: #2b2372;
+    --purple-700: #3831a0;
+    --purple-600: #483fcd;
+    --purple-500: #5754fa;
+    --purple-300: #938dff;
+    --purple-200: #c1bdff;
+    --purple-50: #f0effe;
+
+    /* BUNDLE BLUE */
+    --blue-900: #002d64;
+    --blue-800: #002f73;
+    --blue-700: #0052a1;
+    --blue-600: #006ac8;
+    --blue-500: #0097fc;
+    --blue-300: #73b8f0;
+    --blue-200: #a2d0ff;
+    --blue-50: #d0e7ff;
+
+    /* GOOD TO GO GREEN */
+    --green-900: #013c33;
+    --green-800: #02594c;
+    --green-700: #007765;
+    --green-600: #089c7c;
+    --green-500: #20b09f;
+    --green-300: #5cc2b4;
+    --green-200: #8ccdc9;
+    --green-50: #d1eee9;
+
+    /* GET QUOTES GOLD */
+    --gold-900: #9c540b;
+    --gold-800: #b6680f;
+    --gold-700: #d17700;
+    --gold-600: #e79302;
+    --gold-500: #fea530;
+    --gold-300: #ffc96e;
+    --gold-200: #ffdc9c;
+    --gold-50: #ffe1ba;
+
+    /* RISKY RED */
+    --red-900: #740127;
+    --red-800: #990031;
+    --red-700: #bf0039;
+    --red-600: #df0048;
+    --red-500: #f43f70;
+    --red-300: #ff75a1;
+    --red-200: #ffa1c0;
+    --red-50: #ffd1df;
+
+     /* ==========================================
+     ROSE PALETTE
+  ========================================== */
+
+  --rose-950: #590d22;
+  --rose-900: #800f2f;
+  --rose-800: #a4133c;
+  --rose-700: #c9184a;
+  --rose-600: #ff4d6d;
+  --rose-500: #ff758f;
+  --rose-400: #ff8fa3;
+  --rose-300: #ffb3c1;
+  --rose-200: #ffccd5;
+  --rose-100: #fff0f3;
+
+    /* COMMON */
+    --white: #ffffff;
+    --text-dark: #1f2937;
+    --text-muted: #64748b;
+    --border-soft: #e5e7eb;
+    --bg-soft: #f8fafc;
+
+    /* ==================================================
+     ORANGE
+  ================================================== */
+  --orange-900: #e65001;
+  --orange-800: #f57001;
+  --orange-700: #fea727;
+  --orange-600: #fecd80;
+  --orange-500: #fef3e1;
+
+  /* ==================================================
+     YELLOW
+  ================================================== */
+  --yellow-900: #fac02c;
+  --yellow-800: #f4d916;
+  --yellow-700: #fad53e;
+  --yellow-600: #fde68c;
+  --yellow-500: #fef9e3;
+
+
   /* Brand — slate-indigo */
   --brand: #2563eb;
   --brand-dark: #1e40af;
@@ -127,8 +219,8 @@ a {
   flex-direction: column;
   background: linear-gradient(
     180deg,
-    var(--sidebar-from) 0%,
-    var(--sidebar-to) 100%
+    var(--rose-400) 0%,
+    var(--rose-500) 100%
   );
   box-shadow: 4px 0 20px rgba(15, 23, 42, 0.12);
   border-right: 1px solid rgba(255, 255, 255, 0.06);
@@ -374,11 +466,11 @@ a {
   box-shadow: var(--shadow);
 }
 .summary-card.active {
-  border-color: var(--brand-border);
-  box-shadow: 0 0 0 3px var(--brand-soft);
+  border-color: var(--gold-200);
+  box-shadow: 0 0 0 3px var(--gray-50);
 }
 .summary-card.active::before {
-  background: var(--brand);
+  background: var(--gold-500);
 }
 .summary-card span {
   display: block;
@@ -394,10 +486,10 @@ a {
   line-height: 1;
 }
 .summary-card.active span {
-  color: var(--brand-dark);
+  color: var(--gold-700);
 }
 .summary-card.active strong {
-  color: var(--brand);
+  color: var(--red);
 }
 
 /* ================================================================
@@ -550,7 +642,11 @@ a {
 .request-head {
   width: 100%;
   border: 0;
-  background: transparent;
+  background: var(--yellow-500);
+  /* background: linear-gradient(135deg, #ffd1df 0%, #ffa1c0 100%); */
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  position: relative;
+  border-bottom: 1px solid var(--yellow-600);
   padding: 18px 22px;
   display: flex;
   align-items: center;
@@ -558,10 +654,37 @@ a {
   gap: 12px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.25s;
+  margin-bottom: 20px;
 }
 .request-head:hover {
-  background: var(--gray-50);
+  background: var(--yellow-600);
+  /* background: linear-gradient(135deg, #ffd1df 0%, #ffa1c0 100%); */
+}
+.request-head::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0; 
+  bottom: 0;
+  width: 5px;
+  background: var(--gold-500);
+}
+
+.request-card.status-accounting_review .request-head {
+  background: #fef3c7;
+}
+
+.request-card.status-manager_review .request-head {
+  background: #dbeafe;
+}
+
+.request-card.status-approved .request-head {
+  background: #dcfce7;
+}
+
+.request-card.status-rejected .request-head {
+  background: #fee2e2;
 }
 
 .request-head-left {
@@ -586,8 +709,8 @@ a {
   flex: 0 0 auto;
 }
 .request-head:hover .expand-icon {
-  background: var(--brand-soft);
-  color: var(--brand);
+  background: var(--gray-200);
+  color: var(--red);
 }
 .request-title h3 {
   font-size: 17px;
@@ -617,6 +740,7 @@ a {
 }
 .request-card.collapsed .expand-icon {
   transform: rotate(-90deg);
+ background-color: var(--gold-300);
 }
 .request-body {
   padding: 0 22px 22px;
@@ -728,72 +852,63 @@ a {
   padding: 16px;
 }
 
-
 /* ================================================================
    PANEL COLORS
 ================================================================ */
 
 /* ข้อมูลคำขอ */
-.panel-request .panel-head{
-  background:#dbeafe;
+.panel-request .panel-head {
+  background: #dbeafe;
 }
 
-.panel-request .panel-body{
-  background:#eff6ff;
+.panel-request .panel-body {
+  background: #eff6ff;
 }
-
 
 /* ข้อมูลฝ่ายบัญชี */
-.panel-accounting .panel-head{
-  background:#dcfce7;
+.panel-accounting .panel-head {
+  background: #dcfce7;
 }
 
-.panel-accounting .panel-body{
-  background:#f0fdf4;
+.panel-accounting .panel-body {
+  background: #f0fdf4;
 }
-
 
 /* ผลวิเคราะห์ PDF */
-.panel-analysis .panel-head{
-  background:#fef3c7;
+.panel-analysis .panel-head {
+  background: #fef3c7;
 }
 
-.panel-analysis .panel-body{
-  background:#fffbeb;
+.panel-analysis .panel-body {
+  background: #fffbeb;
 }
-
 
 /* ลำดับการดำเนินการ */
-.panel-flow .panel-head{
-  background:#ede9fe;
+.panel-flow .panel-head {
+  background: #ede9fe;
 }
 
-.panel-flow .panel-body{
-  background:#f5f3ff;
+.panel-flow .panel-body {
+  background: #f5f3ff;
 }
-
 
 /* เอกสาร PDF */
-.panel-pdf .panel-head{
-  background:#fee2e2;
+.panel-pdf .panel-head {
+  background: #fee2e2;
 }
 
-.panel-pdf .panel-body{
-  background:#fef2f2;
+.panel-pdf .panel-body {
+  background: #fef2f2;
 }
-
 
 /* ลายเซ็น */
-.panel-signature .panel-head{
-  background:#e0f2fe;
+.panel-signature .panel-head {
+  background: #e0f2fe;
 }
 
-.panel-signature .panel-body{
-  background:#f0f9ff;
+.panel-signature .panel-body {
+  background: #f0f9ff;
 }
-
-
-
 
 /* ================================================================
    CUSTOMER INFO GRID
@@ -1294,7 +1409,9 @@ a {
    SIGNATURE SECTION
 ================================================================ */
 .signature-panel {
-  /* inherits .panel */
+  display: block;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .signature-preview-card {
@@ -1352,6 +1469,35 @@ a {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 10px;
+}
+
+.panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.accounting-signature-box {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--gray-300);
+}
+
+.signature-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--gray-700);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.signature-title .material-symbols-outlined {
+  font-size: 19px;
+  color: var(--brand);
 }
 
 /* ================================================================
@@ -1818,28 +1964,25 @@ a {
   }
 }
 
+.request-title h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 
-
-
-.request-title h3{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-
-  font-size:16px;
-  font-weight:800;
-  color:#0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-.request-title .doc-no{
-  margin-top:4px;
+.request-title .doc-no {
+  margin-top: 4px;
 
-  font-size:12px;
-  color:#94a3b8;
-  font-weight:500;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
-.bill-separator{
-  color:#cbd5e1;
+.bill-separator {
+  color: #cbd5e1;
 }
