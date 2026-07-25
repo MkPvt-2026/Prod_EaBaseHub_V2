@@ -38,7 +38,7 @@ if (typeof supabase === 'undefined') {
   console.error('❌ Supabase library ยังไม่ถูกโหลด!');
   throw new Error('Supabase library is not loaded');
 }
-
+// 111
 // สร้าง client
 const supabaseClient = supabase.createClient(config.url, config.anonKey);
 
