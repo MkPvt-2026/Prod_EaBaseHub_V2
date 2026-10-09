@@ -25,7 +25,7 @@ async function getUser() {
     if (user) return user;
   }
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) { window.location.href = "/login.html"; return null; }
+  if (!user) { window.location.href = "/pages/auth/login.html"; return null; }
   return user;
 }
 

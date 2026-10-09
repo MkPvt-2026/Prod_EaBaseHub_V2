@@ -1,12 +1,12 @@
 // ─── PAGE NAVIGATION ───
 const pageLinks = {
-  'sale': 'credit-limit-sale.html',
-  'a4': 'credit-limit-a4-document.html',
-  'sign': 'credit-limit-signature.html',
-  'detail': 'credit-limit-detail.html',
-  'finance': 'credit-limit-finance.html',
-  'approval': 'credit-limit-approval.html',
-  'tracking': 'credit-limit-tracking.html'
+  'sale': '/pages/forms/credit-limit-sale.html',
+  'a4': '/pages/forms/credit-limit-a4-document.html',
+  'sign': '/pages/forms/credit-limit-signature.html',
+  'detail': '/pages/forms/credit-limit-detail.html',
+  'finance': '/pages/Accounting/credit-limit-finance.html',
+  'approval': '/pages/forms/credit-limit-approval.html',
+  'tracking': '/pages/forms/credit-limit-tracking.html'
 };
 
 function goPage(id) {
@@ -104,20 +104,20 @@ function saveSig() {
     const img = new Image();
     img.onload = () => { dCtx.clearRect(0,0,disp.width,disp.height); dCtx.drawImage(img,0,0,disp.width,disp.height); };
     img.src = sigData;
-    document.getElementById('sigPlaceholder').style.display = 'none';
-    document.getElementById('sigDisplayWrap').style.display = 'block';
+    { const el = document.getElementById('sigPlaceholder'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('sigDisplayWrap'); if (el) el.style.display = 'block'; }
   }
   closeSigModal();
 }
 function clearDisplaySig() {
   const disp = document.getElementById('sigDisplay');
   if (disp) disp.getContext('2d').clearRect(0,0,disp.width,disp.height);
-  document.getElementById('sigPlaceholder').style.display = 'block';
-  document.getElementById('sigDisplayWrap').style.display = 'none';
+  { const el = document.getElementById('sigPlaceholder'); if (el) el.style.display = 'block'; }
+  { const el = document.getElementById('sigDisplayWrap'); if (el) el.style.display = 'none'; }
   sigData = null;
 }
 function clearSig2() {
   const c = document.getElementById('sigCanvas2');
-  c.getContext('2d').clearRect(0,0,c.width,c.height);
-  document.getElementById('sigHint2').classList.remove('hidden');
+  if (c) c.getContext('2d').clearRect(0,0,c.width,c.height);
+  document.getElementById('sigHint2')?.classList.remove('hidden');
 }

@@ -1,6 +1,8 @@
 function showPage(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + page).classList.add('active');
+    const target = document.getElementById('page-' + page) || document.querySelector('.page');
+    if (!target) return;
+    target.classList.add('active');
 
     // Update flow steps in header
     const steps = document.querySelectorAll('.flow-step');

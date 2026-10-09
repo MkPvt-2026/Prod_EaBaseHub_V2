@@ -17,6 +17,8 @@
 
     <!-- <link rel="stylesheet" href="/css/base/baseExecutive.css"> -->
     <link rel="stylesheet" href="/css/pages/report/reportTracker.css" />
+    <!-- Layout สำหรับโน้ตบุ๊ก (โหลดหลังไฟล์หลักเพื่อ override) -->
+    <link rel="stylesheet" href="/css/pages/report/reportTracker-laptop.css" />
     <!-- 🆕 Sidebar + Header styles -->
     <!-- <link rel="stylesheet" href="/css/base/sidebar-header.css"> -->
   </head>
@@ -108,6 +110,13 @@
             <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
           </a>
 
+      <a href="/pages/marketing/marketingHome.html" class="sidebar-nav-item" title="Marketing Home">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">campaign</span>
+        </div>
+        <span class="nav-label">Marketing Home</span>
+      </a>
+
           <!-- <a href="#"
     class="sidebar-nav-item"
     title="ทีมงาน">
@@ -193,7 +202,7 @@
 
         <!-- Breadcrumb -->
         <div class="app-breadcrumb">
-          <a href="/pages/executive/home.html">
+          <a href="/pages/executive/executiveHome.html">
             <span class="material-symbols-outlined">home</span>
             หน้าหลัก
           </a>
@@ -208,261 +217,178 @@
          PAGE CONTENT
     ══════════════════════════════════════════════════ -->
         <main class="app-content">
-          <div class="container">
+          <div class="container rt-container">
             <!-- ══════════════════════════════════════════════════
-             DATE RANGE PICKER
+             TOOLBAR (sticky) — ช่วงเวลา + รอบทริป + ตัวกรอง ในที่เดียว
+             ออกแบบสำหรับโน้ตบุ๊ก 1366–1920px: เห็นรายการตั้งแต่หน้าจอแรก
         ══════════════════════════════════════════════════ -->
-            <div class="date-range-section">
-              <div class="date-range-header">
-                <div class="date-range-title">
-                  <span class="icon">
-                    <span class="material-symbols-outlined icon-md"
-                      >calendar_clock</span
-                    >
-                    <span>ช่วงเวลา</span>
-                  </span>
+            <section class="rt-toolbar" aria-label="ช่วงเวลาและตัวกรอง">
+              <!-- แถว 1: ช่วงเวลา -->
+              <div class="rt-row">
+                <div class="rt-period">
+                  <span class="material-symbols-outlined">calendar_clock</span>
                   <span class="date-range-label" id="dateRangeLabel">—</span>
                 </div>
 
-                <div class="date-range-controls">
-                  <div class="date-input-group">
-                    <label>เริ่ม</label>
-                    <input type="date" id="dateStart" />
-                  </div>
-                  <div class="date-input-group">
-                    <label>สิ้นสุด</label>
-                    <input type="date" id="dateEnd" />
-                  </div>
+                <div class="rt-dates">
+                  <input type="date" id="dateStart" aria-label="วันที่เริ่ม" />
+                  <span class="rt-dash">–</span>
+                  <input type="date" id="dateEnd" aria-label="วันที่สิ้นสุด" />
                 </div>
-              </div>
 
-              <div class="quick-range-btns">
-                <button class="quick-range-btn" data-range="today">
-                  วันนี้
-                </button>
-                <button class="quick-range-btn" data-range="7days">
-                  7 วัน
-                </button>
-                <button class="quick-range-btn active" data-range="thisWeek">
-                  สัปดาห์นี้
-                </button>
-                <button class="quick-range-btn" data-range="lastWeek">
-                  สัปดาห์ที่แล้ว
-                </button>
-                <button class="quick-range-btn" data-range="30days">
-                  30 วัน
-                </button>
-                <button class="quick-range-btn" data-range="thisMonth">
-                  เดือนนี้
-                </button>
-                <button class="quick-range-btn" data-range="lastMonth">
-                  เดือนที่แล้ว
-                </button>
-              </div>
-            </div>
+                <div class="quick-range-btns rt-seg" role="group" aria-label="ช่วงเวลาด่วน">
+                  <button class="quick-range-btn" data-range="today">วันนี้</button>
+                  <button class="quick-range-btn" data-range="7days">7 วัน</button>
+                  <button class="quick-range-btn active" data-range="thisWeek">สัปดาห์นี้</button>
+                  <button class="quick-range-btn" data-range="lastWeek">สัปดาห์ก่อน</button>
+                  <button class="quick-range-btn" data-range="30days">30 วัน</button>
+                  <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
+                  <button class="quick-range-btn" data-range="lastMonth">เดือนก่อน</button>
+                </div>
 
-            <!-- ══════════════════════════════════════════════════
-             SUMMARY CARDS
-        ══════════════════════════════════════════════════ -->
-            <div class="summary-cards">
-              <div class="sum-card total-theme">
-                <div class="sum-icon-desc">
-                  <span class="material-symbols-outlined icon-blue"
-                    >description</span
-                  >
-                </div>
-                <div class="sum-content">
-                  <div class="sum-value" id="totalReports">—</div>
-                  <div class="sum-label">รายงานทั้งหมด</div>
-                </div>
-              </div>
-
-              <div class="sum-card un-read">
-                <div class="sum-icon-unread">
-                  <span class="material-symbols-outlined icon-orange"
-                    >schedule</span
-                  >
-                </div>
-                <div class="sum-content">
-                  <div class="sum-value" id="unreadReports">—</div>
-                  <div class="sum-label">ยังไม่อ่าน</div>
-                </div>
-              </div>
-
-              <div class="sum-card">
-                <div class="sum-icon">
-                  <span class="material-symbols-outlined icon-green"
-                    >check_circle</span
-                  >
-                </div>
-                <div class="sum-content">
-                  <div class="sum-value" id="readReports">—</div>
-                  <div class="sum-label">อ่านแล้ว</div>
-                </div>
-              </div>
-
-              <div class="sum-card">
-                <div class="sum-icon-cyan">
-                  <span class="material-symbols-outlined icon-cyan">chat</span>
-                </div>
-                <div class="sum-content">
-                  <div class="sum-value" id="commentedReports">—</div>
-                  <div class="sum-label">มี Comment</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════
-             SALES OVERVIEW
-        ══════════════════════════════════════════════════ -->
-            <div class="card">
-              <div class="card-header">
-                <h2>
-                  <span class="material-symbols-outlined">groups</span>
-                  ภาพรวมทีมเซลล์
-                </h2>
-                <span class="card-hint"
-                  >คลิกการ์ดเพื่อดูรายงานทั้งหมดของเซลล์ในตารางเดียว</span
-                >
-              </div>
-              <div class="sales-grid" id="salesGrid">
-                <div class="loading">กำลังโหลด...</div>
-              </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════
-             FILTERS
-        ══════════════════════════════════════════════════ -->
-            <div class="filter-section">
-              <div class="filter-row">
-                <div class="filter-group">
-                  <label>รอบทริป (เดือน/ช่วงเวลา)</label>
-                  <select id="filterTripRound">
-                    <option value="">— ทั้งหมด / เลือกรอบทริป —</option>
+                <div class="rt-round">
+                  <span class="material-symbols-outlined" title="รอบทริป">route</span>
+                  <select id="filterTripRound" aria-label="รอบทริป">
+                    <option value="">รอบทริป: ไม่เลือก (ใช้ช่วงวันที่)</option>
                   </select>
-                </div>
-
-                <div class="filter-group">
-                  <label>เซลล์</label>
-                  <select id="filterSales">
-                    <option value="">— ทั้งหมด —</option>
-                  </select>
-                </div>
-
-                <div class="filter-group">
-                  <label>สถานะ</label>
-                  <select id="filterStatus">
-                    <option value="">— ทั้งหมด —</option>
-                    <option value="unread">ยังไม่อ่าน</option>
-                    <option value="read">อ่านแล้ว</option>
-                    <option value="commented">มี Comment</option>
-                  </select>
-                </div>
-
-                <div class="filter-group">
-                  <label>ค้นหา</label>
-                  <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="ชื่อร้าน, สินค้า, จังหวัด..."
-                  />
+                  <button type="button" id="btnTripRoundDocs" class="rt-btn rt-btn-green" onclick="openTripRoundDocsModal()" title="เอกสารที่เซลล์ส่งบัญชี ในรอบที่เลือก">
+                    <span class="material-symbols-outlined">folder_open</span>
+                    เอกสารส่งบัญชี
+                  </button>
                 </div>
               </div>
 
-              <div class="filter-actions">
-                <button onclick="applyFilter()" class="btn btn-primary">
-                  <span class="material-symbols-outlined icon-white"
-                    >search</span
-                  >
+              <!-- แถว 2: ค้นหา + ตัวกรอง + เมนูเอกสาร -->
+              <div class="rt-row">
+                <div class="rt-search">
+                  <span class="material-symbols-outlined">search</span>
+                  <input type="text" id="searchInput" placeholder="ค้นหา ร้าน / สินค้า / จังหวัด / เซลล์ / หมายเหตุ" />
+                </div>
+
+                <select id="filterSales" class="rt-select" aria-label="เซลล์">
+                  <option value="">เซลล์: ทั้งหมด</option>
+                </select>
+
+                <select id="filterStatus" class="rt-select" aria-label="สถานะ">
+                  <option value="">สถานะ: ทั้งหมด</option>
+                  <option value="unread">ยังไม่อ่าน</option>
+                  <option value="read">อ่านแล้ว</option>
+                  <option value="commented">มี Comment</option>
+                </select>
+
+                <button onclick="resetFilter()" class="rt-btn" title="ล้างตัวกรอง">
+                  <span class="material-symbols-outlined">restart_alt</span>
+                  ล้าง
+                </button>
+                <!-- ยังเก็บปุ่มกรองไว้ (กด Enter ในช่องค้นหาก็ได้) -->
+                <button onclick="applyFilter()" class="rt-btn rt-btn-primary rt-apply" title="กรอง">
+                  <span class="material-symbols-outlined">filter_alt</span>
                   กรอง
                 </button>
 
-                <button onclick="resetFilter()" class="btn btn-secondary">
-                  <span class="material-symbols-outlined">refresh</span>
-                  รีเซ็ต
-                </button>
+                <span class="rt-spacer"></span>
 
-                <button onclick="openFormPlanOverviewModal()" class="btn btn-plan-form">
-                  <span class="material-symbols-outlined icon-white">map</span>
-                  รายงาน formPlan
-                </button>
-
-                <button onclick="openFormActualOverviewModal()" class="btn btn-actual-form">
-                  <span class="material-symbols-outlined icon-white">receipt_long</span>
-                  รายงาน formActual
-                </button>
-
-                <button onclick="exportCSV()" class="btn btn-export">
-                  <span class="material-symbols-outlined icon-orange"
-                    >download</span
-                  >
-                  Export CSV
-                </button>
+                <details class="rt-menu">
+                  <summary class="rt-btn">
+                    <span class="material-symbols-outlined">description</span>
+                    เอกสาร / ส่งออก
+                    <span class="material-symbols-outlined rt-caret">expand_more</span>
+                  </summary>
+                  <div class="rt-menu-list">
+                    <button onclick="this.closest('details').open=false; openFormPlanOverviewModal()">
+                      <span class="material-symbols-outlined">map</span> รายงานแผนเดินทาง (formPlan)
+                    </button>
+                    <button onclick="this.closest('details').open=false; openFormActualOverviewModal()">
+                      <span class="material-symbols-outlined">receipt_long</span> รายงานเคลียร์ค่าใช้จ่าย (formActual)
+                    </button>
+                    <button onclick="this.closest('details').open=false; exportCSV()">
+                      <span class="material-symbols-outlined">download</span> Export CSV
+                    </button>
+                  </div>
+                </details>
               </div>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════
+             KPI STRIP — คลิกเพื่อกรองตามสถานะ
+        ══════════════════════════════════════════════════ -->
+            <div class="summary-cards rt-kpis">
+              <button type="button" class="sum-card rt-kpi" data-status="" title="แสดงทั้งหมด">
+                <span class="material-symbols-outlined rt-kpi-icon k-blue">description</span>
+                <span class="sum-value" id="totalReports">—</span>
+                <span class="sum-label">รายงานทั้งหมด</span>
+              </button>
+              <button type="button" class="sum-card rt-kpi" data-status="unread" title="กรองเฉพาะยังไม่อ่าน">
+                <span class="material-symbols-outlined rt-kpi-icon k-orange">mark_email_unread</span>
+                <span class="sum-value" id="unreadReports">—</span>
+                <span class="sum-label">ยังไม่อ่าน</span>
+              </button>
+              <button type="button" class="sum-card rt-kpi" data-status="read" title="กรองเฉพาะอ่านแล้ว">
+                <span class="material-symbols-outlined rt-kpi-icon k-green">check_circle</span>
+                <span class="sum-value" id="readReports">—</span>
+                <span class="sum-label">อ่านแล้ว</span>
+              </button>
+              <button type="button" class="sum-card rt-kpi" data-status="commented" title="กรองเฉพาะที่มี Comment">
+                <span class="material-symbols-outlined rt-kpi-icon k-cyan">chat</span>
+                <span class="sum-value" id="commentedReports">—</span>
+                <span class="sum-label">มี Comment</span>
+              </button>
             </div>
 
             <!-- ══════════════════════════════════════════════════
-             REPORTS LIST + VIEW TOGGLE
+             BODY: ซ้าย = ทีมเซลล์ (กรอง) · ขวา = รายการรายงาน
         ══════════════════════════════════════════════════ -->
-            <div class="card">
-              <div class="card-header">
-                <h2>
-                  <span class="material-symbols-outlined">list_alt</span>
-                  รายการรายงาน
-                </h2>
+            <div class="rt-body">
+              <aside class="card rt-team" aria-label="ทีมเซลล์">
+                <div class="rt-team-head">
+                  <span class="material-symbols-outlined">groups</span>
+                  ทีมเซลล์
+                  <span class="rt-team-hint">คลิกเพื่อกรอง</span>
+                </div>
+                <div class="sales-grid rt-team-list" id="salesGrid">
+                  <div class="loading">กำลังโหลด...</div>
+                </div>
+              </aside>
 
-                <div class="header-actions">
-                  <!-- View Toggle -->
-                  <div
-                    class="view-toggle"
-                    role="tablist"
-                    aria-label="โหมดแสดงผล"
-                  >
-                    <button
-                      class="view-toggle-btn active"
-                      data-view="list"
-                      onclick="switchView('list')"
-                    >
-                      <span class="material-symbols-outlined icon-sm"
-                        >view_list</span
-                      >
-                      List
+              <section class="card rt-list" aria-label="รายการรายงาน">
+                <div class="card-header rt-list-head">
+                  <h2>
+                    <span class="material-symbols-outlined">list_alt</span>
+                    รายการรายงาน
+                    <span id="reportCount" class="card-hint"></span>
+                  </h2>
+
+                  <div class="view-toggle" role="tablist" aria-label="โหมดแสดงผล">
+                    <button class="view-toggle-btn active" data-view="list" onclick="switchView('list')">
+                      <span class="material-symbols-outlined icon-sm">view_list</span>
+                      รายการ
                     </button>
-                    <button
-                      class="view-toggle-btn"
-                      data-view="table"
-                      onclick="switchView('table')"
-                    >
-                      <span class="material-symbols-outlined icon-sm"
-                        >table_rows</span
-                      >
-                      Table by Sales
+                    <button class="view-toggle-btn" data-view="table" onclick="switchView('table')">
+                      <span class="material-symbols-outlined icon-sm">table_rows</span>
+                      ตารางรายเซลล์
                     </button>
                   </div>
+                </div>
 
-                  <span id="reportCount" class="card-hint"></span>
+                <!-- LIST VIEW -->
+                <div id="listView" class="view-panel active">
+                  <div class="reports-container" id="reportsContainer">
+                    <div class="loading">กำลังโหลด...</div>
+                  </div>
+                  <div class="pagination" id="pagination"></div>
                 </div>
-              </div>
 
-              <!-- LIST VIEW -->
-              <div id="listView" class="view-panel active">
-                <div class="reports-container" id="reportsContainer">
-                  <div class="loading">กำลังโหลด...</div>
+                <!-- TABLE BY SALES VIEW -->
+                <div id="tableView" class="view-panel">
+                  <div class="table-by-sales-hint">
+                    <span class="material-symbols-outlined icon-blue">info</span>
+                    เลือกเซลล์เพื่อดูรายงานทั้งหมดในตารางเดียว
+                  </div>
+                  <div class="sales-quick-pick" id="salesQuickPick">
+                    <div class="loading">กำลังโหลด...</div>
+                  </div>
                 </div>
-                <div class="pagination" id="pagination"></div>
-              </div>
-
-              <!-- TABLE BY SALES VIEW -->
-              <div id="tableView" class="view-panel">
-                <div class="table-by-sales-hint">
-                  <span class="material-symbols-outlined icon-blue">info</span>
-                  คลิกการ์ดเซลล์ด้านบนเพื่อดูรายงานทั้งหมดในตารางเดียว —
-                  หรือเลือกจากด้านล่างนี้
-                </div>
-                <div class="sales-quick-pick" id="salesQuickPick">
-                  <div class="loading">กำลังโหลด...</div>
-                </div>
-              </div>
+              </section>
             </div>
           </div>
           <!-- /.container -->
@@ -913,6 +839,59 @@
                 <tr>
                   <td colspan="7" class="loading">กำลังโหลดข้อมูลการเบิกจ่าย...</td>
                 </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+     MODAL: เอกสารรอบทริป (ใบแผน + ใบเคลียร์ค่าใช้จ่าย ที่เซลล์ส่งบัญชี)
+══════════════════════════════════════════════════ -->
+    <div id="tripRoundDocsModal" class="modal modal-xl">
+      <div class="modal-content modal-content-xl">
+        <button class="close-btn" onclick="closeTripRoundDocsModal()" title="ปิด">
+          <span class="material-symbols-outlined icon-sm">close</span>
+        </button>
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <span class="material-symbols-outlined icon-lg icon-blue-dark">folder_open</span>
+            <div>
+              <h3 id="tripRoundDocsTitle">เอกสารรอบทริป</h3>
+              <div class="sales-modal-subtitle" id="tripRoundDocsSubtitle">ใบแผนการเดินทาง + ใบเคลียร์ค่าใช้จ่าย ที่เซลล์พิมพ์ส่งฝ่ายบัญชี</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div id="tripRoundDocsSummary" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;">
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;">
+              <input type="checkbox" id="tripRoundDocsMissingOnly" onchange="renderTripRoundDocs()" />
+              แสดงเฉพาะคนที่ยังส่งไม่ครบ
+            </label>
+            <span style="flex:1"></span>
+            <button type="button" class="btn btn-secondary" onclick="printTripRoundDocs('plan')">
+              <span class="material-symbols-outlined">print</span> พิมพ์ใบแผนทั้งรอบ
+            </button>
+            <button type="button" class="btn btn-primary" onclick="printTripRoundDocs('actual')">
+              <span class="material-symbols-outlined icon-white">print</span> พิมพ์ใบเคลียร์ทั้งรอบ
+            </button>
+          </div>
+          <div class="form-table-wrapper">
+            <table class="form-data-table">
+              <thead>
+                <tr>
+                  <th>เซลล์</th>
+                  <th>ช่วงทริป</th>
+                  <th>ใบแผนการเดินทาง (ฟอร์ม ๑)</th>
+                  <th>ใบเคลียร์ค่าใช้จ่าย (ฟอร์ม ๒)</th>
+                  <th>ยอดเบิก</th>
+                  <th>สถานะส่งบัญชี</th>
+                </tr>
+              </thead>
+              <tbody id="tripRoundDocsBody">
+                <tr><td colspan="6" class="loading">กำลังโหลด...</td></tr>
               </tbody>
             </table>
           </div>

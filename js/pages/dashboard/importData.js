@@ -28,7 +28,7 @@ let visibleColumns = new Set();
         }
         
         if (typeof protectPage === 'function') {
-            await protectPage(['admin', 'manager']);
+            await protectPage(['admin', 'manager', 'marketing']);
             let userAttempts = 0;
             while (!window.currentUser && userAttempts < 50) {
                 await new Promise(r => setTimeout(r, 100));

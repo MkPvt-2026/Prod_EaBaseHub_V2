@@ -621,11 +621,11 @@ var NotificationCenter = window.NotificationCenter || {
 
   goToPendingClaims() {
     // ไปหน้าเคลมและ filter เฉพาะที่รอดำเนินการ
-    window.location.href = '/pages/claims/claimManager.html?status=pending';
+    window.location.href = '/pages/dashboard/QcDashboard.html?status=pending';
   },
 
   goToClaimsPage() {
-    window.location.href = '/pages/claims/claimManager.html';
+    window.location.href = '/pages/dashboard/QcDashboard.html';
   },
 
   viewAllInactiveSales() {
@@ -638,7 +638,7 @@ var NotificationCenter = window.NotificationCenter || {
       alert('รายชื่อเซลล์ที่ต้องติดตาม:\n\n' + 
         inactiveSales.map(s => `${s.full_name} - ${s.daysSinceLastReport} วัน`).join('\n'));
     } else {
-      window.location.href = '/pages/sales/salesManagement.html?filter=inactive';
+      window.location.href = '/pages/reports/reportTracker.html';
     }
   },
 

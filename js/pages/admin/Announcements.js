@@ -166,7 +166,7 @@ const AnnouncementsModule = (() => {
 
         // Show add button only for admin/manager
         const role = currentUser?.role?.toLowerCase() || '';
-        if (['admin', 'adminqc', 'manager'].includes(role)) {
+        if (['admin', 'adminqc', 'manager', 'marketing'].includes(role)) {
             btn.style.display = 'inline-flex';
         } else {
             btn.style.display = 'none';

@@ -1,0 +1,205 @@
+/* =====================================================
+   marketingHome.css — หน้าเมนูการตลาด (ปุ่มเมนูแบบการ์ด)
+   ออกแบบสำหรับโน้ตบุ๊ก 1366–1920px
+   ใช้ sidebar/header จาก managerDashboard.css
+   ===================================================== */
+
+:root {
+  --mk-line: #e2e8f0;
+  --mk-ink: #0f172a;
+  --mk-muted: #64748b;
+  --mk-brand: #db2777;      /* สีประจำการตลาด */
+  --mk-brand-2: #f97316;
+  --mk-radius: 14px;
+}
+
+.mk-page .app-header { height: 60px; padding: 0 20px; }
+.mk-page .header-user-avatar { color: #fff; font-weight: 600; font-size: 14px; }
+.mk-page .header-icon { background: #fce7f3; color: var(--mk-brand); }
+
+.mk-content {
+  padding: 18px 24px 32px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ---------- Hero ---------- */
+.mk-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  margin-bottom: 18px;
+  border-radius: var(--mk-radius);
+  color: #fff;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(255, 255, 255, 0.18) 0 70px, transparent 71px),
+    radial-gradient(circle at 80% 120%, rgba(255, 255, 255, 0.12) 0 90px, transparent 91px),
+    linear-gradient(120deg, var(--mk-brand) 0%, #e11d48 45%, var(--mk-brand-2) 100%);
+  box-shadow: 0 8px 24px rgba(219, 39, 119, 0.22);
+}
+.mk-hero h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+.mk-hero p { margin: 0; font-size: 13.5px; opacity: 0.9; }
+
+.mk-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 420px;
+  min-width: 260px;
+}
+.mk-search .material-symbols-outlined {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 20px;
+  pointer-events: none;
+}
+.mk-search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 40px 0 40px;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--mk-ink);
+  background: #fff;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+.mk-search input:focus { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55), 0 2px 8px rgba(15, 23, 42, 0.12); }
+.mk-search kbd {
+  position: absolute;
+  right: 10px;
+  font: 600 11px/1 'Kanit', sans-serif;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 3px 6px;
+  background: #f8fafc;
+}
+
+/* ---------- Groups ---------- */
+.mk-groups { display: flex; flex-direction: column; gap: 20px; }
+.mk-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mk-ink);
+}
+.mk-group-title .material-symbols-outlined { font-size: 20px; color: var(--mk-brand); }
+
+.mk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+/* ---------- Tile (ปุ่มเมนู) ---------- */
+.mk-tile {
+  --c: #2563eb;
+  --c-soft: #dbeafe;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 78px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-radius);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.mk-tile:hover,
+.mk-tile:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--c);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  outline: none;
+}
+.mk-tile:focus-visible { box-shadow: 0 0 0 3px var(--c-soft); }
+.mk-tile-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 25px !important;
+  background: var(--c-soft);
+  color: var(--c);
+}
+.mk-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mk-tile-text b { font-size: 14.5px; font-weight: 600; color: var(--mk-ink); }
+.mk-tile-text small { font-size: 12.5px; color: var(--mk-muted); line-height: 1.4; }
+.mk-go { color: #cbd5e1; font-size: 20px !important; transition: color 0.15s, transform 0.15s; }
+.mk-tile:hover .mk-go { color: var(--c); transform: translateX(3px); }
+
+.mk-soon {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+}
+.mk-tile.is-soon { cursor: not-allowed; background: #fbfcfe; }
+.mk-tile.is-soon .mk-tile-icon { filter: grayscale(0.6); opacity: 0.7; }
+.mk-tile.is-soon:hover { transform: none; box-shadow: none; border-color: var(--mk-line); }
+
+/* สีของปุ่ม */
+.c-blue   { --c: #2563eb; --c-soft: #dbeafe; }
+.c-green  { --c: #16a34a; --c-soft: #dcfce7; }
+.c-orange { --c: #ea580c; --c-soft: #ffedd5; }
+.c-purple { --c: #7c3aed; --c-soft: #ede9fe; }
+.c-pink   { --c: #db2777; --c-soft: #fce7f3; }
+.c-teal   { --c: #0d9488; --c-soft: #ccfbf1; }
+.c-slate  { --c: #475569; --c-soft: #e2e8f0; }
+
+/* ---------- ใช้ล่าสุด ---------- */
+.mk-recent { margin-bottom: 20px; }
+.mk-recent-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mk-tile.is-compact {
+  grid-template-columns: auto auto;
+  min-height: 0;
+  padding: 7px 14px 7px 8px;
+  border-radius: 999px;
+}
+.mk-tile.is-compact .mk-tile-icon { width: 30px; height: 30px; border-radius: 999px; font-size: 18px !important; }
+.mk-tile.is-compact .mk-tile-text b { font-size: 13px; font-weight: 500; }
+
+.mk-loading,
+.mk-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: var(--mk-muted);
+  background: #fff;
+  border: 1px dashed var(--mk-line);
+  border-radius: var(--mk-radius);
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 1500px) {
+  .mk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .mk-hero { flex-direction: column; align-items: stretch; }
+  .mk-search { flex-basis: auto; min-width: 0; }
+  .mk-content { padding: 14px 16px 24px; }
+}
+
+/* hidden ต้องชนะ display:flex ด้านบน */
+.mk-empty[hidden],
+.mk-recent[hidden] { display: none !important; }

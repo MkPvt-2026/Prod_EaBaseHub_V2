@@ -55,7 +55,7 @@ async function protectAdmin() {
 // ============================================================
 
 function goHome() {
-  window.location.href = "/pages/admin/adminDashboard.html";
+  window.location.href = "/pages/dashboard/adminDashboard.html";
 }
 
 
@@ -253,6 +253,8 @@ function roleBadge(role) {
     manager:   { cls: "role-manager",   icon: "supervisor_account", label: "Manager" },
     executive: { cls: "role-executive", icon: "star",               label: "Executive" },
     sales:     { cls: "role-sales",     icon: "badge",              label: "Sales" },
+    accounting:{ cls: "role-accounting",icon: "account_balance",    label: "Accounting" },
+    marketing: { cls: "role-marketing", icon: "campaign",           label: "Marketing" },
     user:      { cls: "role-user",      icon: "person",             label: "User" },
   };
 

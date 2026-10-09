@@ -33,6 +33,9 @@ let pendingOpts = [];     // { id, value, existing, deleted }
 document.addEventListener("DOMContentLoaded", async () => {
   await waitForSupabase();
 
+  // หน้านี้สำหรับ Admin เท่านั้น
+  if (typeof protectPage === "function") await protectPage(["admin"]);
+
   try {
     const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
     if (sessionError || !session) {

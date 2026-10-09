@@ -64,7 +64,7 @@ async function saveUser() {
 
 
 window.addEventListener("load", async () => {
-  await protectAdmin();
+  await protectPage(["admin"]);
   await loadUser();
 });
 

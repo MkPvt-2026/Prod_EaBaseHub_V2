@@ -163,7 +163,7 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', async () => {
-    await protectPage(['manager', 'admin']);
+    await protectPage(['manager', 'admin', 'marketing']);
 
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -198,7 +198,8 @@
       const navFiles = {
         admin: "/pages/components/nav-admin.html",
         executive: "/pages/components/nav-executive.html",
-        manager: "/pages/components/nav-manager.html"
+        manager: "/pages/components/nav-manager.html",
+        marketing: "/pages/components/nav-marketing.html"
       };
 
       const file = navFiles[role];
@@ -266,7 +267,7 @@
 <script>
 // ป้องกันหน้า: admin only
 document.addEventListener('DOMContentLoaded', async () => {
-  await protectPage(['admin' ,'manager']);
+  await protectPage(['admin', 'manager', 'marketing']);
   loadHistory();
 });
 

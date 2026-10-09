@@ -21,6 +21,38 @@ function showLoginOverlay(redirectUrl) {
 }
 
 // ===============================
+// Helper: หน้าแรกของแต่ละ role (อ้างอิง roleConfig.js ที่เดียว)
+// ===============================
+function getRoleHomePage(role) {
+  if (typeof getDefaultPage === "function") {
+    const page = getDefaultPage(role);
+    if (page && !page.includes("/auth/login")) return page;
+  }
+  return null;
+}
+
+function isActiveStatus(status) {
+  return String(status || "").toLowerCase() === "active";
+}
+
+// แยก error เครือข่าย (ต่อ Supabase ไม่ได้) ออกจาก error ข้อมูลไม่พบ
+function isNetworkError(err) {
+  const msg = String(err?.message || err || "");
+  return /Failed to fetch|NetworkError|AuthRetryableFetchError|Load failed|ERR_NAME_NOT_RESOLVED/i.test(msg)
+    || err?.name === "AuthRetryableFetchError";
+}
+
+function networkErrorMessage() {
+  const env = window.APP_ENV === "production" ? "PRODUCTION" : "DEVELOPMENT";
+  return `เชื่อมต่อฐานข้อมูล (${env}) ไม่ได้\n\n` +
+    "• ตรวจสอบอินเทอร์เน็ต\n" +
+    "• ถ้าเป็น Supabase แบบฟรี โปรเจกต์อาจถูก Pause อัตโนมัติ → เข้า Supabase Dashboard แล้วกด Restore\n" +
+    (env === "DEVELOPMENT"
+      ? "• หรือทดสอบกับฐานข้อมูลจริงโดยเปิดหน้านี้ด้วย ?env=production"
+      : "");
+}
+
+// ===============================
 // Redirect if already logged in
 // ===============================
 async function redirectIfLoggedIn() {
@@ -38,23 +70,14 @@ async function redirectIfLoggedIn() {
 
     if (!profile) return;
 
-    if (profile.status !== "Active") {
+    if (!isActiveStatus(profile.status)) {
       await supabaseClient.auth.signOut();
       return;
     }
 
-    // Redirect ตาม Role
-    if (profile.role === "admin") {
-      window.location.href = "/pages/dashboard/adminDashboard.html";
-    } else if (profile.role === "adminQc") {
-      window.location.href = "/pages/dashboard/QcDashboard.html";
-    } else if (profile.role === "sales") {
-      window.location.href = "/index.html";
-    } else if (profile.role === "manager") {
-      window.location.href = "/index.html";
-    } else if (profile.role === "executive") {
-      window.location.href = "/pages/executive/executive-Dashboard.html";
-    }
+    // Redirect ตาม Role (ตาม roleConfig.js)
+    const home = getRoleHomePage(profile.role);
+    if (home && profile.role !== "user") window.location.href = home;
   } catch (error) {
     console.error("Error checking session:", error);
   }
@@ -101,8 +124,14 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("username", identifier)
           .maybeSingle();
 
-        if (error || !userData) {
-          throw new Error("ไม่พบ Username นี้ในระบบ");
+        if (error) {
+          console.error("❌ Username lookup error:", error);
+          if (isNetworkError(error)) throw new Error(networkErrorMessage());
+          throw new Error("ค้นหา Username ไม่สำเร็จ: " + error.message +
+            "\n(ลองเข้าสู่ระบบด้วย Email แทน)");
+        }
+        if (!userData || !userData.email) {
+          throw new Error("ไม่พบ Username นี้ในระบบ\n(ลองเข้าสู่ระบบด้วย Email แทน)");
         }
 
         emailToUse = userData.email;
@@ -131,11 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // ══════════════════════════════════════════════
       // ✨ ถ้า Inactive → redirect ไปหน้า pending-approval
       // ══════════════════════════════════════════════
-      if (profile.status !== "Active") {
+      if (!isActiveStatus(profile.status)) {
 
         await supabaseClient.auth.signOut();
 
-        if (profile.status === "Inactive") {
+        if (String(profile.status || "").toLowerCase() === "inactive") {
           // ── เก็บข้อมูลลง sessionStorage ──
           try {
             sessionStorage.setItem("pending_user_info", JSON.stringify({
@@ -183,23 +212,17 @@ document.addEventListener("DOMContentLoaded", () => {
       // ══════════════════════════════════════════════
       // Active + มี role → redirect ตาม role
       // ══════════════════════════════════════════════
-      if (profile.role === "admin") {
-        showLoginOverlay("/pages/dashboard/adminDashboard.html");
-      } else if (profile.role === "adminQc") {
-        showLoginOverlay("/pages/dashboard/QcDashboard.html");
-      } else if (profile.role === "sales") {
-        showLoginOverlay("/index.html");
-      } else if (profile.role === "manager") {
-        showLoginOverlay("/index.html");
-      } else if (profile.role === "executive") {
-        showLoginOverlay("/pages/executive/executive-Dashboard.html");
+      const home = getRoleHomePage(profile.role);
+      if (home) {
+        showLoginOverlay(home);
       } else {
         await supabaseClient.auth.signOut();
-        throw new Error("คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้");
+        throw new Error("คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้ (role: " + profile.role + ")");
       }
 
     } catch (err) {
-      let errorMessage = err.message;
+      console.error("❌ Login error:", err);
+      let errorMessage = isNetworkError(err) ? networkErrorMessage() : err.message;
 
       if (err.message.includes("Invalid login credentials")) {
         errorMessage = "Username/Email หรือรหัสผ่านไม่ถูกต้อง";

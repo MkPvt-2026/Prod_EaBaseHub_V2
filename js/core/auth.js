@@ -30,7 +30,9 @@ function getSafeDefaultPage(role) {
 
 const loginForm = document.getElementById("loginForm");
 
-if (loginForm) {
+// หน้า login.html มี login.js จัดการเองแล้ว (และไม่มี #message)
+// ทำงานเฉพาะหน้าที่มี #message เพื่อไม่ให้ submit ซ้อนกัน 2 ตัว
+if (loginForm && document.getElementById("message")) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -90,7 +92,8 @@ if (loginForm) {
 
 const registerForm = document.getElementById("registerForm");
 
-if (registerForm) {
+// หน้า register.html มี register.js จัดการเองแล้ว
+if (registerForm && document.getElementById("regMessage")) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 

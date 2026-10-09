@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (typeof protectPage === "function") {
       try {
-        await protectPage(["admin", "executive", "manager"]);
+        await protectPage(["admin", "executive", "manager", "marketing"]);
       } catch (e) {
         console.warn("⚠️ protectPage failed:", e.message);
       }
@@ -132,6 +132,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setupEventListeners();
     setupLogout();
+    applyUrlFilters();
 
     console.log("✅ Report Manager ready");
   } catch (e) {
@@ -300,6 +301,7 @@ function setupDateControls() {
     startInput.addEventListener("change", () => {
       dateStart = new Date(startInput.value);
       dateStart.setHours(0, 0, 0, 0);
+      clearTripRound();
       updateDateRangeLabel();
       clearQuickRangeActive();
       loadReports();
@@ -310,6 +312,7 @@ function setupDateControls() {
     endInput.addEventListener("change", () => {
       dateEnd = new Date(endInput.value);
       dateEnd.setHours(23, 59, 59, 999);
+      clearTripRound();
       updateDateRangeLabel();
       clearQuickRangeActive();
       loadReports();
@@ -318,6 +321,7 @@ function setupDateControls() {
 
   document.querySelectorAll(".quick-range-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
+      clearTripRound();
       setQuickRange(btn.dataset.range);
       document
         .querySelectorAll(".quick-range-btn")
@@ -403,7 +407,9 @@ function updateDateRangeLabel() {
 }
 
 function formatDateForInput(date) {
-  return date.toISOString().split("T")[0];
+  // ใช้วันที่ตามเวลาท้องถิ่น (toISOString เป็น UTC → ไทย +7 จะเลื่อนไป 1 วัน)
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 // =====================================================
@@ -435,7 +441,7 @@ async function loadProfiles() {
 
     const selectSales = document.getElementById("filterSales");
     if (selectSales) {
-      selectSales.innerHTML = '<option value="">— ทั้งหมด —</option>';
+      selectSales.innerHTML = '<option value="">เซลล์: ทั้งหมด</option>';
       (salesData || []).forEach((p) => {
         const opt = document.createElement("option");
         opt.value = p.id;
@@ -667,6 +673,8 @@ async function loadReports() {
     const endTime = dateEnd.getTime();
 
     allReports = (data || []).filter((r) => {
+      // เลือกรอบทริปอยู่ → กรองตามช่วงของเซลล์แต่ละคน
+      if (activeTripRound) return isReportInActiveRange(r);
       const date = r.submitted_at || r.report_date || r.created_at;
       if (!date) return false;
       const t = new Date(date).getTime();
@@ -777,42 +785,48 @@ function updateSalesGrid() {
     return;
   }
 
-  grid.innerHTML = salesEntries
+  // รายชื่อเซลล์แบบแถวกะทัดรัด (คอลัมน์ซ้าย) — คลิกแถว = กรองรายการ, ปุ่มตาราง = เปิดตารางทั้งหมดของเซลล์
+  const rows = salesEntries
     .map(([id, profile]) => {
       const groups = groupedReports.filter((g) => g.sale_id === id);
-      const total = groups.length;
-      const unread = groups.filter((g) => !g.manager_acknowledged).length;
-      const isActive = activeSalesFilter === id;
-      const displayName = profile.display_name || "—";
-
-      return `
-      <div class="sales-card ${isActive ? "active" : ""} ${unread > 0 ? "has-unread" : ""}"
-           onclick="openSalesTableModal('${id}')"
-           title="คลิกเพื่อดูรายงานทั้งหมดของ ${escapeHtml(displayName)}">
-        <div class="sales-card-header">
-          <div class="sales-avatar">${displayName.charAt(0).toUpperCase()}</div>
-          <button class="sales-filter-btn"
-                  onclick="event.stopPropagation(); filterBySale('${id}')"
-                  title="กรองในรายการด้านล่าง">
-            <span class="material-symbols-outlined icon-sm">filter_alt</span>
-          </button>
-        </div>
-        <div class="sales-name">${escapeHtml(displayName)}</div>
-        <div class="sales-stats">
-          <div class="stat-item">
-            <span class="stat-value">${total}</span>
-            <span class="stat-label">ร้านค้า</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value" style="color:${unread > 0 ? "var(--danger, #ef4444)" : "var(--info, #0093ad)"}">
-              ${unread}
-            </span>
-            <span class="stat-label">ยังไม่อ่าน</span>
-          </div>
-        </div>
-      </div>`;
+      return {
+        id,
+        name: profile.display_name || "—",
+        area: profile.area || "",
+        total: groups.length,
+        unread: groups.filter((g) => !g.manager_acknowledged).length,
+      };
     })
-    .join("");
+    .sort((a, b) => b.unread - a.unread || b.total - a.total || a.name.localeCompare(b.name, "th"));
+
+  const totalAll = groupedReports.length;
+  const unreadAll = groupedReports.filter((g) => !g.manager_acknowledged).length;
+
+  grid.innerHTML =
+    `<div class="sales-card rt-team-row ${!activeSalesFilter ? "active" : ""}"
+          onclick="filterBySale(null)" title="แสดงทุกคน">
+       <div class="sales-avatar rt-avatar-all"><span class="material-symbols-outlined">groups</span></div>
+       <div class="rt-team-name">ทุกคน</div>
+       <span class="rt-count">${totalAll}</span>
+       <span class="rt-unread ${unreadAll ? "" : "zero"}" title="ยังไม่อ่าน">${unreadAll}</span>
+       <span class="rt-row-gap"></span>
+     </div>` +
+    rows
+      .map((r) => `
+      <div class="sales-card rt-team-row ${activeSalesFilter === r.id ? "active" : ""} ${r.total === 0 ? "is-empty" : ""}"
+           onclick="filterBySale('${r.id}')"
+           title="กรองรายการของ ${escapeHtml(r.name)}${r.area ? " · " + escapeHtml(r.area) : ""}">
+        <div class="sales-avatar">${escapeHtml(r.name.charAt(0).toUpperCase())}</div>
+        <div class="rt-team-name">${escapeHtml(r.name)}${r.area ? `<small>${escapeHtml(r.area)}</small>` : ""}</div>
+        <span class="rt-count" title="จำนวนร้านที่เข้า">${r.total}</span>
+        <span class="rt-unread ${r.unread ? "" : "zero"}" title="ยังไม่อ่าน">${r.unread}</span>
+        <button class="sales-filter-btn rt-open-table"
+                onclick="event.stopPropagation(); openSalesTableModal('${r.id}')"
+                title="เปิดตารางรายงานทั้งหมดของ ${escapeHtml(r.name)}">
+          <span class="material-symbols-outlined icon-sm">open_in_full</span>
+        </button>
+      </div>`)
+      .join("");
 }
 
 // =====================================================
@@ -885,7 +899,7 @@ function switchView(view) {
 // 🔍 FILTERS
 // =====================================================
 function filterBySale(saleId) {
-  if (activeSalesFilter === saleId) {
+  if (!saleId || activeSalesFilter === saleId) {
     activeSalesFilter = null;
     document.getElementById("filterSales").value = "";
   } else {
@@ -896,8 +910,14 @@ function filterBySale(saleId) {
   updateSalesGrid();
   applyFilter();
 
+  // เลื่อนไปที่รายการเฉพาะเมื่อรายการอยู่นอกจอ (เช่น จอแคบที่คอลัมน์ซ้อนกัน)
   const listEl = document.getElementById("listView");
-  if (listEl) listEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (listEl) {
+    const top = listEl.getBoundingClientRect().top;
+    if (top > window.innerHeight * 0.8 || top < 0) {
+      listEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 }
 
 function filterByManager(mgrId) {
@@ -950,6 +970,15 @@ function applyFilter() {
 
   currentPage = 1;
   renderReports();
+
+  // sync สถานะ UI (เซลล์ที่เลือก + การ์ด KPI)
+  if ((activeSalesFilter || "") !== salesId) {
+    activeSalesFilter = salesId || null;
+    updateSalesGrid();
+  }
+  document.querySelectorAll(".rt-kpi").forEach((k) => {
+    k.classList.toggle("active", (k.dataset.status || "") === status && (status !== "" || !salesId && !search));
+  });
 }
 
 function resetFilter() {
@@ -966,6 +995,7 @@ function resetFilter() {
 
   updateSalesGrid();
   renderReports();
+  document.querySelectorAll(".rt-kpi").forEach((k) => k.classList.toggle("active", !k.dataset.status));
 }
 
 // =====================================================
@@ -2414,7 +2444,34 @@ function setupEventListeners() {
     searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") applyFilter();
     });
+    // กรองทันทีขณะพิมพ์ (หน่วง 250ms)
+    let t = null;
+    searchInput.addEventListener("input", () => {
+      clearTimeout(t);
+      t = setTimeout(applyFilter, 250);
+    });
   }
+
+  // เปลี่ยนตัวเลือกแล้วกรองทันที
+  ["filterSales", "filterStatus"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", applyFilter);
+  });
+
+  // คลิกการ์ด KPI = กรองตามสถานะ
+  document.querySelectorAll(".rt-kpi").forEach((k) => {
+    k.addEventListener("click", () => {
+      const st = document.getElementById("filterStatus");
+      if (st) st.value = k.dataset.status || "";
+      applyFilter();
+    });
+  });
+
+  // ปิดเมนู "เอกสาร / ส่งออก" เมื่อคลิกนอกเมนู
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll("details.rt-menu[open]").forEach((d) => {
+      if (!d.contains(e.target)) d.open = false;
+    });
+  });
 
   const modal = document.getElementById("reportModal");
   if (modal) {
@@ -2852,11 +2909,19 @@ async function openFormPlanOverviewModal() {
 
   try {
     let query = supabaseClient.from("trips").select("*");
-    if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
-    if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+    if (activeTripRound) {
+      query = query.gte("start_date", activeTripRound.minStart).lte("end_date", activeTripRound.maxEnd);
+    } else {
+      if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
+      if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+    }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    let { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw error;
+    // เลือกรอบทริปอยู่ → เอาเฉพาะเอกสารที่อยู่ในรอบนั้น
+    if (activeTripRound && data) {
+      data = data.filter((x) => getTripRoundKey(x.start_date, x.end_date) === activeTripRound.key);
+    }
 
     if (!data || data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">ไม่พบข้อมูลแผนการเดินทาง</td></tr>`;
@@ -2942,11 +3007,19 @@ async function openFormActualOverviewModal() {
 
   try {
     let query = supabaseClient.from("actuals").select("*");
-    if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
-    if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+    if (activeTripRound) {
+      query = query.gte("start_date", activeTripRound.minStart).lte("end_date", activeTripRound.maxEnd);
+    } else {
+      if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
+      if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+    }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    let { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw error;
+    // เลือกรอบทริปอยู่ → เอาเฉพาะเอกสารที่อยู่ในรอบนั้น
+    if (activeTripRound && data) {
+      data = data.filter((x) => getTripRoundKey(x.start_date, x.end_date) === activeTripRound.key);
+    }
 
     if (!data || data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">ไม่พบข้อมูลเคลียร์ค่าใช้จ่าย</td></tr>`;
@@ -3118,100 +3191,199 @@ function closeFormDetailModal() {
 // =====================================================
 // 📅 TRIP ROUND SELECTION & Dynamic Populating
 // =====================================================
+// ─────────────────────────────────────────────────────
+// แนวคิด "รอบทริป"
+//   • แต่ละเซลล์มีช่วงวันที่ของตัวเอง (start_date–end_date ไม่เท่ากัน)
+//   • แต่ทุกคนอยู่ "รอบเดียวกัน" → จัดกลุ่มตาม "เดือนของรอบ"
+//   • เดือนของรอบ = เดือนที่ "วันกึ่งกลาง" ของช่วงตกอยู่
+//     (เช่น 28 ก.ย.–10 ต.ค. → รอบ ต.ค.)  เปลี่ยนกติกาได้ที่ TRIP_ROUND_RULE
+//   • เลือกรอบแล้ว: รายงานของเซลล์แต่ละคนจะถูกกรองตาม "ช่วงของคนนั้นเอง"
+//     เซลล์ที่ไม่มีแผนในรอบนั้น → ใช้ทั้งเดือนของรอบแทน
+// ─────────────────────────────────────────────────────
+const TRIP_ROUND_RULE = "midpoint"; // "midpoint" | "start" (ใช้เดือนของวันเริ่ม)
+
+let activeTripRound = null; // round object ที่เลือกอยู่ (null = ใช้ช่วงวันที่ปกติ)
+
+function parseLocalDate(d, endOfDay = false) {
+  if (!d) return null;
+  const [y, m, dd] = String(d).slice(0, 10).split("-").map(Number);
+  return endOfDay ? new Date(y, m - 1, dd, 23, 59, 59, 999) : new Date(y, m - 1, dd, 0, 0, 0, 0);
+}
+
+function getTripRoundKey(startDate, endDate) {
+  const s = parseLocalDate(startDate);
+  const e = parseLocalDate(endDate) || s;
+  if (!s) return null;
+  const ref = TRIP_ROUND_RULE === "start" ? s : new Date((s.getTime() + e.getTime()) / 2);
+  return `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function tripRoundLabel(key, monthStyle = "long") {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("th-TH", { month: monthStyle, year: "numeric" });
+}
+
 async function loadAllTripRounds() {
   try {
-    const { data: plans } = await supabaseClient
-      .from("trips")
-      .select("id, doc_no, version, start_date, end_date, user_id, user_name, area, created_at")
-      .order("start_date", { ascending: false });
-
-    const { data: actuals } = await supabaseClient
-      .from("actuals")
-      .select("id, ref_plan_id, start_date, end_date, user_id, user_name, zone, created_at")
-      .order("start_date", { ascending: false });
+    const [{ data: plans }, { data: actuals }] = await Promise.all([
+      supabaseClient
+        .from("trips")
+        .select("id, doc_no, version, start_date, end_date, user_id, user_name, area, created_at, is_latest")
+        .order("start_date", { ascending: false }),
+      supabaseClient
+        .from("actuals")
+        .select("id, ref_plan_id, start_date, end_date, user_id, user_name, zone, created_at")
+        .order("start_date", { ascending: false }),
+    ]);
 
     const roundsMap = new Map();
 
-    (plans || []).forEach((p) => {
-      if (!p.start_date || !p.end_date) return;
-      const key = `${p.start_date}_${p.end_date}`;
+    const addEntry = (row, kind) => {
+      if (!row.start_date || !row.end_date) return;
+      if (kind === "plan" && row.is_latest === false) return; // ข้ามเวอร์ชันเก่าของแผน
+      const key = getTripRoundKey(row.start_date, row.end_date);
+      if (!key) return;
+
       if (!roundsMap.has(key)) {
+        const [y, m] = key.split("-").map(Number);
         roundsMap.set(key, {
           key,
-          startDate: p.start_date,
-          endDate: p.end_date,
-          docNo: p.doc_no,
-          userNames: new Set([p.user_name].filter(Boolean)),
-          userIds: new Set([p.user_id].filter(Boolean)),
-          planId: p.id,
+          monthStart: new Date(y, m - 1, 1, 0, 0, 0, 0),
+          monthEnd: new Date(y, m, 0, 23, 59, 59, 999),
+          minStart: row.start_date,
+          maxEnd: row.end_date,
+          userIds: new Set(),
+          userNames: new Set(),
+          ranges: {}, // user_id → [{ start, end, planId, actualId, docNo }]
         });
-      } else {
-        const item = roundsMap.get(key);
-        if (p.user_name) item.userNames.add(p.user_name);
-        if (p.user_id) item.userIds.add(p.user_id);
-        if (p.doc_no && !item.docNo) item.docNo = p.doc_no;
       }
-    });
+      const r = roundsMap.get(key);
+      if (row.start_date < r.minStart) r.minStart = row.start_date;
+      if (row.end_date > r.maxEnd) r.maxEnd = row.end_date;
+      if (row.user_name) r.userNames.add(row.user_name);
+      if (!row.user_id) return;
+      r.userIds.add(row.user_id);
 
-    (actuals || []).forEach((a) => {
-      if (!a.start_date || !a.end_date) return;
-      const key = `${a.start_date}_${a.end_date}`;
-      if (!roundsMap.has(key)) {
-        roundsMap.set(key, {
-          key,
-          startDate: a.start_date,
-          endDate: a.end_date,
-          docNo: null,
-          userNames: new Set([a.user_name].filter(Boolean)),
-          userIds: new Set([a.user_id].filter(Boolean)),
-          actualId: a.id,
-        });
-      } else {
-        const item = roundsMap.get(key);
-        if (a.user_name) item.userNames.add(a.user_name);
-        if (a.user_id) item.userIds.add(a.user_id);
-        if (a.id && !item.actualId) item.actualId = a.id;
+      const list = (r.ranges[row.user_id] ||= []);
+      let rng = list.find((x) => x.start === row.start_date && x.end === row.end_date);
+      if (!rng) {
+        rng = { start: row.start_date, end: row.end_date, planId: null, actualId: null, docNo: null };
+        list.push(rng);
       }
-    });
+      if (kind === "plan") {
+        rng.planId ||= row.id;
+        rng.docNo ||= row.doc_no ? `${row.doc_no}${row.version ? " v" + row.version : ""}` : null;
+      } else {
+        rng.actualId ||= row.id;
+      }
+    };
 
-    allTripRoundsList = Array.from(roundsMap.values()).sort(
-      (a, b) => new Date(b.startDate) - new Date(a.startDate),
-    );
+    (plans || []).forEach((p) => addEntry(p, "plan"));
+    (actuals || []).forEach((a) => addEntry(a, "actual"));
+
+    allTripRoundsList = Array.from(roundsMap.values()).sort((a, b) => (a.key < b.key ? 1 : -1));
 
     const filterSelect = document.getElementById("filterTripRound");
     if (filterSelect) {
+      const prev = activeTripRound?.key || "";
       filterSelect.innerHTML =
-        `<option value="">— ทั้งหมด / เลือกรอบทริป —</option>` +
+        `<option value="">รอบทริป: ไม่เลือก (ใช้ช่วงวันที่)</option>` +
         allTripRoundsList
           .map((r) => {
-            const sDate = new Date(r.startDate);
-            const monthTH = sDate.toLocaleDateString("th-TH", { month: "short", year: "numeric" });
-            const dateRange = `${formatDateShort(r.startDate)} - ${formatDateShort(r.endDate)}`;
-            const names = Array.from(r.userNames).join(", ");
-            const doc = r.docNo ? ` [${r.docNo}]` : "";
-            const label = `รอบ ${monthTH} (${dateRange})${doc}${names ? ` — ${names}` : ""}`;
-            return `<option value="${r.startDate}|${r.endDate}">${escapeHtml(label)}</option>`;
+            const range = `${formatDateShort(r.minStart)} – ${formatDateShort(r.maxEnd)}`;
+            const label = `รอบ ${tripRoundLabel(r.key)} · ${r.userIds.size} คน (${range})`;
+            return `<option value="${r.key}">${escapeHtml(label)}</option>`;
           })
           .join("");
+      if (prev && allTripRoundsList.some((r) => r.key === prev)) filterSelect.value = prev;
 
-      filterSelect.onchange = function () {
-        const val = filterSelect.value;
-        if (val) {
-          const [s, e] = val.split("|");
-          const sInput = document.getElementById("dateStart");
-          const eInput = document.getElementById("dateEnd");
-          if (sInput) sInput.value = s;
-          if (eInput) eInput.value = e;
-          dateStart = new Date(s);
-          dateEnd = new Date(e);
-          updateDateRangeLabel();
-          applyFilter();
-        }
-      };
+      filterSelect.onchange = () => selectTripRound(filterSelect.value);
     }
   } catch (err) {
     console.error("loadAllTripRounds error:", err);
   }
+}
+
+// เลือกรอบทริป → ตั้งช่วงโหลดข้อมูลให้ครอบคลุมทุกคนในรอบ แล้วกรองรายคน
+function selectTripRound(key) {
+  const round = allTripRoundsList.find((r) => r.key === key) || null;
+  activeTripRound = round;
+
+  if (round) {
+    // ช่วงรวม = เดือนของรอบ ∪ ช่วงของทุกคน (บางคนอาจเริ่มก่อน/จบหลังเดือน)
+    const unionStart = parseLocalDate(round.minStart);
+    const unionEnd = parseLocalDate(round.maxEnd, true);
+    dateStart = unionStart < round.monthStart ? unionStart : new Date(round.monthStart);
+    dateEnd = unionEnd > round.monthEnd ? unionEnd : new Date(round.monthEnd);
+
+    const sInput = document.getElementById("dateStart");
+    const eInput = document.getElementById("dateEnd");
+    if (sInput) sInput.value = formatDateForInput(dateStart);
+    if (eInput) eInput.value = formatDateForInput(dateEnd);
+    clearQuickRangeActive();
+  }
+
+  updateDateRangeLabel();
+  renderTripRoundInfo();
+  loadReports();
+}
+
+// ช่วงวันที่ที่ใช้กรองรายงานของเซลล์คนหนึ่ง ในรอบที่เลือก
+function getTripRangesForSale(saleId) {
+  if (!activeTripRound) return null;
+  const list = activeTripRound.ranges[saleId];
+  if (list && list.length) {
+    return list.map((x) => ({ start: parseLocalDate(x.start), end: parseLocalDate(x.end, true) }));
+  }
+  return [{ start: activeTripRound.monthStart, end: activeTripRound.monthEnd }];
+}
+
+function isReportInActiveRange(r) {
+  const date = r.report_date || r.submitted_at || r.created_at;
+  if (!date) return false;
+  // report_date เป็นวันที่ล้วน → ตีความเป็นเวลาท้องถิ่น
+  const t = (/^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? parseLocalDate(date) : new Date(date)).getTime();
+
+  const ranges = getTripRangesForSale(r.sale_id);
+  if (ranges) return ranges.some((x) => t >= x.start.getTime() && t <= x.end.getTime());
+  return t >= dateStart.getTime() && t <= dateEnd.getTime();
+}
+
+// แสดงสรุปช่วงของแต่ละคนใต้ dropdown
+function renderTripRoundInfo() {
+  const select = document.getElementById("filterTripRound");
+  if (!select) return;
+  let box = document.getElementById("tripRoundInfo");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "tripRoundInfo";
+    box.style.cssText = "margin-top:6px;font-size:12px;color:#475569;line-height:1.6;";
+    select.insertAdjacentElement("afterend", box);
+  }
+  if (!activeTripRound) {
+    box.innerHTML = "";
+    return;
+  }
+  const items = Object.entries(activeTripRound.ranges)
+    .map(([uid, list]) => {
+      const name = profilesMap[uid]?.display_name || "เซลล์";
+      const rng = list.map((x) => `${formatDateShort(x.start)}–${formatDateShort(x.end)}`).join(", ");
+      return { name, rng };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "th"));
+  box.innerHTML =
+    `<details><summary style="cursor:pointer">ช่วงของแต่ละคนในรอบ ${escapeHtml(tripRoundLabel(activeTripRound.key))} (${items.length} คน)</summary>` +
+    items.map((i) => `<div>• ${escapeHtml(i.name)} : ${escapeHtml(i.rng)}</div>`).join("") +
+    `<div style="color:#94a3b8">เซลล์ที่ไม่มีแผนในรอบนี้ ใช้ทั้งเดือน ${escapeHtml(tripRoundLabel(activeTripRound.key, "short"))}</div></details>`;
+}
+
+// ยกเลิกรอบทริป (เมื่อผู้ใช้เปลี่ยนวันที่เอง / กดช่วงด่วน)
+function clearTripRound() {
+  if (!activeTripRound) return;
+  activeTripRound = null;
+  const select = document.getElementById("filterTripRound");
+  if (select) select.value = "";
+  renderTripRoundInfo();
 }
 
 function populateSalesTripRounds(salesId) {
@@ -3223,27 +3395,30 @@ function populateSalesTripRounds(salesId) {
   select.innerHTML =
     `<option value="">— ทั้งหมดทุกรอบทริป —</option>` +
     salesRounds
-      .map((r) => {
-        const sDate = new Date(r.startDate);
-        const monthTH = sDate.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
-        const dateRange = `${formatDateShort(r.startDate)} - ${formatDateShort(r.endDate)}`;
-        const doc = r.docNo ? ` (${r.docNo})` : "";
-        return `<option value="${r.startDate}|${r.endDate}">${escapeHtml(`รอบ ${monthTH} : ${dateRange}${doc}`)}</option>`;
-      })
+      .flatMap((r) =>
+        (r.ranges[salesId] || []).map((x) => {
+          const dateRange = `${formatDateShort(x.start)} - ${formatDateShort(x.end)}`;
+          const doc = x.docNo ? ` (${x.docNo})` : "";
+          return `<option value="${x.start}|${x.end}">${escapeHtml(`รอบ ${tripRoundLabel(r.key)} : ${dateRange}${doc}`)}</option>`;
+        }),
+      )
       .join("");
+
+  // ถ้าหน้าหลักเลือกรอบไว้ → เลือกรอบเดียวกันของเซลล์คนนี้ให้อัตโนมัติ
+  const own = activeTripRound?.ranges[salesId]?.[0];
+  if (own) select.value = `${own.start}|${own.end}`;
 
   select.onchange = function () {
     const val = select.value;
     let rStart = null,
       rEnd = null;
     if (val) {
-      const [s, e] = val.split("|");
-      rStart = s;
-      rEnd = e;
+      [rStart, rEnd] = val.split("|");
     }
     loadSalesFormPlans(salesId, rStart, rEnd);
     loadSalesFormActuals(salesId, rStart, rEnd);
   };
+  if (own) select.onchange();
 }
 
 // =====================================================
@@ -3569,3 +3744,194 @@ window.printFormActualById = printFormActualById;
 window.printCurrentFormDetail = printCurrentFormDetail;
 window.printSelectedSalesTripRoundDoc = printSelectedSalesTripRoundDoc;
 window.loadAllTripRounds = loadAllTripRounds;
+window.selectTripRound = selectTripRound;
+
+// =====================================================
+// 📁 เอกสารรอบทริป — ผู้จัดการดูเอกสารที่เซลล์พิมพ์ส่งฝ่ายบัญชี
+//    ใบแผน (trips) + ใบเคลียร์ค่าใช้จ่าย (actuals) ของทุกคนในรอบที่เลือก
+// =====================================================
+let tripRoundDocsData = []; // [{ uid, name, plans:[], actuals:[] }]
+
+async function fetchRoundDocs(round) {
+  const [{ data: plans, error: e1 }, { data: actuals, error: e2 }] = await Promise.all([
+    supabaseClient.from("trips").select("*")
+      .gte("start_date", round.minStart).lte("end_date", round.maxEnd)
+      .order("start_date", { ascending: true }),
+    supabaseClient.from("actuals").select("*")
+      .gte("start_date", round.minStart).lte("end_date", round.maxEnd)
+      .order("start_date", { ascending: true }),
+  ]);
+  if (e1) throw e1;
+  if (e2) throw e2;
+  const inRound = (x) => x.start_date && getTripRoundKey(x.start_date, x.end_date) === round.key;
+  return {
+    plans: (plans || []).filter((p) => inRound(p) && p.is_latest !== false),
+    actuals: (actuals || []).filter(inRound),
+  };
+}
+
+async function openTripRoundDocsModal() {
+  if (!activeTripRound) {
+    alert("กรุณาเลือก \"รอบทริป\" ก่อน แล้วกดดูเอกสาร");
+    document.getElementById("filterTripRound")?.focus();
+    return;
+  }
+  const round = activeTripRound;
+  const modal = document.getElementById("tripRoundDocsModal");
+  const tbody = document.getElementById("tripRoundDocsBody");
+  document.getElementById("tripRoundDocsTitle").textContent = `เอกสารรอบ ${tripRoundLabel(round.key)}`;
+  if (modal) modal.classList.add("show");
+  tbody.innerHTML = `<tr><td colspan="6" class="loading">กำลังโหลดเอกสาร...</td></tr>`;
+
+  try {
+    const { plans, actuals } = await fetchRoundDocs(round);
+    const byUser = new Map();
+    const ensure = (uid, name) => {
+      if (!byUser.has(uid)) {
+        byUser.set(uid, { uid, name: profilesMap[uid]?.display_name || name || "ไม่ทราบชื่อ", plans: [], actuals: [] });
+      }
+      return byUser.get(uid);
+    };
+    // เซลล์ทุกคน (รวมคนที่ยังไม่ส่งเอกสาร)
+    Object.values(profilesMap)
+      .filter((p) => p.role === "sales")
+      .forEach((p) => ensure(p.id, p.display_name));
+    plans.forEach((p) => ensure(p.user_id, p.user_name).plans.push(p));
+    actuals.forEach((a) => ensure(a.user_id, a.user_name).actuals.push(a));
+
+    tripRoundDocsData = [...byUser.values()].sort((a, b) => a.name.localeCompare(b.name, "th"));
+    renderTripRoundDocs();
+  } catch (err) {
+    console.error("openTripRoundDocsModal error:", err);
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;">โหลดเอกสารไม่สำเร็จ: ${escapeHtml(err.message || err)}</td></tr>`;
+  }
+}
+
+function tripDocState(u) {
+  const hasPlan = u.plans.length > 0;
+  const hasActual = u.actuals.length > 0;
+  if (hasPlan && hasActual) return { code: "complete", text: "✅ ส่งครบ", color: "#15803d", bg: "#dcfce7" };
+  if (hasActual) return { code: "actual-only", text: "⚠️ ไม่มีใบแผน", color: "#b45309", bg: "#fef3c7" };
+  if (hasPlan) return { code: "plan-only", text: "⏳ ยังไม่ส่งใบเคลียร์", color: "#b45309", bg: "#fef3c7" };
+  return { code: "none", text: "❌ ยังไม่ส่งเอกสาร", color: "#b91c1c", bg: "#fee2e2" };
+}
+
+function renderTripRoundDocs() {
+  const tbody = document.getElementById("tripRoundDocsBody");
+  const summary = document.getElementById("tripRoundDocsSummary");
+  if (!tbody) return;
+  const missingOnly = document.getElementById("tripRoundDocsMissingOnly")?.checked;
+  const fmtD = (d) => (d ? formatDateShort(d) : "-");
+  const money = (n) => Number(n || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // สรุปภาพรวม
+  const total = tripRoundDocsData.length;
+  const complete = tripRoundDocsData.filter((u) => tripDocState(u).code === "complete").length;
+  const none = tripRoundDocsData.filter((u) => tripDocState(u).code === "none").length;
+  const sumActual = tripRoundDocsData.reduce((s, u) => s + u.actuals.reduce((t, a) => t + Number(a.grand_total || 0), 0), 0);
+  const chip = (label, value, color) =>
+    `<div style="padding:8px 14px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:13px;">${label}<div style="font-size:18px;font-weight:700;color:${color}">${value}</div></div>`;
+  if (summary) {
+    summary.innerHTML =
+      chip("ส่งครบ (ใบแผน + ใบเคลียร์)", `${complete} / ${total} คน`, "#15803d") +
+      chip("ยังไม่ส่งเอกสารเลย", `${none} คน`, "#b91c1c") +
+      chip("ยอดเบิกรวมทั้งรอบ", `${money(sumActual)} บาท`, "#1e3a8a");
+  }
+
+  const rows = tripRoundDocsData.filter((u) => !missingOnly || tripDocState(u).code !== "complete");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">${missingOnly ? "ทุกคนส่งครบแล้ว 🎉" : "ไม่มีเอกสารในรอบนี้"}</td></tr>`;
+    return;
+  }
+
+  const docBtns = (type, item, label) => `
+    <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:2px 0;">
+      <span style="font-size:12px;">${escapeHtml(label)}</span>
+      <button class="btn btn-secondary" style="padding:2px 8px;font-size:12px;" onclick="viewFormDetail('${type}', '${item.id}')">ดู</button>
+      <button class="btn btn-primary" style="padding:2px 8px;font-size:12px;" onclick="${type === "plan" ? "printFormPlanById" : "printFormActualById"}('${item.id}')">พิมพ์</button>
+    </div>`;
+
+  tbody.innerHTML = rows
+    .map((u) => {
+      const st = tripDocState(u);
+      const ranges = [...u.plans, ...u.actuals]
+        .map((x) => `${fmtD(x.start_date)}–${fmtD(x.end_date)}`)
+        .filter((v, i, arr) => arr.indexOf(v) === i)
+        .join("<br>") || `<span style="color:#94a3b8">—</span>`;
+      const planCell = u.plans.length
+        ? u.plans.map((p) => docBtns("plan", p, `${p.doc_no || "ใบแผน"}${p.version ? " v" + p.version : ""} · ${p.status === "completed" ? "สมบูรณ์" : p.status || "ร่าง"}`)).join("")
+        : `<span style="color:#b91c1c;font-size:12px;">ยังไม่มี</span>`;
+      const actualCell = u.actuals.length
+        ? u.actuals.map((a) => docBtns("actual", a, `${fmtD(a.created_at)} · ${a.status === "completed" ? "เคลียร์แล้ว" : "รอดำเนินการ"}`)).join("")
+        : `<span style="color:#b91c1c;font-size:12px;">ยังไม่มี</span>`;
+      const sum = u.actuals.reduce((t, a) => t + Number(a.grand_total || 0), 0);
+      return `
+        <tr>
+          <td><strong>${escapeHtml(u.name)}</strong></td>
+          <td style="white-space:nowrap">${ranges}</td>
+          <td>${planCell}</td>
+          <td>${actualCell}</td>
+          <td class="amount-text" style="white-space:nowrap">${u.actuals.length ? money(sum) + " บาท" : "-"}</td>
+          <td><span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;color:${st.color};background:${st.bg}">${st.text}</span></td>
+        </tr>`;
+    })
+    .join("");
+}
+
+// พิมพ์เอกสารทั้งรอบในหน้าเดียว (แยกหน้า A4 ต่อเอกสาร)
+function printTripRoundDocs(type) {
+  const docs = tripRoundDocsData.flatMap((u) => (type === "plan" ? u.plans : u.actuals));
+  if (!docs.length) {
+    alert(type === "plan" ? "ไม่มีใบแผนการเดินทางในรอบนี้" : "ไม่มีใบเคลียร์ค่าใช้จ่ายในรอบนี้");
+    return;
+  }
+  const body = docs
+    .map((d, i) => {
+      const html = type === "plan" ? buildPlanPreviewHTML(d) : buildActualPreviewHTML(d);
+      const brk = i < docs.length - 1 ? "page-break-after:always;break-after:page;" : "";
+      return `<div style="${brk}">${html}</div>`;
+    })
+    .join("");
+  const full = buildFullPageHTML(body);
+  const w = window.open("", "_blank");
+  if (w) {
+    w.document.open();
+    w.document.write(full);
+    w.document.close();
+  } else {
+    const blob = new Blob([full], { type: "text/html;charset=utf-8" });
+    window.open(URL.createObjectURL(blob), "_blank");
+  }
+}
+
+function closeTripRoundDocsModal() {
+  document.getElementById("tripRoundDocsModal")?.classList.remove("show");
+}
+
+window.openTripRoundDocsModal = openTripRoundDocsModal;
+window.closeTripRoundDocsModal = closeTripRoundDocsModal;
+window.renderTripRoundDocs = renderTripRoundDocs;
+window.printTripRoundDocs = printTripRoundDocs;
+
+// =====================================================
+// 🔗 รับตัวกรองจากลิงก์ เช่น จากแดชบอร์ดผู้จัดการ
+//    ?sale=<id>      → กรองเซลล์คนนั้น
+//    ?filter=unread  → เฉพาะที่ยังไม่อ่าน (read / commented ก็ได้)
+// =====================================================
+function applyUrlFilters() {
+  const q = new URLSearchParams(location.search);
+  const sale = q.get("sale");
+  const status = q.get("filter") || q.get("status");
+  let changed = false;
+  const saleSel = document.getElementById("filterSales");
+  if (sale && saleSel && [...saleSel.options].some((o) => o.value === sale)) {
+    saleSel.value = sale;
+    changed = true;
+  }
+  const stSel = document.getElementById("filterStatus");
+  if (status && stSel && [...stSel.options].some((o) => o.value === status)) {
+    stSel.value = status;
+    changed = true;
+  }
+  if (changed) applyFilter();
+}

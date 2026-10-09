@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // =====================================================
 // 👤 USER
 // =====================================================
-async function loadUserInfo(){try{const{data:{session}}=await supabaseClient.auth.getSession();if(!session){window.location.href="login.html";return;}const el=document.getElementById("sidebarEmail");if(el)el.textContent=session.user.email;const{data:profile}=await supabaseClient.from("profiles").select("display_name,area").eq("id",session.user.id).single();const empEl=document.getElementById("empName"),zoneEl=document.getElementById("empZone");if(empEl)empEl.value=profile?.display_name||session.user.email;if(zoneEl)zoneEl.value=profile?.area||"";}catch(err){console.error("❌",err);}}
+async function loadUserInfo(){try{const{data:{session}}=await supabaseClient.auth.getSession();if(!session){window.location.href="/pages/auth/login.html";return;}const el=document.getElementById("sidebarEmail");if(el)el.textContent=session.user.email;const{data:profile}=await supabaseClient.from("profiles").select("display_name,area").eq("id",session.user.id).single();const empEl=document.getElementById("empName"),zoneEl=document.getElementById("empZone");if(empEl)empEl.value=profile?.display_name||session.user.email;if(zoneEl)zoneEl.value=profile?.area||"";}catch(err){console.error("❌",err);}}
 
 // =====================================================
 // 📋 CHECK LATEST PLAN

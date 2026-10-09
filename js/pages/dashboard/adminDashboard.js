@@ -30,7 +30,7 @@ const adminMenus = [
         title: "ประวัติการเข้าใช้งาน",
         desc: "ตรวจสอบกิจกรรมการเข้าใช้งานของผู้ใช้",
         icon: "history",
-        url: "admin-login-log.html"
+        url: "/commingSoon.html"
       }
     ]
   },
@@ -43,19 +43,31 @@ const adminMenus = [
         title: "จัดการร้านค้า",
         desc: "ข้อมูลร้านค้า เขตพื้นที่ และเซลผู้ดูแล",
         icon: "storefront",
-        url: "admin-shops.html"
+        url: "/pages/admin/adminShops.html"
       },
       {
         title: "จัดการสินค้า",
         desc: "หมวดหมู่สินค้า / รายการสินค้า / Attribute",
         icon: "inventory_2",
-        url: "admin-products.html"
+        url: "/pages/admin/AddProductSpec.html"
+      },
+      {
+        title: "รวมรหัสลูกค้า",
+        desc: "รวมลูกค้าที่มีหลายรหัสให้เป็นลูกค้าเดียวกัน",
+        icon: "merge",
+        url: "/pages/admin/merge-customers.html"
+      },
+      {
+        title: "Marketing Home",
+        desc: "เมนูรวมงานการตลาด (RFM, โปรโมชั่น, ประกาศ)",
+        icon: "campaign",
+        url: "/pages/marketing/marketingHome.html"
       },
       {
         title: "จัดการพื้นที่ขาย",
         desc: "โซน จังหวัด และเขตการขาย",
         icon: "location_on",
-        url: "admin-areas.html"
+        url: "/commingSoon.html"
       }
     ]
   },
@@ -68,19 +80,19 @@ const adminMenus = [
         title: "ตั้งค่าการอนุมัติ",
         desc: "กำหนดลำดับการอนุมัติ Manager → Executive",
         icon: "account_tree",
-        url: "admin-approval.html"
+        url: "/commingSoon.html"
       },
       {
         title: "ตั้งค่าเอกสาร",
         desc: "เลขที่เอกสาร / เวอร์ชัน / รูปแบบฟอร์ม",
         icon: "description",
-        url: "admin-documents.html"
+        url: "/commingSoon.html"
       },
       {
         title: "ตั้งค่าการแจ้งเตือน",
         desc: "LINE / Email / Reminder แจ้งเตือนในระบบ",
         icon: "notifications",
-        url: "admin-notifications.html"
+        url: "/commingSoon.html"
       }
     ]
   },
@@ -93,19 +105,19 @@ const adminMenus = [
         title: "นำเข้า / ส่งออกข้อมูล",
         desc: "CSV / Excel / Backup ข้อมูลระบบ",
         icon: "upload_file",
-        url: "admin-import-export.html"
+        url: "/pages/components/importData.html"
       },
       {
         title: "Audit Log",
         desc: "ประวัติการแก้ไขข้อมูลสำคัญในระบบ",
         icon: "fact_check",
-        url: "admin-audit-log.html"
+        url: "/commingSoon.html"
       },
       {
         title: "System Config",
         desc: "ตั้งค่าระบบเพิ่มเติม และการเชื่อมต่อ",
         icon: "settings",
-        url: "admin-config.html"
+        url: "/commingSoon.html"
       }
     ]
   }
@@ -219,7 +231,9 @@ function setupSearch() {
    5) เริ่มทำงานเมื่อโหลดหน้าเสร็จ
    ---------------------------------------------------------- */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // หน้านี้สำหรับ Admin เท่านั้น
+  if (typeof protectPage === "function") await protectPage(["admin"]);
   renderAdminMenus();
   setupSearch();
 });

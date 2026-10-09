@@ -133,7 +133,7 @@ function renderReportList() {
     type: "report",
     title: r.title || "รายงาน (ยังไม่ตั้งชื่อ)",
     date: r.report_date,
-    link: `report.html?id=${r.id}`,
+    link: `/pages/reports/report.html?id=${r.id}`,
     id: r.id,
   }));
 

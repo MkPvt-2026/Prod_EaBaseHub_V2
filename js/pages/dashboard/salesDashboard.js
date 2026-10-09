@@ -310,6 +310,7 @@ function setPeriod(period, btn) {
 function renderAll(data) {
   if (!data || data.length === 0) {
     console.warn('⚠️ No data to render');
+    updateMetrics({ totalAmount: 0, totalProfit: 0, uniqueShops: 0, uniqueSales: 0 });
     return;
   }
   const metrics = computeMetrics(data);
@@ -326,6 +327,7 @@ function showLoading(show) {
   const cards = document.querySelectorAll('.mcard-val');
   cards.forEach(el => {
     if (show) el.textContent = '...';
+    else if (el.textContent === '...') el.textContent = '-';
   });
 }
 

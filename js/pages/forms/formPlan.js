@@ -36,7 +36,7 @@ async function checkAuthorization() {
       await protectPage(["admin", "sales", "manager", "user"]);
     } else {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) { alert("❌ กรุณา Login ก่อน"); window.location.href = "login.html"; return false; }
+      if (!session) { alert("❌ กรุณา Login ก่อน"); window.location.href = "/pages/auth/login.html"; return false; }
     }
     return true;
   } catch (e) { console.error("❌ Auth:", e); return false; }

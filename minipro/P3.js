@@ -55,7 +55,7 @@ async function protectAdmin() {
 // ============================================================
 
 function goHome() {
-  window.location.href = "/pages/admin/adminDashboard.html";
+  window.location.href = "/pages/dashboard/adminDashboard.html";
 }
 
 

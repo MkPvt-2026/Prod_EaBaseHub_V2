@@ -121,26 +121,6 @@ async function loadUserProfile() {
 }
 
 /* =================================================
-   📷 Avatar Upload Preview
-================================================= */
-function initAvatarUpload() {
-  const wrapper = document.querySelector('.avatar-wrapper');
-  const input   = document.getElementById('uploadAvatar');
-  const img     = document.getElementById('profileImage');
-
-  if (!wrapper || !input || !img) return;
-
-  wrapper.addEventListener('click', () => input.click());
-  input.addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { img.src = reader.result; };
-    reader.readAsDataURL(file);
-  });
-}
-
-/* =================================================
    📆 CALENDAR
 ================================================= */
 function renderCalendar() {

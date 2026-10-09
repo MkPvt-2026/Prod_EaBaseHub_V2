@@ -1115,7 +1115,7 @@ async function renderHeatmap() {
       counts[d.toISOString().split('T')[0]] = 0;
     }
     (data || []).forEach(r => {
-      const key = r.submitted_at.split('T')[0];
+      const key = String(r.submitted_at || r.created_at || '').split('T')[0];
       if (key in counts) counts[key]++;
     });
 

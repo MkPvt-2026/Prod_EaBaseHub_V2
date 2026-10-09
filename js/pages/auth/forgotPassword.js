@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const { error } = await supabaseClient.auth.resetPasswordForEmail(
         email,
         {
-          redirectTo: `${window.location.origin}/pages/auth/reset-password.html`,
+          redirectTo: `${window.location.origin}/pages/auth/resetPassword.html`,
         }
       );
 

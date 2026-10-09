@@ -5,7 +5,8 @@
         admin: "/pages/components/nav-admin.html",
         adminQc: "/pages/components/nav-Qc.html",
         executive: "/pages/components/nav-executive.html",
-        manager: "/pages/components/nav-manager.html"
+        manager: "/pages/components/nav-manager.html",
+        marketing: "/pages/components/nav-marketing.html"
       };
 
       const file = navFiles[role];

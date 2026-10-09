@@ -478,6 +478,10 @@ async function loadExecClaims() {
 // =====================================================
 // 📅 DATE RANGE CONTROLS
 // =====================================================
+// ช่วงวันที่ (ใช้โดย date-range controls)
+let dateStart = null;
+let dateEnd = null;
+
 function initDateRange() {
   const today = new Date();
   const dayOfWeek = today.getDay();
@@ -512,7 +516,7 @@ function setupDateControls() {
       dateStart.setHours(0, 0, 0, 0);
       updateDateRangeLabel();
       clearQuickRangeActive();
-      loadReports();
+      loadExecClaims();
     });
   }
 
@@ -522,7 +526,7 @@ function setupDateControls() {
       dateEnd.setHours(23, 59, 59, 999);
       updateDateRangeLabel();
       clearQuickRangeActive();
-      loadReports();
+      loadExecClaims();
     });
   }
 
@@ -596,7 +600,7 @@ function setQuickRange(range) {
   if (endInput) endInput.value = formatDateForInput(dateEnd);
 
   updateDateRangeLabel();
-  loadReports();
+  loadExecClaims();
 }
 
 function updateDateRangeLabel() {
@@ -2101,6 +2105,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         </tr>`;
     }
     return;
+  }
+
+  // ตรวจสิทธิ์: หน้าอนุมัติของผู้บริหาร
+  if (typeof protectPage === "function") {
+    await protectPage(["admin", "executive"]);
   }
 
   // 3) ตั้งค่า header date + user

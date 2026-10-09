@@ -261,7 +261,7 @@ function goManage(id) {
 }
 
 function goHome() {
-  window.location.href = "/pages/admin/adminDashboard.html";
+  window.location.href = "/pages/dashboard/adminDashboard.html";
 }
 
 // -------------------------------------------------------

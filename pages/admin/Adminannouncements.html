@@ -461,7 +461,8 @@ async function initPage() {
 
         // อัพเดต UI แสดงชื่อผู้ใช้
         const userName = user.user_metadata?.full_name || user.email || "ผู้ใช้";
-        document.getElementById("userName").textContent = userName;
+        const userNameEl = document.getElementById("userName");
+        if (userNameEl) userNameEl.textContent = userName;
 
         // ดึง role จาก Supabase (ตาราง profiles)
         const role = await getUserRole(user.id);

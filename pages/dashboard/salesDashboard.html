@@ -27,7 +27,7 @@
 
   <nav class="nav">
     <div class="nav-group-label">หลัก</div>
-    <a class="nav-item" href="/pages/index.html"><span class="material-icons-round">home</span> หน้าหลัก</a>
+    <a class="nav-item" href="/index.html"><span class="material-icons-round">home</span> หน้าหลัก</a>
     <a class="nav-item active" href="#"><span class="material-icons-round">bar_chart</span> Dashboard</a>
 
     <div class="nav-group-label">การขาย</div>
@@ -39,17 +39,17 @@
     <a class="nav-item" href="/pages/forms/formPlan.html"><span class="material-icons-round">map</span> แผนเดินทาง</a>
     <a class="nav-item" href="/pages/forms/formActual.html"><span class="material-icons-round">attach_money</span> ค่าใช้จ่าย</a>
 
-    <div class="nav-group-label">ผู้ดูแล</div>
-    <a class="nav-item" href="#"><span class="material-icons-round">manage_accounts</span> จัดการผู้ใช้</a>
-    <a class="nav-item" href="#"><span class="material-icons-round">settings</span> ตั้งค่า</a>
+    <div class="nav-group-label admin-only" style="display:none">ผู้ดูแล</div>
+    <a class="nav-item admin-only" style="display:none" href="/pages/admin/admintor.html"><span class="material-icons-round">manage_accounts</span> จัดการผู้ใช้</a>
+    <a class="nav-item" href="#" onclick="logout(); return false;"><span class="material-icons-round">logout</span> ออกจากระบบ</a>
   </nav>
 
   <div class="sidebar-footer">
     <div class="user-info">
-      <div class="avatar">TN</div>
+      <div class="avatar" id="sdAvatar">--</div>
       <div>
-        <div class="user-name">Tontoey N.</div>
-        <div class="user-role">Admin</div>
+        <div class="user-name" id="sdUserName">-</div>
+        <div class="user-role" id="sdUserRole">-</div>
       </div>
     </div>
   </div>
@@ -70,7 +70,7 @@
 
     <div class="topbar-brand">
       <div class="topbar-title">Sales Dashboard</div>
-      <div class="topbar-sub">ยอดขายรายเดือน · มีนาคม 2569</div>
+      <div class="topbar-sub" id="sdSubtitle">ยอดขาย</div>
     </div>
 
     <div class="period-group">
@@ -80,7 +80,7 @@
     </div>
 
     <div class="topbar-actions">
-      <button class="icon-btn" title="รีเฟรช"><span class="material-icons-round">refresh</span></button>
+      <button class="icon-btn" title="รีเฟรช" onclick="location.reload()"><span class="material-icons-round">refresh</span></button>
       <button class="icon-btn" title="ดาวน์โหลด"><span class="material-icons-round">download</span></button>
     </div>
   </header>
@@ -146,7 +146,7 @@
         <div id="area-list"></div>
       </div>
       <div class="chart-card">
-        <div class="card-header"><div class="card-title">ยอดขายรายวัน (มีนาคม)</div></div>
+        <div class="card-header"><div class="card-title">ยอดขายรายวัน</div></div>
         <div style="position:relative;height:200px"><canvas id="lineChart"></canvas></div>
       </div>
     </div>
@@ -154,7 +154,31 @@
   </div><!-- /content -->
 </div><!-- /main -->
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="/js/pages/manager/Salesdashboard.js"></script>
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/roleConfig.js"></script>
+<script src="/js/core/auth.js"></script>
+<script>
+  // ตรวจสิทธิ์ + แสดงข้อมูลผู้ใช้
+  (async function () {
+    await protectPage(["admin", "executive", "manager", "marketing", "sales", "user"]);
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
+      const { data: p } = await supabaseClient
+        .from("profiles").select("display_name, username, role")
+        .eq("id", session.user.id).single();
+      const name = p?.display_name || p?.username || session.user.email;
+      document.getElementById("sdUserName").textContent = name;
+      document.getElementById("sdUserRole").textContent = p?.role || "";
+      document.getElementById("sdAvatar").textContent = (name || "?").slice(0, 2).toUpperCase();
+      if (p?.role === "admin") document.querySelectorAll(".admin-only").forEach(el => el.style.display = "");
+      document.getElementById("sdSubtitle").textContent =
+        "ยอดขาย · " + new Date().toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+    } catch (e) { console.error(e); }
+  })();
+</script>
+<script src="/js/pages/dashboard/salesDashboard.js"></script>
 </body>
 </html>

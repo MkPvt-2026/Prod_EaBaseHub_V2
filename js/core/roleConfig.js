@@ -14,24 +14,25 @@ const ROLE_CONFIG = {
   // ADMIN — เข้าได้ทุกหน้า
   // -------------------------------------------------------
   admin: {
-    defaultPage: '/pages/admin/adminDashboard.html',
+    defaultPage: '/pages/dashboard/adminDashboard.html',
     allowedPages: [
-      '/pages/admin/adminDashboard.html',
+      '/pages/dashboard/adminDashboard.html',
       '/pages/admin/admintor.html',
       '/pages/admin/adminSales.html',
       '/pages/admin/adminShops.html',
-      '/pages/admin/adminUsers.html',
+      '/pages/admin/adminUserEdit.html',
       '/pages/admin/AddProductSpec.html',
-      '/pages/manager/index.html',
-      '/pages/manager/managerDashboard.html',
-      '/pages/manager/reportManager.html',
-      '/pages/qc/qcDashboard.html',
-      '/pages/executive/executiveDashboard.html',
-      '/pages/sales/salesDashboard.html',
-      '/pages/sales/salesReport.html',
-      '/pages/executive/rfmDashboard.html',   // ← เพิ่มบรรทัดนี้
-      '/pages/admin/rfmImport.html',           // ← เพิ่มบรรทัดนี้
-      '/pages/admin/Adminannouncements.html'
+      '/index.html',
+      '/pages/dashboard/managerDashboard.html',
+      '/pages/reports/report-manager.html',
+      '/pages/dashboard/QcDashboard.html',
+      '/pages/executive/executive-Dashboard.html',
+      '/pages/dashboard/salesDashboard.html',
+      '/pages/reports/report.html',
+      '/pages/dashboard/RfmDashboard.html',
+      '/pages/components/rfmImport.html',
+      '/pages/admin/Adminannouncements.html',
+      '/pages/marketing/marketingHome.html'
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -44,8 +45,9 @@ const ROLE_CONFIG = {
     defaultPage: '/pages/dashboard/QcDashboard.html',
     allowedPages: [
       '/pages/dashboard/QcDashboard.html',
-      '/pages/admin/adminQc.html',
-      
+      '/pages/Qc-claim/adminQc.html',
+      '/pages/Qc-claim/internal-claims.html',
+      '/pages/Qc-claim/external-claims.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -60,9 +62,10 @@ const ROLE_CONFIG = {
       '/pages/dashboard/RfmDashboard.html',
       '/pages/reports/reportTracker.html',
       '/pages/components/rfmImport.html',
-      '/pages/reports/reportManager.html',
+      '/pages/reports/report-manager.html',
       '/pages/dashboard/managerDashboard.html',
       '/pages/admin/Adminannouncements.html',
+      '/pages/marketing/marketingHome.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -76,8 +79,10 @@ const ROLE_CONFIG = {
       '/pages/executive/executiveHome.html',
       '/pages/Qc-claim/claim-evaluation.html',
       '/pages/executive/executive-Dashboard.html',
-      '/pages/executive/rfmDashboard.html', 
-      '/pages/manager/reportManager.html',
+      '/pages/dashboard/RfmDashboard.html',
+      '/pages/reports/report-manager.html',
+      '/pages/reports/reportTracker.html',
+      '/pages/marketing/marketingHome.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -88,12 +93,32 @@ const ROLE_CONFIG = {
   sales: {
     defaultPage: '/index.html',
     allowedPages: [
-      '/pages/sales/salesDashboard.html',
-      '/pages/sales/salesReport.html',
+      '/index.html',
+      '/pages/dashboard/salesDashboard.html',
+      '/pages/reports/report.html',
       '/pages/forms/formActual.html',
       '/pages/forms/formHub.html',
       '/pages/forms/formClaim.html',
       '/pages/forms/credit-limit-sale.html',
+      // ✅ เพิ่มหน้าใหม่ตรงนี้
+    ]
+  },
+
+  // -------------------------------------------------------
+  // MARKETING — การตลาด: หน้าเมนูรวม Marketing Home
+  // -------------------------------------------------------
+  marketing: {
+    defaultPage: '/pages/marketing/marketingHome.html',
+    allowedPages: [
+      '/pages/marketing/marketingHome.html',
+      '/pages/dashboard/RfmDashboard.html',
+      '/pages/dashboard/salesDashboard.html',
+      '/pages/reports/reportTracker.html',
+      '/pages/admin/Adminannouncements.html',
+      '/pages/components/rfmImport.html',
+      '/pages/components/importData.html',
+      '/pages/forms/special-price-sale.html',
+      '/pages/forms/special-price-tracking.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   },
@@ -113,9 +138,10 @@ const ROLE_CONFIG = {
   // USER — ผู้ใช้ทั่วไป (ยังไม่ได้รับ role อื่น)
   // -------------------------------------------------------
   user: {
-    defaultPage: '/pages/sales/salesDashboard.html',
+    defaultPage: '/index.html',
     allowedPages: [
-      '/pages/sales/salesDashboard.html',
+      '/index.html',
+      '/pages/dashboard/salesDashboard.html',
       // ✅ เพิ่มหน้าใหม่ตรงนี้
     ]
   }
@@ -130,8 +156,16 @@ const ROLE_CONFIG = {
  * @param {string} role
  * @returns {object|null}
  */
+// รองรับ role ที่สะกดต่างกันใน DB (เช่น adminqc / ADMINQC)
+function normalizeRole(role) {
+  if (!role) return role;
+  if (ROLE_CONFIG[role]) return role;
+  const key = Object.keys(ROLE_CONFIG).find(k => k.toLowerCase() === String(role).toLowerCase());
+  return key || role;
+}
+
 function getRoleConfig(role) {
-  return ROLE_CONFIG[role] || null;
+  return ROLE_CONFIG[normalizeRole(role)] || null;
 }
 
 /**
@@ -141,7 +175,7 @@ function getRoleConfig(role) {
  * @returns {string}
  */
 function getDefaultPage(role) {
-  return ROLE_CONFIG[role]?.defaultPage || '/pages/auth/login.html';
+  return ROLE_CONFIG[normalizeRole(role)]?.defaultPage || '/pages/auth/login.html';
 }
 
 /**
@@ -151,6 +185,7 @@ function getDefaultPage(role) {
  * @returns {boolean}
  */
 function canAccessPage(role, path) {
+  role = normalizeRole(role);
   const config = ROLE_CONFIG[role];
   if (!config) return false;
   // admin เข้าได้ทุกหน้า

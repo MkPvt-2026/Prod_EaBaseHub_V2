@@ -14,7 +14,7 @@ const pageLinks = {
   a4: "credit-limit-a4-document.html",
   sign: "credit-limit-signature.html",
   detail: "credit-limit-detail.html",
-  finance: "credit-limit-finance.html",
+  finance: "/pages/Accounting/credit-limit-finance.html",
   approval: "credit-limit-approval.html",
   tracking: "credit-limit-tracking.html",
 };

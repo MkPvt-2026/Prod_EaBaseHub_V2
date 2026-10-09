@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing Home | EABaseHub</title>
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+  <!-- ใช้ sidebar / header ชุดเดียวกับหน้า Manager -->
+  <link rel="stylesheet" href="/css/base/bassManager.css">
+  <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
+  <link rel="stylesheet" href="/css/pages/marketing/marketingHome.css">
+</head>
+
+<body class="role-manager mk-page">
+<div class="app-layout">
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="app-sidebar collapsed" id="appSidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <span style="display:none">E</span>
+      </div>
+      <div class="sidebar-brand-text">
+        <div class="sidebar-brand-title">EABaseHub</div>
+        <div class="sidebar-brand-sub">Marketing</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a href="/pages/marketing/marketingHome.html" class="sidebar-nav-item active" title="Marketing Home">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">campaign</span></div>
+        <span class="nav-label">Marketing Home</span>
+      </a>
+      <a href="/pages/dashboard/RfmDashboard.html" class="sidebar-nav-item" title="วิเคราะห์ลูกค้า (RFM)">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">bar_chart</span></div>
+        <span class="nav-label">วิเคราะห์ลูกค้า (RFM)</span>
+      </a>
+      <a href="/pages/reports/reportTracker.html" class="sidebar-nav-item" title="รายงานเข้าร้าน">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">assignment</span></div>
+        <span class="nav-label">รายงานเข้าร้าน</span>
+      </a>
+      <a href="/pages/admin/Adminannouncements.html" class="sidebar-nav-item" title="ประชาสัมพันธ์">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">newspaper</span></div>
+        <span class="nav-label">ประชาสัมพันธ์</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+      <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
+      <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+      <span class="nav-label">ออกจากระบบ</span>
+    </button>
+  </aside>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <div class="app-main">
+
+    <header class="app-header">
+      <div class="header-left">
+        <div class="header-system-name">
+          <div class="header-icon"><span class="material-symbols-outlined">campaign</span></div>
+          Marketing Home
+        </div>
+        <div class="header-subtitle">ศูนย์รวมเมนูงานการตลาด · เลือกงานที่ต้องการ</div>
+      </div>
+      <div class="header-right">
+        <div class="header-date-pill">
+          <span class="material-symbols-outlined">calendar_month</span>
+          <span id="headerDateText">—</span>
+        </div>
+        <div class="header-user">
+          <div class="header-user-avatar" id="userAvatar"><span class="material-symbols-outlined">person</span></div>
+          <span class="header-user-name" id="userName">กำลังโหลด...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-content mk-content">
+
+      <!-- ส่วนหัว: ทักทาย + ค้นหาเมนู -->
+      <section class="mk-hero">
+        <div class="mk-hero-text">
+          <h1 id="mkGreeting">สวัสดี</h1>
+          <p>เลือกเมนูด้านล่าง หรือพิมพ์ค้นหาชื่อเมนู</p>
+        </div>
+        <label class="mk-search">
+          <span class="material-symbols-outlined">search</span>
+          <input type="search" id="mkSearch" placeholder="ค้นหาเมนู เช่น RFM, โปรโมชั่น, ราคาพิเศษ" autocomplete="off">
+          <kbd>/</kbd>
+        </label>
+      </section>
+
+      <!-- ใช้ล่าสุด (จำในเครื่องนี้) -->
+      <section class="mk-recent" id="mkRecentWrap" hidden>
+        <h2 class="mk-group-title"><span class="material-symbols-outlined">history</span> ใช้ล่าสุด</h2>
+        <div class="mk-recent-list" id="mkRecent"></div>
+      </section>
+
+      <!-- กลุ่มเมนู (สร้างจาก MARKETING_MENU ใน marketingHome.js) -->
+      <div class="mk-groups" id="mkGroups">
+        <div class="mk-loading">กำลังโหลดเมนู...</div>
+      </div>
+
+      <div class="mk-empty" id="mkEmpty" hidden>
+        <span class="material-symbols-outlined">search_off</span>
+        ไม่พบเมนูที่ค้นหา
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<script src="/js/core/supabaseClient.js"></script>
+<script src="/js/core/roleConfig.js"></script>
+<script src="/js/core/auth.js"></script>
+<script src="/js/pages/marketing/marketingHome.js"></script>
+</body>
+</html>

@@ -106,6 +106,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupLogout();
   await renderDraftList();
   renderSelectedProducts();
+
+  // เปิดรายงานอัตโนมัติเมื่อมาจากลิงก์ ?id=xxx (เช่น จากหน้าแจ้งเตือน)
+  const openId = new URLSearchParams(location.search).get("id");
+  if (openId) {
+    const target = submittedReports.find((x) => String(x.id) === openId);
+    if (target) handleView(target.id);
+  }
 });
 
 // =====================================================
@@ -903,6 +910,7 @@ async function handleView(id) {
   // หา row ที่กด แล้วหา group ที่มัน belong อยู่
   const clicked = submittedReports.find((x) => x.id === id);
   if (!clicked) return;
+  currentViewReportId = id;
 
   // หาทุก row ใน group เดียวกัน
   const groupRows = submittedReports.filter(
@@ -1782,3 +1790,26 @@ const { error } = await supabaseClient.from("report_comments").insert({
   }
 }
 
+
+// =====================================================
+// 💾 SAVE EDIT — บันทึกหมายเหตุของรายงานที่เปิดอยู่
+// (ปุ่ม #saveEditBtn ใน modal เรียกใช้ฟังก์ชันนี้)
+// =====================================================
+async function saveEdit() {
+  if (!currentViewReportId) return;
+  const noteEl = document.getElementById("m-note");
+  const note = noteEl ? noteEl.value.trim() : "";
+  const { error } = await supabaseClient
+    .from("reports")
+    .update({ note })
+    .eq("id", currentViewReportId);
+  if (error) {
+    console.error("❌ saveEdit error:", error);
+    showToast("บันทึกไม่สำเร็จ: " + error.message);
+    return;
+  }
+  showToast("บันทึกเรียบร้อย");
+  closeModal();
+  await renderSubmittedTable();
+}
+window.saveEdit = saveEdit;

@@ -128,7 +128,7 @@ function getIcon(type) {
 function buildLink(item) {
   if (item.link) return item.link;
   if (item.post_id) {
-    const base = `/post.html?id=${encodeURIComponent(item.post_id)}`;
+    const base = `/pages/reports/report.html?id=${encodeURIComponent(item.post_id)}`;
     return item.comment_id
       ? `${base}#comment-${encodeURIComponent(item.comment_id)}`
       : base;

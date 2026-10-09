@@ -140,11 +140,12 @@ var NotificationCenter = window.NotificationCenter || {
         this.loadSalesList(),
         this.loadReportsData(),
         this.loadClaimsData(),
+        this.loadHeaderUser(),
       ]);
 
       this.renderAlertBars();
       this.renderSummaryCards();
-      this.renderSalesAlertList();
+      this.renderTeamTable();
       this.renderClaimsSummary();
       this.updateSummaryDate();
 
@@ -232,6 +233,7 @@ var NotificationCenter = window.NotificationCenter || {
           id,
           sale_id,
           shop_id,
+          report_date,
           submitted_at,
           status,
           manager_acknowledged
@@ -281,102 +283,141 @@ var NotificationCenter = window.NotificationCenter || {
   // ─────────────────────────────────────
 
   /**
-   * คำนวณสถิติการส่งรายงานของเซลล์แต่ละคน (สัปดาห์นี้)
-   * นับจำนวนรายงาน ไม่ใช่จำนวนวัน (ส่งเกินได้ ไม่มีปัญหา)
+   * วันที่ของรายงาน (ใช้ report_date ถ้ามี ไม่งั้น submitted_at) แบบเวลาท้องถิ่น
+   */
+  reportDay(r) {
+    const raw = r.report_date || r.submitted_at;
+    if (!raw) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) {
+      const [y, m, d] = String(raw).split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    const d = new Date(raw);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  },
+
+  dayKey(d) {
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  },
+
+  /**
+   * สถิติรายคนของสัปดาห์นี้ (จันทร์–เสาร์)
+   * ⚠️ นับเป็น "วันที่ส่งรายงาน" (ตามกฎ 6 วัน/สัปดาห์) ไม่ใช่จำนวนแถวรายงาน
+   *    (1 การเข้าร้านอาจมีหลายแถวตามจำนวนสินค้า)
+   * สถานะเทียบกับ "วันทำงานที่ผ่านมาแล้ว" (ไม่นับวันนี้ เพราะยังส่งได้อยู่)
+   *   ขาด 0 วัน = ตามแผน · ขาด 1 วัน = warning · ขาด ≥2 วัน = critical
    */
   getSalesWeeklyStats() {
     const monday = this.getMonday(new Date());
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-    
-    const required = this.config.requiredReportsPerWeek; // 6 รายงาน
-    
-    return this.state.salesList.map(sales => {
-      // หารายงานของเซลล์คนนี้ในสัปดาห์นี้ (จันทร์-อาทิตย์)
-      const weeklyReports = this.state.reports.filter(r => {
-        if (r.sale_id !== sales.id) return false;
-        const reportDate = new Date(r.submitted_at);
-        return reportDate >= monday && reportDate <= sunday;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const required = this.config.requiredReportsPerWeek; // 6 วัน
+
+    // วันทำงาน จ.–ส. ของสัปดาห์นี้
+    const weekDays = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d;
+    });
+
+    return this.state.salesList.map((sales) => {
+      const mine = this.state.reports.filter((r) => r.sale_id === sales.id);
+
+      const daysWithReport = new Set();
+      const shopsThisWeek = new Set();
+      const unreadVisits = new Set();
+      mine.forEach((r) => {
+        const d = this.reportDay(r);
+        if (!d) return;
+        const key = this.dayKey(d);
+        if (d >= monday && d <= weekDays[5]) {
+          daysWithReport.add(key);
+          if (r.shop_id) shopsThisWeek.add(r.shop_id);
+        }
+        if (!r.manager_acknowledged) unreadVisits.add(`${r.shop_id}__${key}`);
       });
 
-      const reportsCount = weeklyReports.length;
-      const percentage = Math.round((reportsCount / required) * 100);
+      const days = weekDays.map((d) => {
+        const key = this.dayKey(d);
+        const done = daysWithReport.has(key);
+        let state = 'future';
+        if (done) state = 'done';
+        else if (d < today) state = 'missed';
+        else if (d.getTime() === today.getTime()) state = 'today';
+        return { date: d, state };
+      });
 
-      // หารายงานล่าสุด
-      const lastReport = this.state.reports.find(r => r.sale_id === sales.id);
-      const lastReportDate = lastReport ? new Date(lastReport.submitted_at) : null;
+      const daysDone = days.filter((d) => d.state === 'done').length;
+      const missedDays = days.filter((d) => d.state === 'missed').length;
 
-      // คำนวณสถานะ
       let status = 'normal';
-      let statusText = 'ปกติ';
-      
-      if (reportsCount >= required) {
-        // ส่งครบหรือเกิน = ปกติ
-        status = 'normal';
-        statusText = reportsCount > required ? `ส่งเกิน +${reportsCount - required}` : 'ส่งครบ';
-      } else if (reportsCount >= this.config.warningThreshold) {
-        // ส่ง 3-5 = warning
-        status = 'warning';
-        statusText = `ขาด ${required - reportsCount} รายงาน`;
-      } else {
-        // ส่ง 0-2 = critical
+      let statusText = 'ตามแผน';
+      if (daysDone >= required) {
+        statusText = 'ส่งครบสัปดาห์';
+      } else if (missedDays >= 2) {
         status = 'critical';
-        statusText = reportsCount === 0 ? 'ยังไม่ส่งเลย' : `ส่งแค่ ${reportsCount}`;
+        statusText = `ขาด ${missedDays} วัน`;
+      } else if (missedDays === 1) {
+        status = 'warning';
+        statusText = 'ขาด 1 วัน';
       }
+
+      const lastReport = mine.reduce((best, r) => {
+        const t = new Date(r.submitted_at || r.report_date || 0).getTime();
+        return t > best ? t : best;
+      }, 0);
 
       return {
         ...sales,
-        reportsCount,
+        days,
+        reportsCount: daysDone, // = จำนวนวันที่ส่งแล้ว
         required,
-        percentage: Math.min(percentage, 100), // cap ที่ 100%
-        lastReportDate,
+        missedDays,
+        shops: shopsThisWeek.size,
+        unread: unreadVisits.size,
+        percentage: Math.min(100, Math.round((daysDone / required) * 100)),
+        lastReportDate: lastReport ? new Date(lastReport) : null,
         status,
         statusText,
-        missing: Math.max(0, required - reportsCount),
+        missing: Math.max(0, required - daysDone),
       };
     });
   },
 
   /**
-   * หาเซลล์ที่ต้องติดตาม (ส่งไม่ครบ)
+   * เซลล์ที่ต้องติดตาม (ขาดส่งในวันที่ผ่านมาแล้ว)
    */
   getInactiveSales() {
-    const stats = this.getSalesWeeklyStats();
-    
-    return stats
-      .filter(s => s.status === 'critical' || s.status === 'warning')
-      .sort((a, b) => {
-        // เรียงตาม status (critical ก่อน) แล้วตาม percentage (น้อยก่อน)
-        if (a.status === 'critical' && b.status !== 'critical') return -1;
-        if (a.status !== 'critical' && b.status === 'critical') return 1;
-        return a.percentage - b.percentage;
-      });
+    return this.getSalesWeeklyStats()
+      .filter((s) => s.status === 'critical' || s.status === 'warning')
+      .sort((a, b) => b.missedDays - a.missedDays || a.reportsCount - b.reportsCount);
   },
 
   /**
-   * คำนวณรายงานที่ยังไม่อ่าน
+   * รายงานที่ยังไม่อ่าน — นับเป็น "การเข้าร้าน" (เซลล์+ร้าน+วัน) ให้ตรงกับหน้า reportTracker
    */
   getUnreadReports() {
-    return this.state.reports.filter(r => 
-      !r.manager_acknowledged || r.status === 'pending'
-    );
+    const seen = new Map();
+    this.state.reports.forEach((r) => {
+      if (r.manager_acknowledged) return;
+      const d = this.reportDay(r);
+      const key = `${r.sale_id}__${r.shop_id}__${d ? this.dayKey(d) : 'x'}`;
+      if (!seen.has(key)) seen.set(key, r);
+    });
+    return [...seen.values()];
   },
 
   /**
-   * คำนวณร้านค้าที่เข้าเยี่ยมสัปดาห์นี้
+   * ร้านค้าที่เข้าเยี่ยมสัปดาห์นี้ (ไม่ซ้ำ)
    */
   getWeeklyShopVisits() {
     const monday = this.getMonday(new Date());
     const saturday = this.getSaturday(new Date());
-
-    const weeklyReports = this.state.reports.filter(r => {
-      const reportDate = new Date(r.submitted_at);
-      return reportDate >= monday && reportDate <= saturday;
+    const uniqueShops = new Set();
+    this.state.reports.forEach((r) => {
+      const d = this.reportDay(r);
+      if (d && d >= monday && d <= saturday && r.shop_id) uniqueShops.add(r.shop_id);
     });
-
-    const uniqueShops = new Set(weeklyReports.map(r => r.shop_id));
-    
     return {
       count: uniqueShops.size,
       target: this.config.weeklyShopTarget,
@@ -385,48 +426,32 @@ var NotificationCenter = window.NotificationCenter || {
   },
 
   /**
-   * คำนวณ Active Sales (ส่งครบ 6 รายงาน/สัปดาห์)
+   * เซลล์ที่ส่งตามแผน (ไม่ขาดวันที่ผ่านมา)
    */
   getActiveSalesCount() {
     const stats = this.getSalesWeeklyStats();
-    const activeSales = stats.filter(s => s.reportsCount >= this.config.requiredReportsPerWeek);
-
+    const onTrack = stats.filter((s) => s.status === 'normal').length;
     return {
-      active: activeSales.length,
-      total: this.state.salesList.length,
-      percentage: this.state.salesList.length > 0 
-        ? Math.round((activeSales.length / this.state.salesList.length) * 100)
-        : 0,
+      active: onTrack,
+      total: stats.length,
+      percentage: stats.length ? Math.round((onTrack / stats.length) * 100) : 0,
     };
   },
 
-  /**
-   * คำนวณ KPI
-   */
   calculateKPI() {
     const activeSales = this.getActiveSalesCount();
     const shopVisits = this.getWeeklyShopVisits();
-    
-    const kpi = Math.round((activeSales.percentage + shopVisits.percentage) / 2);
-    
-    return {
-      value: kpi,
-      target: this.config.kpiTarget,
-      status: kpi >= this.config.kpiTarget ? 'good' : 'warning',
-    };
+    const kpi = Math.round((activeSales.percentage + Math.min(shopVisits.percentage, 100)) / 2);
+    return { value: kpi, target: this.config.kpiTarget, status: kpi >= this.config.kpiTarget ? 'good' : 'warning' };
   },
 
-  /**
-   * สรุปเคลม
-   */
   getClaimsSummary() {
     const claims = this.state.claims;
-    
     return {
       total: claims.length,
-      pending: claims.filter(c => c.status === 'pending' || c.status === 'รอดำเนินการ' || !c.status).length,
-      approved: claims.filter(c => c.status === 'approved' || c.status === 'อนุมัติ').length,
-      rejected: claims.filter(c => c.status === 'rejected' || c.status === 'ไม่อนุมัติ').length,
+      pending: claims.filter((c) => c.status === 'pending' || c.status === 'รอดำเนินการ' || !c.status).length,
+      approved: claims.filter((c) => c.status === 'approved' || c.status === 'อนุมัติ').length,
+      rejected: claims.filter((c) => c.status === 'rejected' || c.status === 'ไม่อนุมัติ').length,
     };
   },
 
@@ -434,197 +459,226 @@ var NotificationCenter = window.NotificationCenter || {
   // RENDERING
   // ─────────────────────────────────────
 
+  esc(t) {
+    return String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  },
+
+  /** กล่อง "ต้องดำเนินการ" (คอลัมน์ขวา) */
   renderAlertBars() {
     const container = document.getElementById('alertBars');
     if (!container) return;
 
-    const alerts = [];
-    const inactiveSales = this.getInactiveSales();
-    const unreadReports = this.getUnreadReports();
-    const claimsSummary = this.getClaimsSummary();
-    const required = this.config.requiredReportsPerWeek;
+    const inactive = this.getInactiveSales();
+    const unread = this.getUnreadReports();
+    const claims = this.getClaimsSummary();
+    const today = new Date();
+    const todayUnread = unread.filter((r) => {
+      const d = this.reportDay(r);
+      return d && d.toDateString() === today.toDateString();
+    }).length;
 
-    // Alert: เซลล์ส่งไม่ครบ (Critical - ส่ง 0-2 รายงาน)
-    const criticalSales = inactiveSales.filter(s => s.status === 'critical');
-    if (criticalSales.length > 0) {
-      const names = criticalSales.slice(0, 2).map(s => 
-        `${s.display_name || s.username || 'ไม่ระบุ'} (${s.reportsCount}/${required})`
-      ).join(', ');
-      
-      alerts.push({
-        type: 'critical',
-        icon: '⚠️',
-        title: `มีเซลล์ ${criticalSales.length} คน ส่งรายงานน้อยมาก`,
-        desc: names + (criticalSales.length > 2 ? ` และอีก ${criticalSales.length - 2} คน` : '') + ' - ต้องติดตามด่วน',
-        count: `${criticalSales.length} คน`,
+    const items = [];
+    const critical = inactive.filter((s) => s.status === 'critical');
+    const warning = inactive.filter((s) => s.status === 'warning');
+
+    if (critical.length) {
+      items.push({
+        type: 'critical', icon: 'error',
+        title: `เซลล์ขาดส่ง ≥2 วัน · ${critical.length} คน`,
+        desc: critical.slice(0, 3).map((s) => s.display_name || s.username).join(', ') + (critical.length > 3 ? ` +${critical.length - 3}` : ''),
+        action: `NotificationCenter.setTeamFilter('follow')`, actionText: 'ดูรายชื่อ',
+      });
+    }
+    if (warning.length) {
+      items.push({
+        type: 'warning', icon: 'schedule',
+        title: `เซลล์ขาดส่ง 1 วัน · ${warning.length} คน`,
+        desc: warning.slice(0, 3).map((s) => s.display_name || s.username).join(', ') + (warning.length > 3 ? ` +${warning.length - 3}` : ''),
+        action: `NotificationCenter.setTeamFilter('follow')`, actionText: 'ดูรายชื่อ',
+      });
+    }
+    if (unread.length) {
+      items.push({
+        type: 'info', icon: 'mark_email_unread',
+        title: `รายงานรอตรวจ ${unread.length} การเข้าร้าน`,
+        desc: `วันนี้ ${todayUnread} รายการ`,
+        action: 'NotificationCenter.goToUnreadReports()', actionText: 'ตรวจ',
+      });
+    }
+    if (claims.pending) {
+      items.push({
+        type: 'warning', icon: 'inventory_2',
+        title: `เคลมรอดำเนินการ ${claims.pending} รายการ`,
+        desc: 'ตรวจสอบและอนุมัติ',
+        action: 'NotificationCenter.goToPendingClaims()', actionText: 'เปิด',
       });
     }
 
-    // Alert: เซลล์ส่งไม่ครบ (Warning - ส่ง 3-5 รายงาน)
-    const warningSales = inactiveSales.filter(s => s.status === 'warning');
-    if (warningSales.length > 0) {
-      alerts.push({
-        type: 'warning',
-        icon: '👤',
-        title: `มีเซลล์ ${warningSales.length} คน ส่งรายงานไม่ครบ`,
-        desc: `ส่งน้อยกว่า ${required} รายงาน/สัปดาห์`,
-        count: `${warningSales.length} คน`,
-      });
-    }
-
-    // Alert: เคลมรอดำเนินการ
-    if (claimsSummary.pending > 0) {
-      alerts.push({
-        type: 'warning',
-        icon: '📋',
-        title: `มีเคลมรอดำเนินการ ${claimsSummary.pending} รายการ`,
-        desc: 'กรุณาตรวจสอบและอนุมัติ',
-        count: `${claimsSummary.pending} รายการ`,
-      });
-    }
-
-    // Alert: รายงานยังไม่อ่าน
-    if (unreadReports.length > 0) {
-      const todayReports = unreadReports.filter(r => {
-        const reportDate = new Date(r.submitted_at);
-        const today = new Date();
-        return reportDate.toDateString() === today.toDateString();
-      });
-
-      alerts.push({
-        type: 'info',
-        icon: '📬',
-        title: `รายงานใหม่รอตรวจ ${unreadReports.length} รายการ`,
-        desc: `รายงานวันนี้ ${todayReports.length} รายการ`,
-        count: `${unreadReports.length} รายการ`,
-      });
-    }
-
-    // ถ้าไม่มี alert
-    if (alerts.length === 0) {
+    if (!items.length) {
       container.innerHTML = `
-        <div class="alert-bar success">
-          <span class="alert-icon">✅</span>
-          <div class="alert-content">
-            <p class="alert-title">ทุกอย่างเรียบร้อย!</p>
-            <p class="alert-desc">ไม่มีรายการที่ต้องดำเนินการเร่งด่วน</p>
-          </div>
-        </div>
-      `;
+        <div class="md-alert success">
+          <span class="material-symbols-outlined">task_alt</span>
+          <div class="md-alert-text"><b>ทุกอย่างเรียบร้อย</b><small>ไม่มีรายการที่ต้องดำเนินการ</small></div>
+        </div>`;
       return;
     }
 
-    container.innerHTML = alerts.map(alert => `
-      <div class="alert-bar ${alert.type}">
-        <span class="alert-icon">${alert.icon}</span>
-        <div class="alert-content">
-          <p class="alert-title">${alert.title}</p>
-          <p class="alert-desc">${alert.desc}</p>
-        </div>
-        <span class="alert-count">${alert.count}</span>
-      </div>
-    `).join('');
+    container.innerHTML = items.map((a) => `
+      <div class="md-alert ${a.type}">
+        <span class="material-symbols-outlined">${a.icon}</span>
+        <div class="md-alert-text"><b>${this.esc(a.title)}</b><small>${this.esc(a.desc)}</small></div>
+        <button type="button" class="md-alert-btn" onclick="${a.action}">${a.actionText}</button>
+      </div>`).join('');
   },
 
+  /** การ์ด KPI 4 ใบ */
   renderSummaryCards() {
     const unread = this.getUnreadReports();
     const monday = this.getMonday(new Date());
-    const weeklyReports = this.state.reports.filter(r => 
-      new Date(r.submitted_at) >= monday
-    );
-    const readPercentage = weeklyReports.length > 0 
-      ? Math.round(((weeklyReports.length - unread.length) / weeklyReports.length) * 100)
-      : 100;
+    const weekVisits = new Set(
+      this.state.reports
+        .filter((r) => { const d = this.reportDay(r); return d && d >= monday; })
+        .map((r) => `${r.sale_id}__${r.shop_id}__${this.dayKey(this.reportDay(r))}`),
+    ).size;
 
-    // Card 1: รายงานยังไม่อ่าน
     this.updateCard('valueUnread', unread.length);
-    this.updateCard('subUnread', `จาก ${weeklyReports.length} รายงานสัปดาห์นี้`);
-    this.updateBadge('badgeUnread', unread.length > 0 ? 'badge-warning' : 'badge-success', 
-      unread.length > 0 ? 'ต้องดู' : 'ครบแล้ว');
-    this.updateProgress('progressUnread', readPercentage, unread.length > 5 ? 'danger' : 'warning');
+    this.updateCard('subUnread', `การเข้าร้าน · สัปดาห์นี้ทั้งหมด ${weekVisits}`);
+    this.updateBadge('badgeUnread', unread.length ? 'badge-warning' : 'badge-success', unread.length ? 'ต้องตรวจ' : 'ครบแล้ว');
 
-    // Card 2: เซลล์ส่งรายงานครบ (6 รายงาน/สัปดาห์)
-    const activeSales = this.getActiveSalesCount();
-    this.updateCard('valueSales', `${activeSales.active}/${activeSales.total}`);
-    this.updateCard('subSales', `ส่งครบ ${this.config.requiredReportsPerWeek} รายงาน/สัปดาห์`);
-    this.updateBadge('badgeSales', 
-      activeSales.percentage >= 80 ? 'badge-success' : 'badge-warning',
-      activeSales.percentage >= 80 ? 'ปกติ' : 'ต้องติดตาม');
-    this.updateProgress('progressSales', activeSales.percentage, 
-      activeSales.percentage >= 80 ? 'success' : 'warning');
+    const active = this.getActiveSalesCount();
+    this.updateCard('valueSales', `${active.active}/${active.total}`);
+    this.updateCard('subSales', `ส่งตามแผน (${this.config.requiredReportsPerWeek} วัน/สัปดาห์)`);
+    this.updateBadge('badgeSales', active.percentage >= 80 ? 'badge-success' : 'badge-warning', active.percentage >= 80 ? 'ปกติ' : 'ต้องติดตาม');
+    this.updateProgress('progressSales', active.percentage, active.percentage >= 80 ? 'success' : 'warning');
 
-    // Card 3: ร้านค้าเข้าเยี่ยม
-    const shopVisits = this.getWeeklyShopVisits();
-    this.updateCard('valueShops', shopVisits.count);
-    this.updateCard('subShops', `เป้าหมาย: ${shopVisits.target} ร้าน`);
-    this.updateProgress('progressShops', Math.min(shopVisits.percentage, 100), 'info');
+    const shops = this.getWeeklyShopVisits();
+    this.updateCard('valueShops', shops.count);
+    this.updateCard('subShops', `เป้าหมาย ${shops.target} ร้าน/สัปดาห์`);
+    this.updateProgress('progressShops', Math.min(shops.percentage, 100), 'info');
 
-    // Card 4: KPI
-    const kpi = this.calculateKPI();
-    this.updateCard('valueKPI', `${kpi.value}%`);
-    this.updateCard('subKPI', `เป้าหมาย: ${kpi.target}%`);
-    this.updateBadge('badgeKPI',
-      kpi.status === 'good' ? 'badge-success' : 'badge-warning',
-      kpi.status === 'good' ? 'ถึงเป้า' : 'ต่ำกว่าเป้า');
-    this.updateProgress('progressKPI', kpi.value, kpi.status === 'good' ? 'success' : 'warning');
+    const claims = this.getClaimsSummary();
+    this.updateCard('valueClaimPending', claims.pending);
+    this.updateCard('subClaimPending', `จากเคลมเดือนนี้ ${claims.total} รายการ`);
+    this.updateBadge('badgeClaimPending', claims.pending ? 'badge-warning' : 'badge-success', claims.pending ? 'รอดำเนินการ' : 'ไม่มีค้าง');
   },
 
-  renderSalesAlertList() {
-    const container = document.getElementById('salesAlertList');
-    if (!container) return;
+  /** ตารางความคืบหน้าทีม (ทุกคน) */
+  teamFilter: 'all',
 
-    const inactiveSales = this.getInactiveSales();
-    const required = this.config.requiredReportsPerWeek;
+  setTeamFilter(f) {
+    this.teamFilter = f;
+    document.querySelectorAll('#teamFilter [data-f]').forEach((b) => b.classList.toggle('active', b.dataset.f === f));
+    this.renderTeamTable();
+    document.querySelector('.md-team')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
 
-    if (inactiveSales.length === 0) {
-      container.innerHTML = `
-        <div class="sales-alert-empty">
-          <span class="material-symbols-outlined">check_circle</span>
-          <div>เซลล์ทุกคนส่งรายงานครบ ${required} รายงาน/สัปดาห์</div>
-        </div>
-      `;
+  renderTeamTable() {
+    const body = document.getElementById('teamTableBody');
+    if (!body) return;
+    const dayNames = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+    const order = { critical: 0, warning: 1, normal: 2 };
+    let stats = this.getSalesWeeklyStats().sort(
+      (a, b) => order[a.status] - order[b.status] || a.reportsCount - b.reportsCount ||
+        String(a.display_name).localeCompare(String(b.display_name), 'th'),
+    );
+
+    // ตัวนับบนปุ่มกรอง
+    const nFollow = stats.filter((s) => s.status !== 'normal').length;
+    this.updateCard('teamCountAll', stats.length);
+    this.updateCard('teamCountFollow', nFollow);
+    this.updateCard('teamCountOk', stats.length - nFollow);
+
+    if (this.teamFilter === 'follow') stats = stats.filter((s) => s.status !== 'normal');
+    if (this.teamFilter === 'ok') stats = stats.filter((s) => s.status === 'normal');
+
+    if (!stats.length) {
+      body.innerHTML = `<tr><td colspan="7" class="md-empty">${this.teamFilter === 'follow' ? '🎉 ไม่มีเซลล์ที่ต้องติดตาม' : 'ไม่มีข้อมูลเซลล์'}</td></tr>`;
       return;
     }
 
-    const displaySales = inactiveSales.slice(0, 5);
-
-    container.innerHTML = displaySales.map(sales => {
-      const name = sales.display_name || sales.username || 'ไม่ระบุ';
-      const initials = this.getInitials(name);
-      const avatarClass = sales.status === 'critical' ? 'danger' : 'warning';
-      const badgeClass = sales.status === 'critical' ? 'critical' : 'warning';
-
+    body.innerHTML = stats.map((s) => {
+      const name = s.display_name || s.username || 'ไม่ระบุ';
+      const dots = s.days.map((d, i) => {
+        const tip = `${dayNames[i]} ${d.date.getDate()}/${d.date.getMonth() + 1} · ${{ done: 'ส่งแล้ว', missed: 'ไม่ได้ส่ง', today: 'วันนี้ (ยังไม่ส่ง)', future: 'ยังไม่ถึง' }[d.state]}`;
+        return `<span class="md-day ${d.state}" title="${tip}">${dayNames[i]}</span>`;
+      }).join('');
+      const barCls = s.status === 'critical' ? 'danger' : s.status === 'warning' ? 'warning' : 'success';
       return `
-        <div class="sales-alert-item" onclick="NotificationCenter.contactSales('${sales.id}', '${sales.email || ''}')">
-          <div class="sales-avatar ${avatarClass}">${initials}</div>
-          <div class="sales-info">
-            <div class="sales-name">${name}</div>
-            <div class="sales-status">ส่ง ${sales.reportsCount}/${required} รายงาน</div>
-          </div>
-          <span class="days-badge ${badgeClass}">${sales.statusText}</span>
-        </div>
-      `;
+        <tr class="md-row ${s.status}" onclick="NotificationCenter.openSalesReports('${s.id}')" title="เปิดรายงานของ ${this.esc(name)}">
+          <td>
+            <div class="md-person">
+              <span class="md-avatar ${s.status}">${this.esc(this.getInitials(name))}</span>
+              <span class="md-person-text"><b>${this.esc(name)}</b><small>${this.esc(s.area || '')}</small></span>
+            </div>
+          </td>
+          <td><div class="md-days">${dots}</div></td>
+          <td>
+            <div class="md-progress-cell">
+              <span><b>${s.reportsCount}</b>/${s.required} วัน</span>
+              <div class="md-bar"><i class="${barCls}" style="width:${s.percentage}%"></i></div>
+            </div>
+          </td>
+          <td class="md-num">${s.shops}</td>
+          <td class="md-num">${s.unread ? `<span class="md-pill warn">${s.unread}</span>` : '<span class="md-muted">0</span>'}</td>
+          <td class="md-when">${this.relativeTime(s.lastReportDate)}</td>
+          <td><span class="md-status ${s.status}">${this.esc(s.statusText)}</span></td>
+        </tr>`;
     }).join('');
+  },
 
-    if (inactiveSales.length > 5) {
-      container.innerHTML += `
-        <div class="sales-alert-item" onclick="NotificationCenter.viewAllInactiveSales()" style="justify-content: center;">
-          <span style="color: #10b981; font-weight: 500;">ดูเพิ่มอีก ${inactiveSales.length - 5} คน →</span>
-        </div>
-      `;
-    }
+  // เก็บชื่อเดิมไว้ (โค้ดเก่าเรียกใช้)
+  renderSalesAlertList() {
+    this.renderTeamTable();
   },
 
   renderClaimsSummary() {
     const summary = this.getClaimsSummary();
-    const monthName = this.getThaiMonth(new Date());
-
-    this.updateCard('claimsMonthTitle', `เคลม ${monthName}`);
-    this.updateCard('claimsUpdated', `อัพเดท: ${this.formatTime(new Date())}`);
+    this.updateCard('claimsMonthTitle', `เคลม ${this.getThaiMonth(new Date())}`);
+    this.updateCard('claimsUpdated', `อัปเดต ${this.formatTime(new Date())}`);
     this.updateCard('claimTotal', summary.total);
     this.updateCard('claimPending', summary.pending);
     this.updateCard('claimApproved', summary.approved);
     this.updateCard('claimRejected', summary.rejected);
+
+    const bar = document.getElementById('claimBar');
+    if (bar) {
+      const t = summary.total || 1;
+      bar.innerHTML = summary.total
+        ? `<i class="approved" style="width:${(summary.approved / t) * 100}%"></i><i class="pending" style="width:${(summary.pending / t) * 100}%"></i><i class="rejected" style="width:${(summary.rejected / t) * 100}%"></i>`
+        : '';
+    }
+  },
+
+  relativeTime(date) {
+    if (!date) return '<span class="md-muted">ยังไม่เคยส่ง</span>';
+    const now = new Date();
+    const d0 = new Date(date); d0.setHours(0, 0, 0, 0);
+    const n0 = new Date(now); n0.setHours(0, 0, 0, 0);
+    const diff = Math.round((n0 - d0) / 86400000);
+    const hm = date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    if (diff === 0) return `วันนี้ ${hm}`;
+    if (diff === 1) return `เมื่อวาน ${hm}`;
+    if (diff < 7) return `${diff} วันก่อน`;
+    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  },
+
+  openSalesReports(salesId) {
+    window.location.href = `/pages/reports/reportTracker.html?sale=${encodeURIComponent(salesId)}`;
+  },
+
+  async loadHeaderUser() {
+    try {
+      const db = this.getSupabase();
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) return;
+      const { data: p } = await db.from('profiles').select('display_name, username').eq('id', session.user.id).single();
+      const name = p?.display_name || p?.username || session.user.email;
+      document.querySelectorAll('[data-user="display_name"]').forEach((el) => (el.textContent = name));
+      const av = document.getElementById('userAvatar');
+      if (av) av.textContent = this.getInitials(name);
+    } catch (e) {
+      console.warn('loadHeaderUser:', e);
+    }
   },
 
   // ─────────────────────────────────────
@@ -656,7 +710,10 @@ var NotificationCenter = window.NotificationCenter || {
     const el = document.getElementById('summaryDate');
     if (el) {
       const required = this.config.requiredReportsPerWeek;
-      el.textContent = `เป้าหมาย: ${required} รายงาน/สัปดาห์ | อัพเดท: ${this.formatTime(new Date())}`;
+      const mon = this.getMonday(new Date());
+      const sat = this.getSaturday(new Date());
+      const f = (d) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+      el.textContent = `${f(mon)} – ${f(sat)} · เป้า ${required} วัน/สัปดาห์ · อัปเดต ${this.formatTime(new Date())}`;
     }
   },
 
@@ -719,36 +776,15 @@ var NotificationCenter = window.NotificationCenter || {
   },
 
   goToPendingClaims() {
-    window.location.href = '/pages/claims/claimManager.html?status=pending';
+    window.location.href = '/pages/dashboard/QcDashboard.html?status=pending';
   },
 
   goToClaimsPage() {
-    window.location.href = '/pages/claims/claimManager.html';
+    window.location.href = '/pages/dashboard/QcDashboard.html';
   },
 
   viewAllInactiveSales() {
-    const inactiveSales = this.getInactiveSales();
-    const required = this.config.requiredReportsPerWeek;
-    
-    if (typeof openModal === 'function') {
-      const content = `
-        <p style="margin-bottom: 15px; color: #6b7280;">เป้าหมาย: ${required} รายงาน/สัปดาห์</p>
-        ${inactiveSales.map(s => `
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-            <div>
-              <div style="font-weight: 500;">${s.display_name || s.username || 'ไม่ระบุ'}</div>
-              <div style="font-size: 0.85rem; color: #6b7280;">ส่ง ${s.reportsCount}/${required} รายงาน</div>
-            </div>
-            <span style="color: ${s.status === 'critical' ? '#ef4444' : '#f59e0b'}; font-weight: 600;">${s.statusText}</span>
-          </div>
-        `).join('')}
-      `;
-      
-      openModal('เซลล์ที่ต้องติดตาม', content);
-    } else {
-      alert('รายชื่อเซลล์ที่ต้องติดตาม:\n\n' + 
-        inactiveSales.map(s => `${s.display_name || s.username} - ส่ง ${s.reportsCount}/${required} (${s.statusText})`).join('\n'));
-    }
+    this.setTeamFilter('follow');
   },
 
   contactSales(salesId, email) {
@@ -796,7 +832,7 @@ var NotificationCenter = window.NotificationCenter || {
 
       this.renderAlertBars();
       this.renderSummaryCards();
-      this.renderSalesAlertList();
+      this.renderTeamTable();
       this.renderClaimsSummary();
       this.updateSummaryDate();
 

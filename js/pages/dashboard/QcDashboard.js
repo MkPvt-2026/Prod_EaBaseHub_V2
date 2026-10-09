@@ -99,6 +99,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const filterEl = document.getElementById('filterStatus');
   if (filterEl) filterEl.addEventListener('change', filterTable);
 
+  // รองรับลิงก์ ?status=pending จากหน้า Manager
+  const urlStatus = new URLSearchParams(location.search).get('status');
+  if (filterEl && urlStatus && [...filterEl.options].some(o => o.value === urlStatus)) {
+    filterEl.value = urlStatus;
+    filterTable();
+  }
+
   const cmpSelect = document.getElementById('cmpPeriodSelect');
   if (cmpSelect) {
     cmpSelect.addEventListener('change', (e) => {
@@ -446,7 +453,7 @@ function renderRecentClaims(claims) {
   container.innerHTML = recent.map((c) => {
     const eff = getEffectiveStatus(c);
     const s = statusMap[eff] || statusMap.pending;
-    const id = (c.id || '').substring(0, 8).toUpperCase();
+    const id = String(c.id || '').substring(0, 8).toUpperCase();
     const dt = formatDate(c.claim_date || c.created_at);
     const unpickedMark = isUnpickedNewClaim(c) ? '<span class="qc-new-dot">NEW</span>' : '';
 
@@ -526,7 +533,7 @@ function renderTable(data) {
 
     return `
       <tr class="${s.rowCls}">
-        <td><span class="qc-td-id">${(r.id || '').substring(0, 8).toUpperCase()}</span></td>
+        <td><span class="qc-td-id">${String(r.id || '').substring(0, 8).toUpperCase()}</span></td>
         <td class="qc-td-product">${escapeHtml(r.product || '—')}</td>
         <td><span class="qc-td-date">${r.claim_date ? formatDate(r.claim_date) : '—'}</span></td>
         <td class="text-right qc-mono-cell">${r.qty || '—'}</td>

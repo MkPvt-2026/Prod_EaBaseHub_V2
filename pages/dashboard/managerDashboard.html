@@ -15,6 +15,8 @@
   <!-- CSS -->
   <link rel="stylesheet" href="/css/base/bassManager.css">
   <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard.css">
+  <!-- Layout สำหรับโน้ตบุ๊ก (โหลดหลังไฟล์หลักเพื่อ override) -->
+  <link rel="stylesheet" href="/css/pages/dashboard/managerDashboard-laptop.css">
 </head>
 
 <body class="role-manager">
@@ -81,6 +83,13 @@
         <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
       </a>
 
+      <a href="/pages/marketing/marketingHome.html" class="sidebar-nav-item" title="Marketing Home">
+        <div class="nav-icon-wrap">
+          <span class="material-symbols-outlined">campaign</span>
+        </div>
+        <span class="nav-label">Marketing Home</span>
+      </a>
+
     </nav>
 
     <!-- Collapse toggle button -->
@@ -108,12 +117,12 @@
       <div class="header-left">
         <div class="header-system-name">
           <div class="header-icon">
-            <span class="material-symbols-outlined">analytics</span>
+            <span class="material-symbols-outlined">empty_dashboard</span>
           </div>
-          Customer & Product Analysis
+          แดชบอร์ดผู้จัดการ
         </div>
         <div class="header-subtitle">
-          ติดตามผล · ตรวจสอบ · สำหรับฝ่ายบริหาร 
+          ติดตามการส่งรายงานของทีม · งานที่ต้องดำเนินการ
         </div>
       </div>
 
@@ -145,129 +154,119 @@
       </span>
     </div>
 
-    <!-- ✅ เพิ่ม <main> ที่หายไป -->
-    <main class="app-content">
+    <main class="app-content md-content">
 
-      <!-- ═══════════════ NOTIFICATION CENTER ═══════════════ -->
-      <section class="notification-center" id="notificationCenter">
+      <!-- ═══════════════ KPI (คลิกได้) ═══════════════ -->
+      <section class="md-kpis" aria-label="สรุปภาพรวม">
+        <button type="button" class="md-kpi" onclick="NotificationCenter.goToUnreadReports()" title="ไปตรวจรายงานที่ยังไม่อ่าน">
+          <span class="md-kpi-icon k-orange material-symbols-outlined">mark_email_unread</span>
+          <span class="md-kpi-body">
+            <span class="md-kpi-label">รายงานรอตรวจ <span class="notif-badge badge-loading" id="badgeUnread">—</span></span>
+            <span class="md-kpi-value" id="valueUnread">—</span>
+            <span class="md-kpi-sub" id="subUnread">กำลังโหลด...</span>
+          </span>
+          <span class="material-symbols-outlined md-kpi-go">chevron_right</span>
+        </button>
 
-        <!-- ─── ALERT BARS ─── -->
-        <div class="content-card">
-          <div class="alert-bars" id="alertBars">
-            <div class="alert-bar" style="opacity: 0.6;">
-              <span class="alert-icon">⏳</span>
-              <div class="alert-content">
-                <p class="alert-title">กำลังโหลดการแจ้งเตือน...</p>
-              </div>
-            </div>
-          </div>
+        <button type="button" class="md-kpi" onclick="NotificationCenter.setTeamFilter('follow')" title="ดูเซลล์ที่ต้องติดตาม">
+          <span class="md-kpi-icon k-green material-symbols-outlined">groups</span>
+          <span class="md-kpi-body">
+            <span class="md-kpi-label">เซลล์ส่งตามแผน <span class="notif-badge badge-loading" id="badgeSales">—</span></span>
+            <span class="md-kpi-value" id="valueSales">—</span>
+            <span class="md-kpi-sub" id="subSales">กำลังโหลด...</span>
+            <span class="md-kpi-bar"><span class="progress-bar progress-success" id="progressSales" style="width:0%"></span></span>
+          </span>
+        </button>
+
+        <div class="md-kpi is-static">
+          <span class="md-kpi-icon k-blue material-symbols-outlined">storefront</span>
+          <span class="md-kpi-body">
+            <span class="md-kpi-label">ร้านที่เข้าเยี่ยม <span class="notif-badge badge-info" id="badgeShops">สัปดาห์นี้</span></span>
+            <span class="md-kpi-value" id="valueShops">—</span>
+            <span class="md-kpi-sub" id="subShops">กำลังโหลด...</span>
+            <span class="md-kpi-bar"><span class="progress-bar progress-info" id="progressShops" style="width:0%"></span></span>
+          </span>
         </div>
 
-        <!-- ─── SUMMARY CARDS ─── -->
-        <div class="content-card">
-          <div class="section-header">
-            <h2 class="section-title">
-              <span class="material-symbols-outlined">monitoring</span>
-              สรุปภาพรวม
-            </h2>
-            <span class="section-date" id="summaryDate">—</span>
-          </div>
-
-          <div class="notif-cards-grid" id="summaryCards">
-            <div class="notif-card" onclick="NotificationCenter.goToUnreadReports()">
-              <div class="notif-card-header">
-                <span class="notif-label">รายงานยังไม่อ่าน</span>
-                <span class="notif-badge badge-loading" id="badgeUnread">—</span>
-              </div>
-              <div class="notif-value" id="valueUnread">—</div>
-              <div class="notif-sub" id="subUnread">กำลังโหลด...</div>
-              <div class="notif-progress">
-                <div class="progress-bar" id="progressUnread" style="width: 0%"></div>
-              </div>
-            </div>
-
-            <div class="notif-card" onclick="NotificationCenter.viewAllInactiveSales()">
-              <div class="notif-card-header">
-                <span class="notif-label">เซลล์ส่งรายงาน</span>
-                <span class="notif-badge badge-loading" id="badgeSales">—</span>
-              </div>
-              <div class="notif-value" id="valueSales">—</div>
-              <div class="notif-sub" id="subSales">กำลังโหลด...</div>
-              <div class="notif-progress">
-                <div class="progress-bar progress-success" id="progressSales" style="width: 0%"></div>
-              </div>
-            </div>
-
-            <div class="notif-card">
-              <div class="notif-card-header">
-                <span class="notif-label">ร้านค้าเข้าเยี่ยม</span>
-                <span class="notif-badge badge-info" id="badgeShops">สัปดาห์นี้</span>
-              </div>
-              <div class="notif-value" id="valueShops">—</div>
-              <div class="notif-sub" id="subShops">กำลังโหลด...</div>
-              <div class="notif-progress">
-                <div class="progress-bar progress-info" id="progressShops" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ─── CLAIMS SUMMARY ─── -->
-        <div class="content-card">
-          <div class="section-header">
-            <h2 class="section-title">
-              <span class="material-symbols-outlined">inventory_2</span>
-              สถานะเคลมเดือนนี้
-            </h2>
-          </div>
-
-          <div class="claims-summary-card" id="claimsSummary">
-            <div class="claims-header">
-              <span class="claims-title" id="claimsMonthTitle">เคลม —</span>
-              <span class="claims-updated" id="claimsUpdated">อัพเดท: —</span>
-            </div>
-            <div class="claims-stats-grid">
-              <div class="claim-stat">
-                <div class="claim-stat-value" id="claimTotal">—</div>
-                <div class="claim-stat-label">เคลมทั้งหมด</div>
-              </div>
-              <div class="claim-stat pending">
-                <div class="claim-stat-value" id="claimPending">—</div>
-                <div class="claim-stat-label">รอดำเนินการ</div>
-              </div>
-              <div class="claim-stat approved">
-                <div class="claim-stat-value" id="claimApproved">—</div>
-                <div class="claim-stat-label">อนุมัติแล้ว</div>
-              </div>
-              <div class="claim-stat rejected">
-                <div class="claim-stat-value" id="claimRejected">—</div>
-                <div class="claim-stat-label">ไม่อนุมัติ</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ─── SALES ALERT LIST ─── -->
-        <div class="content-card">
-          <div class="section-header">
-            <h2 class="section-title">
-              <span class="material-symbols-outlined">warning</span>
-              เซลล์ที่ต้องติดตาม
-            </h2>
-          </div>
-
-          <div class="sales-alert-list" id="salesAlertList">
-            <div class="sales-alert-item" style="opacity: 0.6;">
-              <div class="sales-avatar">...</div>
-              <div class="sales-info">
-                <div class="sales-name">กำลังโหลด...</div>
-                <div class="sales-status">—</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <button type="button" class="md-kpi" onclick="NotificationCenter.goToPendingClaims()" title="เปิดเคลมที่รอดำเนินการ">
+          <span class="md-kpi-icon k-red material-symbols-outlined">inventory_2</span>
+          <span class="md-kpi-body">
+            <span class="md-kpi-label">เคลมรอดำเนินการ <span class="notif-badge badge-loading" id="badgeClaimPending">—</span></span>
+            <span class="md-kpi-value" id="valueClaimPending">—</span>
+            <span class="md-kpi-sub" id="subClaimPending">กำลังโหลด...</span>
+          </span>
+          <span class="material-symbols-outlined md-kpi-go">chevron_right</span>
+        </button>
       </section>
+
+      <!-- ═══════════════ 2 คอลัมน์ ═══════════════ -->
+      <div class="md-grid">
+
+        <!-- ซ้าย: ความคืบหน้าทีม -->
+        <section class="md-card md-team" aria-label="ความคืบหน้าทีม">
+          <header class="md-card-head">
+            <div>
+              <h2><span class="material-symbols-outlined">fact_check</span> ความคืบหน้าการส่งรายงาน · สัปดาห์นี้</h2>
+              <div class="md-card-sub" id="summaryDate">—</div>
+            </div>
+            <div class="md-seg" id="teamFilter" role="group" aria-label="กรองเซลล์">
+              <button type="button" data-f="all" class="active" onclick="NotificationCenter.setTeamFilter('all')">ทั้งหมด <b id="teamCountAll">0</b></button>
+              <button type="button" data-f="follow" onclick="NotificationCenter.setTeamFilter('follow')">ต้องติดตาม <b id="teamCountFollow" class="danger">0</b></button>
+              <button type="button" data-f="ok" onclick="NotificationCenter.setTeamFilter('ok')">ตามแผน <b id="teamCountOk" class="ok">0</b></button>
+            </div>
+          </header>
+
+          <div class="md-table-wrap">
+            <table class="md-table">
+              <thead>
+                <tr>
+                  <th>เซลล์</th>
+                  <th title="วันที่ส่งรายงาน จันทร์–เสาร์">วันที่ส่ง (จ.–ส.)</th>
+                  <th>ความคืบหน้า</th>
+                  <th class="md-num">ร้าน</th>
+                  <th class="md-num">รอตรวจ</th>
+                  <th>ส่งล่าสุด</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="teamTableBody">
+                <tr><td colspan="7" class="md-empty">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="md-card-foot">
+            <span class="md-legend"><i class="md-day done"></i> ส่งแล้ว <i class="md-day missed"></i> ไม่ได้ส่ง <i class="md-day today"></i> วันนี้ <i class="md-day future"></i> ยังไม่ถึง</span>
+            <a href="/pages/reports/reportTracker.html" class="md-link">เปิดหน้ารายงานทั้งหมด <span class="material-symbols-outlined">arrow_forward</span></a>
+          </footer>
+        </section>
+
+        <!-- ขวา: ต้องดำเนินการ + เคลม -->
+        <aside class="md-side">
+          <section class="md-card" aria-label="ต้องดำเนินการ">
+            <header class="md-card-head">
+              <h2><span class="material-symbols-outlined">notifications_active</span> ต้องดำเนินการ</h2>
+            </header>
+            <div class="md-alerts" id="alertBars">
+              <div class="md-alert"><span class="material-symbols-outlined">hourglass_top</span><div class="md-alert-text"><b>กำลังโหลด...</b></div></div>
+            </div>
+          </section>
+
+          <section class="md-card" id="claimsSummary" aria-label="สถานะเคลม">
+            <header class="md-card-head">
+              <h2><span class="material-symbols-outlined">inventory_2</span> <span id="claimsMonthTitle">เคลม —</span></h2>
+              <span class="md-card-sub" id="claimsUpdated">—</span>
+            </header>
+            <div class="md-claims">
+              <div class="md-claim"><b id="claimTotal">—</b><span>ทั้งหมด</span></div>
+              <div class="md-claim pending"><b id="claimPending">—</b><span>รอดำเนินการ</span></div>
+              <div class="md-claim approved"><b id="claimApproved">—</b><span>อนุมัติ</span></div>
+              <div class="md-claim rejected"><b id="claimRejected">—</b><span>ไม่อนุมัติ</span></div>
+            </div>
+            <div class="md-stack" id="claimBar" title="สัดส่วน อนุมัติ / รอ / ไม่อนุมัติ"></div>
+            <a href="/pages/dashboard/QcDashboard.html" class="md-link md-link-block">เปิด QC Dashboard <span class="material-symbols-outlined">arrow_forward</span></a>
+          </section>
+        </aside>
+      </div>
 
     </main>
 
@@ -348,6 +347,9 @@
     });
   }
   updateHeaderDate();
+
+  // ── ตรวจสิทธิ์: Manager / Admin ──
+  if (typeof protectPage === 'function') protectPage(['admin', 'manager']);
 </script>
 
 </body>

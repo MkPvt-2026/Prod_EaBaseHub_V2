@@ -2,6 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | แก้ไขผู้ใช้</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,8 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 
 
-<link rel="stylesheet" href="css/admin-base.css">
-<link rel="stylesheet" href="css/admin-edit.css">
+<link rel="stylesheet" href="/css/base/adminBase.css">
 
 </head>
 
@@ -45,23 +45,27 @@
     <option value="user">User</option>
     <option value="sales">Sales</option>
     <option value="manager">Manager</option>
+    <option value="executive">Executive</option>
+    <option value="adminQc">AdminQC</option>
+    <option value="accounting">Accounting</option>
+    <option value="marketing">Marketing</option>
     <option value="admin">Admin</option>
   </select>
 
   <label>Status</label>
   <select id="status">
     <option value="Active">Active</option>
-    <option value="Suspended">Suspended</option>
+    <option value="Inactive">Inactive</option>
   </select>
 
   <button onclick="saveUser()">บันทึก</button>
 
 </main>
 
-<script src="js/core/supabaseClient.js"></script>
+<script src="/js/core/supabaseClient.js"></script>
 <script src="/js/core/roleConfig.js"></script>
   <script src="/js/core/auth.js"></script>
-<script src="js/admin-edit.js"></script>
+<script src="/js/pages/admin/adminEdit.js"></script>
 
 
 </body>

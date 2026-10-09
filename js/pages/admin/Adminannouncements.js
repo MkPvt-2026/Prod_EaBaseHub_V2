@@ -524,6 +524,11 @@ const AdminAnnouncements = (() => {
     async function init() {
         try {
             console.log('🚀 AdminAnnouncements initializing...');
+
+            // ตรวจสิทธิ์ (ให้ตรงกับปุ่ม "สร้างประกาศ" ใน Announcements.js)
+            if (typeof protectPage === 'function') {
+                await protectPage(['admin', 'adminQc', 'adminqc', 'manager', 'marketing']);
+            }
             
             // Get current user
             currentUser = window.currentUser || null;

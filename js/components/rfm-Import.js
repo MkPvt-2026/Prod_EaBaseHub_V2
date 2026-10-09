@@ -1,7 +1,7 @@
 
 // ป้องกันหน้า: admin only
 document.addEventListener('DOMContentLoaded', async () => {
-  await protectPage(['admin' ,'manager']);
+  await protectPage(['admin', 'manager', 'marketing']);
   loadHistory();
 });
 
