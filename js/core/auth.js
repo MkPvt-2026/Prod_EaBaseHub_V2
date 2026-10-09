@@ -11,7 +11,17 @@ if (typeof supabaseClient === 'undefined') {
 }
 
 if (typeof ROLE_CONFIG === 'undefined') {
-  console.error('❌ ROLE_CONFIG ไม่พร้อมใช้งาน! ตรวจสอบว่าโหลด roleConfig.js ก่อนหรือยัง');
+  console.warn('⚠️ ROLE_CONFIG ไม่พร้อมใช้งาน — ใช้ fallback defaultPage');
+}
+
+function getSafeDefaultPage(role) {
+  if (typeof getDefaultPage === 'function') {
+    return getDefaultPage(role);
+  }
+  if (typeof ROLE_CONFIG !== 'undefined' && ROLE_CONFIG[role]?.defaultPage) {
+    return ROLE_CONFIG[role].defaultPage;
+  }
+  return '/pages/auth/login.html';
 }
 
 // ======================================================
@@ -56,7 +66,7 @@ if (loginForm) {
         return;
       }
 
-      const destination = getDefaultPage(profile?.role);
+      const destination = getSafeDefaultPage(profile?.role);
 
       console.log("✅ Login successful — role:", profile?.role, "→", destination);
       msg.innerText   = "เข้าสู่ระบบสำเร็จ!";
@@ -174,7 +184,7 @@ async function protectPage(allowedRoles = []) {
         console.warn("⚠️ Role not allowed:", profile.role, "— allowed:", allowedRoles);
 
         // ✅ redirect ไปหน้า default ของ role ตัวเอง (ไม่ kick ไป login)
-        const destination = getDefaultPage(profile.role);
+        const destination = getSafeDefaultPage(profile.role);
         console.log("↩️ Redirecting to:", destination);
         window.location.href = destination;
         return;

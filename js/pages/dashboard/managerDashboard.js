@@ -8,7 +8,7 @@
    - userService.js (optional)
    ══════════════════════════════════════════════════════════════ */
 
-const NotificationCenter = {
+var NotificationCenter = window.NotificationCenter || {
   // ─────────────────────────────────────
   // CONFIG
   // ─────────────────────────────────────

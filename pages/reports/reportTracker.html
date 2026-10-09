@@ -336,6 +336,13 @@
             <div class="filter-section">
               <div class="filter-row">
                 <div class="filter-group">
+                  <label>รอบทริป (เดือน/ช่วงเวลา)</label>
+                  <select id="filterTripRound">
+                    <option value="">— ทั้งหมด / เลือกรอบทริป —</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
                   <label>เซลล์</label>
                   <select id="filterSales">
                     <option value="">— ทั้งหมด —</option>
@@ -373,6 +380,16 @@
                 <button onclick="resetFilter()" class="btn btn-secondary">
                   <span class="material-symbols-outlined">refresh</span>
                   รีเซ็ต
+                </button>
+
+                <button onclick="openFormPlanOverviewModal()" class="btn btn-plan-form">
+                  <span class="material-symbols-outlined icon-white">map</span>
+                  รายงาน formPlan
+                </button>
+
+                <button onclick="openFormActualOverviewModal()" class="btn btn-actual-form">
+                  <span class="material-symbols-outlined icon-white">receipt_long</span>
+                  รายงาน formActual
                 </button>
 
                 <button onclick="exportCSV()" class="btn btn-export">
@@ -623,50 +640,125 @@
         </div>
 
         <div class="modal-body">
-          <div class="mini-summary">
-            <div class="mini-stat">
-              <span class="mini-label">ร้านที่เข้า</span>
-              <span class="mini-value" id="stShops">—</span>
+          <!-- Sales Trip Round Bar -->
+          <div class="sales-trip-round-bar" style="margin-bottom:14px; display:flex; align-items:center; gap:10px; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px; font-weight:600; color:#1e293b; font-size:13px;">
+              <span class="material-symbols-outlined icon-blue" style="font-size:20px;">event_repeat</span>
+              <span>เลือกรอบทริปประจำเดือน:</span>
             </div>
-            <div class="mini-stat">
-              <span class="mini-label">จังหวัด</span>
-              <span class="mini-value" id="stProvinces">—</span>
+            <select id="salesTripRoundFilter" style="padding:6px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; font-family:inherit; flex:1; min-width:240px; background:#fff;">
+              <option value="">— ทั้งหมดทุกรอบทริป —</option>
+            </select>
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="printSelectedSalesTripRoundDoc()">
+              <span class="material-symbols-outlined icon-sm">print</span> ดึงใบปริ้นเอกสาร A4
+            </button>
+          </div>
+
+          <!-- Modal Tabs -->
+          <div class="modal-tabs">
+            <button class="modal-tab-btn active" id="tabVisitBtn" onclick="switchSalesModalTab('visits')">
+              <span class="material-symbols-outlined icon-sm">storefront</span>
+              รายงานการเข้าร้าน
+            </button>
+            <button class="modal-tab-btn" id="tabPlanBtn" onclick="switchSalesModalTab('plan')">
+              <span class="material-symbols-outlined icon-sm">map</span>
+              แผนการเดินทาง (formPlan)
+            </button>
+            <button class="modal-tab-btn" id="tabActualBtn" onclick="switchSalesModalTab('actual')">
+              <span class="material-symbols-outlined icon-sm">receipt_long</span>
+              เคลียร์ค่าใช้จ่าย (formActual)
+            </button>
+          </div>
+
+          <!-- TAB 1: VISITS -->
+          <div id="salesTabVisits" class="tab-content-panel active">
+            <div class="mini-summary">
+              <div class="mini-stat">
+                <span class="mini-label">ร้านที่เข้า</span>
+                <span class="mini-value" id="stShops">—</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">จังหวัด</span>
+                <span class="mini-value" id="stProvinces">—</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">ยังไม่อ่าน</span>
+                <span class="mini-value" style="color: #f59e0b" id="stUnread">—</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">มี Comment</span>
+                <span class="mini-value" style="color: #0093ad" id="stCommented">—</span>
+              </div>
             </div>
-            <div class="mini-stat">
-              <span class="mini-label">ยังไม่อ่าน</span>
-              <span class="mini-value" style="color: #f59e0b" id="stUnread"
-                >—</span
-              >
-            </div>
-            <div class="mini-stat">
-              <span class="mini-label">มี Comment</span>
-              <span class="mini-value" style="color: #0093ad" id="stCommented"
-                >—</span
-              >
+
+            <div class="sales-table-wrapper">
+              <table class="sales-table" id="salesReportTable">
+                <thead>
+                  <tr>
+                    <th style="width: 80px">วันที่</th>
+                    <th style="width: 130px">ร้านค้า</th>
+                    <th style="width: 90px">จังหวัด</th>
+                    <th style="width: 130px">สินค้าที่จำหน่าย</th>
+                    <th style="width: 150px">สินค้าที่ลูกค้าแนะนำ</th>
+                    <th style="width: 240px">รายละเอียดการเข้าเยี่ยม</th>
+                    <th style="width: 150px">ร้านตามแผน</th>
+                    <th style="width: 75px" class="col-status">สถานะ</th>
+                    <th style="width: 90px" class="col-action">Comment</th>
+                  </tr>
+                </thead>
+                <tbody id="salesTableBody">
+                  <tr>
+                    <td colspan="9" class="loading">กำลังโหลด...</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div class="sales-table-wrapper">
-            <table class="sales-table" id="salesReportTable">
-              <thead>
-                <tr>
-                  <th style="width: 80px">วันที่</th>
-                  <th style="width: 130px">ร้านค้า</th>
-                  <th style="width: 90px">จังหวัด</th>
-                  <th style="width: 130px">สินค้าที่จำหน่าย</th>
-                  <th style="width: 150px">สินค้าที่ลูกค้าแนะนำ</th>
-                  <th style="width: 240px">รายละเอียดการเข้าเยี่ยม</th>
-                  <th style="width: 150px">ร้านตามแผน</th>
-                  <th style="width: 75px" class="col-status">สถานะ</th>
-                  <th style="width: 90px" class="col-action">Comment</th>
-                </tr>
-              </thead>
-              <tbody id="salesTableBody">
-                <tr>
-                  <td colspan="9" class="loading">กำลังโหลด...</td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- TAB 2: FORM PLAN -->
+          <div id="salesTabPlan" class="tab-content-panel">
+            <div class="form-table-wrapper">
+              <table class="form-data-table">
+                <thead>
+                  <tr>
+                    <th>วันที่ยื่น</th>
+                    <th>ช่วงเวลาเดินทาง</th>
+                    <th>เส้นทาง/ร้านค้าตามแผน</th>
+                    <th>ประมาณการค่าใช้จ่าย</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="salesPlanTableBody">
+                  <tr>
+                    <td colspan="6" class="loading">กำลังโหลดแผนการเดินทาง...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 3: FORM ACTUAL -->
+          <div id="salesTabActual" class="tab-content-panel">
+            <div class="form-table-wrapper">
+              <table class="form-data-table">
+                <thead>
+                  <tr>
+                    <th>วันที่ยื่น</th>
+                    <th>ช่วงเวลาเดินทาง</th>
+                    <th>รายการเคลียร์ค่าใช้จ่าย</th>
+                    <th>ยอดรวมที่ขอเบิก</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="salesActualTableBody">
+                  <tr>
+                    <td colspan="6" class="loading">กำลังโหลดข้อมูลการเบิกจ่าย...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -740,6 +832,113 @@
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+     MODAL: FORM PLAN OVERVIEW
+══════════════════════════════════════════════════ -->
+    <div id="formPlanOverviewModal" class="modal modal-xl">
+      <div class="modal-content modal-content-xl">
+        <button class="close-btn" onclick="closeFormPlanOverviewModal()" title="ปิด">
+          <span class="material-symbols-outlined icon-sm">close</span>
+        </button>
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <span class="material-symbols-outlined icon-lg icon-blue-dark">map</span>
+            <div>
+              <h3>รายงานแผนการเดินทาง (formPlan - ฟอร์ม ๑)</h3>
+              <div class="sales-modal-subtitle">แผนงานการออกปฏิบัติงานเข้าร้านของทีมเซลล์</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="form-table-wrapper">
+            <table class="form-data-table">
+              <thead>
+                <tr>
+                  <th>เซลล์ผู้รับผิดชอบ</th>
+                  <th>วันที่ยื่น</th>
+                  <th>ช่วงเวลาเดินทาง</th>
+                  <th>เส้นทาง / ร้านค้าตามแผน</th>
+                  <th>ประมาณการค่าใช้จ่าย</th>
+                  <th>สถานะ</th>
+                  <th>รายละเอียด</th>
+                </tr>
+              </thead>
+              <tbody id="formPlanOverviewBody">
+                <tr>
+                  <td colspan="7" class="loading">กำลังโหลดข้อมูลแผนเดินทาง...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+     MODAL: FORM ACTUAL OVERVIEW
+══════════════════════════════════════════════════ -->
+    <div id="formActualOverviewModal" class="modal modal-xl">
+      <div class="modal-content modal-content-xl">
+        <button class="close-btn" onclick="closeFormActualOverviewModal()" title="ปิด">
+          <span class="material-symbols-outlined icon-sm">close</span>
+        </button>
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <span class="material-symbols-outlined icon-lg icon-green">receipt_long</span>
+            <div>
+              <h3>รายงานเคลียร์ค่าใช้จ่าย (formActual - ฟอร์ม ๒)</h3>
+              <div class="sales-modal-subtitle">สรุปการเบิกจ่ายและเคลียร์ค่าใช้จ่ายจริงของทีมเซลล์</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="form-table-wrapper">
+            <table class="form-data-table">
+              <thead>
+                <tr>
+                  <th>เซลล์ผู้รับผิดชอบ</th>
+                  <th>วันที่ยื่น</th>
+                  <th>ช่วงเวลาเดินทาง</th>
+                  <th>รายการ/ร้านค้าปฏิบัติงาน</th>
+                  <th>ยอดรวมที่ขอเบิก</th>
+                  <th>สถานะ</th>
+                  <th>รายละเอียด</th>
+                </tr>
+              </thead>
+              <tbody id="formActualOverviewBody">
+                <tr>
+                  <td colspan="7" class="loading">กำลังโหลดข้อมูลการเบิกจ่าย...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+     MODAL: FORM DETAIL VIEW
+══════════════════════════════════════════════════ -->
+    <div id="formDetailModal" class="modal">
+      <div class="modal-content">
+        <button class="close-btn" onclick="closeFormDetailModal()" title="ปิด">
+          <span class="material-symbols-outlined icon-sm">close</span>
+        </button>
+        <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 id="formDetailTitle" style="margin:0;">รายละเอียดเอกสาร</h3>
+            <span id="formDetailBadge" class="badge badge-info" style="margin-top:4px;">—</span>
+          </div>
+          <button type="button" id="formDetailPrintBtn" class="btn btn-primary" style="padding:6px 14px; font-size:13px;" onclick="printCurrentFormDetail()">
+            <span class="material-symbols-outlined icon-white icon-sm">print</span> ดึงใบปริ้นเอกสาร A4 (Export)
+          </button>
+        </div>
+        <div class="modal-body" id="formDetailContent">
+          <div class="loading">กำลังโหลดรายละเอียด...</div>
         </div>
       </div>
     </div>

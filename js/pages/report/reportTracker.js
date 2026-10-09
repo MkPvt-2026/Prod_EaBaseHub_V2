@@ -128,6 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await Promise.all([loadProfiles(), loadShops(), loadProducts()]);
     await loadReports();
+    await loadAllTripRounds();
 
     setupEventListeners();
     setupLogout();
@@ -1246,6 +1247,8 @@ async function openSalesTableModal(saleId) {
   console.log("🧑 profile =", profile);
 
   await loadTripPlansForSale(saleId);
+  populateSalesTripRounds(saleId);
+  switchSalesModalTab("visits");
   renderSalesTable(saleId);
 
   const modal = document.getElementById("salesTableModal");
@@ -2655,3 +2658,914 @@ window.toggleNote = toggleNote;
 window.exportSalesVisitPDF = exportSalesVisitPDF;
 window.printSalesVisitReport = printSalesVisitReport;
 window.exportSalesVisitExcel = exportSalesVisitExcel;
+
+// =====================================================
+// 🗺️ FORM PLAN & FORM ACTUAL INTEGRATION
+// =====================================================
+
+function switchSalesModalTab(tabName) {
+  const visitBtn = document.getElementById("tabVisitBtn");
+  const planBtn = document.getElementById("tabPlanBtn");
+  const actualBtn = document.getElementById("tabActualBtn");
+
+  const visitTab = document.getElementById("salesTabVisits");
+  const planTab = document.getElementById("salesTabPlan");
+  const actualTab = document.getElementById("salesTabActual");
+
+  [visitBtn, planBtn, actualBtn].forEach((btn) => btn?.classList.remove("active"));
+  [visitTab, planTab, actualTab].forEach((p) => p?.classList.remove("active"));
+
+  if (tabName === "visits") {
+    visitBtn?.classList.add("active");
+    visitTab?.classList.add("active");
+  } else if (tabName === "plan") {
+    planBtn?.classList.add("active");
+    planTab?.classList.add("active");
+    if (currentSalesModalId) {
+      loadSalesFormPlans(currentSalesModalId);
+    }
+  } else if (tabName === "actual") {
+    actualBtn?.classList.add("active");
+    actualTab?.classList.add("active");
+    if (currentSalesModalId) {
+      loadSalesFormActuals(currentSalesModalId);
+    }
+  }
+}
+
+let currentFormDetailRef = null;
+let allTripRoundsList = [];
+
+async function loadSalesFormPlans(salesId, rStart, rEnd) {
+  const tbody = document.getElementById("salesPlanTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6" class="loading">กำลังโหลดแผนการเดินทาง...</td></tr>`;
+
+  try {
+    let query = supabaseClient.from("trips").select("*").eq("user_id", salesId);
+    if (rStart && rEnd) {
+      query = query.gte("start_date", rStart).lte("end_date", rEnd);
+    } else {
+      if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
+      if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">ไม่พบข้อมูลแผนการเดินทางในช่วงเวลานี้</td></tr>`;
+      return;
+    }
+
+    const fmtD = (d) =>
+      d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" }) : "-";
+
+    tbody.innerHTML = data
+      .map((item) => {
+        let rows = [];
+        let expense = null;
+        if (Array.isArray(item.trips)) {
+          rows = item.trips;
+        } else if (item.trips && typeof item.trips === "object") {
+          rows = item.trips.rows || [];
+          expense = item.trips.expense || null;
+        }
+
+        const routesText =
+          rows
+            .map((r) => {
+              const shops = [r.shop1, r.shop2, r.shop3].filter(
+                (s) => s && s.trim() && s !== "ชื่อร้าน" && s !== "-",
+              );
+              const prov = [r.from, r.to].filter(
+                (p) => p && p.trim() && p !== "จังหวัด" && p !== "-",
+              );
+              return `📍 ${fmtD(r.date)}: ${prov.join(" → ")} ${shops.length > 0 ? `(${shops.join(", ")})` : ""}`;
+            })
+            .join("<br>") || "ไม่ระบุเส้นทาง";
+
+        let estTotal = 0;
+        if (expense) {
+          estTotal =
+            (expense.allowance_rate || 0) * (expense.allowance_days || 0) +
+            (expense.hotel_rate || 0) * (expense.hotel_nights || 0) +
+            (expense.other_cost || 0);
+        }
+
+        const statusClass = item.status === "completed" ? "badge-status-completed" : "badge-status-draft";
+        const statusText = item.status === "completed" ? "สมบูรณ์" : "ร่าง/รออนุมัติ";
+
+        return `
+          <tr>
+            <td>${fmtD(item.created_at)}</td>
+            <td>${fmtD(item.start_date)} - ${fmtD(item.end_date)}</td>
+            <td>${routesText}</td>
+            <td class="amount-text">${estTotal > 0 ? estTotal.toLocaleString("th-TH") + " บาท" : "-"}</td>
+            <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+            <td style="display:flex;gap:4px;align-items:center;">
+              <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="viewFormDetail('plan', '${item.id}')">
+                <span class="material-symbols-outlined icon-sm">visibility</span> ดู
+              </button>
+              <button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="printFormPlanById('${item.id}')">
+                <span class="material-symbols-outlined icon-white icon-sm">print</span> พิมพ์ A4
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("loadSalesFormPlans error:", err);
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;">เกิดข้อผิดพลาด: ${err.message}</td></tr>`;
+  }
+}
+
+async function loadSalesFormActuals(salesId, rStart, rEnd) {
+  const tbody = document.getElementById("salesActualTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6" class="loading">กำลังโหลดข้อมูลการเบิกจ่าย...</td></tr>`;
+
+  try {
+    let query = supabaseClient.from("actuals").select("*").eq("user_id", salesId);
+    if (rStart && rEnd) {
+      query = query.gte("start_date", rStart).lte("end_date", rEnd);
+    } else {
+      if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
+      if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">ไม่พบข้อมูลเคลียร์ค่าใช้จ่ายในช่วงเวลานี้</td></tr>`;
+      return;
+    }
+
+    const fmtD = (d) =>
+      d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" }) : "-";
+
+    tbody.innerHTML = data
+      .map((item) => {
+        const rows = Array.isArray(item.rows) ? item.rows : [];
+        const routesText =
+          rows.map((r) => `🚘 ${fmtD(r.date)}: ${r.route || "-"} ${r.note ? `(${r.note})` : ""}`).join("<br>") ||
+          "ไม่ระบุรายการ";
+
+        const totalAmt = item.grand_total ? Number(item.grand_total).toLocaleString("th-TH") + " บาท" : "-";
+        const statusClass = item.status === "completed" ? "badge-status-completed" : "badge-status-draft";
+        const statusText = item.status === "completed" ? "อนุมัติ/เคลียร์แล้ว" : "รอดำเนินการ";
+
+        return `
+          <tr>
+            <td>${fmtD(item.created_at)}</td>
+            <td>${fmtD(item.start_date)} - ${fmtD(item.end_date)}</td>
+            <td>${routesText}</td>
+            <td class="amount-text">${totalAmt}</td>
+            <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+            <td style="display:flex;gap:4px;align-items:center;">
+              <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="viewFormDetail('actual', '${item.id}')">
+                <span class="material-symbols-outlined icon-sm">visibility</span> ดู
+              </button>
+              <button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="printFormActualById('${item.id}')">
+                <span class="material-symbols-outlined icon-white icon-sm">print</span> พิมพ์ A4
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("loadSalesFormActuals error:", err);
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;">เกิดข้อผิดพลาด: ${err.message}</td></tr>`;
+  }
+}
+
+async function openFormPlanOverviewModal() {
+  const modal = document.getElementById("formPlanOverviewModal");
+  const tbody = document.getElementById("formPlanOverviewBody");
+  if (modal) modal.classList.add("show");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="7" class="loading">กำลังโหลดข้อมูลแผนเดินทาง...</td></tr>`;
+
+  try {
+    let query = supabaseClient.from("trips").select("*");
+    if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
+    if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">ไม่พบข้อมูลแผนการเดินทาง</td></tr>`;
+      return;
+    }
+
+    const fmtD = (d) =>
+      d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" }) : "-";
+
+    tbody.innerHTML = data
+      .map((item) => {
+        const profile = profilesMap[item.user_id];
+        const salesName = item.user_name || profile?.display_name || "ไม่ทราบชื่อ";
+        let rows = [];
+        let expense = null;
+        if (Array.isArray(item.trips)) {
+          rows = item.trips;
+        } else if (item.trips && typeof item.trips === "object") {
+          rows = item.trips.rows || [];
+          expense = item.trips.expense || null;
+        }
+
+        const routesText =
+          rows
+            .slice(0, 3)
+            .map((r) => {
+              const shops = [r.shop1, r.shop2, r.shop3].filter(
+                (s) => s && s.trim() && s !== "ชื่อร้าน" && s !== "-",
+              );
+              return `📍 ${fmtD(r.date)}: ${[r.from, r.to].filter(Boolean).join("→")} ${shops.length > 0 ? `(${shops.join(",")})` : ""}`;
+            })
+            .join("<br>") + (rows.length > 3 ? `<br><small style="color:#64748b">+ อีก ${rows.length - 3} รายการ</small>` : "");
+
+        let estTotal = 0;
+        if (expense) {
+          estTotal =
+            (expense.allowance_rate || 0) * (expense.allowance_days || 0) +
+            (expense.hotel_rate || 0) * (expense.hotel_nights || 0) +
+            (expense.other_cost || 0);
+        }
+
+        const statusClass = item.status === "completed" ? "badge-status-completed" : "badge-status-draft";
+        const statusText = item.status === "completed" ? "สมบูรณ์" : "ร่าง/รออนุมัติ";
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(salesName)}</strong></td>
+            <td>${fmtD(item.created_at)}</td>
+            <td>${fmtD(item.start_date)} - ${fmtD(item.end_date)}</td>
+            <td>${routesText}</td>
+            <td class="amount-text">${estTotal > 0 ? estTotal.toLocaleString("th-TH") + " บาท" : "-"}</td>
+            <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+            <td style="display:flex;gap:4px;align-items:center;">
+              <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="viewFormDetail('plan', '${item.id}')">
+                <span class="material-symbols-outlined icon-sm">visibility</span> ดู
+              </button>
+              <button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="printFormPlanById('${item.id}')">
+                <span class="material-symbols-outlined icon-white icon-sm">print</span> พิมพ์ A4
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("openFormPlanOverviewModal error:", err);
+    tbody.innerHTML = `<tr><td colspan="7" style="color:red;text-align:center;">เกิดข้อผิดพลาด: ${err.message}</td></tr>`;
+  }
+}
+
+function closeFormPlanOverviewModal() {
+  const modal = document.getElementById("formPlanOverviewModal");
+  if (modal) modal.classList.remove("show");
+}
+
+async function openFormActualOverviewModal() {
+  const modal = document.getElementById("formActualOverviewModal");
+  const tbody = document.getElementById("formActualOverviewBody");
+  if (modal) modal.classList.add("show");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="7" class="loading">กำลังโหลดข้อมูลการเบิกจ่าย...</td></tr>`;
+
+  try {
+    let query = supabaseClient.from("actuals").select("*");
+    if (dateStart) query = query.gte("start_date", formatDateForInput(dateStart));
+    if (dateEnd) query = query.lte("end_date", formatDateForInput(dateEnd));
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">ไม่พบข้อมูลเคลียร์ค่าใช้จ่าย</td></tr>`;
+      return;
+    }
+
+    const fmtD = (d) =>
+      d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" }) : "-";
+
+    tbody.innerHTML = data
+      .map((item) => {
+        const profile = profilesMap[item.user_id];
+        const salesName = item.user_name || profile?.display_name || "ไม่ทราบชื่อ";
+        const rows = Array.isArray(item.rows) ? item.rows : [];
+        const routesText =
+          rows.slice(0, 3).map((r) => `🚘 ${fmtD(r.date)}: ${r.route || "-"}`).join("<br>") +
+          (rows.length > 3 ? `<br><small style="color:#64748b">+ อีก ${rows.length - 3} รายการ</small>` : "");
+
+        const totalAmt = item.grand_total ? Number(item.grand_total).toLocaleString("th-TH") + " บาท" : "-";
+        const statusClass = item.status === "completed" ? "badge-status-completed" : "badge-status-draft";
+        const statusText = item.status === "completed" ? "อนุมัติ/เคลียร์แล้ว" : "รอดำเนินการ";
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(salesName)}</strong></td>
+            <td>${fmtD(item.created_at)}</td>
+            <td>${fmtD(item.start_date)} - ${fmtD(item.end_date)}</td>
+            <td>${routesText}</td>
+            <td class="amount-text">${totalAmt}</td>
+            <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+            <td style="display:flex;gap:4px;align-items:center;">
+              <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="viewFormDetail('actual', '${item.id}')">
+                <span class="material-symbols-outlined icon-sm">visibility</span> ดู
+              </button>
+              <button class="btn btn-primary" style="padding:4px 8px;font-size:12px;" onclick="printFormActualById('${item.id}')">
+                <span class="material-symbols-outlined icon-white icon-sm">print</span> พิมพ์ A4
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("openFormActualOverviewModal error:", err);
+    tbody.innerHTML = `<tr><td colspan="7" style="color:red;text-align:center;">เกิดข้อผิดพลาด: ${err.message}</td></tr>`;
+  }
+}
+
+function closeFormActualOverviewModal() {
+  const modal = document.getElementById("formActualOverviewModal");
+  if (modal) modal.classList.remove("show");
+}
+
+async function viewFormDetail(type, id) {
+  currentFormDetailRef = { type, id };
+  const modal = document.getElementById("formDetailModal");
+  const titleEl = document.getElementById("formDetailTitle");
+  const badgeEl = document.getElementById("formDetailBadge");
+  const contentEl = document.getElementById("formDetailContent");
+
+  if (modal) modal.classList.add("show");
+  contentEl.innerHTML = `<div class="loading">กำลังโหลดข้อมูลเอกสาร...</div>`;
+
+  const fmtD = (d) =>
+    d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" }) : "-";
+
+  if (type === "plan") {
+    titleEl.textContent = "แผนการเดินทาง (formPlan - ฟอร์ม ๑)";
+    try {
+      const { data, error } = await supabaseClient.from("trips").select("*").eq("id", id).single();
+      if (error || !data) throw new Error("ไม่พบเอกสารนี้");
+
+      badgeEl.textContent = data.status === "completed" ? "สมบูรณ์" : "ร่าง";
+      let rows = [];
+      let exp = {};
+      if (Array.isArray(data.trips)) rows = data.trips;
+      else if (data.trips && typeof data.trips === "object") {
+        rows = data.trips.rows || [];
+        exp = data.trips.expense || {};
+      }
+
+      const rowsHtml = rows
+        .map(
+          (r, i) => `
+        <div class="detail-card-box">
+          <div class="detail-card-header">
+            <span>#${i + 1} วันที่: ${fmtD(r.date)}</span>
+            <span>${escapeHtml(r.from || "-")} → ${escapeHtml(r.to || "-")}</span>
+          </div>
+          <div><strong>ร้านค้า:</strong> ${escapeHtml([r.shop1, r.shop2, r.shop3].filter(Boolean).join(", ") || "-")}</div>
+          ${r.note ? `<div style="color:#64748b;font-size:12px;margin-top:4px;">หมายเหตุ: ${escapeHtml(r.note)}</div>` : ""}
+        </div>
+      `,
+        )
+        .join("");
+
+      contentEl.innerHTML = `
+        <div style="margin-bottom:16px;">
+          <div><strong>ผู้ยื่น:</strong> ${escapeHtml(data.user_name || "-")}</div>
+          <div><strong>ช่วงเวลา:</strong> ${fmtD(data.start_date)} - ${fmtD(data.end_date)}</div>
+        </div>
+        <h4 style="margin-bottom:10px;">รายการเส้นทางและร้านค้า (${rows.length} รายการ)</h4>
+        ${rowsHtml}
+        <div class="detail-card-box" style="background:#f0f9ff;border-color:#bae6fd;">
+          <strong>ประมาณการค่าใช้จ่าย:</strong>
+          <ul style="margin:6px 0 0 18px;font-size:13px;">
+            <li>เบี้ยเลี้ยง: ${exp.allowance_days || 0} วัน @ ${exp.allowance_rate || 0} บาท</li>
+            <li>ค่าที่พัก: ${exp.hotel_nights || 0} คืน @ ${exp.hotel_rate || 0} บาท</li>
+            <li>ค่าใช้จ่ายอื่นๆ: ${exp.other_cost || 0} บาท</li>
+          </ul>
+        </div>
+      `;
+    } catch (e) {
+      contentEl.innerHTML = `<div style="color:red;">❌ ${e.message}</div>`;
+    }
+  } else if (type === "actual") {
+    titleEl.textContent = "เคลียร์ค่าใช้จ่าย (formActual - ฟอร์ม ๒)";
+    try {
+      const { data, error } = await supabaseClient.from("actuals").select("*").eq("id", id).single();
+      if (error || !data) throw new Error("ไม่พบเอกสารนี้");
+
+      badgeEl.textContent = data.status === "completed" ? "อนุมัติแล้ว" : "รอดำเนินการ";
+      const rows = Array.isArray(data.rows) ? data.rows : [];
+
+      const rowsHtml = rows
+        .map(
+          (r, i) => `
+        <div class="detail-card-box">
+          <div class="detail-card-header">
+            <span>#${i + 1} วันที่: ${fmtD(r.date)}</span>
+          </div>
+          <div><strong>เส้นทาง/ร้านค้า:</strong> ${escapeHtml(r.route || "-")}</div>
+          ${r.note ? `<div style="color:#64748b;font-size:12px;margin-top:4px;">หมายเหตุ: ${escapeHtml(r.note)}</div>` : ""}
+        </div>
+      `,
+        )
+        .join("");
+
+      contentEl.innerHTML = `
+        <div style="margin-bottom:16px;">
+          <div><strong>ผู้ขอเบิก:</strong> ${escapeHtml(data.user_name || "-")}</div>
+          <div><strong>เขต/พื้นที่:</strong> ${escapeHtml(data.zone || "-")}</div>
+          <div><strong>ช่วงเวลา:</strong> ${fmtD(data.start_date)} - ${fmtD(data.end_date)}</div>
+        </div>
+        <h4 style="margin-bottom:10px;">รายการปฏิบัติงานจริง (${rows.length} รายการ)</h4>
+        ${rowsHtml}
+        <div class="detail-card-box" style="background:#f0fdf4;border-color:#bbf7d0;">
+          <div style="font-size:16px;font-weight:700;color:#15803d;">
+            ยอดรวมขอเบิกสุทธิ: ${(data.grand_total || 0).toLocaleString("th-TH")} บาท
+          </div>
+          <ul style="margin:6px 0 0 18px;font-size:13px;color:#334155;">
+            <li>เบี้ยเลี้ยง: ${data.allowance_days || 0} วัน @ ${data.allowance_rate || 0} บาท</li>
+            <li>ค่าที่พัก: ${data.hotel_nights || 0} คืน @ ${data.hotel_rate || 0} บาท</li>
+            <li>ค่าอื่นๆ: ${data.other_cost || 0} บาท</li>
+          </ul>
+        </div>
+      `;
+    } catch (e) {
+      contentEl.innerHTML = `<div style="color:red;">❌ ${e.message}</div>`;
+    }
+  }
+}
+
+function closeFormDetailModal() {
+  const modal = document.getElementById("formDetailModal");
+  if (modal) modal.classList.remove("show");
+}
+
+// =====================================================
+// 📅 TRIP ROUND SELECTION & Dynamic Populating
+// =====================================================
+async function loadAllTripRounds() {
+  try {
+    const { data: plans } = await supabaseClient
+      .from("trips")
+      .select("id, doc_no, version, start_date, end_date, user_id, user_name, area, created_at")
+      .order("start_date", { ascending: false });
+
+    const { data: actuals } = await supabaseClient
+      .from("actuals")
+      .select("id, ref_plan_id, start_date, end_date, user_id, user_name, zone, created_at")
+      .order("start_date", { ascending: false });
+
+    const roundsMap = new Map();
+
+    (plans || []).forEach((p) => {
+      if (!p.start_date || !p.end_date) return;
+      const key = `${p.start_date}_${p.end_date}`;
+      if (!roundsMap.has(key)) {
+        roundsMap.set(key, {
+          key,
+          startDate: p.start_date,
+          endDate: p.end_date,
+          docNo: p.doc_no,
+          userNames: new Set([p.user_name].filter(Boolean)),
+          userIds: new Set([p.user_id].filter(Boolean)),
+          planId: p.id,
+        });
+      } else {
+        const item = roundsMap.get(key);
+        if (p.user_name) item.userNames.add(p.user_name);
+        if (p.user_id) item.userIds.add(p.user_id);
+        if (p.doc_no && !item.docNo) item.docNo = p.doc_no;
+      }
+    });
+
+    (actuals || []).forEach((a) => {
+      if (!a.start_date || !a.end_date) return;
+      const key = `${a.start_date}_${a.end_date}`;
+      if (!roundsMap.has(key)) {
+        roundsMap.set(key, {
+          key,
+          startDate: a.start_date,
+          endDate: a.end_date,
+          docNo: null,
+          userNames: new Set([a.user_name].filter(Boolean)),
+          userIds: new Set([a.user_id].filter(Boolean)),
+          actualId: a.id,
+        });
+      } else {
+        const item = roundsMap.get(key);
+        if (a.user_name) item.userNames.add(a.user_name);
+        if (a.user_id) item.userIds.add(a.user_id);
+        if (a.id && !item.actualId) item.actualId = a.id;
+      }
+    });
+
+    allTripRoundsList = Array.from(roundsMap.values()).sort(
+      (a, b) => new Date(b.startDate) - new Date(a.startDate),
+    );
+
+    const filterSelect = document.getElementById("filterTripRound");
+    if (filterSelect) {
+      filterSelect.innerHTML =
+        `<option value="">— ทั้งหมด / เลือกรอบทริป —</option>` +
+        allTripRoundsList
+          .map((r) => {
+            const sDate = new Date(r.startDate);
+            const monthTH = sDate.toLocaleDateString("th-TH", { month: "short", year: "numeric" });
+            const dateRange = `${formatDateShort(r.startDate)} - ${formatDateShort(r.endDate)}`;
+            const names = Array.from(r.userNames).join(", ");
+            const doc = r.docNo ? ` [${r.docNo}]` : "";
+            const label = `รอบ ${monthTH} (${dateRange})${doc}${names ? ` — ${names}` : ""}`;
+            return `<option value="${r.startDate}|${r.endDate}">${escapeHtml(label)}</option>`;
+          })
+          .join("");
+
+      filterSelect.onchange = function () {
+        const val = filterSelect.value;
+        if (val) {
+          const [s, e] = val.split("|");
+          const sInput = document.getElementById("dateStart");
+          const eInput = document.getElementById("dateEnd");
+          if (sInput) sInput.value = s;
+          if (eInput) eInput.value = e;
+          dateStart = new Date(s);
+          dateEnd = new Date(e);
+          updateDateRangeLabel();
+          applyFilter();
+        }
+      };
+    }
+  } catch (err) {
+    console.error("loadAllTripRounds error:", err);
+  }
+}
+
+function populateSalesTripRounds(salesId) {
+  const select = document.getElementById("salesTripRoundFilter");
+  if (!select) return;
+
+  const salesRounds = allTripRoundsList.filter((r) => r.userIds.has(salesId));
+
+  select.innerHTML =
+    `<option value="">— ทั้งหมดทุกรอบทริป —</option>` +
+    salesRounds
+      .map((r) => {
+        const sDate = new Date(r.startDate);
+        const monthTH = sDate.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+        const dateRange = `${formatDateShort(r.startDate)} - ${formatDateShort(r.endDate)}`;
+        const doc = r.docNo ? ` (${r.docNo})` : "";
+        return `<option value="${r.startDate}|${r.endDate}">${escapeHtml(`รอบ ${monthTH} : ${dateRange}${doc}`)}</option>`;
+      })
+      .join("");
+
+  select.onchange = function () {
+    const val = select.value;
+    let rStart = null,
+      rEnd = null;
+    if (val) {
+      const [s, e] = val.split("|");
+      rStart = s;
+      rEnd = e;
+    }
+    loadSalesFormPlans(salesId, rStart, rEnd);
+    loadSalesFormActuals(salesId, rStart, rEnd);
+  };
+}
+
+// =====================================================
+// 🖨️ PRINTING OFFICIAL A4 EXPORT DOCUMENTS
+// =====================================================
+function buildFullPageHTML(body) {
+  return `<!DOCTYPE html><html lang="th"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ใบเอกสารการเดินทาง</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0 }
+  html, body {
+    width:100%; background:#fff; font-family:'Kanit',sans-serif;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  #print-wrap { width: 190mm; margin-left: auto; margin-right: auto; padding: 10mm 0; }
+  .no-print { text-align:center; padding:12px; background:#f8fafc; border-bottom:1px solid #e2e8f0 }
+  .no-print button {
+    font-family:'Kanit',sans-serif; font-size:15px; font-weight:600;
+    padding:10px 24px; margin:4px; border-radius:8px; cursor:pointer;
+    border:none; color:#fff; min-width:140px; touch-action:manipulation;
+  }
+  .btn-print { background:#1D9E75 }
+  .btn-close { background:#64748b }
+  @media print {
+    @page { size: A4 portrait; margin: 10mm 10mm; }
+    html, body { width:210mm }
+    #print-wrap { width: 190mm; padding: 0; margin-left: auto; margin-right: auto; }
+    .no-print { display:none !important }
+  }
+</style>
+</head><body>
+<div class="no-print">
+  <button class="btn-print" onclick="window.print()">🖨 พิมพ์ / Save PDF</button>
+  <button class="btn-close" onclick="window.close()">✖ ปิดหน้านี้</button>
+</div>
+<div id="print-wrap">${body}</div>
+</body></html>`;
+}
+
+function buildPlanPreviewHTML(plan) {
+  let tripRows = [],
+    expense = {};
+  if (Array.isArray(plan.trips)) {
+    tripRows = plan.trips;
+  } else if (plan.trips && typeof plan.trips === "object") {
+    tripRows = plan.trips.rows || [];
+    expense = plan.trips.expense || {};
+  }
+
+  const fd = (d) => {
+    if (!d) return "-";
+    const p = String(d).split("-");
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+  };
+  const fm = (n) => (n || 0).toLocaleString("th-TH", { minimumFractionDigits: 2 });
+
+  let tRows = "";
+  tripRows.forEach((t, i) => {
+    const bg = i % 2 === 0 ? "" : 'style="background:#f7f9fb"';
+    tRows += `<tr ${bg}><td>${fd(t.date)}</td><td>${escapeHtml(t.from || "-")}</td><td>${escapeHtml(t.to || "-")}</td><td>${escapeHtml(t.shop1 || "-")}</td><td>${escapeHtml(t.shop2 || "-")}</td><td>${escapeHtml(t.shop3 || "-")}</td><td style="text-align:left;padding-left:4px">${escapeHtml(t.note || "")}</td></tr>`;
+  });
+  if (!tRows)
+    tRows = `<tr><td colspan="7" style="text-align:center;color:#999;padding:10px">ไม่มีข้อมูล</td></tr>`;
+
+  const ar = expense.allowance_rate || 0,
+    ad = expense.allowance_days || 0;
+  const hr = expense.hotel_rate || 0,
+    hn = expense.hotel_nights || 0;
+  const oc = expense.other_cost || 0;
+  const ta = ar * ad,
+    th = hr * hn,
+    gt = ta + th + oc;
+
+  const emp = plan.user_name || "-",
+    area = plan.area || "-";
+  const st = fd(plan.start_date),
+    en = fd(plan.end_date);
+  const docNo = plan.doc_no || "-";
+  const version = "v" + (plan.version || 1);
+  const pd = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+
+  return `
+<style>
+.dw{font-family:'Kanit',sans-serif;font-size:11px;color:#1a1a1a;line-height:1.35}
+.dc{text-align:center;margin-bottom:2px}
+.dc .cn{font-size:18px;font-weight:700}.dc .tt{font-size:14px;font-weight:600;margin-top:1px}
+hr.dv{border:none;border-top:1.5px solid #1a1a1a;margin:4px 0 8px}
+.dm{display:grid;grid-template-columns:1fr 1fr;border:1px solid #999;border-radius:3px;margin-bottom:8px;overflow:hidden}
+.dmc{padding:4px 10px;font-size:14px;line-height:1.6}.dmc:first-child{border-right:1px solid #999}
+.ml{font-weight:700;color:#444;margin-right:3px}
+.dt{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px;table-layout:fixed}
+.dt th{background:#e8f5f4;color:#1a5550;padding:4px 2px;text-align:center;font-weight:700;font-size:14px;border:1px solid #b2d8d5}
+.dt td{padding:3px 4px;text-align:center;border:1px solid #ccc;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:11px;font-weight:700;margin-bottom:3px;padding-bottom:2px;border-bottom:1.5px solid #b2d8d5;display:flex;align-items:center;gap:4px}
+.st::before{content:'';display:inline-block;width:3px;height:12px;background:#7ec8c3;border-radius:2px}
+.ct{width:50%;margin-left:auto;margin-bottom:10px;border-collapse:collapse;font-size:14px}
+.ct td,.ct th{border:1px solid #ccc;padding:2px 6px}
+.ct td:first-child{font-weight:600;color:#333}.ct td:nth-child(2){text-align:center;color:#555}.ct td:last-child{text-align:right}
+.ct .tr th{background:#e8f5f4;color:#1a5550;text-align:right;padding:3px 6px;font-size:14px;border:1px solid #b2d8d5;font-weight:700}
+.sg{margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
+.sb{font-size:12.5px;line-height:1.5}.sl{border-top:1px solid #555;padding-top:24px;margin-top:40px}
+.sn{font-weight:600}.sr{color:#555}
+.dpd{text-align:right;font-size:9px;color:#777;margin-bottom:3px}
+</style>
+<div class="dw">
+  <div class="dpd">วันที่พิมพ์: ${pd}</div>
+  <div style="text-align:right;font-size:12px;margin-bottom:4px">
+    เลขที่เอกสาร: ${docNo} <br>
+    Version: ${version}
+  </div>
+  <hr style="margin:4px 0;">
+  <div class="dc"><div class="cn">บริษัท เอิร์นนี่ แอดวานซ์ จำกัด</div><div class="tt">แผนการเดินทางและเบิกทดลองจ่าย ๑</div></div>
+  <hr class="dv">
+  <div class="dm">
+    <div class="dmc">
+      <div><span class="ml">พนักงานขาย :</span>${escapeHtml(emp)}</div>
+      <div><span class="ml">เขตการขาย :</span>${escapeHtml(area)}</div>
+    </div>
+    <div class="dmc">
+      <div><span class="ml">ระหว่างวันที่ :</span>${st}</div>
+      <div><span class="ml">ถึงวันที่ :</span>${en}</div>
+      <div><span class="ml">จำนวน :</span>${tripRows.length} วัน</div>
+    </div>
+  </div>
+  <table class="dt"><thead><tr><th style="width:11%">ว/ด/ป</th><th style="width:14%">จากจังหวัด</th><th style="width:14%">ไปจังหวัด</th><th style="width:18%">ร้านค้า 1</th><th style="width:18%">ร้านค้า 2</th><th style="width:15%">ร้านค้า 3</th><th style="width:10%">หมายเหตุ</th></tr></thead><tbody>${tRows}</tbody></table>
+  <div class="st">สรุปค่าใช้จ่าย</div>
+  <table class="ct">
+    <tr><td>เบี้ยเลี้ยง</td><td>${fm(ar)} × ${ad} วัน</td><td>${fm(ta)} บาท</td></tr>
+    <tr><td>ค่าที่พัก</td><td>${fm(hr)} × ${hn} คืน</td><td>${fm(th)} บาท</td></tr>
+    <tr><td>อื่นๆ</td><td style="text-align:center">–</td><td>${fm(oc)} บาท</td></tr>
+    <tr class="tr"><th colspan="2">รวมเบิกทั้งหมด</th><th style="font-size:14px">${fm(gt)} บาท</th></tr>
+  </table>
+  <div class="sg">
+    <div class="sb"><div class="sl"><div class="sn">(${escapeHtml(emp)})</div><div class="sr">พนักงานขาย</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ผจก.ฝ่ายขาย</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ฝ่ายบัญชี</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ผู้อนุมัติ</div></div></div>
+  </div>
+</div>`;
+}
+
+function buildActualPreviewHTML(d) {
+  const fd = (s) => {
+    if (!s) return "-";
+    const p = String(s).split("-");
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
+  };
+  const fm = (n) => Number(n || 0).toLocaleString("th-TH", { minimumFractionDigits: 2 });
+  const rows = d.rows || [];
+  const ar = d.allowance_rate || 0,
+    ad = d.allowance_days || 0,
+    hr = d.hotel_rate || 0,
+    hn = d.hotel_nights || 0,
+    oc = d.other_cost || 0;
+  const ta = ar * ad,
+    th = hr * hn,
+    gt = d.grand_total || ta + th + oc;
+  const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+  const planRef = d.ref_plan_id
+    ? `<div><span class="ml">อ้างอิงแผน :</span>${d.ref_plan_id.substring(0, 8)}...</div>`
+    : "";
+
+  let tRows = "";
+  rows.forEach((r, i) => {
+    const bg = i % 2 === 1 ? ' style="background:#f7f9fb"' : "";
+    tRows += `<tr${bg}><td>${fd(r.date)}</td><td style="text-align:left;padding-left:6px">${escapeHtml(r.route || "-")}</td><td style="text-align:left;padding-left:4px">${escapeHtml(r.note || "")}</td></tr>`;
+  });
+
+  return `
+<style>
+.dw{font-family:'Kanit',sans-serif;font-size:11px;color:#1a1a1a;line-height:1.35}
+.dc{text-align:center;margin-bottom:2px}.dc .cn{font-size:18px;font-weight:700}.dc .tt{font-size:14px;font-weight:600;margin-top:1px}
+hr.dv{border:none;border-top:1.5px solid #1a1a1a;margin:4px 0 8px}
+.dpd{text-align:right;font-size:9px;color:#777;margin-bottom:3px}
+.dm{display:grid;grid-template-columns:1fr 1fr;border:1px solid #999;border-radius:3px;margin-bottom:8px;overflow:hidden}
+.dmc{padding:4px 10px;font-size:14px;line-height:1.6}.dmc:first-child{border-right:1px solid #999}
+.ml{font-weight:700;color:#444;margin-right:3px}
+.dt{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:10px;table-layout:fixed}
+.dt th{background:#e8f5f4;color:#1a5550;padding:4px 4px;text-align:center;border:1px solid #b2d8d5;font-size:14px;font-weight:700}
+.dt td{padding:3px 4px;border:1px solid #ccc;text-align:center;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st{font-size:11px;font-weight:700;margin-bottom:3px;padding-bottom:2px;border-bottom:1.5px solid #1a6b64;display:flex;align-items:center;gap:4px}
+.st::before{content:'';display:inline-block;width:3px;height:12px;background:#3FB7AE;border-radius:2px}
+.ct{width:50%;margin-left:auto;margin-bottom:10px;border-collapse:collapse;font-size:14px}
+.ct td,.ct th{border:1px solid #ccc;padding:2px 6px}.ct td:first-child{font-weight:600;color:#333}.ct td:nth-child(2){text-align:center;color:#555}.ct td:last-child{text-align:right}
+.ct .tr th{background:#e8f5f4;color:#1a5550;text-align:right;padding:3px 6px;font-size:14px;border:1px solid #b2d8d5;font-weight:700}
+.sg{margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
+.sb{font-size:12.5px;line-height:1.5}.sl{border-top:1px solid #555;padding-top:24px;margin-top:40px}
+.sn{font-weight:600}.sr{color:#555}
+</style>
+<div class="dw">
+  <div class="dpd">วันที่พิมพ์: ${today}</div>
+  <div class="dc"><div class="cn">บริษัท เอิร์นนี่ แอดวานซ์ จำกัด</div><div class="tt">ใบเดินทางจริงและเคลียร์ค่าใช้จ่าย ๒</div></div>
+  <hr class="dv">
+  <div class="dm"><div class="dmc"><div><span class="ml">พนักงานขาย :</span>${escapeHtml(d.user_name || "-")}</div><div><span class="ml">เขตการขาย :</span>${escapeHtml(d.zone || "-")}</div>${planRef}</div><div class="dmc"><div><span class="ml">ระหว่างวันที่ :</span>${fd(d.start_date)}</div><div><span class="ml">ถึงวันที่ :</span>${fd(d.end_date)}</div><div><span class="ml">จำนวน :</span>${rows.length} วัน</div></div></div>
+  <table class="dt"><thead><tr><th style="width:15%">ว/ด/ป</th><th style="width:65%">เส้นทางจริง</th><th style="width:20%">หมายเหตุ</th></tr></thead><tbody>${tRows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:10px">ไม่มีข้อมูล</td></tr>'}</tbody></table>
+  <div class="st">สรุปค่าใช้จ่าย</div>
+  <table class="ct">
+    <tr><td>เบี้ยเลี้ยง</td><td>${fm(ar)} × ${ad} วัน</td><td>${fm(ta)} บาท</td></tr>
+    <tr><td>ค่าที่พัก</td><td>${fm(hr)} × ${hn} คืน</td><td>${fm(th)} บาท</td></tr>
+    <tr><td>อื่นๆ</td><td style="text-align:center">–</td><td>${fm(oc)} บาท</td></tr>
+    <tr class="tr"><th colspan="2">รวมเบิกทั้งหมด</th><th style="font-size:14px">${fm(gt)} บาท</th></tr>
+  </table>
+  <div class="sg">
+    <div class="sb"><div class="sl"><div class="sn">(${escapeHtml(d.user_name || " - ")})</div><div class="sr">พนักงานขาย</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ผจก.ฝ่ายขาย</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ฝ่ายบัญชี</div></div></div>
+    <div class="sb"><div class="sl"><div class="sn">(...............................................................)</div><div class="sr">ผู้อนุมัติ</div></div></div>
+  </div>
+</div>`;
+}
+
+async function printFormPlanById(id) {
+  try {
+    const { data, error } = await supabaseClient.from("trips").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      alert("ไม่พบข้อมูลเอกสารแผนเดินทาง");
+      return;
+    }
+    const html = buildPlanPreviewHTML(data);
+    const full = buildFullPageHTML(html);
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.open();
+      w.document.write(full);
+      w.document.close();
+    } else {
+      const blob = new Blob([full], { type: "text/html;charset=utf-8" });
+      window.open(URL.createObjectURL(blob), "_blank");
+    }
+  } catch (e) {
+    alert("❌ " + e.message);
+  }
+}
+
+async function printFormActualById(id) {
+  try {
+    const { data, error } = await supabaseClient.from("actuals").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      alert("ไม่พบข้อมูลเอกสารเบิกจ่าย");
+      return;
+    }
+    const html = buildActualPreviewHTML(data);
+    const full = buildFullPageHTML(html);
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.open();
+      w.document.write(full);
+      w.document.close();
+    } else {
+      const blob = new Blob([full], { type: "text/html;charset=utf-8" });
+      window.open(URL.createObjectURL(blob), "_blank");
+    }
+  } catch (e) {
+    alert("❌ " + e.message);
+  }
+}
+
+function printCurrentFormDetail() {
+  if (!currentFormDetailRef) {
+    alert("กรุณาเลือกเอกสารก่อนพิมพ์");
+    return;
+  }
+  if (currentFormDetailRef.type === "plan") {
+    printFormPlanById(currentFormDetailRef.id);
+  } else if (currentFormDetailRef.type === "actual") {
+    printFormActualById(currentFormDetailRef.id);
+  }
+}
+
+async function printSelectedSalesTripRoundDoc() {
+  const select = document.getElementById("salesTripRoundFilter");
+  const val = select?.value;
+  if (!val) {
+    alert("กรุณาเลือกรอบทริปก่อนดึงใบเอกสาร");
+    return;
+  }
+  const [s, e] = val.split("|");
+  if (!currentSalesModalId) return;
+
+  const { data: plans } = await supabaseClient
+    .from("trips")
+    .select("id")
+    .eq("user_id", currentSalesModalId)
+    .eq("start_date", s)
+    .eq("end_date", e)
+    .limit(1);
+
+  if (plans && plans.length > 0) {
+    printFormPlanById(plans[0].id);
+    return;
+  }
+
+  const { data: actuals } = await supabaseClient
+    .from("actuals")
+    .select("id")
+    .eq("user_id", currentSalesModalId)
+    .eq("start_date", s)
+    .eq("end_date", e)
+    .limit(1);
+
+  if (actuals && actuals.length > 0) {
+    printFormActualById(actuals[0].id);
+    return;
+  }
+
+  alert("ไม่พบใบเอกสารสำหรับรอบทริปนี้");
+}
+
+window.switchSalesModalTab = switchSalesModalTab;
+window.openFormPlanOverviewModal = openFormPlanOverviewModal;
+window.closeFormPlanOverviewModal = closeFormPlanOverviewModal;
+window.openFormActualOverviewModal = openFormActualOverviewModal;
+window.closeFormActualOverviewModal = closeFormActualOverviewModal;
+window.viewFormDetail = viewFormDetail;
+window.closeFormDetailModal = closeFormDetailModal;
+window.printFormPlanById = printFormPlanById;
+window.printFormActualById = printFormActualById;
+window.printCurrentFormDetail = printCurrentFormDetail;
+window.printSelectedSalesTripRoundDoc = printSelectedSalesTripRoundDoc;
+window.loadAllTripRounds = loadAllTripRounds;
