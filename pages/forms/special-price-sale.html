@@ -1,281 +1,237 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>หน้าส่งคำขอราคาพิเศษ (Sale)</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="/css/pages/forms/special-price-sale.css">
-  <link rel="stylesheet" href="/css/pages/forms/Price-Exception-Request.css">
-</head>
-
-<body>
-
-  
-
-    <!-- TOP HEADER -->
-    <div class="top-header">
-      <div class="logo-icon">
-        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
+  <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>EABaseHub | ขออนุมัติราคาพิเศษ</title>
+    <link rel="icon" href="/assets/icons/icon-192.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/formPlan-ux.css" />
+    <link rel="stylesheet" href="/css/pages/forms/special-price-sale-ux.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
+  <body>
+    <header class="app-header ui-role-bar">
+      <div class="logo">
+        <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo" /></div>
+        <h2>EABaseHub</h2>
       </div>
-      <div class="brand">
-        <h1>ระบบขออนุมัติราคาพิเศษ</h1>
-        <!-- <p>ทุกกรณีต้องผ่าน Manager ก่อน Executive</p> -->
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info"><div class="user-name" id="userName">กำลังโหลด...</div></div>
+        <button id="logoutBtn" class="logout-btn" onclick="logout()">ออกจากระบบ</button>
       </div>
+    </header>
 
-      <div class="flow-steps">
-        <div class="flow-step done" onclick="location.href='special-price-sale.html'">
-          <div class="flow-step-num">✓</div>
-          <div>
-            <div class="flow-step-label">1. Sale</div>
-            <div class="flow-step-sub">ส่งคำขอ</div>
-          </div>
+    <nav class="app-nav" id="salesNav" hidden>
+      <a href="/index.html">หน้าแรก</a>
+      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
+      <a href="/pages/forms/formHub.html" class="active">แบบฟอร์ม</a>
+      <a href="/pages/forms/shopUser.html">ร้านของฉัน</a>
+    </nav>
+
+    <main class="fp sp">
+      <section class="fp-head ui-role-hero sp-head">
+        <div>
+          <a class="fp-back" id="backLink" href="/index.html"><span class="material-symbols-outlined">arrow_back</span><span id="backText">หน้าแรก</span></a>
+          <h1>ขออนุมัติราคาพิเศษ</h1>
+          <p>ขอขายต่ำกว่าราคาปกติให้ลูกค้า · Manager พิจารณาก่อน ถ้าอนุมัติจะส่งต่อผู้บริหารอัตโนมัติ · ติดตามผลได้ที่ “คำขอของฉัน”</p>
         </div>
+        <ol class="sp-steps" aria-label="ขั้นตอน">
+          <li class="is-now"><b>1</b>กรอกคำขอ</li>
+          <li><b>2</b>Manager อนุมัติ</li>
+          <li><b>3</b>ผู้บริหารอนุมัติ</li>
+        </ol>
+      </section>
 
-        <div class="flow-arrow">→</div>
-        <div class="flow-step active" onclick="location.href='special-price-manager.html'">
-          <div class="flow-step-num">2</div>
-          <div>
-            <div class="flow-step-label">Manager</div>
-            <div class="flow-step-sub">ตรวจสอบและอนุมัติ</div>
-          </div>
-
-        </div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step" onclick="location.href='special-price-executive.html'">
-          <div class="flow-step-num">3</div>
-          <div>
-            <div class="flow-step-label">Executive</div>
-            <div class="flow-step-sub">อนุมัติขั้นสุดท้าย</div>
-          </div>
-        </div>
-
-        <div class="flow-arrow">→</div>
-        <div class="flow-step" onclick="location.href='special-price-tracking.html'">
-          <div class="flow-step-num">✓</div>
-          <div>
-            <div class="flow-step-label">Completed</div>
-            <div class="flow-step-sub">เก็บเป็นเอกสาร</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- SIDEBAR + MAIN -->
-    <div class="layout">
-      <nav class="sidebar">
-        <div class="sidebar-logo">
-          <!-- <div class="logo-icon">
-        <img src="/assets/icons/logo-192.png" alt="EABaseHub">
-      </div> -->
-          <span>EABaseHub</span>
-          <p>Sales Workspace</p>
-        </div>              
-
-        <div class="nav-item" onclick="location.href='/index.html'">
-          <span class="nav-icon">🏠</span> หน้าหลัก
-        </div>
-
-        <div class="nav-item" onclick="location.href='formPlan.html'">
-          <span class="nav-icon">💰</span> ใบแผนการเดินทาง
-        </div>
-
-        <div class="nav-item" onclick="location.href='formActual.html'">
-          <span class="nav-icon">💰</span> ใบแผนเดินทางจริง
-        </div>
-
-        <div class="nav-item active" onclick="location.href='credit-limit-sale.html'">
-          <span class="nav-icon">💰</span> ของเงินเกิน
-        </div>
-
-        <div class="nav-item" onclick="location.href='special-price-sale.html'">
-          <span class="nav-icon">📋</span> ขอราคาพิเศษ
-        </div>
-
-        <div class="nav-item">
-          <span class="nav-icon">🏷️</span> ขอส่วนลด
-        </div>
-
-        <div class="nav-item">
-          <span class="nav-icon">📦</span> รายการของออเดิร์
-        </div>
-
-        <div class="nav-item" onclick="location.href='special-price-tracking.html'">
-          <span class="nav-icon">📊</span> รายงาน
-          <span class="nav-badge">4</span>
-        </div>
-
-        <div class="nav-item">
-          <span class="nav-icon">⚙️</span> ตั้งค่า
-        </div>
-
-      </nav>
-
-      <main class="main">
-        <div class="page active">
-          <div class="page-tabs">
-            <button class="tab-btn active">📝 หน้าส่งคำขอ (Sale)</button>
-            <button class="tab-btn" onclick="location.href='special-price-manager.html'">👔 Manager</button>
-            <button class="tab-btn" onclick="location.href='special-price-executive.html'">👑 Executive</button>
-            <button class="tab-btn" onclick="location.href='special-price-tracking.html'">📋 ติดตามสถานะ</button>
-            <button class="tab-btn" onclick="location.href='special-price-document.html'">📄 เอกสาร A4</button>
+      <div class="fp-layout">
+        <!-- ===================== ฟอร์ม ===================== -->
+        <section class="fp-card fp-form" id="spForm">
+          <div class="fp-edit-banner" id="fpEditBanner" hidden>
+            <span class="material-symbols-outlined">edit_note</span>
+            <span id="fpEditText">กำลังแก้ไขร่าง</span>
+            <button type="button" class="fp-link-btn" onclick="clearForm()">เริ่มคำขอใหม่</button>
           </div>
 
-          <div class="card section-space">
-            <div class="card-header">
-              <div class="card-number">1</div>
-              <h2>หน้าส่งคำขอ (Sale)</h2>
+          <!-- 1 ลูกค้า -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>1</b> ลูกค้าและเอกสาร</h2>
+              <span class="fp-hint" id="shopScopeHint"></span>
             </div>
-            <div class="card-body">
-              <!-- Sale info -->
-              <div class="sale-info">
-                <div>
-                  <div class="sale-name">วีรากรณ์ สนใจ</div>
-                  <div class="sale-role">Sale Executive</div>
+            <div class="sp-grid-cust">
+              <div class="fp-field sp-combo">
+                <label for="shopSearch">ลูกค้า <i>*</i></label>
+                <div class="sp-combo-box">
+                  <span class="material-symbols-outlined">search</span>
+                  <input id="shopSearch" type="text" autocomplete="off" placeholder="พิมพ์ชื่อร้านหรือรหัสลูกค้า" aria-autocomplete="list" aria-controls="shopResults" />
+                  <button type="button" class="sp-combo-clear" id="shopClear" onclick="clearShop()" aria-label="ล้างลูกค้า" hidden><span class="material-symbols-outlined">close</span></button>
                 </div>
-                <div class="sale-avatar">👩‍💼</div>
+                <div class="sp-combo-list" id="shopResults" role="listbox" hidden></div>
+                <div class="sp-shop-picked" id="shopPicked" hidden></div>
               </div>
-
-              <!-- Customer info -->
-              <div style="background:var(--bg);border-radius:10px;padding:16px;margin-bottom:16px;">
-                <div
-                  style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">
-                  ข้อมูลลูกค้า</div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">ชื่อลูกค้า</label>
-                    <select class="form-control">
-                      <option>บริษัท แสงทองกรุ๊ป จำกัด</option>
-                      <option>บริษัท เทคโนโลยีสยาม จำกัด</option>
-                      <option>ห้างหุ้นส่วน นนทบุรีวิศวกรรม</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">วันที่เอกสาร</label>
-                    <input type="date" class="form-control" value="2024-05-27">
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">เลขที่ใบเสนอราคา / SO</label>
-                    <input type="text" class="form-control" value="QT-2024-0221">
-                  </div>
-                </div>
+              <div class="fp-field">
+                <label for="docDate">วันที่เอกสาร</label>
+                <input type="date" id="docDate" />
               </div>
-
-              <!-- Product table -->
-              <div style="margin-bottom:16px;">
-                <div
-                  style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
-                  รายการสินค้าที่ขออนุมัติราคาพิเศษ</div>
-                <div style="overflow-x:auto;">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>ลำดับ</th>
-                        <th>รหัสสินค้า</th>
-                        <th>รายการสินค้า</th>
-                        <th class="num">จำนวน</th>
-                        <th>หน่วย</th>
-                        <th class="num">ราคาปกติ (ต่อหน่วย)</th>
-                        <th class="num">ราคาที่ขอ (ต่อหน่วย)</th>
-                        <th class="num">ส่วนลด (%)</th>
-                        <th class="num">ส่วนต่าง (บาท)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>1</td>
-                        <td>FG-001</td>
-                        <td>ถุง PE 18x20</td>
-                        <td class="num">1,000</td>
-                        <td>ชุด</td>
-                        <td class="num">120.00</td>
-                        <td class="num">105.00</td>
-                        <td class="num discount">12.50%</td>
-                        <td class="num discount">15,000.00</td>
-                      </tr>
-                      <tr>
-                        <td>2</td>
-                        <td>FG-002</td>
-                        <td>พีลิตฟิล์มพับพลาสก</td>
-                        <td class="num">500</td>
-                        <td>ม้วน</td>
-                        <td class="num">80.00</td>
-                        <td class="num">72.00</td>
-                        <td class="num discount">10.00%</td>
-                        <td class="num discount">4,000.00</td>
-                      </tr>
-                      <tr>
-                        <td>3</td>
-                        <td>FG-003</td>
-                        <td>เทปกาว</td>
-                        <td class="num">500</td>
-                        <td>ม้วน</td>
-                        <td class="num">45.00</td>
-                        <td class="num">40.00</td>
-                        <td class="num discount">11.11%</td>
-                        <td class="num discount">2,500.00</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="table-footer">
-                  <div>
-                    <div class="total-label">ยอดรวมส่วนต่าง</div>
-                    <div class="total-val">21,500.00 บาท</div>
-                  </div>
-                  <div>
-                    <div class="total-label">ส่วนลดเฉลี่ย</div>
-                    <div class="disc-val">9.20%</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Reason -->
-              <div class="form-row">
-                <div>
-                  <div
-                    style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
-                    เหตุผลการขอราคาพิเศษ *</div>
-                  <div class="reason-grid">
-                    <label class="reason-option"><input type="radio" name="reason" checked> แข่งขันราคา</label>
-                    <label class="reason-option"><input type="radio" name="reason"> ลูกค้าประจำ</label>
-                    <label class="reason-option"><input type="radio" name="reason"> ปิดดีล / ยอดขาย</label>
-                    <label class="reason-option"><input type="radio" name="reason"> โปรโมชันพิเศษ</label>
-                    <label class="reason-option"><input type="radio" name="reason"> เคลียร์สต็อก</label>
-                    <label class="reason-option"><input type="radio" name="reason"> อื่นๆ</label>
-                  </div>
-                  <textarea class="remark-area"
-                    placeholder="คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น">คู่แข่งเสนอราคาต่ำกว่า ต้องการให้ลูกค้าตัดสินใจเร็วขึ้น</textarea>
-                </div>
-                <div>
-                  <div
-                    style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
-                    ลายเซ็นผู้ (Sale) *</div>
-                  <div class="sig-box">
-                    <div class="sig-img">วีรากรณ์</div>
-                    <div class="sig-name">ม.ส. วีรากรณ์ สนใจ</div>
-                    <div class="sig-date">วันที่ 27/05/2024</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="btn-actions">
-                <button class="btn btn-outline">💾 บันทึกร่าง</button>
-                <button class="btn btn-primary" onclick="location.href='special-price-manager.html'">📤 ส่งคำขออนุมัติ
-                  →</button>
+              <div class="fp-field">
+                <label for="quoteNo">เลขที่ใบเสนอราคา / SO</label>
+                <input type="text" id="quoteNo" placeholder="ถ้ามี" />
               </div>
             </div>
           </div>
+
+          <!-- 2 สินค้า -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>2</b> สินค้าที่ขอราคาพิเศษ</h2>
+              <span class="fp-hint">ระบบคำนวณส่วนลดและส่วนต่างให้อัตโนมัติ</span>
+            </div>
+            <div class="fp-table-wrap">
+              <table class="fp-table sp-table" id="itemTable">
+                <thead>
+                  <tr>
+                    <th class="c-no">#</th>
+                    <th>สินค้า</th>
+                    <th class="c-code">รหัส</th>
+                    <th class="c-qty num">จำนวน</th>
+                    <th class="c-unit">หน่วย</th>
+                    <th class="c-price num">ราคาปกติ/หน่วย</th>
+                    <th class="c-price num">ราคาที่ขอ/หน่วย</th>
+                    <th class="c-pct num">ส่วนลด</th>
+                    <th class="c-diff num">ส่วนต่าง (บาท)</th>
+                    <th class="c-del"></th>
+                  </tr>
+                </thead>
+                <tbody id="itemBody"></tbody>
+              </table>
+              <div class="fp-empty-rows" id="emptyRows">ยังไม่มีสินค้า — กด “เพิ่มสินค้า”</div>
+            </div>
+            <datalist id="productList"></datalist>
+            <datalist id="unitList">
+              <option value="ชิ้น"></option><option value="ถุง"></option><option value="ม้วน"></option>
+              <option value="กล่อง"></option><option value="แพ็ค"></option><option value="ชุด"></option>
+              <option value="กก."></option><option value="เมตร"></option><option value="แผ่น"></option>
+            </datalist>
+            <div class="fp-row-actions">
+              <button type="button" class="fp-btn-soft" onclick="addItem()"><span class="material-symbols-outlined">add</span>เพิ่มสินค้า</button>
+              <span class="fp-row-count" id="rowCount"></span>
+            </div>
+            <div class="sp-totals">
+              <div><span>มูลค่าราคาปกติ</span><b id="sumNormal">0.00</b></div>
+              <div><span>มูลค่าราคาที่ขอ</span><b id="sumRequest">0.00</b></div>
+              <div class="is-key"><span>ส่วนต่างรวม (บาท)</span><b id="sumDiff">0.00</b></div>
+              <div class="is-key"><span>ส่วนลดเฉลี่ย</span><b id="sumPct">0.00%</b></div>
+            </div>
+          </div>
+
+          <!-- 3 เหตุผล -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>3</b> เหตุผลการขอราคาพิเศษ <i class="sp-req">*</i></h2>
+            </div>
+            <div class="sp-chips" id="reasonChips" role="radiogroup" aria-label="เหตุผล">
+              <label><input type="radio" name="reason" value="แข่งขันราคา" /><span>แข่งขันราคา</span></label>
+              <label><input type="radio" name="reason" value="ลูกค้าประจำ" /><span>ลูกค้าประจำ</span></label>
+              <label><input type="radio" name="reason" value="ปิดดีล / ยอดขาย" /><span>ปิดดีล / ยอดขาย</span></label>
+              <label><input type="radio" name="reason" value="โปรโมชันพิเศษ" /><span>โปรโมชันพิเศษ</span></label>
+              <label><input type="radio" name="reason" value="เคลียร์สต็อก" /><span>เคลียร์สต็อก</span></label>
+              <label><input type="radio" name="reason" value="อื่น ๆ" /><span>อื่น ๆ</span></label>
+            </div>
+            <div class="fp-field sp-reason">
+              <label for="reasonText">รายละเอียด (ให้ผู้บริหารเห็นภาพ เช่น ราคาคู่แข่ง ยอดที่คาดว่าจะได้)</label>
+              <textarea id="reasonText" rows="3" maxlength="1000" placeholder="เช่น คู่แข่งเสนอ 100 บาท/ถุง ลูกค้าจะสั่ง 1,000 ถุงต่อเดือน ถ้าได้ราคานี้"></textarea>
+              <span class="sp-count" id="reasonCount">0/1000</span>
+            </div>
+          </div>
+
+          <!-- 4 ลายเซ็น -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>4</b> ลายเซ็นผู้ขอ <i class="sp-req">*</i></h2>
+              <button type="button" class="fp-link-btn" onclick="clearSignature()">ล้างลายเซ็น</button>
+            </div>
+            <div class="sp-sign">
+              <div class="sp-sign-pad" id="sigWrap">
+                <canvas id="sigCanvas" aria-label="ช่องเซ็นชื่อ"></canvas>
+                <span class="sp-sign-hint" id="sigHint"><span class="material-symbols-outlined">draw</span>เซ็นชื่อในกรอบนี้</span>
+              </div>
+              <div class="sp-sign-meta">
+                <div><span>ผู้ขอ</span><b id="requesterName">-</b></div>
+                <div><span>ตำแหน่ง</span><b id="requesterRole">-</b></div>
+              </div>
+            </div>
+            <div class="fp-warn" id="fpWarn" hidden></div>
+          </div>
+
+          <!-- แถบปุ่ม -->
+          <div class="fp-actionbar">
+            <span class="fp-status" id="fpStatus">คำขอใหม่ (ยังไม่บันทึก)</span>
+            <button type="button" class="fp-btn-ghost" onclick="clearForm()"><span class="material-symbols-outlined">restart_alt</span><span class="fp-hide-sm">ล้าง</span></button>
+            <button type="button" class="fp-btn-outline" onclick="saveDraft()"><span class="material-symbols-outlined">bookmark_add</span>บันทึกร่าง</button>
+            <button type="button" class="fp-btn-primary" onclick="openPreview()"><span class="material-symbols-outlined">preview</span>ตรวจ &amp; ส่งคำขอ</button>
+          </div>
+        </section>
+
+        <!-- ===================== ด้านข้าง ===================== -->
+        <aside class="fp-side">
+          <section class="fp-card fp-panel">
+            <h2 class="fp-panel-title">
+              <span class="material-symbols-outlined">inventory</span> ร่างในเครื่องนี้
+              <span class="fp-count" id="draftCountBadge">0</span>
+            </h2>
+            <div id="draftList" class="fp-list"></div>
+          </section>
+
+          <section class="fp-card fp-panel">
+            <h2 class="fp-panel-title">
+              <span class="material-symbols-outlined">fact_check</span> คำขอของฉัน
+              <span class="fp-count" id="requestCountBadge">0</span>
+              <button type="button" class="fp-icon-only" onclick="loadMyRequests()" title="รีเฟรช"><span class="material-symbols-outlined">refresh</span></button>
+            </h2>
+            <div class="sp-filter" id="reqFilter" role="tablist">
+              <button type="button" class="is-on" data-f="all">ทั้งหมด</button>
+              <button type="button" data-f="pending">กำลังพิจารณา</button>
+              <button type="button" data-f="done">ทราบผลแล้ว</button>
+            </div>
+            <div id="requestList" class="fp-list"></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <!-- ตัวอย่างเอกสารก่อนส่ง -->
+    <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="ตัวอย่างเอกสาร">
+      <div class="preview-wrapper">
+        <div class="preview-actions">
+          <span class="preview-title">ตรวจคำขอก่อนส่ง</span>
+          <button type="button" class="pa-primary" onclick="submitRequest()"><span class="material-symbols-outlined">send</span>ส่งให้ Manager</button>
+          <button type="button" onclick="saveDraft()"><span class="material-symbols-outlined">bookmark_add</span>บันทึกร่าง</button>
+          <button type="button" onclick="printPreview()"><span class="material-symbols-outlined">print</span>พิมพ์ / PDF</button>
+          <button type="button" class="pa-close" onclick="closePreview()" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>
         </div>
-      </main>
+        <div id="previewIssues" class="preview-issues" hidden></div>
+        <div id="previewContent" class="a4-page"></div>
+      </div>
     </div>
 
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/special-price-common.js"></script>
     <script src="/js/pages/forms/special-price-sale.js"></script>
+    <script src="/js/core/splash.js"></script>
+    <script src="/js/core/loadingSplash.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
   </body>
 </html>

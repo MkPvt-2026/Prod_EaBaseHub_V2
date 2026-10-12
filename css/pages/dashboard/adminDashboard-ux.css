@@ -1,0 +1,141 @@
+/* =====================================================
+   adminDashboard-ux.css — Administration Console (หน้าหลัก Admin)
+   ใช้บนโน้ตบุ๊กเป็นหลัก (1366×768 ขึ้นไป) · สีจาก --ui-* / --role-* (รองรับพื้นเข้ม body.ui-dark)
+   ===================================================== */
+
+.ad { max-width: 1440px; margin: 0 auto; padding: 4px 4px 32px; color: var(--ui-num); }
+
+/* ---------- ภาพรวม (ui-strip) ---------- */
+.ad-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+.ad-kpi { display: flex; align-items: center; gap: 12px; padding: 14px 16px; text-decoration: none; color: inherit; }
+.ad-kpi .stat-card-icon .material-symbols-outlined { font-size: 21px; color: var(--ui-icon); }
+.ad-kpi-body { display: flex; flex-direction: column; min-width: 0; }
+.ad-kpi-body small { font-size: 12.5px; color: var(--ui-label); }
+.ad-kpi-body b { font-size: 24px; font-weight: 600; line-height: 1.2; color: var(--ui-num); font-variant-numeric: tabular-nums; }
+.ad-kpi-body b.is-warn { color: var(--ui-warn); }
+.ad-kpi-body em { font-style: normal; font-size: 11.5px; color: var(--ui-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ad-updated { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: 8px 2px 14px; font-size: 12px; color: var(--ui-label); }
+
+/* ---------- การ์ด ---------- */
+.ad-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr); gap: 16px; align-items: start; }
+.ad-grid-b { margin-top: 16px; grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); }
+.ad-side { display: grid; gap: 16px; }
+.ad-card {
+  background: var(--ui-panel); border: 1px solid var(--ui-line); border-radius: 14px;
+  box-shadow: var(--ui-shadow); padding: 16px 18px; min-width: 0;
+}
+.ad-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.ad-card-head h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15.5px; font-weight: 600; color: var(--ui-num); }
+.ad-card-head h2 .material-symbols-outlined { font-size: 20px; color: var(--ui-icon); }
+.ad-link {
+  display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 4px 6px; border-radius: 8px;
+  font-family: inherit; font-size: 13px; color: var(--role-light, var(--role-color)); text-decoration: none; cursor: pointer;
+}
+.ad-link .material-symbols-outlined { font-size: 16px; color: inherit; }
+.ad-link:hover { background: var(--ui-hover); }
+.ad-muted { color: var(--ui-label); font-size: 13px; padding: 10px 0; list-style: none; text-align: center; }
+.ad-muted.is-error { color: var(--ui-bad); }
+
+/* ---------- เมนู ---------- */
+.ad-search { position: relative; display: flex; align-items: center; flex: 0 1 260px; }
+.ad-search .material-symbols-outlined { position: absolute; left: 10px; font-size: 18px; color: var(--ui-label); pointer-events: none; }
+.ad-search input {
+  width: 100%; height: 36px; padding: 0 12px 0 34px; border-radius: 10px; border: 1px solid var(--ui-line);
+  background: var(--ui-hover); color: var(--ui-num); font-family: inherit; font-size: 13.5px;
+}
+.ad-search input::placeholder { color: var(--ui-label); }
+.ad-search input:focus { outline: none; border-color: var(--role-color); box-shadow: 0 0 0 3px rgba(var(--role-rgb), 0.2); }
+
+.ad-menu-group + .ad-menu-group { margin-top: 14px; }
+.ad-menu-group h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 12.5px; font-weight: 600; color: var(--ui-label); letter-spacing: 0.2px; }
+.ad-menu-group h3 .material-symbols-outlined { font-size: 16px; color: var(--ui-label); }
+.ad-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ad-tile {
+  display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 9px 12px; border-radius: 12px;
+  border: 1px solid var(--ui-line); background: transparent; text-decoration: none; color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.ad-tile:hover, .ad-tile:focus-visible { background: var(--ui-hover); border-color: rgba(var(--role-rgb), 0.55); outline: none; }
+.ad-tile-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--ui-icon-bg); }
+.ad-tile-icon .material-symbols-outlined { font-size: 21px; color: var(--ui-icon); }
+.ad-tile-text { display: flex; flex-direction: column; min-width: 0; }
+.ad-tile-text b { font-size: 14px; font-weight: 500; color: var(--ui-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-tile-text small { font-size: 12px; color: var(--ui-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ad-soon { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--ui-line); }
+.ad-soon-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ui-label); margin-right: 4px; }
+.ad-soon-label .material-symbols-outlined { font-size: 15px; color: var(--ui-label); }
+.ad-soon-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--ui-line); font-size: 12px; color: var(--ui-label); cursor: default; opacity: 0.8;
+}
+.ad-soon-chip .material-symbols-outlined { font-size: 14px; color: var(--ui-label); }
+.ad-empty { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 30px; color: var(--ui-label); font-size: 13.5px; }
+
+/* ---------- ข้อมูลที่ควรตรวจ ---------- */
+.ad-health { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ad-health-item {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 10px; text-decoration: none; color: inherit;
+  background: rgba(251, 146, 60, 0.08); border: 1px solid rgba(251, 146, 60, 0.28);
+}
+.ad-health-item:hover { background: rgba(251, 146, 60, 0.14); }
+.ad-health-item b { font-size: 20px; font-weight: 600; color: var(--ui-warn); text-align: center; font-variant-numeric: tabular-nums; }
+.ad-health-item span { display: flex; flex-direction: column; font-size: 13.5px; color: var(--ui-num); }
+.ad-health-item small { font-size: 12px; color: var(--ui-label); }
+.ad-health-item .material-symbols-outlined { color: var(--ui-label); }
+.ad-health-ok { display: flex; align-items: center; gap: 6px; padding: 2px 4px; font-size: 12.5px; color: var(--ui-label); }
+.ad-health-ok .material-symbols-outlined { font-size: 16px; color: var(--ui-ok); }
+
+/* ---------- Role ---------- */
+.ad-roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.ad-roles li { display: grid; grid-template-columns: 20px 92px minmax(0, 1fr) 36px; align-items: center; gap: 8px; font-size: 13px; }
+.ad-roles li .material-symbols-outlined { font-size: 17px; color: var(--ui-label); }
+.ad-role-name { color: var(--ui-num); }
+.ad-roles li b { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ui-num); }
+.ad-bar { height: 8px; border-radius: 999px; background: var(--ui-hover); overflow: hidden; }
+.ad-bar i { display: block; height: 100%; border-radius: inherit; background: var(--role-color); min-width: 4px; }
+
+/* ---------- ตาราง Sales ---------- */
+.ad-table-wrap { max-height: 380px; overflow: auto; border: 1px solid var(--ui-line); border-radius: 10px; }
+.ad-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ad-table th {
+  position: sticky; top: 0; z-index: 1; padding: 8px 10px; text-align: left; font-size: 12px; font-weight: 600;
+  color: var(--ui-label); background: var(--ad-th-bg, #f8fafc); border-bottom: 1px solid var(--ui-line);
+}
+body.ui-dark .ad-table th { --ad-th-bg: #1b2333; }
+.ad-table td { padding: 8px 10px; border-bottom: 1px solid var(--ui-divider); color: var(--ui-num); vertical-align: middle; }
+.ad-table tr:last-child td { border-bottom: 0; }
+.ad-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.ad-table td b { font-weight: 500; }
+.ad-table tr.is-off td { opacity: 0.55; }
+.ad-code { font-size: 12px; padding: 1px 8px; border-radius: 6px; background: var(--ui-hover); color: var(--ui-label); }
+.ad-flag { font-size: 12px; color: var(--ui-warn); }
+.ad-pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+.ad-pill.is-ok { background: rgba(74, 222, 128, 0.14); color: var(--ui-ok); }
+.ad-pill.is-off { background: rgba(248, 113, 113, 0.14); color: var(--ui-bad); }
+
+/* ---------- ผู้ใช้ล่าสุด ---------- */
+.ad-people { list-style: none; margin: 0; padding: 0; display: grid; }
+.ad-people li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 64px; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--ui-divider); }
+.ad-people li:last-child { border-bottom: 0; }
+.ad-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--ui-icon-bg); color: var(--ui-icon); font-weight: 600; font-size: 14px; }
+.ad-person { display: flex; flex-direction: column; min-width: 0; }
+.ad-person b { font-size: 13.5px; font-weight: 500; color: var(--ui-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-person small { font-size: 12px; color: var(--ui-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-date { font-size: 12px; color: var(--ui-label); text-align: right; }
+
+/* ---------- ขนาดจอ ---------- */
+@media (max-width: 1279px) {
+  .ad-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .ad-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+  .ad-grid, .ad-grid-b { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .ad-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .ad-tiles { grid-template-columns: 1fr; }
+  .ad-search { flex-basis: 100%; }
+}

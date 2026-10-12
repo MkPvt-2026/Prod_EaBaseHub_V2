@@ -1,389 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
+  <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>EABaseHub | แบบฟอร์ม</title>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
-  <!-- ════ แก้ title ตามหน้า ════ -->
-  <title>FormHub | Sale</title>
+    <!-- โครงหน้าแบบเดียวกับหน้าเซลล์อื่น (หัวเว็บ + แถบเมนู) -->
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/formHub-ux.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-
-  <!-- ════ CSS ════ -->
-  <!-- Layout shell (sidebar + header) -->
-  <link rel="stylesheet" href="/css/base/role-colors.css">
-
-  <!-- ════ เพิ่ม CSS เฉพาะหน้าตรงนี้ ════ -->
-  <link rel="stylesheet" href="/css/pages/forms/formHub.css">
-
-</head>
-
-<body class="role-admin">
-
-  <!-- ════════════════════════════════════════════════
-     APP LAYOUT WRAPPER
-════════════════════════════════════════════════ -->
-  <div class="app-layout">
-
-    <!-- ════════════════════════════════════════════════
-       SIDEBAR
-  ════════════════════════════════════════════════ -->
-    <aside class="app-sidebar collapsed" id="appSidebar">
-
-      <!-- Logo -->
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-circle">
-          <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <span style="display:none">E</span>
+  <body>
+    <header class="app-header ui-role-bar">
+      <div class="logo">
+        <div class="logo-circle">
+          <img src="/assets/icons/icon-192.png" alt="logo" />
         </div>
-        <div class="sidebar-brand-text">
-          <div class="sidebar-brand-title">EABaseHub</div>
-          <div class="sidebar-brand-sub">Hub System</div>
-        </div>
+        <h2>EABaseHub</h2>
       </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">กำลังโหลด...</div>
+        </div>
+        <button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
 
-      <!-- Navigation Items -->
-      <nav class="sidebar-nav" id="sidebarNav">
+    <nav class="app-nav">
+      <a href="/index.html">หน้าแรก</a>
+      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
+      <a href="/pages/forms/formHub.html" class="active">แบบฟอร์ม</a>
+      <a href="/pages/forms/shopUser.html">ร้านของฉัน</a>
+    </nav>
 
-        <a href="/index.html" class="sidebar-nav-item" title="หน้าหลัก">
-          <div class="nav-icon-wrap">
-            <span class="material-symbols-outlined">home</span>
-          </div>
-          <span class="nav-label">หน้าหลัก</span>
-        </a>
+    <main class="fh">
+      <section class="fh-head ui-role-hero">
+        <h1><span class="material-symbols-outlined">assignment</span> แบบฟอร์ม</h1>
+        <p>เลือกแบบฟอร์มที่ต้องการ — แผนเดินทาง เบิกค่าใช้จ่าย และขออนุมัติต่าง ๆ</p>
+      </section>
 
-        <a href="/pages/forms/formPlan.html" class="sidebar-nav-item" title="จัดการเคลม">
-          <div class="nav-icon-wrap">
+      <!-- เมนูแบบฟอร์ม (คงรูปแบบเดิม: การ์ดไอคอนใหญ่ กดง่าย) -->
+      <section class="forms-grid" aria-label="แบบฟอร์ม">
+        <a class="form-card" href="/pages/forms/formPlan.html">
+          <div class="form-icon blue">
             <span class="material-symbols-outlined">emoji_transportation</span>
           </div>
-          <span class="nav-label">จัดการเคลม</span>
+          <h3>แผนการเดินทาง</h3>
+          <p>ใช้สำหรับวางแผนการเดินทางล่วงหน้า</p>
         </a>
 
-        <a href="/pages/forms/formActual.html" class="sidebar-nav-item" title="เคลมลูกค้า">
-          <div class="nav-icon-wrap">
+        <a class="form-card" href="/pages/forms/formActual.html">
+          <div class="form-icon green">
             <span class="material-symbols-outlined">receipt_long</span>
           </div>
-          <span class="nav-label">เคลม-ภายนอก</span>
+          <h3>ใบเดินทางจริง</h3>
+          <p>บันทึกการเดินทางจริงและเคลียร์ค่าใช้จ่าย</p>
         </a>
 
-        <a href="/UnderDev.html" class="sidebar-nav-item" title="เคลมภายใน">
-          <div class="nav-icon-wrap">
+        <a class="form-card" href="/pages/forms/special-price-sale.html">
+          <div class="form-icon orange">
             <span class="material-symbols-outlined">sell</span>
           </div>
-          <span class="nav-label">ขอราคาพิเศษ</span>
+          <h3>ขออนุมัติราคา (พิเศษ)</h3>
+          <p>ขอราคาขายต่ำกว่าราคาปกติ</p>
         </a>
 
-        <a href="/pages/forms/credit-limit-sale.html" class="sidebar-nav-item" title="ขออนุมัติวงเงินเพิ่ม">
-          <div class="nav-icon-wrap">
+        <a class="form-card" href="/pages/forms/credit-limit-sale.html">
+          <div class="form-icon purple">
             <span class="material-symbols-outlined">credit_card</span>
           </div>
-          <span class="nav-label">ขออนุมัติวงเงินเพิ่ม</span>
+          <h3>ขออนุมัติวงเงินเพิ่ม</h3>
+          <p>สำหรับขอเพิ่มวงเงินชั่วคราว</p>
         </a>
+      </section>
+    </main>
 
-      </nav>
-
-      <!-- Collapse toggle button -->
-      <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
-        <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
-      </div>
-
-      <div class="sidebar-divider"></div>
-
-      <!-- Logout -->
-      <button class="sidebar-logout" id="logoutBtn" onclick="logout && logout()" title="ออกจากระบบ">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">logout</span>
-        </div>
-        <span class="nav-label">ออกจากระบบ</span>
-      </button>
-
-    </aside>
-
-
-
-
-    <!-- ════════════════════════════════════════════════
-       MAIN CONTENT
-  ════════════════════════════════════════════════ -->
-    <div class="app-main">
-
-      <!-- ════════════════════════════════════════════════
-         HEADER
-    ════════════════════════════════════════════════ -->
-      <header class="app-header">
-
-        <!-- Left: System name + subtitle -->
-        <div class="header-left">
-          <div class="header-system-name">
-            <div class="header-icon">
-              <!-- ════ เปลี่ยน icon ตามหน้า ════ -->
-              <span class="material-symbols-outlined">assignment</span>
-            </div>
-            <!-- ════ เปลี่ยนชื่อหน้า ════ -->
-            FORMS HUB
-          </div>
-          <!-- ════ เปลี่ยน subtitle ════ -->
-          <div class="header-subtitle">ศูนย์รวมแบบฟอร์มและเอกสารในระบบ</div>
-        </div>
-
-        <!-- Right: badge + date + user -->
-        <div class="header-right">
-
-          <!-- <div class="page-header-badge" title="สิทธิ์การใช้งาน">
-          <span class="material-symbols-outlined" style="font-size:20px;color:#d97706;">workspace_premium</span>
-          <span>Executive</span>
-        </div> -->
-
-          <div class="header-date-pill" id="headerDatePill">
-            <span class="material-symbols-outlined">calendar_month</span>
-            <span id="headerDateText">—</span>
-          </div>
-
-          <div class="header-user">
-            <div class="header-user-avatar" id="userAvatar">
-              <span class="material-symbols-outlined"
-                style="font-size:16px!important;color:white!important;">person</span>
-            </div>
-            <span class="header-user-name" id="userName">กำลังโหลด...</span>
-          </div>
-
-        </div>
-      </header><!-- /.app-header -->
-
-
-      <!-- ════════════════════════════════════════════════
-         BREADCRUMB — แก้ตามหน้า
-    ════════════════════════════════════════════════ -->
-      <nav class="app-breadcrumb" aria-label="breadcrumb">
-        <a href="/pages/executive/executive-Dashboard.html">
-          <span class="material-symbols-outlined">home</span>
-          หน้าหลัก
-        </a>
-        <span class="bc-sep">›</span>
-        <span class="bc-current">
-          <!-- ════ เปลี่ยน icon + ชื่อ ════ -->
-          <span class="material-symbols-outlined">assignment</span>
-          Forms Hub
-        </span>
-      </nav>
-
-
-      <!-- ════════════════════════════════════════════════
-         PAGE CONTENT — ใส่ content ของแต่ละหน้าตรงนี้
-    ════════════════════════════════════════════════ -->
-      <main class="app-content" id="pageContent">
-
-
-        <main class="hub-container">
-
-          <!-- <section class="page-title">
-      <div class="title-icon">
-        <span class="material-symbols-outlined">assignment</span>
-      </div>
-      <div>
-        <h1>Forms Hub</h1>
-        <p>ศูนย์รวมแบบฟอร์มและเอกสารในระบบ</p>
-      </div>
-    </section> -->
-
-          <!-- <div class="search-box">
-      <span class="material-symbols-outlined">search</span>
-      <input type="text" placeholder="ค้นหาแบบฟอร์ม เช่น ขออนุมัติ, เดินทาง, ร้านค้า..." />
-    </div> -->
-
-          <section class="forms-grid">
-
-            <div class="form-card" onclick="location.href='formPlan.html'">
-              <div class="form-icon blue">
-                <span class="material-symbols-outlined">emoji_transportation</span>
-              </div>
-              <h3>แผนการเดินทาง</h3>
-              <p>ใช้สำหรับวางแผนการเดินทางล่วงหน้า</p>
-              <!-- <span class="status ready">พร้อมใช้งาน</span> -->
-            </div>
-
-            <div class="form-card" onclick="location.href='formActual.html'">
-              <div class="form-icon green">
-                <span class="material-symbols-outlined">receipt_long</span>
-              </div>
-              <h3>ใบเดินทางจริง</h3>
-              <p>บันทึกการเดินทางจริงและเคลียร์ค่าใช้จ่าย</p>
-              <!-- <span class="status ready">พร้อมใช้งาน</span> -->
-            </div>
-
-            <div class="form-card" onclick="location.href='/UnderDev.html'">
-              <div class="form-icon orange">
-                <span class="material-symbols-outlined">sell</span>
-              </div>
-              <h3>ขออนุมัติราคา (พิเศษ)</h3>
-              <p>ขอราคาขายต่ำกว่าราคาปกติ</p>
-              <span class="status approve">commingsoon</span>
-            </div>
-
-            <div class="form-card" onclick="location.href='/pages/forms/credit-limit-sale.html'">
-              <div class="form-icon purple">
-                <span class="material-symbols-outlined">credit_card</span>
-              </div>
-              <h3>ขออนุมัติวงเงินเพิ่ม</h3>
-              <p>สำหรับขอเพิ่มวงเงินชั่วคราว</p>
-              <!-- <span class="status approve">commingsoon</span> -->
-            </div>
-
-            <!-- <div class="form-card" onclick="location.href='/UnderDev.html'">
-        <div class="form-icon pink">
-          <span class="material-symbols-outlined">storefront</span>
-        </div>
-        <h3>เปิดร้านค้าใหม่</h3>
-        <p>สำหรับขอเปิดร้านค้าในใหม่ในเขต</p>
-        <span class="status approve">commingsoon</span>
-      </div> -->
-
-            <!-- <div class="form-card" onclick="location.href='#'">
-        <div class="form-icon teal">
-          <span class="material-symbols-outlined">storefront</span>
-        </div>
-        <h3>ใบขอซื้อ/จัดหา</h3>
-        <p>ขอซื้อ ป้ายไวนิล อุปกรณ์ อื่นๆ</p>
-        <span class="status approve">commingsoon</span>
-      </div> -->
-
-            <!-- <div class="form-card" onclick="location.href='claim-approval-request.html'">
-        <div class="form-icon red">
-          <span class="material-symbols-outlined">inventory_2</span>
-        </div>
-        <h3>ขออนุมัติเคลมสินค้า</h3>
-        <p>ใช้สำหรับขออนุมัติเคลมสินค้า</p>
-        <span class="status approve">ต้องอนุมัติ</span>
-      </div> -->
-
-            <!-- <div class="form-card" onclick="location.href='my-documents.html'">
-        <div class="form-icon indigo">
-          <span class="material-symbols-outlined">folder</span>
-        </div>
-        <h3>เอกสารของฉัน</h3>
-        <p>ดูและติดตามเอกสารที่ส่งแล้วทั้งหมด</p>
-        <span class="status ready">พร้อมใช้งาน</span>
-      </div> -->
-
-          </section>
-
-          <!--
-      ╔══════════════════════════════════════════════╗
-      ║  📝 วาง HTML content ของหน้านี้ตรงนี้       ║
-      ║     เช่น .container > .card > ...           ║
-      ╚══════════════════════════════════════════════╝
-
-      ตัวอย่าง:
-      <div class="container">
-        <div class="card">
-          <h2>หัวข้อ</h2>
-          <p>เนื้อหา...</p>
-        </div>
-      </div>
-      -->
-
-
-        </main><!-- /.app-content -->
-
-
-        <!-- Footer -->
-
-    </div><!-- /.app-main -->
-  </div><!-- /.app-layout -->
-
-
-  <!-- Toast notification -->
-  <footer class="app-footer">© 2026 EABaseHub | Sale Executive</footer>
-  <div id="toast" class="toast"></div>
-
-
-  <!-- ════════════════════════════════════════════════
-     SCRIPTS
-════════════════════════════════════════════════ -->
-  <!-- Core (ต้องโหลดก่อน sidebar-header.js) -->
-  <script src="/js/core/supabaseClient.js"></script>
-  <script src="/js/core/roleConfig.js"></script>
-  <script src="/js/core/userService.js"></script>
-  <script src="/js/core/auth.js"></script>
-
-  <!-- Sidebar + Header behaviors -->
-  <!-- <script src="/js/core/sidebar-header.js"></script> -->
-
-  <!-- ════ เพิ่ม JS เฉพาะหน้าตรงนี้ ════ -->
-  <script src="/js/pages/forms/formHub.js"></script>
-  <script src="/js/core/splash.js"></script>
-  <script src="/js/core/loadingSplash.js"></script>
-
-  <script>
-    // ── Sidebar toggle (ใช้ class อย่างเดียว — ให้ CSS จัดการ width) ──
-    const sidebar = document.getElementById('appSidebar');
-
-    // ✅ Default: collapsed
-    if (!sidebar.classList.contains('collapsed') && !sidebar.classList.contains('expanded')) {
-      sidebar.classList.add('collapsed');
-    }
-
-    // โหลดสถานะที่บันทึกไว้ (ถ้าเคยขยายไว้)
-    try {
-      const saved = localStorage.getItem('ea-sidebar-expanded');
-      if (saved === '1') {
-        sidebar.classList.remove('collapsed');
-        sidebar.classList.add('expanded');
-      }
-    } catch (_) { }
-
-    function toggleSidebar() {
-      const isCollapsed = sidebar.classList.contains('collapsed');
-      if (isCollapsed) {
-        sidebar.classList.remove('collapsed');
-        sidebar.classList.add('expanded');
-        try { localStorage.setItem('ea-sidebar-expanded', '1'); } catch (_) { }
-      } else {
-        sidebar.classList.remove('expanded');
-        sidebar.classList.add('collapsed');
-        try { localStorage.setItem('ea-sidebar-expanded', '0'); } catch (_) { }
-      }
-    }
-    window.toggleSidebar = toggleSidebar;
-
-    // ── Set active nav based on current URL ──
-    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-      if (item.getAttribute('href') === window.location.pathname) {
-        document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-      }
-    });
-
-    // ── Header date display ──
-    function updateHeaderDate() {
-      const el = document.getElementById('headerDateText');
-      if (!el) return;
-      const now = new Date();
-      el.textContent = now.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-    }
-    updateHeaderDate();
-
-    // ── Auto-close sidebar เมื่อคลิกพื้นที่ content บน mobile (ถ้า expanded) ──
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth > 768) return;
-      if (!sidebar.classList.contains('expanded')) return;
-      if (sidebar.contains(e.target)) return;
-      sidebar.classList.remove('expanded');
-      sidebar.classList.add('collapsed');
-    });
-  </script>
-
-</body>
-
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/formHub.js"></script>
+    <script src="/js/core/splash.js"></script>
+    <script src="/js/core/loadingSplash.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

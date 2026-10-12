@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="th">
   <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>รายงานการเข้าร้านค้า | Manager</title>
@@ -21,6 +25,9 @@
     <link rel="stylesheet" href="/css/pages/report/reportTracker-laptop.css" />
     <!-- 🆕 Sidebar + Header styles -->
     <!-- <link rel="stylesheet" href="/css/base/sidebar-header.css"> -->
+    <!-- ธีม sidebar ชุด Marketing (โหลดท้ายสุด) -->
+  <link rel="stylesheet" href="/css/components/sidebar-marketing.css">
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
   </head>
   <body>
     <!-- ══════════════════════════════════════════════════
@@ -30,131 +37,69 @@
       <!-- ══════════════════════════════════════════════════
        🆕 SIDEBAR
   ══════════════════════════════════════════════════ -->
-      <aside class="app-sidebar" id="appSidebar">
-        <!-- Logo -->
-        <div class="sidebar-logo">
-          <div class="sidebar-logo-circle">
-            <img
-              src="/assets/icons/icon-192.png"
-              alt="EABaseHub logo"
-              onerror="
-                this.style.display = 'none';
-                this.nextElementSibling.style.display = 'flex';
-              "
-            />
-            <span style="display: none">E</span>
-          </div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-title">EABaseHub</div>
-            <div class="sidebar-brand-sub">Claim System</div>
-          </div>
-        </div>
+      <aside class="app-sidebar expanded ui-role-side" id="appSidebar">
+    <!-- ═══ SIDEBAR ชุดมาตรฐาน (เหมือนกันทุกหน้า: Marketing / Dashboard / รายงาน / ประชาสัมพันธ์ / RFM) ═══
+         ผู้ใช้หลัก = Marketing Manager (admin ใช้ทดสอบ)
+         แก้เมนู → แก้ให้ตรงกันทั้ง 5 หน้า · ซ่อนตาม role ด้วย data-roles (js/components/sidebar-manager.js) -->
+    <a class="sidebar-logo" href="/pages/marketing/marketingHome.html" title="Marketing Home" style="text-decoration:none">
+      <div class="sidebar-logo-circle">
+        <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <span style="display:none">E</span>
+      </div>
+      <div class="sidebar-brand-text">
+        <div class="sidebar-brand-title">EABaseHub</div>
+        <div class="sidebar-brand-sub">Marketing</div>
+      </div>
+    </a>
 
-        <!-- Navigation Items -->
-        <nav class="sidebar-nav" id="sidebarNav">
-          <a href="/index.html" class="sidebar-nav-item" title="หน้าหลัก">
-            <div class="nav-icon-wrap">
-              <span class="material-symbols-outlined">home</span>
-            </div>
-            <span class="nav-label">หน้าหลัก</span>
-          </a>
-
-          <a
-            href="/pages/dashboard/managerDashboard.html"
-            class="sidebar-nav-item"
-            title="Dashboard"
-          >
-            <div class="nav-icon-wrap">
-              <span class="material-symbols-outlined">empty_dashboard</span>
-            </div>
-            <span class="nav-label">Dashboard</span>
-          </a>
-
-          <a
-            href="/pages/reports/reportTracker.html"
-            class="sidebar-nav-item active"
-            title="รายงาน"
-          >
-            <div class="nav-icon-wrap">
-              <span class="material-symbols-outlined">assignment</span>
-            </div>
-            <span class="nav-label">รายงาน เข้าร้าน</span>
-          </a>
-
-          <a
-            href="/pages/admin/Adminannouncements.html"
-            class="sidebar-nav-item"
-            title="ประกาศ"
-          >
-            <div class="nav-icon-wrap">
-              <span class="material-symbols-outlined">campaign</span>
-            </div>
-            <span class="nav-label">ประชาสัมพันธ์</span>
-          </a>
-
-          <a href="/UnderDev.html" class="sidebar-nav-item" title="ขออนุมัติ">
-            <div class="nav-icon-wrap">
-              <span class="material-symbols-outlined">approval_delegation</span>
-            </div>
-            <span class="nav-label">ขออนุมัติเอกสาร</span>
-          </a>
-
-          <a
-            href="/pages/dashboard/RfmDashboard.html"
-            class="sidebar-nav-item"
-            title="วิเคราะห์(RFM)"
-          >
-            <div class="nav-icon-wrap">
-              <span class="material-symbols-outlined">bar_chart</span>
-            </div>
-            <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
-          </a>
-
-      <a href="/pages/marketing/marketingHome.html" class="sidebar-nav-item" title="Marketing Home">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">campaign</span>
-        </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a href="/pages/marketing/marketingHome.html" class="sidebar-nav-item" title="Marketing Home (หน้าแรก)" data-roles="admin,manager,executive,marketing">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">home</span></div>
         <span class="nav-label">Marketing Home</span>
       </a>
+      <a href="/pages/dashboard/managerDashboard.html" class="sidebar-nav-item" title="Dashboard ทีม" data-roles="admin,manager">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">empty_dashboard</span></div>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="/pages/reports/reportTracker.html" class="sidebar-nav-item active" title="รายงานเข้าร้าน" data-roles="admin,executive,manager,marketing">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">assignment</span></div>
+        <span class="nav-label">รายงาน เข้าร้าน</span>
+      </a>
+      <a href="/pages/marketing/announcements.html" class="sidebar-nav-item" title="ประชาสัมพันธ์" data-roles="admin,manager,marketing">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">campaign</span></div>
+        <span class="nav-label">ประชาสัมพันธ์</span>
+      </a>
+      <a href="/UnderDev.html" class="sidebar-nav-item" title="ขออนุมัติเอกสาร">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">approval_delegation</span></div>
+        <span class="nav-label">ขออนุมัติเอกสาร</span>
+      </a>
+      <a href="/pages/dashboard/RfmDashboard.html" class="sidebar-nav-item" title="วิเคราะห์ข้อมูล (RFM)" data-roles="admin,manager,marketing">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">bar_chart</span></div>
+        <span class="nav-label">วิเคราะห์ ข้อมูล(RFM)</span>
+      </a>
+    </nav>
 
-          <!-- <a href="#"
-    class="sidebar-nav-item"
-    title="ทีมงาน">
-    <div class="nav-icon-wrap">
-      <span class="material-symbols-outlined">groups</span>
+    <!-- แยกออกมาไว้ล่าง: กลับหน้าหลักของระบบ (/index.html) — เดิมอยู่บนสุดและกดผิดบ่อย -->
+    <nav class="sidebar-nav sidebar-nav-bottom" aria-label="ไปยังระบบอื่น" style="flex:0 0 auto; padding-bottom:4px;">
+      <a href="/index.html" class="sidebar-nav-item" title="หน้าหลักระบบ (ศูนย์รวม EABaseHub)">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">apps</span></div>
+        <span class="nav-label">หน้าหลักระบบ</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+      <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
     </div>
-    <span class="nav-label">ทีมงาน</span>
-  </a> -->
-        </nav>
 
-        <!-- Collapse toggle button -->
-        <div
-          class="sidebar-collapse-btn"
-          onclick="toggleSidebar()"
-          title="ย่อ/ขยาย"
-        >
-          <span class="material-symbols-outlined" id="collapseIcon"
-            >chevron_right</span
-          >
-        </div>
+    <div class="sidebar-divider"></div>
 
-        <div class="sidebar-divider"></div>
-        <!-- Logout -->
-        <button
-          class="sidebar-logout"
-          id="logoutBtn"
-          onclick="logout()"
-          title="ออกจากระบบ"
-        >
-          <div class="nav-icon-wrap">
-            <span
-              class="material-symbols-outlined"
-              style="font-size: 24px !important; color: white !important"
-              >logout</span
-            >
-          </div>
-          <span class="nav-label">ออกจากระบบ</span>
-        </button>
+    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
+      <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+      <span class="nav-label">ออกจากระบบ</span>
+    </button>
+
+
       </aside>
 
       <!-- ══════════════════════════════════════════════════
@@ -312,7 +257,7 @@
             <!-- ══════════════════════════════════════════════════
              KPI STRIP — คลิกเพื่อกรองตามสถานะ
         ══════════════════════════════════════════════════ -->
-            <div class="summary-cards rt-kpis">
+            <div class="summary-cards rt-kpis ui-strip">
               <button type="button" class="sum-card rt-kpi" data-status="" title="แสดงทั้งหมด">
                 <span class="material-symbols-outlined rt-kpi-icon k-blue">description</span>
                 <span class="sum-value" id="totalReports">—</span>
@@ -932,6 +877,7 @@
     <script src="/js/core/roleConfig.js"></script>
     <script src="/js/core/userService.js"></script>
     <script src="/js/core/auth.js"></script>
+    <script src="/js/components/sidebar-manager.js"></script>
     <script src="/js/pages/report/reportTracker.js"></script>
 
     <script>
@@ -982,5 +928,7 @@
       }
       updateHeaderDate();
     </script>
+      <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
   </body>
 </html>

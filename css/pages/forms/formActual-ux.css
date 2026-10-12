@@ -1,0 +1,63 @@
+/* =====================================================
+   formActual-ux.css — ใบเดินทางจริง (ฟอร์ม ๒)
+   ใช้ร่วมกับ formPlan-ux.css (โครงหน้าเดียวกัน) · เพิ่มเฉพาะส่วนที่ต่าง
+   ===================================================== */
+
+/* ตารางมีแค่ 4 คอลัมน์ → แท็บเล็ตแนวนอน (≥1100px) วางแผงด้านข้างได้ */
+@media (min-width: 1100px) {
+  .fa .fp-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+  .fa .fp-side { position: sticky; top: 12px; grid-template-columns: 1fr; }
+  .fa .fp-list { max-height: 42vh; }
+}
+.fa .fa-table { min-width: 560px; }
+.fa .fa-table .c-date { width: 150px; }
+.fa .fa-table .c-note { width: 200px; }
+
+/* 1 อ้างอิงแผน */
+.fa-plan-pick { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; align-items: end; }
+.fa-plan-pick .fp-btn-soft { min-height: 44px; white-space: nowrap; }
+.fa-plan-pick .fp-btn-soft:disabled { opacity: 0.45; cursor: not-allowed; }
+.fa-plan-info { margin-top: 12px; }
+.fa-plan-info[hidden] { display: none; }
+.fa-plan-stats {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.75fr) minmax(0, 0.75fr) minmax(0, 1.1fr);
+  border: 1px solid var(--role-border); border-radius: 12px; background: var(--role-soft); overflow: hidden;
+}
+.fa-plan-stats > div { padding: 9px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fa-plan-stats > div + div { border-left: 1px solid var(--role-border); }
+.fa-plan-stats span { font-size: 12px; color: var(--fp-muted); }
+.fa-plan-stats b { font-size: 14.5px; font-weight: 600; color: var(--role-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-plan-meta { margin: 0; font-size: 13.5px; color: var(--fp-muted); }
+.fa-plan-warn, .fa-auto-note {
+  display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 0; font-size: 13px; line-height: 1.45;
+}
+.fa-plan-warn { color: #92400e; }
+.fa-auto-note { color: var(--fp-muted); margin: 0 0 8px; }
+.fa-plan-warn .material-symbols-outlined, .fa-auto-note .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+
+/* 2 ช่วงวันที่จริง */
+.fa-period { font-size: 13px; color: var(--fp-muted); padding: 4px 12px; border-radius: 999px; background: #f1f5f9; }
+.fa-period.is-set { background: var(--role-soft); color: var(--role-text); font-weight: 500; }
+
+/* 3 เทียบกับแผน */
+.fa-compare {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--fp-line); border-radius: 12px; overflow: hidden;
+}
+.fa-compare[hidden] { display: none; }
+.fa-compare > div { padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.fa-compare > div + div { border-left: 1px solid var(--fp-line); }
+.fa-compare span { font-size: 12.5px; color: var(--fp-muted); }
+.fa-compare b { font-size: 17px; font-weight: 600; color: #334155; font-variant-numeric: tabular-nums; }
+.fa-cmp-diff.is-return { background: #f0fdf4; }
+.fa-cmp-diff.is-return span, .fa-cmp-diff.is-return b { color: #15803d; }
+.fa-cmp-diff.is-more { background: #fff7ed; }
+.fa-cmp-diff.is-more span, .fa-cmp-diff.is-more b { color: #c2410c; }
+
+@media (max-width: 767px) {
+  .fa-plan-pick { grid-template-columns: 1fr; }
+  .fa-plan-stats { grid-template-columns: 1fr 1fr; }
+  .fa-plan-stats > div:nth-child(3) { border-left: 0; }
+  .fa-plan-stats > div:nth-child(n + 3) { border-top: 1px solid var(--role-border); }
+  .fa-compare b { font-size: 15px; }
+}

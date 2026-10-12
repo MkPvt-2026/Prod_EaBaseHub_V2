@@ -352,7 +352,7 @@ async function init() {
   if (userNameEl) userNameEl.textContent = fullName;
   if (displayNameEl) displayNameEl.textContent = fullName;
   if (userEmailEl) userEmailEl.textContent = session.user.email;
-  if (userRoleEl) userRoleEl.textContent = profile?.role || "Sales Executive";
+  if (userRoleEl) userRoleEl.textContent = roleLabel(profile?.role);
   if (areaCountEl) areaCountEl.textContent = profile?.area || "-";
   if (storeCountEl) storeCountEl.textContent = storeCount;
   if (claimCountEl) claimCountEl.textContent = claims.length;
@@ -376,6 +376,7 @@ async function init() {
   renderReportList();
   renderWeeklyProgress();
   renderCalendar();
+  renderHomeStatus(profile?.role);
 
   await checkNotifications(currentUser, profile);
 
@@ -391,6 +392,109 @@ async function init() {
     }
   } else {
     console.warn("⚠️ AnnouncementsModule not loaded");
+  }
+}
+
+/* =================================================
+   🏠 หน้าแรก: วันที่ + สถานะรายงานวันนี้ + จุดวันในสัปดาห์
+================================================= */
+
+const ROLE_LABELS = {
+  admin: "ผู้ดูแลระบบ",
+  manager: "Marketing Manager",
+  executive: "ผู้บริหาร",
+  adminqc: "Admin QC",
+  sales: "พนักงานขาย",
+  sale: "พนักงานขาย",
+  accounting: "ฝ่ายบัญชี",
+  marketing: "ฝ่ายการตลาด",
+  user: "ผู้ใช้ (รอกำหนดสิทธิ์)",
+};
+
+function roleLabel(role) {
+  const key = String(role || "").toLowerCase().replace(/[_-]/g, "");
+  return ROLE_LABELS[key] || role || "ผู้ใช้";
+}
+
+function localDayKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function reportDayKey(r) {
+  const raw = r.report_date || r.submitted_at || r.created_at;
+  if (!raw) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) return String(raw);
+  return localDayKey(new Date(raw));
+}
+
+function renderHomeStatus(role) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dateEl = document.getElementById("homeDate");
+  if (dateEl) {
+    dateEl.textContent = today.toLocaleDateString("th-TH", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+  }
+
+  // วันที่มีรายงาน + จำนวนร้านต่อวัน
+  const shopsByDay = {};
+  reports.forEach((r) => {
+    const k = reportDayKey(r);
+    if (!k) return;
+    (shopsByDay[k] ||= new Set()).add(r.shop_id || r.id);
+  });
+
+  // จันทร์–เสาร์ของสัปดาห์นี้
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const names = ["จ", "อ", "พ", "พฤ", "ศ", "ส"];
+  let done = 0;
+  let missed = 0;
+  const dots = names.map((n, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const k = localDayKey(d);
+    let st = "future";
+    if (shopsByDay[k]) { st = "done"; done++; }
+    else if (d < today) { st = "missed"; missed++; }
+    else if (d.getTime() === today.getTime()) st = "today";
+    const tip = { done: "ส่งแล้ว", missed: "ไม่ได้ส่ง", today: "วันนี้", future: "ยังไม่ถึง" }[st];
+    return `<i class="wd ${st}" title="${n} ${d.getDate()}/${d.getMonth() + 1} · ${tip}">${n}</i>`;
+  }).join("");
+
+  const weekDaysEl = document.getElementById("weekDays");
+  if (weekDaysEl) weekDaysEl.textContent = done;
+  const dotsEl = document.getElementById("weekDots");
+  if (dotsEl) dotsEl.innerHTML = dots;
+
+  // ข้อความสถานะ + ปุ่มหลัก
+  const statusEl = document.getElementById("homeStatus");
+  const cta = document.getElementById("homeCta");
+  if (!statusEl) return;
+
+  const key = String(role || "").toLowerCase();
+  const isFieldUser = ["sales", "sale", "user", ""].includes(key);
+  if (!isFieldUser) {
+    statusEl.className = "subtext home-status info";
+    statusEl.innerHTML = `<span class="material-symbols-outlined">info</span> เลือกงานด้านล่าง หรือเข้าระบบของฝ่ายคุณทางขวา`;
+    return;
+  }
+
+  const todayShops = shopsByDay[localDayKey(today)]?.size || 0;
+  const isSunday = today.getDay() === 0;
+  if (todayShops > 0) {
+    statusEl.className = "subtext home-status ok";
+    statusEl.innerHTML = `<span class="material-symbols-outlined">check_circle</span> วันนี้ส่งรายงานแล้ว ${todayShops} ร้าน`;
+    if (cta) cta.lastChild.textContent = " เพิ่มรายงานร้านถัดไป";
+  } else if (isSunday) {
+    statusEl.className = "subtext home-status info";
+    statusEl.innerHTML = `<span class="material-symbols-outlined">weekend</span> วันนี้วันอาทิตย์ — ไม่ต้องส่งรายงาน`;
+  } else {
+    statusEl.className = "subtext home-status warn";
+    statusEl.innerHTML = `<span class="material-symbols-outlined">schedule</span> วันนี้ยังไม่ได้ส่งรายงาน` +
+      (missed ? ` · สัปดาห์นี้ขาดไปแล้ว ${missed} วัน` : "");
   }
 }
 
@@ -445,6 +549,8 @@ function showRoleButtons(role) {
 function showButton(id) {
   const btn = document.getElementById(id);
   if (btn) btn.style.display = "flex";
+  const box = document.getElementById("hubLinks");
+  if (box) box.classList.add("has-links"); // แสดงกล่อง "ไปยังระบบอื่น" เมื่อมีปุ่มอย่างน้อย 1 ปุ่ม
 }
 
 /* =================================================

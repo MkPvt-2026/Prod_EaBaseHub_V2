@@ -162,7 +162,7 @@ function renderAdminMenus(keyword = "") {
           <a href="#">ดูทั้งหมด ›</a>
         </div>
 
-        <div class="menu-card-grid">
+        <div class="menu-card-grid ui-tiles">
           ${filteredItems.map(item => `
             <article class="menu-card" data-url="${item.url}">
               <div class="menu-card-icon">

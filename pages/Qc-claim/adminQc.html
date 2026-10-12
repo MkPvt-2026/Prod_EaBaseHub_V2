@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="th" data-theme="light">
   <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EABaseHub | Claims QC</title>
@@ -22,6 +25,7 @@
 
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <link rel="stylesheet" href="/css/pages/Qc-claim/adminQc.css" />
+      <link rel="stylesheet" href="/css/base/ui-cards.css" />
   </head>
 
   <body class="role-adminQc">
@@ -34,7 +38,7 @@
   <!-- ══════════════════════════════════════════════════
        SIDEBAR — collapsed by default
   ══════════════════════════════════════════════════ -->
-  <aside class="app-sidebar collapsed" id="appSidebar">
+  <aside class="app-sidebar collapsed ui-role-side" id="appSidebar">
 
     <!-- Logo -->
     <div class="sidebar-logo">
@@ -170,7 +174,7 @@
     <main class="container">
 
       <!-- SUMMARY CARDS -->
-      <section class="qc-summary" aria-label="สรุปรายการเคลม">
+      <section class="qc-summary ui-strip" aria-label="สรุปรายการเคลม">
         <div class="summary-card total" data-filter="all" role="button" tabindex="0">
           <div class="summary-icon">
             <span class="material-symbols-outlined">inventory_2</span>
@@ -478,5 +482,7 @@
   });
 </script>
 
+      <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
   </body>
 </html>

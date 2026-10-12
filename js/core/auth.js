@@ -180,8 +180,11 @@ async function protectPage(allowedRoles = []) {
     }
 
     // 4️⃣ เช็ค role ว่าเข้าหน้านี้ได้ไหม
-    if (allowedRoles.length > 0) {
-      const hasRole = allowedRoles.includes(profile.role);
+    // ใช้รายการสิทธิ์กลาง (roleConfig.js · PAGE_ACCESS) เป็นหลัก — รายการ role ที่หน้าส่งมาใช้เมื่อไม่มีรายการกลาง
+    if (typeof canAccessPage === "function" || allowedRoles.length > 0) {
+      const hasRole = typeof canAccessPage === "function"
+        ? canAccessPage(profile.role, window.location.pathname)
+        : allowedRoles.includes(profile.role);
 
       if (!hasRole) {
         console.warn("⚠️ Role not allowed:", profile.role, "— allowed:", allowedRoles);
@@ -264,3 +267,100 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 console.log("✅ auth.js loaded");
+
+// ======================================================
+// 🛡️ ACCESS GUARD — ตรวจสิทธิ์ทุกหน้าอัตโนมัติ (จากรายการเดียวใน roleConfig.js)
+//   ชั้นที่ 1: ซ่อนเมนู/การ์ด/ลิงก์ที่ role ไม่มีสิทธิ์ (รวมเมนูที่โหลดทีหลัง)
+//   ชั้นที่ 2: เปิดหน้าตรงจาก URL โดยไม่มีสิทธิ์ → พากลับหน้าแรกของ role
+//   ระหว่างตรวจจะซ่อนเนื้อหาหน้าไว้ ไม่ให้เห็นแวบ
+// ======================================================
+(function eaAccessGuard() {
+  if (window.__eaGuard) return;
+  window.__eaGuard = true;
+  if (typeof canAccessPage !== "function" || typeof isPublicPage !== "function") {
+    console.warn("⚠️ ไม่พบ roleConfig.js v2 — ข้ามการตรวจสิทธิ์กลาง");
+    return;
+  }
+  const path = window.location.pathname;
+  if (isPublicPage(path)) return;
+
+  const st = document.createElement("style");
+  st.id = "eaGuardStyle";
+  st.textContent = "html.ea-guarding body{visibility:hidden!important}";
+  (document.head || document.documentElement).appendChild(st);
+  document.documentElement.classList.add("ea-guarding");
+  const reveal = () => document.documentElement.classList.remove("ea-guarding");
+  const go = (url) => { if (normalizePath(url) !== normalizePath(path)) window.location.replace(url); else reveal(); };
+
+  const MENU_SCOPE = "nav, aside, header, .app-nav, .sidebar, .sidebar-nav, .app-sidebar, .ea-sidebar, .menu, .menu-grid, .forms-grid, .mk-cards, .mk-groups, .mk-recent, .ad-tiles, .at-tabs, .quick-actions, .action-cards, .home-actions, .page-tabs, .tab-bar, .flow-steps, [data-menu]";
+  const ITEM = "li, .form-card, .mk-card, .mk-tile, .ad-tile, .menu-card, .menu-item, .nav-item, .sidebar-nav-item, .quick-btn, .action-card, .tab-item, .tab-btn, .flow-step";
+
+  function targetPath(el) {
+    let href = el.getAttribute("href");
+    if (!href) {
+      const m = (el.getAttribute("onclick") || "").match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+      if (!m) return null;
+      href = m[1];
+    }
+    if (/^(#|javascript:|mailto:|tel:)/i.test(href)) return null;
+    try {
+      const u = new URL(href, window.location.href);
+      if (u.origin !== window.location.origin) return null;
+      return u.pathname;
+    } catch (e) { return null; }
+  }
+  function filterMenus(role, root) {
+    const scope = root && root.querySelectorAll ? root : document;
+    const els = [];
+    if (scope.matches && scope.matches("a[href], [onclick*='location.href']")) els.push(scope);
+    scope.querySelectorAll("a[href], [onclick*='location.href']").forEach((el) => els.push(el));
+    els.forEach((el) => {
+      const tp = targetPath(el);
+      if (!tp || canAccessPage(role, tp)) return;
+      // โลโก้ที่ลิงก์ไปหน้าที่ role ไม่มีสิทธิ์ → พาไปหน้าแรกของ role ตัวเองแทน (ไม่ซ่อนโลโก้)
+      if (el.matches(".sidebar-logo, .logo a, a.logo, a.brand")) { el.setAttribute("href", getDefaultPage(role)); el.title = "หน้าแรก"; return; }
+      const inMenu = el.closest(MENU_SCOPE) || el.matches(ITEM) || el.closest(ITEM);
+      if (!inMenu || el.closest("p")) return; // ลิงก์ในข้อความปกติไม่ซ่อน
+      const item = el.matches(ITEM) ? el : (el.closest(ITEM) || el);
+      item.setAttribute("data-ea-hidden", "");
+      item.hidden = true;
+      item.style.setProperty("display", "none", "important");
+    });
+  }
+
+  async function run() {
+    try {
+      for (let i = 0; i < 50 && typeof supabaseClient === "undefined"; i++) await new Promise((r) => setTimeout(r, 100));
+      if (typeof supabaseClient === "undefined") throw new Error("ระบบยังไม่พร้อม");
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { go("/pages/auth/login.html"); return; }
+      const { data: profile, error } = await supabaseClient.from("profiles").select("role, status").eq("id", session.user.id).single();
+      if (error && error.code === "PGRST116") { go("/pages/auth/login.html"); return; } // ไม่มีโปรไฟล์
+      if (error) throw error;
+      if (!profile) { go("/pages/auth/login.html"); return; }
+      if (String(profile.status || "").toLowerCase() !== "active") {
+        try { await supabaseClient.auth.signOut(); } catch (e) { /* ignore */ }
+        go("/pages/auth/login.html"); return;
+      }
+      const role = normalizeRole(profile.role);
+      window.EA_ROLE = role;
+      if (!canAccessPage(role, path)) {
+        console.warn("🚫 ไม่มีสิทธิ์เข้าหน้านี้:", role, path);
+        go(getDefaultPage(role));
+        return;
+      }
+      filterMenus(role, document);
+      new MutationObserver((muts) => muts.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) filterMenus(role, n); })))
+        .observe(document.documentElement, { childList: true, subtree: true });
+      reveal();
+    } catch (e) {
+      console.error("Access guard:", e);
+      reveal();
+      document.body.innerHTML = `<div style="font-family:Kanit,sans-serif;max-width:420px;margin:15vh auto;padding:24px;text-align:center;border:1px solid #e2e8f0;border-radius:16px;background:#fff;color:#334155">
+        <h2 style="margin:0 0 8px;font-size:20px">ตรวจสอบสิทธิ์ไม่สำเร็จ</h2>
+        <p style="margin:0 0 16px;font-size:14px;color:#64748b">ตรวจการเชื่อมต่ออินเทอร์เน็ต แล้วลองใหม่อีกครั้ง</p>
+        <button onclick="location.reload()" style="font:inherit;padding:10px 20px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer">ลองใหม่</button></div>`;
+    }
+  }
+  run();
+})();

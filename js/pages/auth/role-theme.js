@@ -15,7 +15,7 @@
 const RoleTheme = (() => {
 
   // role ทั้งหมดที่รองรับ — ต้องตรงกับ class ใน role-colors.css
-  const VALID_ROLES = ['admin', 'manager', 'executive', 'adminQc', 'sale', 'user'];
+  const VALID_ROLES = ['admin', 'manager', 'executive', 'adminQc', 'sale', 'accounting', 'marketing', 'user'];
 
   // Map role ที่อาจสะกดต่างกันใน DB → class ที่ถูกต้อง
   // (เผื่อ DB เก็บเป็น 'admin_qc' หรือ 'ADMIN' ฯลฯ)

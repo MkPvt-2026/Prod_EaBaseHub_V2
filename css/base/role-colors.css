@@ -1,86 +1,123 @@
 /* =========================================================
-   ROLE COLORS — Theme tokens สำหรับสลับสีตามบทบาทผู้ใช้
-   วิธีใช้: เพิ่ม class เช่น <body class="role-manager">
-   แล้วโค้ดอื่น ๆ ใช้ var(--role-color) แทนสี hardcode
+   ROLE COLORS — Theme tokens สลับสีตามบทบาทผู้ใช้ (v2)
+   ใช้: <body class="role-manager"> แล้วอ้าง var(--role-*)
 
-   Palette ปัจจุบัน:
-   - Admin     — เทา
-   - Manager   — ฟ้า
-   - Executive — ม่วง
-   - AdminQc   — ส้ม
-   - Sale      — เขียว
-   - User      — แดงอ่อน
+   หลักการ (ปรับใหม่):
+   - สีหลัก (accent) เป็นโทน 600–700 → ตัวหนังสือขาวบนปุ่มอ่านได้ (contrast ≥ 4.5:1)
+   - พื้น sidebar เป็นโทนเข้มของสีประจำ role (ไม่ใช้สีสดเต็มแผ่น ลดความล้าตา)
+   - พื้นอ่อน (soft) ใช้แค่กล่องไอคอน/ป้าย ไม่ทาทั้งการ์ด
+   - ไม่ใช้สีแดงเป็นสีประจำ role (แดง = แจ้งเตือน/ผิดพลาดเท่านั้น)
 
-   Tokens ที่มีให้ใช้:
-   - var(--role-color)   สีหลัก (sidebar, primary button)
-   - var(--role-hover)   สี hover (เข้มขึ้นนิด)
-   - var(--role-soft)    พื้นหลังอ่อน (icon-box, badge bg)
-   - var(--role-border)  เส้นขอบอ่อน
-   - var(--role-text)    สีตัวอักษรเข้ม (badge text)
-   - rgba(var(--role-rgb), 0.x)  สำหรับ shadow/overlay
+   Tokens:
+   --role-color   สีหลัก (ปุ่ม, ไอคอน, เส้นเน้น)      --role-hover  เข้มขึ้นตอน hover
+   --role-soft    พื้นอ่อน (icon box, badge)          --role-border เส้นขอบอ่อน
+   --role-text    ตัวหนังสือเข้มบนพื้นอ่อน           --role-rgb    สำหรับ rgba()
+   --role-side    พื้น sidebar (gradient เข้ม)        --role-light  สีเน้นบนพื้นเข้ม (เมนูที่เลือก)
    ========================================================= */
 
 :root {
-  /* ================= ROLE COLORS ================= */
 
-  /* Admin — เทา */
-  --admin:        #6B7280;
-  --admin-hover:  #4B5563;
-  --admin-soft:   #F3F4F6;
-  --admin-border: #D1D5DB;
-  --admin-text:   #374151;
+  /* ผู้ดูแลระบบ — คราม (Indigo) */
+  --admin:        #4f46e5;
+  --admin-hover:  #4338ca;
+  --admin-soft:   #eef2ff;
+  --admin-border: #c7d2fe;
+  --admin-text:   #3730a3;
+  --admin-rgb:    79, 70, 229;
+  --admin-side:   linear-gradient(180deg, #1e1b4b 0%, #2e2a6e 100%);
+  --admin-light:  #a5b4fc;
 
-  /* Manager — ฟ้า */
-  --manager:        #2563EB;
-  --manager-hover:  #1D4ED8;
-  --manager-soft:   #EFF6FF;
-  --manager-border: #BFDBFE;
-  --manager-border1:  #2e4c9e;
-  --ea-side-bg:     #0c87c9;
-  --ea-side-bg-2:   #0ea5e9;
-  --manager-side:    linear-gradient(180deg, var(--ea-side-bg-2) 0%, var(--ea-side-bg) 100%);
+  /* Marketing Manager — น้ำเงิน */
+  --manager:        #2563eb;
+  --manager-hover:  #1d4ed8;
+  --manager-soft:   #eff6ff;
+  --manager-border: #bfdbfe;
+  --manager-text:   #1e40af;
+  --manager-rgb:    37, 99, 235;
+  --manager-side:   linear-gradient(180deg, #0f1f3d 0%, #142a52 100%);
+  --manager-light:  #7dd3fc;
+
+  /* ผู้บริหาร — ม่วง */
+  --executive:        #7c3aed;
+  --executive-hover:  #6d28d9;
+  --executive-soft:   #f5f3ff;
+  --executive-border: #ddd6fe;
+  --executive-text:   #5b21b6;
+  --executive-rgb:    124, 58, 237;
+  --executive-side:   linear-gradient(180deg, #2e1065 0%, #3b1a78 100%);
+  --executive-light:  #c4b5fd;
+
+  /* Admin QC — ส้มอิฐ */
+  --adminQc:        #c2410c;
+  --adminQc-hover:  #9a3412;
+  --adminQc-soft:   #fff7ed;
+  --adminQc-border: #fed7aa;
+  --adminQc-text:   #9a3412;
+  --adminQc-rgb:    194, 65, 12;
+  --adminQc-side:   linear-gradient(180deg, #3b1407 0%, #5c2410 100%);
+  --adminQc-light:  #fdba74;
+
+  /* เซลล์ — เขียว */
+  --sale:        #15803d;
+  --sale-hover:  #166534;
+  --sale-soft:   #f0fdf4;
+  --sale-border: #bbf7d0;
+  --sale-text:   #166534;
+  --sale-rgb:    21, 128, 61;
+  --sale-side:   linear-gradient(180deg, #052e16 0%, #0f3d22 100%);
+  --sale-light:  #86efac;
+
+  /* บัญชี — เขียวน้ำทะเล (Teal) */
+  --accounting:        #0e7490;
+  --accounting-hover:  #155e75;
+  --accounting-soft:   #ecfeff;
+  --accounting-border: #a5f3fc;
+  --accounting-text:   #155e75;
+  --accounting-rgb:    14, 116, 144;
+  --accounting-side:   linear-gradient(180deg, #082f3a 0%, #0e3f4d 100%);
+  --accounting-light:  #67e8f9;
+
+  /* การตลาด — ชมพูเข้ม */
+  --marketing:        #be185d;
+  --marketing-hover:  #9d174d;
+  --marketing-soft:   #fdf2f8;
+  --marketing-border: #fbcfe8;
+  --marketing-text:   #9d174d;
+  --marketing-rgb:    190, 24, 93;
+  --marketing-side:   linear-gradient(180deg, #4a0a26 0%, #6b1238 100%);
+  --marketing-light:  #f9a8d4;
+
+  /* ผู้ใช้ทั่วไป / รออนุมัติ — เทาสเลท */
+  --user:        #475569;
+  --user-hover:  #334155;
+  --user-soft:   #f8fafc;
+  --user-border: #cbd5e1;
+  --user-text:   #334155;
+  --user-rgb:    71, 85, 105;
+  --user-side:   linear-gradient(180deg, #1e293b 0%, #2b3648 100%);
+  --user-light:  #cbd5e1;
+
+  /* ชื่อเดิม (หน้าอื่นยังอ้างอยู่) */
+  --manager-border1: var(--manager-border);
   --manager-header:  linear-gradient(180deg, var(--manager-soft) 0%, var(--manager-soft) 100%);
-  /* Executive — ม่วง */
-  --executive:        #7C3AED;
-  --executive-hover:  #6D28D9;
-  --executive-soft:   #F3E8FF;
-  --executive-border: #DDD6FE;
-  --executive-text:   #4C1D95;
+  --sales:  var(--sale);
+  --ea-side-bg:   #0f1f3d;
+  --ea-side-bg-2: #142a52;
 
-  /* Admin QC — ส้ม */
-  --adminQc:        #F97316;
-  --adminQc-hover:  #EA580C;
-  --adminQc-soft:   #FFF3E8;
-  --adminQc-border: #FDBA74;
-  --adminQc-text:   #9A3412;
-
-  /* Sale — เขียว */
-  --sale:        #25A385;
-  --sale-hover:  #1D948A;
-  --sale-soft:   #E6F7F2;
-  --sale-border: #B7E4D8;
-  --sale-text:   #0F4F43;
-
-  /* User — แดงอ่อน (rose pink) */
-  --user:        #F43F5E;
-  --user-hover:  #E11D48;
-  --user-soft:   #FFE4E6;
-  --user-border: #FECDD3;
-  --user-text:   #9F1239;
-
-  /* ================= DEFAULT FALLBACK =================
-     ถ้าไม่มี role class ให้ใช้สี manager (ฟ้า) เป็นค่าเริ่มต้น */
+  /* ===== ค่าเริ่มต้น (ยังไม่รู้ role) = manager ===== */
   --role-color:  var(--manager);
   --role-hover:  var(--manager-hover);
   --role-soft:   var(--manager-soft);
-  --role-border: var(--manager-border1);
-  --role-header: var(--manager-header);
+  --role-border: var(--manager-border);
   --role-text:   var(--manager-text);
-  --role-rgb:    37, 99, 235;
+  --role-rgb:    var(--manager-rgb);
+  --role-side:   var(--manager-side);
+  --role-light:  var(--manager-light);
+  --role-header: var(--manager-header);
 }
 
 /* =========================================================
-   ROLE CLASS BINDING — map role → --role-* variables
+   ROLE CLASS BINDING — map role → --role-*
    ========================================================= */
 
 body.role-admin {
@@ -89,16 +126,20 @@ body.role-admin {
   --role-soft:   var(--admin-soft);
   --role-border: var(--admin-border);
   --role-text:   var(--admin-text);
-  --role-rgb:    107, 114, 128;
+  --role-rgb:    var(--admin-rgb);
+  --role-side:   var(--admin-side);
+  --role-light:  var(--admin-light);
 }
 
 body.role-manager {
-  --role-color:  var(--manager-side);
+  --role-color:  var(--manager);
   --role-hover:  var(--manager-hover);
   --role-soft:   var(--manager-soft);
   --role-border: var(--manager-border);
   --role-text:   var(--manager-text);
-  --role-rgb:    37, 99, 235;
+  --role-rgb:    var(--manager-rgb);
+  --role-side:   var(--manager-side);
+  --role-light:  var(--manager-light);
 }
 
 body.role-executive {
@@ -107,25 +148,55 @@ body.role-executive {
   --role-soft:   var(--executive-soft);
   --role-border: var(--executive-border);
   --role-text:   var(--executive-text);
-  --role-rgb:    124, 58, 237;
+  --role-rgb:    var(--executive-rgb);
+  --role-side:   var(--executive-side);
+  --role-light:  var(--executive-light);
 }
 
-body.role-adminQc {
+body.role-adminQc,
+body.role-adminqc {
   --role-color:  var(--adminQc);
   --role-hover:  var(--adminQc-hover);
   --role-soft:   var(--adminQc-soft);
   --role-border: var(--adminQc-border);
   --role-text:   var(--adminQc-text);
-  --role-rgb:    249, 115, 22;
+  --role-rgb:    var(--adminQc-rgb);
+  --role-side:   var(--adminQc-side);
+  --role-light:  var(--adminQc-light);
 }
 
-body.role-sale {
+body.role-sale,
+body.role-sales {
   --role-color:  var(--sale);
   --role-hover:  var(--sale-hover);
   --role-soft:   var(--sale-soft);
   --role-border: var(--sale-border);
   --role-text:   var(--sale-text);
-  --role-rgb:    37, 163, 133;
+  --role-rgb:    var(--sale-rgb);
+  --role-side:   var(--sale-side);
+  --role-light:  var(--sale-light);
+}
+
+body.role-accounting {
+  --role-color:  var(--accounting);
+  --role-hover:  var(--accounting-hover);
+  --role-soft:   var(--accounting-soft);
+  --role-border: var(--accounting-border);
+  --role-text:   var(--accounting-text);
+  --role-rgb:    var(--accounting-rgb);
+  --role-side:   var(--accounting-side);
+  --role-light:  var(--accounting-light);
+}
+
+body.role-marketing {
+  --role-color:  var(--marketing);
+  --role-hover:  var(--marketing-hover);
+  --role-soft:   var(--marketing-soft);
+  --role-border: var(--marketing-border);
+  --role-text:   var(--marketing-text);
+  --role-rgb:    var(--marketing-rgb);
+  --role-side:   var(--marketing-side);
+  --role-light:  var(--marketing-light);
 }
 
 body.role-user {
@@ -134,5 +205,7 @@ body.role-user {
   --role-soft:   var(--user-soft);
   --role-border: var(--user-border);
   --role-text:   var(--user-text);
-  --role-rgb:    244, 63, 94;
+  --role-rgb:    var(--user-rgb);
+  --role-side:   var(--user-side);
+  --role-light:  var(--user-light);
 }

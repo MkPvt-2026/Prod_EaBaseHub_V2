@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="th">
   <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#4caf8a" />
@@ -20,6 +23,10 @@
     <link rel="stylesheet" href="/css/base/role-colors.css" />
 
     <link rel="stylesheet" href="/css/index.css" />
+    <!-- ธีมสีตาม role (โหลดหลัง index.css) -->
+    <link rel="stylesheet" href="/css/index-theme.css" />
+    <!-- จัดหน้าแรกให้ใช้ง่าย (โหลดท้ายสุด) -->
+    <link rel="stylesheet" href="/css/index-ux.css" />
 
 
   </head>
@@ -50,36 +57,36 @@
         </div>
 
         <nav class="menu" id="sidebarMenu">
-          <a class="menu-item active" href="/index.html">
+          <a class="menu-item active" href="/index.html" data-short="หน้าแรก">
             <span class="material-symbols-outlined menu-icon">home</span>
             <span class="menu-text">หน้าแรก</span>
           </a>
-          <a class="menu-item" href="/pages/reports/report.html">
+          <a class="menu-item" href="/pages/reports/report.html" data-short="รายงาน">
             <span class="material-symbols-outlined menu-icon"
               >edit_document</span
             >
             <span class="menu-text">เขียนรายงาน</span>
           </a>
-          <a class="menu-item" href="/pages/forms/formClaim.html">
+          <a class="menu-item" href="/pages/forms/formClaim.html" data-short="แจ้งเคลม">
             <span class="material-symbols-outlined menu-icon"
               >assignment_late</span
             >
             <span class="menu-text">แจ้งเคลมสินค้า</span>
           </a>
-          <a class="menu-item" href="/pages/forms/formHub.html">
+          <a class="menu-item" href="/pages/forms/formHub.html" data-short="แบบฟอร์ม">
             <span class="material-symbols-outlined menu-icon">description</span>
-            <span class="menu-text">แบบฟอร์มต่างๆ</span>
+            <span class="menu-text">แบบฟอร์ม / เบิกค่าใช้จ่าย</span>
           </a>
-          <a class="menu-item" href="/pages/forms/shopUser.html">
+          <a class="menu-item" href="/pages/forms/shopUser.html" data-short="ร้านค้า">
             <span class="material-symbols-outlined menu-icon">store</span>
             <span class="menu-text">ร้านค้าของฉัน</span>
           </a>
-          <a class="menu-item" href="/commingSoon.html">
+          <a class="menu-item" href="/commingSoon.html" data-short="ดาวน์โหลด">
             <span class="material-symbols-outlined menu-icon"
               >download</span
             >
-            <!-- <span class="menu-text">CommingSoon</span> -->
-            <span class="menu-text">Download Hub</span>
+            <span class="menu-text">ดาวน์โหลด</span>
+            <span class="menu-soon">เร็ว ๆ นี้</span>
           </a>
         </nav>
 
@@ -88,7 +95,8 @@
           onclick="toggleSidebar()"
           aria-label="ย่อ/ขยายเมนู"
         >
-          <span class="material-symbols-outlined icon-white">menu</span>
+          <span class="material-symbols-outlined icon-white">left_panel_close</span>
+          <span class="menu-text">ย่อเมนู</span>
         </button>
       </aside>
 
@@ -99,91 +107,91 @@
       <main class="content">
         <div class="content-layout">
           <div class="main-content">
-            <!-- HEADER -->
-            <header class="header">
+            <!-- HEADER: ทักทาย + สถานะวันนี้ + ปุ่มหลัก -->
+            <header class="header home-hero">
               <div class="header-left">
-                <h2>สวัสดี : <span id="userName">กำลังโหลด...</span></h2>
-                <p class="subtext">ยินดีต้อนรับเข้าสู่ระบบ</p>
+                <p class="home-date" id="homeDate">—</p>
+                <h2>สวัสดี <span id="userName">กำลังโหลด...</span></h2>
+                <p class="subtext home-status" id="homeStatus">
+                  <span class="material-symbols-outlined">hourglass_top</span>
+                  กำลังตรวจสอบรายงานวันนี้...
+                </p>
               </div>
 
               <div class="header-right">
-                <button class="logout-btn" onclick="logout()">
-                  <span
-                    class="material-symbols-outlined"
-                    style="font-size: 16px; vertical-align: middle"
-                    >logout</span
-                  >ออกจากระบบ
+                <a class="home-cta" id="homeCta" href="/pages/reports/report.html">
+                  <span class="material-symbols-outlined">edit_document</span>
+                  เขียนรายงานวันนี้
+                </a>
+                <button class="logout-btn" onclick="logout()" title="ออกจากระบบ">
+                  <span class="material-symbols-outlined">logout</span>
+                  <span class="logout-text">ออกจากระบบ</span>
                 </button>
               </div>
             </header>
 
-            <!-- MINI CARDS -->
-            <div class="shop-cards">
-              <a
-                href="/pages/forms/shopUser.html"
-                class="mini-card shop"
-                style="text-decoration: none"
-              >
+            <!-- สรุปของฉัน -->
+            <h3 class="home-section-title">สรุปของฉัน</h3>
+            <div class="shop-cards stat-strip">
+              <div class="mini-card week" title="นับวันที่ส่งรายงาน จันทร์–เสาร์">
+                <div class="icon-box">
+                  <span class="material-symbols-outlined">event_available</span>
+                </div>
+                <div class="card-info">
+                  <h3><span id="weekDays">0</span><small>/6 วัน</small></h3>
+                  <p>ส่งรายงานสัปดาห์นี้</p>
+                  <div class="week-dots" id="weekDots"></div>
+                </div>
+              </div>
+
+              <a href="/pages/forms/shopUser.html" class="mini-card shop" style="text-decoration: none">
                 <div class="icon-box">
                   <span class="material-symbols-outlined">store</span>
                 </div>
                 <div class="card-info">
                   <h3 id="storeCount">0</h3>
-                  <p>ร้านที่รับผิดชอบ</p>
+                  <p>ร้านที่ดูแล <span class="card-link">ดูรายชื่อ ›</span></p>
                 </div>
               </a>
 
-              <div class="mini-card trip">
+              <div class="mini-card claim" onclick="goToNotifications()" style="cursor: pointer">
                 <div class="icon-box">
-                  <span class="material-symbols-outlined">map</span>
-                </div>
-                <div class="card-info">
-                  <h3 id="areaCount">0</h3>
-                  <p>พื้นที่</p>
-                </div>
-              </div>
-
-              <div
-                class="mini-card claim"
-                onclick="goToNotifications()"
-                style="cursor: pointer"
-              >
-                <div class="icon-box">
-                  <span class="material-symbols-outlined">crisis_alert</span>
+                  <span class="material-symbols-outlined">notifications</span>
                 </div>
                 <div class="card-info">
                   <h3 id="notificationCount">0</h3>
-                  <p>แจ้งเตือน</p>
+                  <p>แจ้งเตือนที่ยังไม่อ่าน <span class="card-link">เปิดดู ›</span></p>
                 </div>
                 <span id="notifyBadge" class="notify-badge">0</span>
               </div>
             </div>
 
-            <!-- ACTION CARDS -->
+            <!-- งานที่ทำบ่อย -->
+            <h3 class="home-section-title">ต้องการทำอะไร?</h3>
             <div class="actions">
-              <a
-                href="/pages/reports/report.html"
-                class="action-card theme-green"
-              >
-                <span class="material-symbols-outlined">edit_document</span>
-                <h3>เขียนรายงาน</h3>
-                <p>บันทึกการเยี่ยมร้านลูกค้า</p>
+              <a href="/pages/reports/report.html" class="action-card theme-green is-primary">
+                <span class="material-symbols-outlined ac-icon">edit_document</span>
+                <h3>เขียนรายงานเข้าร้าน</h3>
+                <p>บันทึกการเยี่ยมร้านและสินค้าที่ลูกค้าสนใจ</p>
+                <span class="material-symbols-outlined ac-go" aria-hidden="true">chevron_right</span>
               </a>
-              <a
-                href="/pages/forms/formHub.html"
-                class="action-card theme-yellow"
-              >
-                <span class="material-symbols-outlined">description</span>
-                <h3>Forms Hub</h3>
-                <p>แบบฟอร์มเบิกค่าใช้จ่าย</p>
-              </a>
-              <a
-                href="/pages/forms/formClaim.html"
-                class="action-card theme-pink"
-              >
-                <span class="material-symbols-outlined">assignment_late</span>
+              <a href="/pages/forms/formClaim.html" class="action-card theme-pink">
+                <span class="material-symbols-outlined ac-icon">assignment_late</span>
                 <h3>แจ้งเคลมสินค้า</h3>
-                <p>แจ้งเคลมสินค้ามีปัญหา</p>
+                <p>สินค้ามีปัญหา ชำรุด หรือต้องการเปลี่ยน</p>
+                <span class="material-symbols-outlined ac-go" aria-hidden="true">chevron_right</span>
+              </a>
+              <a href="/pages/forms/formHub.html" class="action-card theme-yellow">
+                <span class="material-symbols-outlined ac-icon">description</span>
+                <h3>แบบฟอร์ม / เบิกค่าใช้จ่าย</h3>
+                <p>แผนเดินทาง ใบเคลียร์ค่าใช้จ่าย ขอราคาพิเศษ</p>
+                <span class="material-symbols-outlined ac-go" aria-hidden="true">chevron_right</span>
+              </a>
+              <a href="/pages/forms/shopUser.html" class="action-card theme-green">
+                <span class="material-symbols-outlined ac-icon">storefront</span>
+                <h3>ร้านค้าของฉัน</h3>
+                <p>ดูข้อมูลและประวัติร้านที่ดูแล</p>
+                <span class="material-symbols-outlined ac-go" aria-hidden="true">chevron_right</span>
               </a>
             </div>
 
@@ -205,7 +213,7 @@
                     class="announce-btn-add"
                     id="announceBtnAdd"
                     style="display: none"
-                    onclick="location.href = '/pages/admin/Adminannouncements.html'"
+                    title="สร้างประกาศ (ไปหน้าจัดการตาม role — Announcements.js)"
                   >
                     <span class="material-symbols-outlined">add</span>
                     สร้างประกาศ
@@ -242,17 +250,20 @@
                   <h4 id="displayName">Loading...</h4>
                   <p id="userEmail">email@example.com</p>
                   <span id="userRole">Sales Executive</span>
+                  <p class="user-area"><span class="material-symbols-outlined">location_on</span> พื้นที่: <b id="areaCount">-</b></p>
                 </div>
               </div>
 
-              <!-- ★ ปุ่มเข้า Dashboard ตาม Role -->
+              <!-- ★ ปุ่มเข้าระบบของแต่ละฝ่าย (แสดงตามสิทธิ์) -->
+              <div class="hub-links" id="hubLinks">
+                <h4 class="hub-title">ไปยังระบบอื่น</h4>
               <button
                 id="managerDashboardBtn"
                 class="btn-ea btn-manager"
                 style="display: none"
                 onclick="goToManagerDashboard()"
               >
-                <span class="btn-text">Marketing Manager</span>
+                <span class="btn-text">Marketing Home<small>เมนูงานการตลาด</small></span>
                 <span class="material-symbols-outlined icon">open_in_new</span>
                 <span class="spinner"></span>
               </button>
@@ -263,7 +274,7 @@
                 style="display: none"
                 onclick="goToExecutiveDashboard()"
               >
-                <span class="btn-text">Executive</span>
+                <span class="btn-text">ผู้บริหาร<small>Executive Dashboard</small></span>
                 <span class="material-symbols-outlined icon">analytics</span>
                 <span class="spinner"></span>
               </button>
@@ -274,7 +285,7 @@
                 style="display: none"
                 onclick="goToAdminQcDashboard()"
               >
-                <span class="btn-text">Admin QC</span>
+                <span class="btn-text">ตรวจสอบเคลม (QC)<small>QC Dashboard</small></span>
                 <span class="material-symbols-outlined icon">verified</span>
                 <span class="spinner"></span>
               </button>
@@ -285,12 +296,13 @@
                 style="display: none"
                 onclick="goToAdmin()"
               >
-                <span class="btn-text">Admin Hub</span>
+                <span class="btn-text">ผู้ดูแลระบบ<small>Admin Console</small></span>
                 <span class="material-symbols-outlined icon"
                   >admin_panel_settings</span
                 >
                 <span class="spinner"></span>
               </button>
+              </div>
 
               <!-- CALENDAR CARD -->
               <div class="calendar-card">
@@ -314,6 +326,10 @@
                   </div>
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="calendar-legend">
+                  <span><i class="lg-report"></i> วันที่ส่งรายงาน</span>
+                  <span><i class="lg-today"></i> วันนี้</span>
+                </div>
               </div>
 
 
@@ -331,19 +347,7 @@
               </div> -->
 
 
-              <!-- OPEN SHOP CARD -->
-              <div class="open-shop-card" onclick="openShopModal()">
-                <div class="open-shop-icon">
-                  <span
-                    class="material-symbols-outlined"
-                    style="font-size: 40px"
-                    >add_business</span
-                  >
-                </div>
-                <h4>เพิ่ม / เปิดร้านค้า</h4>
-                <p>ลงทะเบียนร้านค้าใหม่</p>
-                <span class="open-shop-badge">Coming Soon</span>
-              </div>
+              <!-- (การ์ด "เพิ่ม / เปิดร้านค้า" ยังไม่เปิดใช้ → ซ่อนไว้ก่อน ลดความสับสน) -->
             </aside>
           </div>
         </div>
@@ -409,10 +413,10 @@
         });
       }
 
-      // SIDEBAR STATE - ย่อเสมอทุกครั้งที่โหลดหน้า
-      window.addEventListener("load", () => {
-        document.getElementById("sidebar")?.classList.add("collapsed");
-      });
+      // SIDEBAR — ไม่บังคับย่ออีกต่อไป (เดิมย่อเหลือไอคอนทุกครั้ง ทำให้ต้องเดาเมนู)
+      //   ≥1200px  : เมนูเต็มพร้อมชื่อ (กด "ย่อเมนู" ได้)
+      //   768–1199 : แท็บเล็ต → แถบไอคอน + ชื่อสั้น (จัดด้วย css/index-ux.css)
+      //   ≤767     : มือถือ → แถบบน + ปุ่มเมนู
 
       // CLOSE MENU ON OUTSIDE CLICK (Mobile)
       document.addEventListener("click", (e) => {
@@ -439,7 +443,8 @@
       }
 
       function goToManagerDashboard() {
-        window.location.href = "/pages/dashboard/managerDashboard.html";
+        // ปุ่ม "Marketing Manager" → หน้าแรกของ Marketing Manager
+        window.location.href = "/pages/marketing/marketingHome.html";
       }
 
       function goToExecutiveDashboard() {

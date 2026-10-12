@@ -1,0 +1,446 @@
+/* =====================================================
+   ui-cards.css — รูปแบบการ์ดกลางของทั้งระบบ (ชุดเดียวกับหน้าแรก)
+   โหลดเป็น CSS ตัวสุดท้ายของหน้า · ต้องมี role-colors.css + RoleTheme.init()
+
+   ใช้แบบ "ติด class" ใน HTML:
+   1) .ui-strip  ← ใส่ที่กล่องที่ครอบการ์ดตัวเลขสรุป (KPI)
+        → กลายเป็นแผงเดียว แบ่งช่องด้วยเส้นคั่น ไม่มีเส้นสีขอบการ์ด
+        → ไอคอน = วงกลมพื้นอ่อนสี role · ตัวเลขใหญ่สีเข้ม
+        → การ์ดที่เลือกอยู่ (.active / .is-active) = พื้นอ่อน + แถบล่างสี role
+        → สีสถานะใช้กับ "ตัวเลข" เท่านั้น: รอ=ส้ม, ไม่ผ่าน/ปฏิเสธ=แดง, อนุมัติ=เขียว
+   2) .ui-tiles  ← ใส่ที่กล่องที่ครอบการ์ดเมนู
+        → ปุ่มแนวนอน: ไอคอนสี่เหลี่ยม | ชื่อ + คำอธิบาย | ลูกศร ›
+   3) body.ui-dark ← หน้าที่พื้นเข้ม (admin) ใช้สีชุดมืดของแผง/การ์ด
+   4) สีเน้น (ปุ่มหลัก, แท็บที่เลือก, หน้าปัจจุบัน) = สีประจำ role
+   ===================================================== */
+
+/* โหลดชุดสี role ซ้ำ "หลัง" CSS ของหน้า → หน้าที่ตั้ง --sale / --manager ฯลฯ เป็นสีอื่นไว้ จะถูกคืนเป็นสีกลางเดียวกันทุกหน้า */
+@import url("/css/base/role-colors.css");
+
+
+/* ประกาศที่ body (ไม่ใช่ :root) เพื่อให้ var(--role-*) อ่านค่าจาก body.role-xxx */
+body {
+  --ui-panel: #fff;
+  --ui-line: #e5e7eb;
+  --ui-divider: #eef0f4;
+  --ui-num: #0f172a;
+  --ui-label: #64748b;
+  --ui-hover: #f8fafc;
+  --ui-icon-bg: var(--role-soft, #eff6ff);
+  --ui-icon: var(--role-color, #2563eb);
+  --ui-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --ui-ok: #15803d;
+  --ui-warn: #c2410c;
+  --ui-bad: #dc2626;
+}
+body.ui-dark {
+  --ui-panel: rgba(255, 255, 255, 0.035);
+  --ui-line: rgba(255, 255, 255, 0.09);
+  --ui-divider: rgba(255, 255, 255, 0.08);
+  --ui-num: #f8fafc;
+  --ui-label: #94a3b8;
+  --ui-hover: rgba(255, 255, 255, 0.05);
+  --ui-icon-bg: rgba(var(--role-rgb, 37, 99, 235), 0.18);
+  --ui-icon: var(--role-light, #93c5fd);
+  --ui-shadow: none;
+  --ui-ok: #4ade80;
+  --ui-warn: #fb923c;
+  --ui-bad: #f87171;
+}
+
+/* =====================================================
+   1) แผงสรุปตัวเลข
+   ===================================================== */
+.ui-strip {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  grid-auto-flow: row !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  background: var(--ui-panel) !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--ui-shadow) !important;
+  overflow: hidden !important;
+}
+/* เส้นคั่นซ้าย/บน — ช่องแรกของแต่ละแถวถูกตัดด้วย overflow จึงไม่มีเส้นเกิน */
+.ui-strip > * {
+  margin: 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: -1px 0 0 0 var(--ui-divider), 0 -1px 0 0 var(--ui-divider) !important;
+  transform: none !important;
+  animation: none !important;
+  opacity: 1 !important; /* บางหน้าซ่อนการ์ดไว้รอ animation เข้า */
+  outline-offset: -3px;
+  position: relative;
+}
+.ui-strip > *::before { display: none !important; }
+.ui-strip > :is(a, button, [role="button"], [onclick], [data-filter], [data-status], .md-kpi, .qc-kpi-card--clickable) {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.ui-strip > :is(a, button, [role="button"], [onclick], [data-filter], [data-status], .qc-kpi-card--clickable):hover {
+  background: var(--ui-hover) !important;
+}
+.ui-strip > .is-static { cursor: default; }
+.ui-strip > .is-static:hover { background: transparent !important; }
+
+/* ช่องที่เลือกอยู่ (ใช้เป็นตัวกรอง) */
+.ui-strip > :is(.active, .is-active, [aria-pressed="true"]) {
+  background: var(--role-soft, #eff6ff) !important;
+  box-shadow: -1px 0 0 0 var(--ui-divider), 0 -1px 0 0 var(--ui-divider), inset 0 -3px 0 0 var(--role-color, #2563eb) !important;
+}
+body.ui-dark .ui-strip > :is(.active, .is-active) { background: rgba(var(--role-rgb), 0.14) !important; }
+
+/* ไอคอน → วงกลมพื้นอ่อนสี role */
+.ui-strip :is(.summary-icon, .kpi-icon, .qc-kpi-icon, .mcard-icon, .stat-card-icon, .md-kpi-icon, .rt-kpi-icon, [class^="sum-icon"], .icon-box, .metric-icon) {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 50% !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  background: var(--ui-icon-bg) !important;
+  background-image: none !important;
+  color: var(--ui-icon) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  animation: none !important;
+  opacity: 1 !important;
+}
+.ui-strip :is(.summary-icon, .kpi-icon, .mcard-icon, [class^="sum-icon"], .icon-box, .metric-icon) :is(.material-symbols-outlined, .material-icons-round, .material-icons, i, span) {
+  color: var(--ui-icon) !important;
+  font-size: 22px !important;
+  background: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* ตัวเลข */
+.ui-strip :is(.summary-num, .kpi-number, .qc-kpi-val, .mcard-val, .stat-value, .md-kpi-value, .sum-value, .metric-value, .ui-num) {
+  color: var(--ui-num) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px;
+  -webkit-text-fill-color: currentColor !important;
+  background: none !important;
+}
+/* ป้ายกำกับ */
+.ui-strip :is(.summary-head, .summary-label, .kpi-title, .kpi-sub, .qc-kpi-label, .qc-kpi-sub, .mcard-label, .stat-label, .stat-sub, .md-kpi-label, .md-kpi-sub, .sum-label, .metric-label, .metric-sub, .ui-label) {
+  color: var(--ui-label) !important;
+}
+
+/* สีสถานะ (เฉพาะตัวเลข) */
+.ui-strip > :is(.pending, .waiting, .in-progress, .un-read, .c2) :is(.summary-num, .sum-value, .metric-value, .stat-value, .ui-num),
+.ui-strip .ui-num.is-warn { color: var(--ui-warn) !important; }
+.ui-strip > :is(.rejected, .red, .stat-red, .c4, .qc-kpi-card--alert) :is(.summary-num, .metric-value, .mcard-val, .stat-value, .qc-kpi-val, .ui-num),
+.ui-strip .ui-num.is-bad,
+.ui-strip .qc-kpi-val.fail { color: var(--ui-bad) !important; }
+.ui-strip > :is(.approved, .c3, .stat-green) :is(.summary-num, .metric-value, .stat-value, .ui-num),
+.ui-strip .ui-num.is-ok,
+.ui-strip .qc-kpi-val.pass { color: var(--ui-ok) !important; }
+
+/* ป้ายแจ้งเตือนเล็กที่มุม (เช่น badge) ไม่ถูกตัด */
+.ui-strip .notif-badge,
+.ui-strip .notify-badge { position: relative; }
+
+/* =====================================================
+   2) การ์ดเมนู → ปุ่มแนวนอน
+   ===================================================== */
+.ui-tiles {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 12px !important;
+}
+.ui-tiles > * {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) 24px !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas: "icon title go" "icon desc go" !important;
+  column-gap: 14px !important;
+  row-gap: 2px !important;
+  align-content: center !important;
+  align-items: center !important;
+  justify-items: start !important;
+  text-align: left !important;
+  min-height: 84px !important;
+  height: auto !important;
+  padding: 16px 16px 16px 18px !important;
+  margin: 0 !important;
+  background: var(--ui-panel) !important;
+  background-image: none !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--ui-shadow) !important;
+  transform: none !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.ui-tiles > *::before { display: none !important; }
+.ui-tiles > *::after {
+  content: "chevron_right";
+  grid-area: go;
+  justify-self: end;
+  font-family: "Material Symbols Outlined";
+  font-size: 24px;
+  line-height: 1;
+  color: #94a3b8;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  transition: transform 0.15s, color 0.15s;
+}
+.ui-tiles > *:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+}
+body.ui-dark .ui-tiles > *:hover { border-color: rgba(255, 255, 255, 0.2) !important; }
+.ui-tiles > *:hover::after { transform: translateX(3px); color: var(--role-color, #475569); }
+.ui-tiles > *:focus-visible { outline: 3px solid var(--role-border, #bfdbfe); outline-offset: 2px; }
+
+.ui-tiles :is(.form-icon, .menu-card-icon, .mk-tile-icon, .ui-tile-icon) {
+  grid-area: icon !important;
+  width: 48px !important;
+  height: 48px !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--ui-icon-bg) !important;
+  background-image: none !important;
+  color: var(--ui-icon) !important;
+  box-shadow: none !important;
+  font-size: 26px !important;
+}
+.ui-tiles :is(.form-icon, .menu-card-icon) .material-symbols-outlined {
+  font-size: 26px !important;
+  color: var(--ui-icon) !important;
+}
+.ui-tiles > * > :is(h3, h4, b, .ui-tile-title) {
+  grid-area: title !important;
+  align-self: end !important;
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: var(--ui-num) !important;
+}
+.ui-tiles > * > :is(p, small, .ui-tile-desc) {
+  grid-area: desc !important;
+  align-self: start !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: var(--ui-label) !important;
+}
+/* ป้ายสถานะ (เช่น "เร็ว ๆ นี้") วางแทนลูกศร */
+.ui-tiles > * > :is(.status, .mk-soon) {
+  grid-area: go;
+  justify-self: end;
+  align-self: center;
+  margin: 0 !important;
+  position: static !important;
+  white-space: nowrap;
+}
+.ui-tiles > *:has(> :is(.status, .mk-soon))::after { display: none; }
+.ui-tiles > *:has(> :is(.status, .mk-soon)) { grid-template-columns: 48px minmax(0, 1fr) auto !important; }
+
+/* =====================================================
+   3) สีเน้นตาม role (ปุ่มหลัก / แท็บที่เลือก / หน้าปัจจุบัน)
+   ไม่แตะปุ่มที่มีความหมายเฉพาะ: อนุมัติ(เขียว) ลบ/ปฏิเสธ(แดง)
+   ===================================================== */
+body:not(.ui-dark) :is(.btn.btn-primary, button.btn-primary, .btn-primary-sm, .btn-advance-filter, .btn-create-announce, .btn-form-publish, .am-tab.active, .tab-btn.active, .tab.active, .admin-announce-filter-btn.active, .page-btn.active, .quick-range-btn.active, .btn-preview, .btn-submit):not(.btn-success):not(.btn-danger) {
+  background: var(--role-color) !important;
+  background-image: none !important;
+  border-color: var(--role-color) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(var(--role-rgb), 0.22) !important;
+}
+body:not(.ui-dark) :is(.btn.btn-primary, button.btn-primary, .btn-primary-sm, .btn-advance-filter, .btn-create-announce, .btn-form-publish, .btn-preview, .btn-submit):not(.btn-success):not(.btn-danger):hover {
+  background: var(--role-hover) !important;
+  border-color: var(--role-hover) !important;
+}
+body:not(.ui-dark) :is(.btn.btn-primary, .btn-advance-filter, .btn-create-announce, .tab-btn.active, .btn-submit) :is(.material-symbols-outlined, span, i) { color: inherit !important; }
+
+/* =====================================================
+   4) จอเล็ก
+   ===================================================== */
+@media (max-width: 767px) {
+  .ui-strip { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  /* ช่องแคบ: ไอคอนอยู่บน ตัวเลข/ป้ายอยู่ล่าง */
+  .ui-strip > * { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; padding: 14px !important; }
+  .ui-strip > * :is(.summary-label, .kpi-sub, .sum-label) { white-space: normal !important; }
+  /* ป้ายสถานะลงไปอยู่ใต้คำอธิบาย ไม่เบียดชื่อ */
+  .ui-tiles > *:has(> :is(.status, .mk-soon)) { grid-template-columns: 48px minmax(0, 1fr) 24px !important; grid-template-areas: "icon title go" "icon desc go" "icon badge go" !important; }
+  .ui-tiles > *:has(> :is(.status, .mk-soon))::after { display: block; }
+  .ui-tiles > * > :is(.status, .mk-soon) { grid-area: badge !important; justify-self: start !important; margin-top: 6px !important; }
+  .ui-tiles { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .ui-tiles > * { min-height: 76px !important; padding: 14px !important; }
+}
+@media (pointer: coarse) {
+  .ui-tiles > *:active { transform: scale(0.985) !important; }
+  .ui-strip > *:active { background: var(--ui-hover) !important; }
+}
+
+/* แผงสรุปแบบเรียบ (ป้าย <span> + ตัวเลข <strong>) เช่น หน้าบัญชี */
+.ui-strip > * > strong { color: var(--ui-num) !important; }
+.ui-strip > * > span:not(.material-symbols-outlined):not([class*="icon"]):not([class*="badge"]) { color: var(--ui-label) !important; }
+.ui-strip > .active > strong,
+.ui-strip > .is-active > strong { color: var(--role-text, var(--role-color)) !important; }
+/* แผงที่ใส่ขนาดไว้ใน style="" (inline) */
+.ui-strip[style] { margin-bottom: 20px; }
+.ui-strip > [style] { padding: 16px 18px !important; }
+
+/* แดชบอร์ดผู้จัดการ: การ์ดมีคำอธิบายยาว → 2 ช่องต่อแถวบนแท็บเล็ต/โน้ตบุ๊กเล็ก */
+.md-kpis.ui-strip { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+@media (min-width: 1600px) { .md-kpis.ui-strip { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
+@media (max-width: 600px) { .md-kpis.ui-strip { grid-template-columns: 1fr !important; } }
+
+/* =====================================================
+   5) สีทั้งหน้าตาม role (เมนูข้าง / แถบบน / แบนเนอร์หัวหน้า / ปุ่ม)
+   ผู้ใช้ 1 คน เห็นสีเดียวทั้งระบบ — สีประจำหน้าเดิมถูกแทนด้วยสี role
+   ===================================================== */
+
+/* 5.1 ตัวแปรสีหลักที่แต่ละหน้าตั้งไว้เอง → ชี้ไปที่สี role
+   (ไม่แตะสีที่มีความหมาย: success / danger / warning / pending / red / green / orange) */
+body {
+  --accent: var(--role-color);
+  --accent-dark: var(--role-hover);
+  --primary: var(--role-color);
+  --primary-dark: var(--role-hover);
+  --primary-light: var(--role-hover);
+  --brand: var(--role-color);
+  --brand-dark: var(--role-text);
+  --brand-mid: var(--role-color);
+  --brand-light: var(--role-border);
+  --md-brand: var(--role-color);
+  --rt-brand: var(--role-color);
+  --blue: var(--role-color);
+  --blue-dark: var(--role-hover);
+  --blue-light: var(--role-border);
+  --purple: var(--role-color);
+  --indigo: var(--role-hover);
+  --teal-200: var(--role-border);
+  --teal-400: var(--role-color);
+  --teal-500: var(--role-color);
+  --teal-700: var(--role-text);
+  --mint-400: var(--role-color);
+  --mint-500: var(--role-color);
+  --mint-900: var(--role-hover);
+  --green-600: var(--role-color);
+  --green-700: var(--role-color);
+  --ea-side-bg: var(--role-color);
+  --ea-side-bg-2: var(--role-hover);
+  /* เมนูข้างชุด Marketing */
+  --sb-active: var(--role-light);
+  --sb-active-icon: var(--role-light);
+  --sb-active-bg: rgba(255, 255, 255, 0.13);
+}
+body.ui-dark {
+  --accent: var(--role-light);
+  --accent-text: var(--role-light);
+}
+
+/* 5.2 เมนูข้าง = พื้นเข้มโทนสี role (เหมือนหน้าแรก) */
+.ui-role-side,
+body #appSidebar.app-sidebar.ui-role-side {
+  background: var(--role-side) !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+.ui-role-side :is(a, button, .nav-item, .sidebar-nav-item, .ea-nav-item, .menu-item, li):is(.active, .is-active, [aria-current="page"]) {
+  background: rgba(255, 255, 255, 0.14) !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.ui-role-side :is(a, button, .nav-item, .sidebar-nav-item, .ea-nav-item, .menu-item, li):is(.active, .is-active) :is(.material-symbols-outlined, .material-icons-round, .nav-icon-wrap, i, svg) {
+  color: var(--role-light) !important;
+}
+
+/* 5.3 แถบหัวเว็บที่เคยมีสีของหน้า */
+.ui-role-bar {
+  background: var(--role-side) !important;
+  border-bottom-color: transparent !important;
+}
+
+/* 5.4 แบนเนอร์หัวหน้า */
+.ui-role-hero {
+  background: linear-gradient(135deg, var(--role-hover) 0%, var(--role-color) 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 20px rgba(var(--role-rgb), 0.18) !important;
+}
+
+/* 5.5 เมนูแท็บรองใต้หัวเว็บ / ป้ายวันที่-ชื่อผู้ใช้ / ไอคอนหัวหน้า */
+.app-nav :is(a, button).active,
+.app-nav :is(a, button).tab-active,
+.tab-item.tab-active {
+  background: var(--role-color) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: var(--role-color) !important;
+}
+:is(.header-date-pill, .header-user-name, .page-header-badge, .header-role-badge, .date-pill) {
+  background: var(--role-soft) !important;
+  background-image: none !important;
+  color: var(--role-text) !important;
+  border-color: var(--role-border) !important;
+}
+:is(.header-date-pill, .page-header-badge) .material-symbols-outlined { color: var(--role-color) !important; }
+body:not(.ui-dark) :is(.header-icon, .app-header-icon) {
+  background: var(--role-soft) !important;
+  background-image: none !important;
+  color: var(--role-color) !important;
+  border-color: var(--role-border) !important;
+}
+body:not(.ui-dark) :is(.header-icon, .app-header-icon) :is(.material-symbols-outlined, i) { color: var(--role-color) !important; }
+:is(.header-user-avatar, .user-avatar) {
+  background: var(--role-color) !important;
+  background-image: none !important;
+  color: #fff !important;
+}
+.app-breadcrumb :is(a, span).active,
+.app-breadcrumb .current,
+.app-breadcrumb [aria-current] { color: var(--role-color) !important; }
+
+/* 5.6 ปุ่มเพิ่ม/ปุ่มงานหลักที่เคยใช้สีของหน้า */
+body:not(.ui-dark) :is(.btn-add, .btn-add-product, .btn-ea, .rt-btn-green, .btn-goto, .qc-btn-goto-qc):not(.btn-success):not(.btn-danger) {
+  background: var(--role-color) !important;
+  background-image: none !important;
+  border-color: var(--role-color) !important;
+  color: #fff !important;
+}
+
+/* 5.7 หน้าแจ้งเคลม: เดิมทั้งหน้าเป็นธีมเหลือง/ส้ม → ใช้สี role (กล่องคำเตือนยังเป็นสีส้ม --d-*) */
+body .claim-scope {
+  --w-50: #f8fafc;
+  --w-100: var(--role-soft);
+  --w-200: var(--role-border);
+  --w-400: var(--role-color);
+  --w-500: var(--role-color);
+  --w-700: var(--role-text);
+  --w-900: var(--role-text);
+  --bg-base: #f3f5f9;
+  --border: #e5e7eb;
+  --text-primary: #1f2937;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+}
+body:has(.claim-scope) { background: #f3f5f9 !important; }
+.ui-role-hero :is(h1, h2, h3) :is(.material-symbols-outlined, i) { color: rgba(255, 255, 255, 0.92) !important; }
+body.ui-dark :is(.header-date-pill, .header-user-name, .page-header-badge, .header-role-badge, .date-pill) {
+  background: rgba(var(--role-rgb), 0.16) !important;
+  color: var(--role-light) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body.ui-dark :is(.header-date-pill, .page-header-badge) .material-symbols-outlined { color: var(--role-light) !important; }

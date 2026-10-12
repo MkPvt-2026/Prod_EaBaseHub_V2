@@ -1,972 +1,459 @@
 // =====================================================
-// AddProductSpec.js  —  CRUD ครบ 5 ตาราง
-// categories / products / product_variants
-// attributes / attribute_options
+// AddProductSpec.js v2.0 — สินค้าและหมวดหมู่ (Admin · ใช้บนโน้ตบุ๊กเป็นหลัก)
+//
+// ตาราง: categories(id,name) → products(id,name,category_id,sku,description)
+//        → attributes(id,name,product_id,category_id,input_type,order_no[,is_required]) → attribute_options(id,attribute_id,value)
+//        → product_variants(id,product_id,sku,color,brand,length,width,thickness,feature,status)
+// ผู้ใช้ข้อมูลนี้: หน้ารายงานเยี่ยมร้าน (เลือกหมวด → สินค้า → กรอก Attribute) และ reports.product_id อ้างถึงสินค้า
+//
+// v2.0 แก้จากเดิม
+//  - กรองหมวดในแท็บหนึ่งไปทับรายการที่ใช้ร่วม → แท็บอื่นแสดงชื่อเป็น "—" และลบหมวดแล้วลบสินค้าไม่ครบ
+//    → โหลดข้อมูลทั้งหมดครั้งเดียว (แบ่งหน้า) แล้วกรองบนหน้าจอ
+//  - ลบหมวด/สินค้าแบบลบต่อกันโดยไม่ตรวจ error ทีละขั้น และลบสินค้าที่ถูกใช้ในรายงานเยี่ยมร้านได้ (ประวัติเสีย)
+//    → หมวดต้องว่างก่อนลบ · สินค้าที่มีในรายงานลบไม่ได้ · ลบต่อกันตรวจทุกขั้น
+//  - ชื่อที่มี ' ทำให้ปุ่มลบพัง (onclick) · ไม่มีตรวจชื่อ/SKU/ตัวเลือกซ้ำ · รายการถูกตัดที่ 200/300 แถวโดยไม่บอก
+//  - ตั้ง "บังคับกรอก" (is_required) ที่หน้ารายงานใช้อยู่ไม่ได้ · Attribute แบบเลือกที่ไม่มีตัวเลือกไม่มีคำเตือน
+//  - SKU อัตโนมัติจากอักษรไทย 3 ตัวแรก + เวลา → อ่านไม่ออกและซ้ำได้
 // =====================================================
+"use strict";
 
-// ── Cache ──
-let _cats  = [];   // { id, name }
-let _prods = [];   // { id, name, category_id, sku, description }
-let _attrs = [];   // { id, name, product_id, category_id, input_type, order_no }
-let _vars  = [];   // product_variants
-let _opts  = [];   // attribute_options
+let C = [], P = [], A = [], O = [], V = [];   // categories, products, attributes, options, variants
+let _cat = "";            // หมวดที่เลือก ("" = ทั้งหมด, "_none" = ไม่มีหมวด)
+let _drawerId = null;     // สินค้าที่เปิดรายละเอียด
+let _form = null;         // { kind, id, extra }
+let _chips = [];          // ตัวเลือกใน Attribute ที่กำลังแก้ { id, value, del }
+let _hasRequired = false; // ตาราง attributes มีคอลัมน์ is_required ไหม
+let _busy = false;
 
-// ===============================
-// AUTO SKU
-// ===============================
-function generateSKU(categoryName) {
-  if (!categoryName) return 'SKU-' + Date.now();
-  const code = categoryName.substring(0, 3).toUpperCase();
-  const time = Date.now().toString().slice(-5);
-  return `${code}-${time}`;
+const TYPE_LABEL = { select: "เลือกจากรายการ", text: "พิมพ์ข้อความ", number: "ตัวเลข" };
+const VAR_STATUS = { active: "ขายอยู่", inactive: "พักขาย", discontinued: "เลิกผลิต" };
+
+// =====================================================
+// ตัวช่วย
+// =====================================================
+function $(id) { return document.getElementById(id); }
+function esc(t) { return String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function norm(s) { return String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase(); }
+function toast(msg, type = "ok") { const t = $("atToast"); t.textContent = msg; t.className = `at-toast is-${type} is-show`; clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("is-show"), 2800); }
+const catName = (id) => C.find((c) => c.id === id)?.name || "ไม่มีหมวด";
+const prodOf = (id) => P.find((p) => p.id === id) || null;
+const attrsOf = (pid) => A.filter((a) => a.product_id === pid).sort((a, b) => (a.order_no ?? 999) - (b.order_no ?? 999) || String(a.name).localeCompare(String(b.name), "th"));
+const optsOf = (aid) => O.filter((o) => o.attribute_id === aid).sort((a, b) => String(a.value).localeCompare(String(b.value), "th", { numeric: true }));
+const varsOf = (pid) => V.filter((v) => v.product_id === pid);
+function attrProblem(a) { return a.input_type === "select" && !optsOf(a.id).length; }
+
+async function fetchAll(table, cols, order) {
+  const out = [];
+  for (let from = 0; from < 100000; from += 1000) {
+    let q = supabaseClient.from(table).select(cols).range(from, from + 999);
+    if (order) q = q.order(order);
+    const { data, error } = await q;
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
+// ตรวจว่าเขียนสำเร็จจริง (ถูก RLS ปฏิเสธจะไม่มี error แต่ไม่มีแถว)
+function mustRows(res, what) {
+  if (res.error) throw res.error;
+  if (Array.isArray(res.data) && !res.data.length) throw new Error(`ไม่มีสิทธิ์${what} (ตรวจ RLS)`);
+  return res.data;
 }
 
-// ── Modal state ──
-let modalMode   = null;   // 'add' | 'edit'
-let modalTable  = null;   // 'cat'|'prod'|'var'|'attr'|'opt'
-let modalEditId = null;
-let pendingOpts = [];     // { id, value, existing, deleted }
-
 // =====================================================
-// INIT
+// เริ่มต้น
 // =====================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  await waitForSupabase();
-
-  // หน้านี้สำหรับ Admin เท่านั้น
+  if (typeof supabaseClient === "undefined") { alert("ระบบยังไม่พร้อม กรุณารีเฟรชหน้า"); return; }
   if (typeof protectPage === "function") await protectPage(["admin"]);
-
-  try {
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-    if (sessionError || !session) {
-      location.href = "/pages/auth/login.html";
-      return;
-    }
-
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role, display_name")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profileError) {
-      showToast("ไม่สามารถตรวจสอบสิทธิ์", "err");
-      setTimeout(() => location.href = "/pages/auth/login.html", 1500);
-      return;
-    }
-
-    if (!profile || !["admin", "manager"].includes(profile.role)) {
-      showToast("คุณไม่มีสิทธิ์เข้าถึงหน้านี้", "err");
-      setTimeout(() => location.href = "/index.html", 1500);
-      return;
-    }
-
-    const displayName = profile.display_name || session.user.email;
-    const userNameEl   = document.getElementById("userName");
-    const userAvatarEl = document.getElementById("userAvatar");
-    if (userNameEl)   userNameEl.textContent   = displayName;
-    if (userAvatarEl) userAvatarEl.textContent = displayName.charAt(0).toUpperCase();
-
-  } catch (e) {
-    console.error("Auth error:", e);
-    location.href = "/pages/auth/login.html";
-    return;
-  }
-
-  // Tabs
-  document.querySelectorAll(".am-tab").forEach(btn => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  if (!window.currentUser?.id && typeof loadCurrentUser === "function") await loadCurrentUser();
+  const r = String(window.currentUser?.role || "").toLowerCase();
+  if (r && r !== "admin") return;
+  const name = window.currentUser?.display_name || window.currentUser?.email || "Admin";
+  $("userName").textContent = name; $("userAvatar").textContent = name.trim().charAt(0).toUpperCase();
+  $("logoutBtn").addEventListener("click", async () => { try { await supabaseClient.auth.signOut(); } catch (e) { /* ignore */ } location.href = "/pages/auth/login.html"; });
+  loadNav();
+  $("prodSearch").addEventListener("input", renderProducts);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { if (!$("formModal").hidden) closeForm(); else closeDrawer(); }
+    if (e.key === "/" && !/input|textarea|select/i.test(document.activeElement?.tagName || "")) { e.preventDefault(); $("prodSearch").focus(); }
   });
-
-  // Logout
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      location.href = "/pages/auth/login.html";
-    });
-  }
-
-  // Chip Enter key
-  document.addEventListener("keydown", e => {
-    if (e.key === "Enter" && document.getElementById("mf-optval") === document.activeElement) {
-      e.preventDefault();
-      addChip();
-    }
-  });
-
-  // Auto SKU เมื่อเปลี่ยน category ใน form prod
-  document.addEventListener("change", e => {
-    if (e.target.id === "mf-cat" && modalTable === "prod" && !_skuManual) {
-      const catName = e.target.options[e.target.selectedIndex].text;
-      const skuInput = document.getElementById("mf-sku");
-      if (skuInput) skuInput.value = generateSKU(catName);
-    }
-  });
-  document.addEventListener("input", e => {
-    if (e.target.id === "mf-sku") _skuManual = true;
-  });
-
-  await refreshCache();
-  await backfillCategoryId();
-  await Promise.all([
-    loadCategories(),
-    loadProducts(),
-    loadVariants(),
-    loadAttributes(),
-    loadOptions(),
-  ]);
-  populateAllFilters();
+  $("formModal").addEventListener("click", (e) => { if (e.target.id === "formModal") closeForm(); });
+  await loadAll();
 });
 
-let _skuManual = false;
-
-async function waitForSupabase() {
-  let attempts = 0;
-  while (!window.supabaseClient && attempts < 50) {
-    await new Promise(r => setTimeout(r, 100));
-    attempts++;
-  }
-  if (!window.supabaseClient) throw new Error("Supabase client ไม่พร้อม");
-}
-
-// =====================================================
-// BACKFILL category_id ใน attributes ที่เป็น NULL
-// =====================================================
-async function backfillCategoryId() {
+async function loadNav() {
   try {
-    const { data: nullAttrs, error } = await supabaseClient
-      .from("attributes")
-      .select("id,product_id")
-      .is("category_id", null);
-
-    if (error || !nullAttrs?.length) return;
-
-    const updates = nullAttrs
-      .map(a => ({ id: a.id, category_id: getCatIdByProd(a.product_id) }))
-      .filter(a => a.category_id);
-
-    if (!updates.length) return;
-
-    await Promise.all(updates.map(u =>
-      supabaseClient.from("attributes").update({ category_id: u.category_id }).eq("id", u.id)
-    ));
-
-    console.log(`✅ backfill category_id สำเร็จ ${updates.length} records`);
-    await refreshCache();
-  } catch (e) {
-    console.warn("backfillCategoryId:", e);
-  }
+    const res = await fetch("/pages/components/nav-admin.html"); if (!res.ok) return;
+    $("navContainer").innerHTML = await res.text();
+    document.querySelectorAll("#navContainer .app-nav a").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === location.pathname));
+  } catch (e) { console.warn("nav:", e); }
 }
 
-
-function switchTab(tab) {
-  document.querySelectorAll(".am-tab").forEach(b =>
-    b.classList.toggle("active", b.dataset.tab === tab));
-  document.querySelectorAll(".am-panel").forEach(p =>
-    p.classList.toggle("active", p.id === `tab-${tab}`));
-}
-
-// =====================================================
-// CACHE
-// =====================================================
-async function refreshCache() {
+async function loadAll() {
   try {
-    const [c, p, a] = await Promise.all([
-      supabaseClient.from("categories").select("id,name").order("name"),
-      supabaseClient.from("products").select("id,name,category_id").order("name"),
-      supabaseClient.from("attributes").select("id,name,product_id,category_id,input_type,order_no").order("name"),
+    const [c, p, a, o, v] = await Promise.all([
+      fetchAll("categories", "id,name,created_at", "name"),
+      fetchAll("products", "id,name,category_id,sku,description,created_at", "name"),
+      fetchAll("attributes", "*", "name"),
+      fetchAll("attribute_options", "id,attribute_id,value"),
+      fetchAll("product_variants", "id,product_id,sku,color,brand,length,width,thickness,feature,status,created_at").catch((e) => { console.warn("variants:", e); return []; }),
     ]);
-    _cats  = c.data || [];
-    _prods = p.data || [];
-    _attrs = a.data || [];
+    C = c; P = p; A = a; O = o; V = v;
+    _hasRequired = A.some((x) => Object.prototype.hasOwnProperty.call(x, "is_required"));
+    await backfillAttrCategory();
+    renderAll();
   } catch (e) {
-    console.error("refreshCache:", e);
+    console.error("loadAll:", e);
+    $("prodBody").innerHTML = `<tr><td colspan="6" class="at-state is-error">โหลดข้อมูลไม่สำเร็จ: ${esc(e.message)}</td></tr>`;
   }
 }
+// attributes.category_id ว่าง → เติมจากหมวดของสินค้า (ทำเมื่อพบเท่านั้น)
+async function backfillAttrCategory() {
+  const fix = A.filter((a) => !a.category_id && prodOf(a.product_id)?.category_id);
+  for (const a of fix) {
+    const cid = prodOf(a.product_id).category_id;
+    const { error } = await supabaseClient.from("attributes").update({ category_id: cid }).eq("id", a.id);
+    if (!error) a.category_id = cid;
+  }
+}
+function renderAll() { renderStats(); renderCats(); renderProducts(); if (_drawerId) renderDrawer(); }
 
-function getCatName(id)  { return _cats.find(c => c.id === id)?.name  || "—"; }
-function getProdName(id) { return _prods.find(p => p.id === id)?.name || "—"; }
-function getAttrName(id) { return _attrs.find(a => a.id === id)?.name || "—"; }
-
-function getCatIdByProd(prodId) {
-  return _prods.find(p => p.id === prodId)?.category_id || null;
+// =====================================================
+// สรุป
+// =====================================================
+function renderStats() {
+  const noOpt = A.filter(attrProblem).length;
+  const noCat = P.filter((p) => !C.some((c) => c.id === p.category_id)).length;
+  const items = [
+    ["folder", "หมวดหมู่", C.length], ["inventory_2", "สินค้า", P.length], ["tune", "Attribute", A.length],
+    ["list", "ตัวเลือก", O.length], ["layers", "Variant", V.length],
+  ];
+  $("statBar").innerHTML = items.map(([i, l, n]) => `<span class="ps-stat"><span class="material-symbols-outlined">${i}</span>${l}<b>${n.toLocaleString("th-TH")}</b></span>`).join("")
+    + (noOpt ? `<span class="ps-stat is-warn" title="Attribute แบบเลือกจากรายการที่ยังไม่มีตัวเลือก — เซลล์จะเลือกอะไรไม่ได้"><span class="material-symbols-outlined">warning</span>ไม่มีตัวเลือก<b>${noOpt}</b></span>` : "")
+    + (noCat ? `<span class="ps-stat is-warn"><span class="material-symbols-outlined">warning</span>สินค้าไม่มีหมวด<b>${noCat}</b></span>` : "");
 }
 
 // =====================================================
-// POPULATE ALL FILTER SELECTS
+// หมวดหมู่
 // =====================================================
-function populateAllFilters() {
-  ["prod-filter-cat","var-filter-cat","attr-filter-cat","opt-filter-cat"].forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    const cur = sel.value;
-    const label = (id.includes("var") || id.includes("opt")) ? "ทุกหมวด" : "ทุกหมวดหมู่";
-    sel.innerHTML = `<option value="">${label}</option>`;
-    _cats.forEach(c => {
-      const o = document.createElement("option");
-      o.value = c.id; o.textContent = c.name;
-      sel.appendChild(o);
-    });
-    if (cur) sel.value = cur;
-  });
+function renderCats() {
+  const count = (cid) => P.filter((p) => p.category_id === cid).length;
+  const orphan = P.filter((p) => !C.some((c) => c.id === p.category_id)).length;
+  const row = (id, name, n, editable) => `
+    <li class="ps-cat${_cat === id ? " is-on" : ""}">
+      <button type="button" class="ps-cat-main" onclick="selectCat('${esc(id)}')"><span class="ps-cat-name">${esc(name)}</span><b>${n}</b></button>
+      ${editable ? `<span class="ps-cat-act">
+        <button type="button" onclick="openCatModal('${esc(id)}')" title="แก้ไขชื่อ" aria-label="แก้ไข"><span class="material-symbols-outlined">edit</span></button>
+        <button type="button" onclick="deleteCat('${esc(id)}')" title="ลบหมวด" aria-label="ลบ"><span class="material-symbols-outlined">delete</span></button></span>` : ""}
+    </li>`;
+  $("catList").innerHTML = row("", "ทั้งหมด", P.length, false)
+    + C.map((c) => row(c.id, c.name, count(c.id), true)).join("")
+    + (orphan ? row("_none", "ไม่มีหมวด", orphan, false) : "")
+    + (C.length ? "" : `<li class="at-state">ยังไม่มีหมวดหมู่ — กด + เพื่อเพิ่ม</li>`);
 }
+function selectCat(id) { _cat = id; renderCats(); renderProducts(); }
 
-async function onVarFilterCat() {
-  const catId = document.getElementById("var-filter-cat").value;
-  const sel   = document.getElementById("var-filter-prod");
-  sel.innerHTML = `<option value="">ทุกสินค้า</option>`;
-  const prods = catId ? _prods.filter(p => p.category_id === catId) : _prods;
-  prods.forEach(p => {
-    const o = document.createElement("option");
-    o.value = p.id; o.textContent = p.name;
-    sel.appendChild(o);
-  });
-  await loadVariants();
+function openCatModal(id) {
+  const c = id ? C.find((x) => x.id === id) : null;
+  openForm("cat", id, c ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่",
+    `<label class="at-field ps-full"><span>ชื่อหมวดหมู่ <i>*</i></span><input type="text" id="f-name" maxlength="100" value="${esc(c?.name || "")}" placeholder="เช่น ตาข่ายกรองแสง" /></label>`);
 }
-
-async function onOptFilterCat() {
-  const catId = document.getElementById("opt-filter-cat").value;
-  const sel   = document.getElementById("opt-filter-attr");
-  sel.innerHTML = `<option value="">ทุก Attribute</option>`;
-
-  const attrs = catId
-    ? _attrs.filter(a => {
-        const prod = _prods.find(p => p.id === a.product_id);
-        return prod?.category_id === catId;
-      })
-    : _attrs;
-
-  attrs.forEach(a => {
-    const o = document.createElement("option");
-    o.value = a.id;
-    o.textContent = `${a.name} (${getProdName(a.product_id)})`;
-    sel.appendChild(o);
-  });
-  await loadOptions();
+async function saveCat() {
+  const name = $("f-name").value.trim().replace(/\s+/g, " ");
+  if (!name) return formErr("กรุณาใส่ชื่อหมวดหมู่");
+  if (C.some((c) => c.id !== _form.id && norm(c.name) === norm(name))) return formErr(`มีหมวด “${name}” อยู่แล้ว`);
+  const res = _form.id
+    ? await supabaseClient.from("categories").update({ name }).eq("id", _form.id).select("*")
+    : await supabaseClient.from("categories").insert({ name }).select("*");
+  const row = mustRows(res, "บันทึกหมวดหมู่")[0];
+  if (_form.id) Object.assign(C.find((c) => c.id === _form.id), row); else { C.push(row); _cat = row.id; }
+  C.sort((a, b) => String(a.name).localeCompare(String(b.name), "th"));
+  return _form.id ? "แก้ไขหมวดหมู่แล้ว" : `เพิ่มหมวด “${name}” แล้ว`;
 }
-
-// =====================================================
-// ── CATEGORIES ──
-// =====================================================
-async function loadCategories() {
-  const tbody = document.getElementById("cat-body");
+async function deleteCat(id) {
+  const c = C.find((x) => x.id === id); if (!c) return;
+  const n = P.filter((p) => p.category_id === id).length;
+  if (n) { alert(`หมวด “${c.name}” ยังมีสินค้า ${n} รายการ\nย้ายสินค้าไปหมวดอื่นหรือลบสินค้าก่อน แล้วค่อยลบหมวด`); return; }
+  if (!confirm(`ลบหมวด “${c.name}”?`)) return;
   try {
-    const { data, error } = await supabaseClient
-      .from("categories").select("id,name,created_at").order("name");
-    if (error) throw error;
-    _cats = data || [];
-    populateAllFilters();
-    document.getElementById("cat-count").textContent = `${_cats.length} รายการ`;
-    if (!_cats.length) {
-      tbody.innerHTML = `<tr><td colspan="3" class="am-empty">ยังไม่มีหมวดหมู่</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = _cats.map(c => `
-      <tr>
-        <td data-label="ชื่อ"><strong>${esc(c.name)}</strong></td>
-        <td data-label="วันที่">${fmtDate(c.created_at)}</td>
-        <td data-label="จัดการ">
-          <button class="act-btn act-edit" onclick="openEdit('cat','${c.id}')">✏️ แก้ไข</button>
-          <button class="act-btn act-del"  onclick="delRow('cat','${c.id}','${esc(c.name)}')">🗑️</button>
-        </td>
-      </tr>`).join("");
-  } catch (e) {
-    console.error("loadCategories:", e);
-    tbody.innerHTML = `<tr><td colspan="3" class="am-empty">โหลดไม่สำเร็จ</td></tr>`;
-  }
+    mustRows(await supabaseClient.from("categories").delete().eq("id", id).select("id"), "ลบหมวดหมู่");
+    C = C.filter((x) => x.id !== id); A.forEach((a) => { if (a.category_id === id) a.category_id = null; });
+    if (_cat === id) _cat = "";
+    renderAll(); toast("ลบหมวดหมู่แล้ว");
+  } catch (e) { alert("ลบไม่สำเร็จ: " + e.message); }
 }
 
 // =====================================================
-// ── PRODUCTS ──
+// สินค้า
 // =====================================================
-async function loadProducts() {
-  const tbody = document.getElementById("prod-body");
-  const catId = document.getElementById("prod-filter-cat")?.value || "";
-  try {
-    let q = supabaseClient.from("products")
-      .select("id,name,category_id,sku,description,created_at").order("name");
-    if (catId) q = q.eq("category_id", catId);
-    const { data, error } = await q;
-    if (error) throw error;
-    _prods = data || [];
-    document.getElementById("prod-count").textContent = `${_prods.length} รายการ`;
-    if (!_prods.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="am-empty">ยังไม่มีสินค้า</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = _prods.map(p => `
-      <tr>
-        <td data-label="ชื่อสินค้า"><strong>${esc(p.name)}</strong></td>
-        <td data-label="หมวด"><span class="badge badge-teal">${esc(getCatName(p.category_id))}</span></td>
-        <td data-label="SKU"><code>${esc(p.sku||"—")}</code></td>
-        <td data-label="คำอธิบาย" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.description||"—")}</td>
-        <td data-label="จัดการ">
-          <button class="act-btn act-edit" onclick="openEdit('prod','${p.id}')">✏️ แก้ไข</button>
-          <button class="act-btn act-del"  onclick="delRow('prod','${p.id}','${esc(p.name)}')">🗑️</button>
-        </td>
-      </tr>`).join("");
-  } catch (e) {
-    console.error("loadProducts:", e);
-    tbody.innerHTML = `<tr><td colspan="5" class="am-empty">โหลดไม่สำเร็จ</td></tr>`;
-  }
+function visibleProducts() {
+  const q = norm($("prodSearch").value);
+  return P.filter((p) => (_cat === "" || (_cat === "_none" ? !C.some((c) => c.id === p.category_id) : p.category_id === _cat))
+    && (!q || norm(`${p.name} ${p.sku} ${p.description}`).includes(q)));
 }
-
-// =====================================================
-// ── VARIANTS ──
-// =====================================================
-async function loadVariants() {
-  const tbody  = document.getElementById("var-body");
-  const prodId = document.getElementById("var-filter-prod")?.value || "";
-  const catId  = document.getElementById("var-filter-cat")?.value  || "";
-  try {
-    let q = supabaseClient.from("product_variants")
-      .select("id,product_id,sku,color,brand,length,width,thickness,feature,status,created_at")
-      .order("created_at", { ascending: false });
-
-    if (prodId) {
-      q = q.eq("product_id", prodId);
-    } else if (catId) {
-      const pids = _prods.filter(p => p.category_id === catId).map(p => p.id);
-      if (!pids.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="am-empty">ไม่มีสินค้าในหมวดนี้</td></tr>`;
-        document.getElementById("var-count").textContent = "0 รายการ";
-        return;
-      }
-      q = q.in("product_id", pids);
-    }
-
-    const { data, error } = await q.limit(200);
-    if (error) throw error;
-    _vars = data || [];
-    document.getElementById("var-count").textContent = `${_vars.length} รายการ`;
-    if (!_vars.length) {
-      tbody.innerHTML = `<tr><td colspan="10" class="am-empty">ยังไม่มี Variant</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = _vars.map(v => `
-      <tr>
-        <td data-label="สินค้า"><span class="badge badge-teal">${esc(getProdName(v.product_id))}</span></td>
-        <td data-label="SKU"><code>${esc(v.sku||"—")}</code></td>
-        <td data-label="สี">${badge(v.color,"badge-blue")}</td>
-        <td data-label="ยาว">${esc(v.length||"—")}</td>
-        <td data-label="กว้าง">${esc(v.width||"—")}</td>
-        <td data-label="หนา">${esc(v.thickness||"—")}</td>
-        <td data-label="ยี่ห้อ">${esc(v.brand||"—")}</td>
-        <td data-label="Feature">${esc(v.feature||"—")}</td>
-        <td data-label="Status">${badge(v.status, v.status==="active"?"badge-teal":v.status==="inactive"?"badge-amber":"badge-red")}</td>
-        <td data-label="จัดการ">
-          <button class="act-btn act-edit" onclick="openEdit('var','${v.id}')">✏️</button>
-          <button class="act-btn act-del"  onclick="delRow('var','${v.id}','Variant')">🗑️</button>
-        </td>
-      </tr>`).join("");
-  } catch (e) {
-    console.error("loadVariants:", e);
-    tbody.innerHTML = `<tr><td colspan="10" class="am-empty">โหลดไม่สำเร็จ</td></tr>`;
-  }
-}
-
-// =====================================================
-// ── ATTRIBUTES ──
-// =====================================================
-async function loadAttributes() {
-  const tbody = document.getElementById("attr-body");
-  const catId = document.getElementById("attr-filter-cat")?.value || "";
-  try {
-    let q = supabaseClient
-      .from("attributes")
-      .select("id,name,product_id,input_type,order_no")
-      .order("order_no", { ascending: true, nullsFirst: false });
-
-    if (catId) {
-      const prodIds = _prods.filter(p => p.category_id === catId).map(p => p.id);
-      if (!prodIds.length) {
-        _attrs = [];
-        document.getElementById("attr-count").textContent = "0 รายการ";
-        tbody.innerHTML = `<tr><td colspan="5" class="am-empty">ไม่มีสินค้าในหมวดนี้</td></tr>`;
-        return;
-      }
-      q = q.in("product_id", prodIds);
-    }
-
-    const { data, error } = await q;
-    if (error) throw error;
-    _attrs = data || [];
-    document.getElementById("attr-count").textContent = `${_attrs.length} รายการ`;
-
-    if (!_attrs.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="am-empty">ยังไม่มี Attribute</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = _attrs.map(a => `
-      <tr>
-        <td data-label="ชื่อ Attribute"><strong>${esc(a.name)}</strong></td>
-        <td data-label="สินค้า">
-          <span class="badge badge-teal">${esc(getProdName(a.product_id))}</span>
-          <span class="badge badge-gray" style="margin-left:4px">${esc(getCatName(getCatIdByProd(a.product_id)))}</span>
-        </td>
-        <td data-label="ประเภท Input"><code>${esc(a.input_type || "—")}</code></td>
-        <td data-label="ลำดับ">${a.order_no ?? "—"}</td>
-        <td data-label="จัดการ">
-          <button class="act-btn act-edit" onclick="openEdit('attr','${a.id}')">✏️ แก้ไข</button>
-          <button class="act-btn act-del"  onclick="delRow('attr','${a.id}','${esc(a.name)}')">🗑️</button>
-        </td>
-      </tr>`).join("");
-  } catch (e) {
-    console.error("loadAttributes:", e);
-    tbody.innerHTML = `<tr><td colspan="5" class="am-empty">โหลดไม่สำเร็จ</td></tr>`;
-  }
-}
-
-// =====================================================
-// ── OPTIONS ──
-// =====================================================
-async function loadOptions() {
-  const tbody  = document.getElementById("opt-body");
-  const attrId = document.getElementById("opt-filter-attr")?.value || "";
-  const catId  = document.getElementById("opt-filter-cat")?.value  || "";
-  try {
-    let q = supabaseClient.from("attribute_options")
-      .select("id,attribute_id,value,created_at").order("value");
-
-    if (attrId) {
-      q = q.eq("attribute_id", attrId);
-    } else if (catId) {
-      const prodIds = _prods.filter(p => p.category_id === catId).map(p => p.id);
-      const aids    = _attrs.filter(a => prodIds.includes(a.product_id)).map(a => a.id);
-      if (!aids.length) {
-        tbody.innerHTML = `<tr><td colspan="4" class="am-empty">ไม่มี Attribute ในหมวดนี้</td></tr>`;
-        document.getElementById("opt-count").textContent = "0 รายการ";
-        return;
-      }
-      q = q.in("attribute_id", aids);
-    }
-
-    const { data, error } = await q.limit(300);
-    if (error) throw error;
-    _opts = data || [];
-    document.getElementById("opt-count").textContent = `${_opts.length} รายการ`;
-
-    if (!_opts.length) {
-      tbody.innerHTML = `<tr><td colspan="4" class="am-empty">ยังไม่มี Option</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = _opts.map(o => {
-      const attr    = _attrs.find(a => a.id === o.attribute_id);
-      const catName = attr ? getCatName(getCatIdByProd(attr.product_id)) : "—";
-      return `
-        <tr>
-          <td data-label="ค่า"><strong>${esc(o.value)}</strong></td>
-          <td data-label="Attribute"><span class="badge badge-purple">${esc(getAttrName(o.attribute_id))}</span></td>
-          <td data-label="หมวด"><span class="badge badge-teal">${esc(catName)}</span></td>
-          <td data-label="จัดการ">
-            <button class="act-btn act-del" onclick="delRow('opt','${o.id}','${esc(o.value)}')">🗑️ ลบ</button>
-          </td>
-        </tr>`;
-    }).join("");
-  } catch (e) {
-    console.error("loadOptions:", e);
-    tbody.innerHTML = `<tr><td colspan="4" class="am-empty">โหลดไม่สำเร็จ</td></tr>`;
-  }
-}
-
-// =====================================================
-// MODAL — OPEN ADD
-// =====================================================
-function openAdd(table) {
-  modalMode   = "add";
-  modalTable  = table;
-  modalEditId = null;
-  pendingOpts = [];
-  _skuManual  = false;
-
-  document.getElementById("modalTitle").textContent = addTitle(table);
-  document.getElementById("modalBody").innerHTML    = buildForm(table, null);
-  openModal();
-}
-
-// =====================================================
-// MODAL — OPEN EDIT
-// =====================================================
-async function openEdit(table, id) {
-  modalMode   = "edit";
-  modalTable  = table;
-  modalEditId = id;
-  pendingOpts = [];
-  _skuManual  = true;
-
-  let row = null;
-  try {
-    const { data } = await supabaseClient.from(tableOf(table)).select("*").eq("id", id).single();
-    row = data;
-  } catch (e) {
-    showToast("โหลดข้อมูลไม่สำเร็จ", "err");
-    return;
-  }
-
-  document.getElementById("modalTitle").textContent = editTitle(table);
-  document.getElementById("modalBody").innerHTML    = buildForm(table, row);
-
-  if (table === "attr" && row) {
-    const typeEl  = document.getElementById("mf-type");
-    const orderEl = document.getElementById("mf-order");
-    const prodEl  = document.getElementById("mf-prod");
-    if (typeEl  && row.input_type) typeEl.value  = row.input_type;
-    if (orderEl && row.order_no  ) orderEl.value = row.order_no;
-    if (prodEl  && row.product_id) prodEl.value  = row.product_id;
-    await loadExistingOpts(id);
-  }
-
-  openModal();
-}
-
-// =====================================================
-// BUILD FORM HTML
-// =====================================================
-function buildForm(table, row) {
-  const v = row || {};
-
-  const catOpts  = _cats.map(c =>
-    `<option value="${c.id}" ${v.category_id===c.id?"selected":""}>${esc(c.name)}</option>`).join("");
-  const prodOpts = _prods.map(p =>
-    `<option value="${p.id}" ${v.product_id===p.id?"selected":""}>${esc(p.name)} (${esc(getCatName(p.category_id))})</option>`).join("");
-  const attrOpts = _attrs.map(a =>
-    `<option value="${a.id}" ${v.attribute_id===a.id?"selected":""}>${esc(a.name)} — ${esc(getProdName(a.product_id))}</option>`).join("");
-
-  if (table === "cat") return `
-    <div class="mf">
-      <label>ชื่อหมวดหมู่ <span class="req">*</span></label>
-      <input type="text" id="mf-name" value="${esc(v.name||"")}" placeholder="เช่น ตาข่ายกรองแสง, ถุงเพาะชำ"/>
-    </div>`;
-
-  if (table === "prod") return `
-    <div class="mf">
-      <label>หมวดหมู่ <span class="req">*</span></label>
-      <select id="mf-cat"><option value="">-- เลือก --</option>${catOpts}</select>
-    </div>
-    <div class="mf">
-      <label>ชื่อสินค้า <span class="req">*</span></label>
-      <input type="text" id="mf-name" value="${esc(v.name||"")}" placeholder="เช่น ตาข่าย 50%"/>
-    </div>
-    <div class="mf">
-      <label>SKU</label>
-      <input type="text" id="mf-sku" value="${esc(v.sku||"")}" placeholder="รหัสสินค้า (auto-generate ถ้าไม่กรอก)"/>
-    </div>
-    <div class="mf">
-      <label>คำอธิบาย</label>
-      <textarea id="mf-desc">${esc(v.description||"")}</textarea>
-    </div>`;
-
-  if (table === "var") return `
-    <div class="mf">
-      <label>สินค้า <span class="req">*</span></label>
-      <select id="mf-prod"><option value="">-- เลือก --</option>${prodOpts}</select>
-    </div>
-    <div class="mf">
-      <label>SKU Variant</label>
-      <input type="text" id="mf-sku" value="${esc(v.sku||"")}" placeholder="เช่น NET-BLK-2x100m"/>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="mf" style="margin:0">
-        <label>สี (color)</label>
-        <input type="text" id="mf-color" value="${esc(v.color||"")}" placeholder="ดำ, เขียว, ขาว"/>
-      </div>
-      <div class="mf" style="margin:0">
-        <label>ยี่ห้อ (brand)</label>
-        <input type="text" id="mf-brand" value="${esc(v.brand||"")}" placeholder="ยี่ห้อ"/>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
-      <div class="mf" style="margin:0">
-        <label>ความยาว</label>
-        <input type="text" id="mf-length" value="${esc(v.length||"")}" placeholder="50m, 100y"/>
-      </div>
-      <div class="mf" style="margin:0">
-        <label>ความกว้าง</label>
-        <input type="text" id="mf-width" value="${esc(v.width||"")}" placeholder="2m, 4m"/>
-      </div>
-      <div class="mf" style="margin:0">
-        <label>ความหนา</label>
-        <input type="text" id="mf-thick" value="${esc(v.thickness||"")}" placeholder="0.10mm"/>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-      <div class="mf" style="margin:0">
-        <label>Feature</label>
-        <input type="text" id="mf-feat" value="${esc(v.feature||"")}" placeholder="คุณสมบัติพิเศษ"/>
-      </div>
-      <div class="mf" style="margin:0">
-        <label>Status</label>
-        <select id="mf-status">
-          <option value="active"       ${(v.status||"active")==="active"       ?"selected":""}>active</option>
-          <option value="inactive"     ${v.status==="inactive"     ?"selected":""}>inactive</option>
-          <option value="discontinued" ${v.status==="discontinued" ?"selected":""}>discontinued</option>
-        </select>
-      </div>
-    </div>`;
-
-  if (table === "attr") return `
-    <div class="mf">
-      <label>สินค้า <span class="req">*</span></label>
-      <select id="mf-prod">
-        <option value="">-- เลือก --</option>
-        ${prodOpts}
-      </select>
-    </div>
-    <div class="mf">
-      <label>ชื่อ Attribute <span class="req">*</span></label>
-      <input type="text" id="mf-name" value="${esc(v.name||"")}" placeholder="เช่น สี, ขนาด"/>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="mf" style="margin:0">
-        <label>ประเภท Input</label>
-        <select id="mf-type">
-          <option value="select">select</option>
-          <option value="text">text</option>
-          <option value="number">number</option>
-        </select>
-      </div>
-      <div class="mf" style="margin:0">
-        <label>ลำดับ</label>
-        <input type="number" id="mf-order" value="${v.order_no ?? ""}" placeholder="1, 2, 3…"/>
-      </div>
-    </div>
-    <div class="mf" style="margin-top:12px">
-      <label>ตัวเลือก (Options)</label>
-      <div class="chip-row" id="optChips"></div>
-      <div class="chip-add-row">
-        <input type="text" id="mf-optval" placeholder="พิมพ์แล้ว Enter หรือกด + เพิ่ม"/>
-        <button class="chip-add-btn" onclick="addChip()">+ เพิ่ม</button>
-      </div>
-    </div>`;
-
-  if (table === "opt") return `
-    <div class="mf">
-      <label>Attribute <span class="req">*</span></label>
-      <select id="mf-attr"><option value="">-- เลือก --</option>${attrOpts}</select>
-    </div>
-    <div class="mf">
-      <label>ค่า (Value) <span class="req">*</span></label>
-      <input type="text" id="mf-value" value="${esc(v.value||"")}" placeholder="เช่น ดำ, 50%, 2m x 100m"/>
-    </div>`;
-
-  return "";
-}
-
-// =====================================================
-// OPTION CHIPS
-// =====================================================
-async function loadExistingOpts(attrId) {
-  try {
-    const { data } = await supabaseClient.from("attribute_options")
-      .select("id,value").eq("attribute_id", attrId).order("value");
-    pendingOpts = (data||[]).map(o => ({ id: o.id, value: o.value, existing: true, deleted: false }));
-    renderChips();
-  } catch (e) {
-    console.error("loadExistingOpts:", e);
-  }
-}
-
-function addChip() {
-  const inp = document.getElementById("mf-optval");
-  const val = inp?.value?.trim();
-  if (!val) return;
-  if (pendingOpts.some(o => o.value === val && !o.deleted)) {
-    showToast("มีตัวเลือกนี้อยู่แล้ว", "err");
-    return;
-  }
-  pendingOpts.push({ id: null, value: val, existing: false, deleted: false });
-  inp.value = "";
-  inp.focus();
-  renderChips();
-}
-
-function removeChip(idx) {
-  const opt = pendingOpts[idx];
-  if (opt.existing) {
-    pendingOpts[idx].deleted = true;
-  } else {
-    pendingOpts.splice(idx, 1);
-  }
-  renderChips();
-}
-
-function renderChips() {
-  const el = document.getElementById("optChips");
-  if (!el) return;
-  const visible = pendingOpts.filter(o => !o.deleted);
-  if (!visible.length) {
-    el.innerHTML = `<span style="font-size:12px;color:#94a3b8">ยังไม่มีตัวเลือก</span>`;
-    return;
-  }
-  el.innerHTML = pendingOpts.map((o, i) => {
-    if (o.deleted) return "";
-    return `<span class="chip">${esc(o.value)}<button class="chip-del" onclick="removeChip(${i})">×</button></span>`;
+function renderProducts() {
+  const rows = visibleProducts();
+  $("prodTitle").textContent = _cat === "" ? "สินค้าทั้งหมด" : _cat === "_none" ? "สินค้าที่ไม่มีหมวด" : catName(_cat);
+  $("prodCount").textContent = `${rows.length.toLocaleString("th-TH")} รายการ`;
+  const showCat = _cat === "" || _cat === "_none";
+  $("thCat").hidden = !showCat;
+  if (!rows.length) { $("prodBody").innerHTML = `<tr><td colspan="6" class="at-state">${P.length ? "ไม่พบสินค้า" : "ยังไม่มีสินค้า — กด “เพิ่มสินค้า”"}</td></tr>`; return; }
+  $("prodBody").innerHTML = rows.map((p) => {
+    const at = attrsOf(p.id), bad = at.filter(attrProblem).length, id = esc(p.id);
+    return `<tr class="ps-prow${p.id === _drawerId ? " is-on" : ""}" onclick="openDrawer('${id}')">
+      <td><b class="ps-pname">${esc(p.name)}</b>${p.description ? `<small class="ps-pdesc">${esc(p.description)}</small>` : ""}</td>
+      <td>${p.sku ? `<span class="at-code">${esc(p.sku)}</span>` : `<span class="at-dim">-</span>`}</td>
+      ${showCat ? `<td>${C.some((c) => c.id === p.category_id) ? esc(catName(p.category_id)) : `<span class="at-flag">ไม่มีหมวด</span>`}</td>` : ""}
+      <td class="num">${at.length ? at.length : `<span class="at-dim">0</span>`}${bad ? ` <span class="at-flag" title="Attribute แบบเลือกที่ยังไม่มีตัวเลือก">⚠ ${bad}</span>` : ""}</td>
+      <td class="num">${varsOf(p.id).length || `<span class="at-dim">0</span>`}</td>
+      <td class="c-act"><div class="at-actions" onclick="event.stopPropagation()">
+        <button type="button" class="at-act" onclick="openDrawer('${id}')"><span class="material-symbols-outlined">tune</span>รายละเอียด</button>
+        <button type="button" class="at-act is-icon" onclick="openProdModal('${id}')" title="แก้ไข" aria-label="แก้ไข"><span class="material-symbols-outlined">edit</span></button>
+        <button type="button" class="at-act is-icon" onclick="deleteProd('${id}')" title="ลบ" aria-label="ลบ"><span class="material-symbols-outlined">delete</span></button>
+      </div></td></tr>`;
   }).join("");
 }
 
-// =====================================================
-// MODAL — SAVE
-// =====================================================
-async function modalSave() {
-  const btn = document.getElementById("modalSaveBtn");
-  btn.disabled = true;
-  btn.textContent = "⏳ กำลังบันทึก...";
-  try {
-    if (modalTable === "cat")  await saveCat();
-    if (modalTable === "prod") await saveProd();
-    if (modalTable === "var")  await saveVar();
-    if (modalTable === "attr") await saveAttr();
-    if (modalTable === "opt")  await saveOpt();
-  } catch (e) {
-    console.error("modalSave:", e);
-    showToast("บันทึกไม่สำเร็จ: " + (e.message || "unknown"), "err");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "💾 บันทึก";
-  }
+function newSku(cid) {
+  // รหัสอ่านง่ายและไม่ซ้ำ: P-ลำดับหมวด(2)-ลำดับสินค้า(3)
+  const ci = Math.max(0, C.findIndex((c) => c.id === cid)) + 1;
+  const prefix = `P${String(ci).padStart(2, "0")}-`;
+  let n = P.filter((p) => String(p.sku || "").startsWith(prefix)).length + 1;
+  while (P.some((p) => p.sku === prefix + String(n).padStart(3, "0"))) n++;
+  return prefix + String(n).padStart(3, "0");
 }
-
-function gv(id) { return document.getElementById(id)?.value?.trim() || null; }
-
-async function saveCat() {
-  const name = gv("mf-name");
-  if (!name) { showToast("กรุณากรอกชื่อ", "err"); return; }
-  await upsert("categories", { name }, modalEditId);
-  showToast(`✅ ${modalMode==="add"?"เพิ่ม":"แก้ไข"}หมวดหมู่สำเร็จ`, "ok");
-  closeModal();
-  await refreshCache();
-  await loadCategories();
+function openProdModal(id) {
+  const p = id ? prodOf(id) : null;
+  const cid = p ? p.category_id : (_cat && _cat !== "_none" ? _cat : "");
+  openForm("prod", id, p ? "แก้ไขสินค้า" : "เพิ่มสินค้า", `
+    <label class="at-field"><span>หมวดหมู่ <i>*</i></span><select id="f-cat"><option value="">— เลือก —</option>${C.map((c) => `<option value="${esc(c.id)}"${c.id === cid ? " selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+    <label class="at-field"><span>SKU / รหัสสินค้า</span><input type="text" id="f-sku" maxlength="50" value="${esc(p?.sku || "")}" placeholder="เว้นว่าง = สร้างให้อัตโนมัติ" /></label>
+    <label class="at-field ps-full"><span>ชื่อสินค้า <i>*</i></span><input type="text" id="f-name" maxlength="150" value="${esc(p?.name || "")}" placeholder="เช่น ตาข่ายกรองแสง 50%" /></label>
+    <label class="at-field ps-full"><span>คำอธิบาย</span><textarea id="f-desc" rows="3" maxlength="1000" placeholder="รายละเอียดสั้น ๆ (ถ้ามี)">${esc(p?.description || "")}</textarea></label>`);
 }
-
 async function saveProd() {
-  const name  = gv("mf-name");
-  const catId = gv("mf-cat");
-  if (!name || !catId) { showToast("กรุณากรอกข้อมูลให้ครบ", "err"); return; }
-
-  let sku = gv("mf-sku");
-  if (!sku) sku = generateSKU(getCatName(catId));
-
-  await upsert("products", { name, category_id: catId, sku, description: gv("mf-desc") || null }, modalEditId);
-  showToast(`✅ ${modalMode==="add"?"เพิ่ม":"แก้ไข"}สินค้าสำเร็จ`, "ok");
-  closeModal();
-  await refreshCache();
-  await loadProducts();
+  const name = $("f-name").value.trim().replace(/\s+/g, " "), cid = $("f-cat").value;
+  let sku = $("f-sku").value.trim();
+  if (!cid) return formErr("กรุณาเลือกหมวดหมู่");
+  if (!name) return formErr("กรุณาใส่ชื่อสินค้า");
+  if (P.some((p) => p.id !== _form.id && p.category_id === cid && norm(p.name) === norm(name))) return formErr(`มีสินค้า “${name}” ในหมวดนี้แล้ว`);
+  if (sku && P.some((p) => p.id !== _form.id && norm(p.sku) === norm(sku))) return formErr(`SKU “${sku}” ถูกใช้กับสินค้าอื่นแล้ว`);
+  if (!sku) sku = newSku(cid);
+  const row = { name, category_id: cid, sku, description: $("f-desc").value.trim() || null };
+  const res = _form.id ? await supabaseClient.from("products").update(row).eq("id", _form.id).select("*") : await supabaseClient.from("products").insert(row).select("*");
+  const saved = mustRows(res, "บันทึกสินค้า")[0];
+  if (_form.id) {
+    const old = prodOf(_form.id);
+    if (old.category_id !== cid) A.filter((a) => a.product_id === _form.id).forEach((a) => { a.category_id = cid; });
+    Object.assign(old, saved);
+    // Attribute ต้องอยู่หมวดเดียวกับสินค้า (หน้ารายงานกรองตามหมวด)
+    if (A.some((a) => a.product_id === _form.id)) await supabaseClient.from("attributes").update({ category_id: cid }).eq("product_id", _form.id);
+  } else P.push(saved);
+  P.sort((a, b) => String(a.name).localeCompare(String(b.name), "th"));
+  if (!_form.id) { _drawerId = saved.id; setTimeout(() => openDrawer(saved.id), 0); }
+  return _form.id ? "แก้ไขสินค้าแล้ว" : `เพิ่ม “${name}” แล้ว — เพิ่ม Attribute ต่อได้เลย`;
 }
-
-async function saveVar() {
-  const prodId = gv("mf-prod");
-  if (!prodId) { showToast("กรุณาเลือกสินค้า", "err"); return; }
-  await upsert("product_variants", {
-    product_id: prodId,
-    sku:        gv("mf-sku"),
-    color:      gv("mf-color"),
-    brand:      gv("mf-brand"),
-    length:     gv("mf-length"),
-    width:      gv("mf-width"),
-    thickness:  gv("mf-thick"),
-    feature:    gv("mf-feat"),
-    status:     gv("mf-status") || "active",
-  }, modalEditId);
-  showToast(`✅ ${modalMode==="add"?"เพิ่ม":"แก้ไข"} Variant สำเร็จ`, "ok");
-  closeModal();
-  await loadVariants();
-}
-
-async function saveAttr() {
-  const name   = gv("mf-name");
-  const prodId = gv("mf-prod");
-  if (!name || !prodId) { showToast("กรุณากรอกข้อมูลให้ครบ", "err"); return; }
-
-  const catId = getCatIdByProd(prodId);
-  if (!catId) { showToast("ไม่พบ category ของสินค้านี้", "err"); return; }
-
-  const orderVal = document.getElementById("mf-order")?.value;
-  const orderNo  = orderVal ? parseInt(orderVal) : null;
-
-  const attrId = await upsert("attributes", {
-    name,
-    product_id:  prodId,
-    category_id: catId,
-    input_type:  gv("mf-type") || "select",
-    order_no:    isNaN(orderNo) ? null : orderNo,
-  }, modalEditId);
-
-  const targetId = modalEditId || attrId;
-  if (!targetId) { showToast("บันทึก Attribute ไม่สำเร็จ (ไม่ได้รับ ID)", "err"); return; }
-
-  const toDelete = pendingOpts.filter(o => o.existing && o.deleted && o.id);
-  if (toDelete.length) {
-    const delIds = toDelete.map(o => o.id);
-    const { error: delErr } = await supabaseClient.from("attribute_options").delete().in("id", delIds);
-    if (delErr) throw delErr;
-  }
-
-  const toInsert = pendingOpts.filter(o => !o.existing && !o.deleted);
-  if (toInsert.length) {
-    const rows = toInsert.map(o => ({ attribute_id: targetId, value: o.value }));
-    const { error: insErr } = await supabaseClient.from("attribute_options").insert(rows);
-    if (insErr) throw insErr;
-  }
-
-  showToast("✅ บันทึก Attribute สำเร็จ", "ok");
-  closeModal();
-  await refreshCache();
-  await loadAttributes();
-  await loadOptions();
-}
-
-async function saveOpt() {
-  const attrId = gv("mf-attr");
-  const value  = gv("mf-value");
-  if (!attrId || !value) { showToast("กรุณากรอกข้อมูลให้ครบ", "err"); return; }
-  const { error } = await supabaseClient.from("attribute_options").insert({ attribute_id: attrId, value });
-  if (error) throw error;
-  showToast("✅ เพิ่ม Option สำเร็จ", "ok");
-  closeModal();
-  await loadOptions();
-}
-
-// generic upsert — return id เสมอ
-async function upsert(tbl, payload, editId) {
-  let data, error;
-  if (editId) {
-    ({ data, error } = await supabaseClient.from(tbl).update(payload).eq("id", editId).select("id").single());
-  } else {
-    ({ data, error } = await supabaseClient.from(tbl).insert(payload).select("id").single());
-  }
-  if (error) throw error;
-  return data?.id ?? null;
-}
-
-// =====================================================
-// DELETE
-// =====================================================
-async function delRow(table, id, label) {
-  const warnings = {
-    cat:  "(products, variants, attributes และ options ทั้งหมดในหมวดนี้จะถูกลบด้วย)",
-    prod: "(variants, attributes และ options ของสินค้านี้จะถูกลบด้วย)",
-    attr: "(attribute_options ทั้งหมดจะถูกลบด้วย)",
-    var:  "",
-    opt:  "",
-  };
-  if (!confirm(`ลบ "${label}"?\n${warnings[table] || ""}`)) return;
-
+async function deleteProd(id) {
+  const p = prodOf(id); if (!p) return;
+  let used = 0;
   try {
-    // ── Cascade: categories ──
-    if (table === "cat") {
-      const prodIds = _prods.filter(p => p.category_id === id).map(p => p.id);
-      if (prodIds.length) {
-        const attrIds = _attrs.filter(a => prodIds.includes(a.product_id)).map(a => a.id);
-        if (attrIds.length) {
-          await supabaseClient.from("attribute_options").delete().in("attribute_id", attrIds);
-          await supabaseClient.from("attributes").delete().in("id", attrIds);
-        }
-        await supabaseClient.from("product_variants").delete().in("product_id", prodIds);
-        await supabaseClient.from("products").delete().in("id", prodIds);
-      }
-      // ลบ category หลัก
-      const { error: catErr } = await supabaseClient.from("categories").delete().eq("id", id);
-      if (catErr) throw catErr;
+    const { count, error } = await supabaseClient.from("reports").select("id", { count: "exact", head: true }).eq("product_id", id);
+    if (error) throw error; used = count || 0;
+  } catch (e) { alert("ตรวจการใช้งานในรายงานไม่สำเร็จ — ลองใหม่อีกครั้ง\n" + e.message); return; }
+  if (used) { alert(`ลบ “${p.name}” ไม่ได้\nสินค้านี้ถูกใช้ในรายงานเยี่ยมร้าน ${used.toLocaleString("th-TH")} รายการ — ถ้าลบ ประวัติรายงานจะไม่มีชื่อสินค้า\n\nถ้าเลิกขายแล้ว แนะนำเปลี่ยนชื่อ เช่น ต่อท้าย “(เลิกขาย)” แทน`); return; }
+  const at = attrsOf(id), vs = varsOf(id);
+  if (!confirm(`ลบสินค้า “${p.name}”?` + (at.length || vs.length ? `\nจะลบ Attribute ${at.length} รายการ (และตัวเลือก) กับ Variant ${vs.length} รายการด้วย` : ""))) return;
+  try {
+    const aids = at.map((a) => a.id);
+    if (aids.length) {
+      let r = await supabaseClient.from("attribute_options").delete().in("attribute_id", aids); if (r.error) throw r.error;
+      r = await supabaseClient.from("attributes").delete().in("id", aids); if (r.error) throw r.error;
     }
-
-    // ── Cascade: products ──
-    else if (table === "prod") {
-      const attrIds = _attrs.filter(a => a.product_id === id).map(a => a.id);
-      if (attrIds.length) {
-        await supabaseClient.from("attribute_options").delete().in("attribute_id", attrIds);
-        await supabaseClient.from("attributes").delete().in("id", attrIds);
-      }
-      await supabaseClient.from("product_variants").delete().eq("product_id", id);
-      // ลบ product หลัก
-      const { error: prodErr } = await supabaseClient.from("products").delete().eq("id", id);
-      if (prodErr) throw prodErr;
-    }
-
-    // ── Cascade: attributes ──
-    else if (table === "attr") {
-      await supabaseClient.from("attribute_options").delete().eq("attribute_id", id);
-      const { error } = await supabaseClient.from("attributes").delete().eq("id", id);
-      if (error) throw error;
-    }
-
-    // ── var / opt — ลบตรงๆ ──
-    else {
-      const { error } = await supabaseClient.from(tableOf(table)).delete().eq("id", id);
-      if (error) throw error;
-    }
-
-    showToast("ลบสำเร็จ", "info");
-    await refreshCache();
-
-    if (table === "cat") {
-  await loadCategories();   // loadCategories จะ set _cats ใหม่และเรียก populateAllFilters() เองอยู่แล้ว
-  await loadProducts();
-  await loadAttributes();
-  await loadOptions();
+    if (vs.length) { const r = await supabaseClient.from("product_variants").delete().eq("product_id", id); if (r.error) throw r.error; }
+    mustRows(await supabaseClient.from("products").delete().eq("id", id).select("id"), "ลบสินค้า");
+    O = O.filter((o) => !aids.includes(o.attribute_id)); A = A.filter((a) => a.product_id !== id); V = V.filter((v) => v.product_id !== id); P = P.filter((x) => x.id !== id);
+    if (_drawerId === id) closeDrawer();
+    renderAll(); toast("ลบสินค้าแล้ว");
+  } catch (e) { alert("ลบไม่สำเร็จ: " + e.message); await loadAll(); }
 }
-    if (table === "prod") { await loadProducts(); await loadVariants(); await loadAttributes(); await loadOptions(); }
-    if (table === "var")  await loadVariants();
-    if (table === "attr") { await loadAttributes(); await loadOptions(); }
-    if (table === "opt")  await loadOptions();
 
+// =====================================================
+// รายละเอียดสินค้า (Attribute / Variant)
+// =====================================================
+function openDrawer(id) {
+  _drawerId = id; renderDrawer();
+  $("drawer").hidden = false; $("drawerBg").hidden = false;
+  document.querySelectorAll(".ps-prow").forEach((tr) => tr.classList.toggle("is-on", tr.getAttribute("onclick")?.includes(id)));
+}
+function closeDrawer() {
+  _drawerId = null; $("drawer").hidden = true; $("drawerBg").hidden = true;
+  document.querySelectorAll(".ps-prow.is-on").forEach((tr) => tr.classList.remove("is-on"));
+}
+function renderDrawer() {
+  const p = prodOf(_drawerId); if (!p) { closeDrawer(); return; }
+  $("dCat").textContent = catName(p.category_id); $("dName").textContent = p.name; $("dSku").textContent = p.sku || "ไม่มี SKU";
+  $("dDesc").textContent = p.description || ""; $("dDesc").hidden = !p.description;
+  const at = attrsOf(p.id);
+  $("dAttrs").innerHTML = at.length ? at.map((a, i) => {
+    const os = optsOf(a.id), aid = esc(a.id);
+    return `<li class="ps-attr${attrProblem(a) ? " is-bad" : ""}">
+      <div class="ps-attr-head">
+        <span class="ps-order">${i + 1}</span>
+        <b>${esc(a.name)}</b>${a.is_required ? `<span class="ps-req">บังคับ</span>` : ""}
+        <span class="ps-type">${esc(TYPE_LABEL[a.input_type] || a.input_type || "-")}</span>
+        <span class="ps-attr-act">
+          <button type="button" onclick="moveAttr('${aid}',-1)" ${i ? "" : "disabled"} title="เลื่อนขึ้น" aria-label="เลื่อนขึ้น"><span class="material-symbols-outlined">arrow_upward</span></button>
+          <button type="button" onclick="moveAttr('${aid}',1)" ${i < at.length - 1 ? "" : "disabled"} title="เลื่อนลง" aria-label="เลื่อนลง"><span class="material-symbols-outlined">arrow_downward</span></button>
+          <button type="button" onclick="openAttrModal('${aid}')" title="แก้ไข" aria-label="แก้ไข"><span class="material-symbols-outlined">edit</span></button>
+          <button type="button" onclick="deleteAttr('${aid}')" title="ลบ" aria-label="ลบ"><span class="material-symbols-outlined">delete</span></button>
+        </span>
+      </div>
+      ${a.input_type === "select" ? (os.length ? `<div class="ps-opts">${os.map((o) => `<span class="ps-opt">${esc(o.value)}</span>`).join("")}</div>` : `<p class="ps-warn"><span class="material-symbols-outlined">warning</span>ยังไม่มีตัวเลือก — เซลล์จะเลือกค่าไม่ได้ <button type="button" class="at-more" onclick="openAttrModal('${aid}')">เพิ่มตัวเลือก ›</button></p>`) : ""}
+    </li>`;
+  }).join("") : `<li class="ps-empty">ยังไม่มี Attribute — หน้ารายงานจะไม่ถามข้อมูลเพิ่มสำหรับสินค้านี้</li>`;
+  const vs = varsOf(p.id);
+  $("dVars").innerHTML = vs.length ? `<div class="at-table-wrap ps-var-wrap"><table class="at-table"><thead><tr><th>SKU</th><th>สี</th><th>ขนาด (ย×ก×ห)</th><th>ยี่ห้อ</th><th>สถานะ</th><th class="c-act"></th></tr></thead><tbody>
+    ${vs.map((v) => `<tr><td>${v.sku ? `<span class="at-code">${esc(v.sku)}</span>` : "-"}</td><td>${esc(v.color || "-")}</td>
+      <td>${[v.length, v.width, v.thickness].map((x) => esc(x || "-")).join(" × ")}</td><td>${esc(v.brand || "-")}</td>
+      <td><span class="at-pill ${v.status === "active" ? "is-ok" : v.status === "inactive" ? "is-warn" : "is-off"}">${esc(VAR_STATUS[v.status] || v.status || "-")}</span></td>
+      <td class="c-act"><div class="at-actions"><button type="button" class="at-act is-icon" onclick="openVarModal('${esc(v.id)}')" aria-label="แก้ไข"><span class="material-symbols-outlined">edit</span></button>
+      <button type="button" class="at-act is-icon" onclick="deleteVar('${esc(v.id)}')" aria-label="ลบ"><span class="material-symbols-outlined">delete</span></button></div></td></tr>`).join("")}
+    </tbody></table></div>` : `<p class="ps-empty">ยังไม่มี Variant</p>`;
+}
+
+function openAttrModal(id) {
+  const a = id ? A.find((x) => x.id === id) : null;
+  _chips = a ? optsOf(a.id).map((o) => ({ id: o.id, value: o.value, del: false })) : [];
+  const nextOrder = Math.max(0, ...attrsOf(_drawerId).map((x) => x.order_no || 0)) + 1;
+  openForm("attr", id, a ? "แก้ไข Attribute" : "เพิ่ม Attribute", `
+    <label class="at-field"><span>ชื่อที่เซลล์เห็น <i>*</i></span><input type="text" id="f-name" maxlength="100" value="${esc(a?.name || "")}" placeholder="เช่น สี, ขนาด, % กรองแสง" /></label>
+    <label class="at-field"><span>วิธีกรอก</span><select id="f-type">${Object.entries(TYPE_LABEL).map(([k, l]) => `<option value="${k}"${(a?.input_type || "select") === k ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+    <label class="at-field"><span>ลำดับ</span><input type="number" id="f-order" min="1" value="${a?.order_no ?? nextOrder}" /></label>
+    ${_hasRequired ? `<label class="ps-check"><input type="checkbox" id="f-req" ${a?.is_required ? "checked" : ""} /> บังคับกรอก</label>` : `<span></span>`}
+    <div class="at-field ps-full" id="optBox">
+      <span>ตัวเลือก <small>(พิมพ์แล้วกด Enter · วางหลายค่าคั่นด้วย , ได้)</small></span>
+      <div class="ps-chips" id="chipList"></div>
+      <div class="ps-chip-add"><input type="text" id="f-opt" placeholder="เช่น ดำ" /><button type="button" class="at-btn-ghost is-text" onclick="addChip()"><span class="material-symbols-outlined">add</span>เพิ่ม</button></div>
+    </div>`);
+  renderChips();
+  $("f-type").addEventListener("change", () => { $("optBox").hidden = $("f-type").value !== "select"; });
+  $("optBox").hidden = $("f-type").value !== "select";
+  $("f-opt").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addChip(); } });
+}
+function addChip() {
+  const raw = $("f-opt").value;
+  const vals = raw.split(",").map((s) => s.trim().replace(/\s+/g, " ")).filter(Boolean);
+  const dup = [];
+  vals.forEach((v) => {
+    const ex = _chips.find((c) => norm(c.value) === norm(v));
+    if (ex && !ex.del) dup.push(v); else if (ex) ex.del = false; else _chips.push({ id: null, value: v, del: false });
+  });
+  $("f-opt").value = ""; $("f-opt").focus(); renderChips();
+  if (dup.length) toast(`มีอยู่แล้ว: ${dup.join(", ")}`, "err");
+}
+function removeChip(i) { const c = _chips[i]; if (c.id) c.del = true; else _chips.splice(i, 1); renderChips(); }
+function renderChips() {
+  const live = _chips.filter((c) => !c.del);
+  $("chipList").innerHTML = live.length ? _chips.map((c, i) => c.del ? "" : `<span class="ps-chip${c.id ? "" : " is-new"}">${esc(c.value)}<button type="button" onclick="removeChip(${i})" aria-label="ลบ ${esc(c.value)}">×</button></span>`).join("") : `<span class="at-dim">ยังไม่มีตัวเลือก</span>`;
+}
+async function saveAttr() {
+  const name = $("f-name").value.trim().replace(/\s+/g, " "), type = $("f-type").value;
+  if ($("f-opt") && $("f-opt").value.trim()) addChip(); // ค่าที่พิมพ์ค้างไว้
+  if (!name) return formErr("กรุณาใส่ชื่อ Attribute");
+  if (A.some((a) => a.id !== _form.id && a.product_id === _drawerId && norm(a.name) === norm(name))) return formErr(`สินค้านี้มี Attribute “${name}” แล้ว`);
+  const live = _chips.filter((c) => !c.del);
+  if (type === "select" && !live.length && !confirm("ยังไม่มีตัวเลือก — เซลล์จะเลือกค่าไม่ได้ บันทึกต่อไหม?")) return false;
+  const ord = parseInt($("f-order").value, 10);
+  const row = { name, input_type: type, order_no: isNaN(ord) ? null : ord, product_id: _drawerId, category_id: prodOf(_drawerId)?.category_id || null };
+  if (_hasRequired) row.is_required = $("f-req").checked;
+  const res = _form.id ? await supabaseClient.from("attributes").update(row).eq("id", _form.id).select("*") : await supabaseClient.from("attributes").insert(row).select("*");
+  const saved = mustRows(res, "บันทึก Attribute")[0];
+  if (_form.id) Object.assign(A.find((a) => a.id === _form.id), saved); else A.push(saved);
+  // ตัวเลือก (เก็บไว้แม้เปลี่ยนเป็นพิมพ์ข้อความ เผื่อเปลี่ยนกลับ)
+  const delIds = _chips.filter((c) => c.del && c.id).map((c) => c.id);
+  if (delIds.length) { const r = await supabaseClient.from("attribute_options").delete().in("id", delIds); if (r.error) throw r.error; O = O.filter((o) => !delIds.includes(o.id)); }
+  const add = _chips.filter((c) => !c.del && !c.id).map((c) => ({ attribute_id: saved.id, value: c.value }));
+  if (add.length) { const r = await supabaseClient.from("attribute_options").insert(add).select("*"); O.push(...mustRows(r, "เพิ่มตัวเลือก")); }
+  return _form.id ? "แก้ไข Attribute แล้ว" : "เพิ่ม Attribute แล้ว";
+}
+async function moveAttr(id, dir) {
+  if (_busy) return;
+  const list = attrsOf(_drawerId), i = list.findIndex((a) => a.id === id), j = i + dir;
+  if (j < 0 || j >= list.length) return;
+  // ให้ลำดับเป็น 1..n ไม่ซ้ำ แล้วสลับคู่ที่เลื่อน
+  const next = list.map((a, k) => ({ a, n: k + 1 }));
+  [next[i].n, next[j].n] = [next[j].n, next[i].n];
+  _busy = true;
+  try {
+    for (const { a, n } of next) if (a.order_no !== n) {
+      const r = await supabaseClient.from("attributes").update({ order_no: n }).eq("id", a.id).select("id");
+      mustRows(r, "เปลี่ยนลำดับ"); a.order_no = n;
+    }
+    renderDrawer();
+  } catch (e) { alert("เปลี่ยนลำดับไม่สำเร็จ: " + e.message); } finally { _busy = false; }
+}
+async function deleteAttr(id) {
+  const a = A.find((x) => x.id === id); if (!a) return;
+  const n = optsOf(id).length;
+  if (!confirm(`ลบ Attribute “${a.name}”${n ? ` และตัวเลือก ${n} ค่า` : ""}?\nรายงานเก่าที่เคยกรอกช่องนี้จะไม่แสดงชื่อช่อง`)) return;
+  try {
+    let r = await supabaseClient.from("attribute_options").delete().eq("attribute_id", id); if (r.error) throw r.error;
+    mustRows(await supabaseClient.from("attributes").delete().eq("id", id).select("id"), "ลบ Attribute");
+    O = O.filter((o) => o.attribute_id !== id); A = A.filter((x) => x.id !== id);
+    renderAll(); toast("ลบ Attribute แล้ว");
+  } catch (e) { alert("ลบไม่สำเร็จ: " + e.message); await loadAll(); }
+}
+
+function openVarModal(id) {
+  const v = id ? V.find((x) => x.id === id) : null;
+  const f = (k, label, ph) => `<label class="at-field"><span>${label}</span><input type="text" id="f-${k}" maxlength="80" value="${esc(v?.[k] || "")}" placeholder="${ph}" /></label>`;
+  openForm("var", id, v ? "แก้ไข Variant" : "เพิ่ม Variant", `
+    ${f("sku", "SKU รุ่น", "เช่น NET-BLK-2x100")}
+    <label class="at-field"><span>สถานะ</span><select id="f-status">${Object.entries(VAR_STATUS).map(([k, l]) => `<option value="${k}"${(v?.status || "active") === k ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+    ${f("color", "สี", "ดำ, เขียว")}${f("brand", "ยี่ห้อ", "")}
+    ${f("length", "ความยาว", "50m")}${f("width", "ความกว้าง", "2m")}
+    ${f("thickness", "ความหนา", "0.10mm")}${f("feature", "คุณสมบัติพิเศษ", "")}`);
+}
+async function saveVar() {
+  const g = (k) => $("f-" + k).value.trim() || null;
+  const row = { product_id: _drawerId, sku: g("sku"), color: g("color"), brand: g("brand"), length: g("length"), width: g("width"), thickness: g("thickness"), feature: g("feature"), status: $("f-status").value };
+  if (!row.sku && !row.color && !row.length && !row.width && !row.thickness && !row.brand) return formErr("กรอกอย่างน้อย SKU หรือ สี/ขนาด/ยี่ห้อ");
+  if (row.sku && V.some((v) => v.id !== _form.id && norm(v.sku) === norm(row.sku))) return formErr(`SKU “${row.sku}” ถูกใช้แล้ว`);
+  const res = _form.id ? await supabaseClient.from("product_variants").update(row).eq("id", _form.id).select("*") : await supabaseClient.from("product_variants").insert(row).select("*");
+  const saved = mustRows(res, "บันทึก Variant")[0];
+  if (_form.id) Object.assign(V.find((v) => v.id === _form.id), saved); else V.push(saved);
+  return "บันทึก Variant แล้ว";
+}
+async function deleteVar(id) {
+  if (!confirm("ลบ Variant นี้?")) return;
+  try {
+    mustRows(await supabaseClient.from("product_variants").delete().eq("id", id).select("id"), "ลบ Variant");
+    V = V.filter((v) => v.id !== id); renderAll(); toast("ลบ Variant แล้ว");
+  } catch (e) { alert("ลบไม่สำเร็จ: " + e.message); }
+}
+
+// =====================================================
+// ฟอร์มกลาง
+// =====================================================
+function openForm(kind, id, title, html) {
+  _form = { kind, id: id || null };
+  $("formTitle").textContent = title; $("formBody").innerHTML = html; $("formErr").hidden = true;
+  $("formModal").hidden = false;
+  setTimeout(() => $("formBody").querySelector("input:not([type=checkbox]), select")?.focus(), 50);
+}
+function closeForm() { $("formModal").hidden = true; _form = null; _chips = []; }
+function formErr(m) { $("formErr").textContent = m; $("formErr").hidden = false; return false; }
+async function saveForm() {
+  if (_busy || !_form) return;
+  _busy = true; $("formSave").disabled = true; $("formErr").hidden = true;
+  try {
+    const fn = { cat: saveCat, prod: saveProd, attr: saveAttr, var: saveVar }[_form.kind];
+    const msg = await fn();
+    if (msg) { closeForm(); renderAll(); toast(msg); }
   } catch (e) {
-    console.error("delRow:", e);
-    showToast("ลบไม่สำเร็จ: " + e.message, "err");
-  }
+    console.error("save:", e);
+    formErr("บันทึกไม่สำเร็จ: " + (e.code === "23505" ? "ข้อมูลซ้ำกับที่มีอยู่" : e.message));
+  } finally { _busy = false; $("formSave").disabled = false; }
 }
-
-// =====================================================
-// MODAL HELPERS
-// =====================================================
-function openModal() {
-  document.getElementById("amModal").classList.add("open");
-  document.getElementById("modalOverlay").classList.add("open");
-  document.getElementById("modalSaveBtn").disabled    = false;
-  document.getElementById("modalSaveBtn").textContent = "💾 บันทึก";
-}
-
-function closeModal() {
-  document.getElementById("amModal").classList.remove("open");
-  document.getElementById("modalOverlay").classList.remove("open");
-  pendingOpts = [];
-  _skuManual  = false;
-}
-
-// =====================================================
-// UTILS
-// =====================================================
-function tableOf(t) {
-  return { cat:"categories", prod:"products", var:"product_variants", attr:"attributes", opt:"attribute_options" }[t];
-}
-function addTitle(t) {
-  return { cat:"➕ เพิ่มหมวดหมู่", prod:"➕ เพิ่มสินค้า", var:"➕ เพิ่ม Variant", attr:"➕ เพิ่ม Attribute", opt:"➕ เพิ่ม Option" }[t] || "เพิ่ม";
-}
-function editTitle(t) {
-  return { cat:"✏️ แก้ไขหมวดหมู่", prod:"✏️ แก้ไขสินค้า", var:"✏️ แก้ไข Variant", attr:"✏️ แก้ไข Attribute", opt:"✏️ แก้ไข Option" }[t] || "แก้ไข";
-}
-function badge(v, cls) {
-  return v ? `<span class="badge ${cls}">${esc(v)}</span>` : "—";
-}
-function esc(s) {
-  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-function fmtDate(s) {
-  if (!s) return "—";
-  try { return new Date(s).toLocaleDateString("th-TH",{year:"numeric",month:"short",day:"numeric"}); }
-  catch { return "—"; }
-}
-
-let _toastTimer;
-function showToast(msg, type="ok") {
-  const t = document.getElementById("amToast");
-  if (!t) return;
-  t.textContent = msg;
-  t.className   = `am-toast show ${type}`;
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => { t.className = `am-toast ${type}`; }, 3000);
-}
-
-console.log("✅ AddProductSpec.js loaded");

@@ -2,12 +2,22 @@
 
 <html lang="th">
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <!-- ea-guard: สคริปต์ตรวจสิทธิ์กลาง (หน้านี้เดิมไม่มี) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>ระบบขออนุมัติวงเงินเกิน - การอนุมัติ</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&amp;family=Noto+Serif+Thai:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/css/pages/forms/credit-limit-a4-document.css" />
-</head>
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
 <body>
 <!-- SIGNATURE MODAL -->
 <div class="modal-overlay" id="sigModal">
@@ -174,5 +184,7 @@
 <button class="btn btn-outline btn-sm" onclick="goPage('tracking')" title="ติดตาม">📊</button>
 </div>
 
-<script src="/js/pages/forms/credit-limit-approval.js"></script></body>
+<script src="/js/pages/forms/credit-limit-approval.js"></script>    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

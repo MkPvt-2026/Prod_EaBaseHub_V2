@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>EABaseHub | ⚠️ แจ้งเคลมสินค้า</title>
+  <title>EABaseHub | แจ้งเคลมสินค้า</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -18,15 +22,17 @@
   <link rel="stylesheet" href="/css/base/layout.css">
   <link rel="stylesheet" href="/css/pages/forms/formClaim.css">
   <link rel="stylesheet" href="/css/pages/forms/formClaim_icons.css">
-  <link rel="stylesheet" href="/css/pages/forms/formClaim_warning.css"> 
-</head>
+  <link rel="stylesheet" href="/css/pages/forms/formClaim_warning.css">
+  <link rel="stylesheet" href="/css/pages/forms/formClaim-ux.css">
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
 
 <body>
 
   <!-- ===================================================== -->
   <!-- HEADER                                                -->
   <!-- ===================================================== -->
-  <header class="app-header">
+  <header class="app-header ui-role-bar">
     <div class="logo">
       <div class="logo-circle">
         <img src="/assets/icons/icon-192.png" alt="logo">
@@ -59,184 +65,170 @@
   <!-- PAGE HEADER                                           -->
   <!-- ===================================================== -->
    <div class="claim-scope">
-
-
-  <div class="container">
-    <div class="page-header">
-      <h1>⚠️ แจ้งเคลมสินค้า</h1>
-      <p>กรอกข้อมูล • บันทึกแบบร่าง • แนบหลักฐาน • ส่งเคลม</p>
-    </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 1: ข้อมูลพนักงานและลูกค้า                         -->
-  <!-- ===================================================== -->
-  <div class="card">
-    <h2>👤 ข้อมูลพนักงานและลูกค้า</h2>
-    <h4>ข้อมูลจากระบบของคุณ</h4>
-    <div class="section-divider"></div>
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label>พนักงานขาย</label>
-        <input data-user="display_name" data-user-readonly readonly placeholder="กำลังโหลด...">
+  <div class="container cf">
+    <!-- หัวหน้า + ขั้นตอน -->
+    <section class="cf-head ui-role-hero">
+      <div>
+        <h1><span class="material-symbols-outlined">report</span> แจ้งเคลมสินค้า</h1>
+        <p>แจ้งสินค้าที่มีปัญหาพร้อมรูปหลักฐาน ส่งให้ฝ่าย QC ตรวจสอบ</p>
       </div>
-      <div class="form-group">
-        <label>เขตการขาย</label>
-        <input data-user="area" data-user-readonly readonly placeholder="กำลังโหลด...">
-      </div>
+      <ol class="cf-steps" aria-label="ขั้นตอน">
+        <li><b>1</b><span>ร้าน &amp; สินค้า</span></li>
+        <li><b>2</b><span>ปัญหา &amp; รูปถ่าย</span></li>
+        <li><b>3</b><span>ส่งเคลม</span></li>
+      </ol>
+    </section>
+
+    <div class="cf-layout">
+      <!-- ===================== ฟอร์ม ===================== -->
+      <section class="card cf-form" id="claimForm" aria-label="ฟอร์มแจ้งเคลม">
+        <div class="cf-edit-banner" id="cfEditBanner" hidden>
+          <span class="material-symbols-outlined">edit_note</span>
+          <span>กำลังแก้ไขร่าง <b id="cfEditName"></b></span>
+          <button type="button" class="cf-link-btn" onclick="cancelDraftEdit()">ยกเลิกการแก้ไข</button>
+        </div>
+
+        <!-- 1 ลูกค้า -->
+        <div class="cf-sec" id="cfSecCustomer">
+          <h2 class="cf-sec-title"><b>1</b> ลูกค้าที่แจ้งเคลม</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="claimDate">วันที่แจ้งเคลม <em class="cf-req">*</em></label>
+              <input type="date" id="claimDate" required>
+            </div>
+            <div class="form-group">
+              <label for="customer">ร้านค้า / ลูกค้า <em class="cf-req">*</em></label>
+              <select id="customer" required>
+                <option value="">กำลังโหลด...</option>
+              </select>
+            </div>
+          </div>
+          <div class="cf-reporter">
+            <span class="material-symbols-outlined">badge</span>
+            ผู้แจ้ง
+            <input data-user="display_name" data-user-readonly readonly placeholder="กำลังโหลด..." aria-label="พนักงานขาย">
+            <span class="cf-dot">·</span> เขต
+            <input data-user="area" data-user-readonly readonly placeholder="—" aria-label="เขตการขาย">
+          </div>
+        </div>
+
+        <!-- 2 สินค้า -->
+        <div class="cf-sec" id="cfSecProduct">
+          <h2 class="cf-sec-title"><b>2</b> สินค้าที่มีปัญหา</h2>
+          <p class="cf-sec-hint">แตะหมวดสินค้าเพื่อเลือกสินค้า หรือพิมพ์ชื่อสินค้าเองในช่องด้านล่าง</p>
+          <div class="product-grid">
+            <!-- JS จะ render หมวดสินค้าที่นี่ -->
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="product">ชื่อสินค้า <em class="cf-req">*</em></label>
+              <input type="text" id="product" placeholder="เลือกจากหมวดด้านบน หรือพิมพ์เอง" required>
+            </div>
+            <div class="form-group">
+              <label for="qty">จำนวน (ระบุหน่วย) <em class="cf-req">*</em></label>
+              <input type="text" id="qty" placeholder="เช่น 10 ม้วน, 5 ถุง, 3 กก." required>
+            </div>
+            <div class="form-group">
+              <label for="buyDate">วันที่เปิดบิล <span class="cf-opt">(ถ้ามี)</span></label>
+              <input type="date" id="buyDate">
+            </div>
+            <div class="form-group">
+              <label for="mfgDate">วันที่ผลิตสินค้า <span class="cf-opt">(ถ้ามี)</span></label>
+              <input type="date" id="mfgDate">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 ปัญหา -->
+        <div class="cf-sec" id="cfSecTypes">
+          <h2 class="cf-sec-title"><b>3</b> ปัญหาที่พบ <em class="cf-req">*</em></h2>
+          <p class="cf-sec-hint">เลือกได้มากกว่า 1 ข้อ</p>
+          <div class="claim-grid" id="claimTypes">
+            <div class="claim-item" role="button" tabindex="0">ชำรุดจากขนส่ง</div>
+            <div class="claim-item" role="button" tabindex="0">ฉีกขาด สภาพไม่สมบูรณ์</div>
+            <div class="claim-item" role="button" tabindex="0">ซีลไม่ติด</div>
+            <div class="claim-item" role="button" tabindex="0">อุปกรณ์ไม่ครบ</div>
+            <div class="claim-item" role="button" tabindex="0">สภาพสินค้า</div>
+            <div class="claim-item" role="button" tabindex="0">อื่นๆ</div>
+          </div>
+          <div class="form-group cf-detail">
+            <label for="detail">รายละเอียดปัญหา <span class="cf-opt" id="cfDetailHint">(ถ้าเลือก “อื่นๆ” ต้องกรอก)</span></label>
+            <textarea id="detail" rows="4" placeholder="เช่น ลักษณะความเสียหาย จุดที่พบปัญหา สภาพการใช้งาน..."></textarea>
+          </div>
+        </div>
+
+        <!-- 4 หลักฐาน -->
+        <div class="cf-sec" id="cfSecMedia">
+          <h2 class="cf-sec-title"><b>4</b> รูป / วิดีโอหลักฐาน <em class="cf-req">*</em></h2>
+          <p class="cf-sec-hint">ถ่ายให้เห็นจุดที่เสียหาย และฉลาก/ล็อตสินค้า อย่างน้อย 1 ไฟล์</p>
+          <div class="cf-existing" id="cfExistingMedia" hidden></div>
+          <div class="cf-media">
+            <div class="form-group">
+              <label>รูปภาพ</label>
+              <div class="upload-grid" id="imageGrid">
+                <label class="upload-box" title="แตะเพื่อถ่าย/เลือกรูป">
+                  <span class="material-symbols-outlined">add_a_photo</span>
+                  <small>เพิ่มรูป</small>
+                  <input type="file" id="imageInput" accept="image/*" multiple hidden>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>วิดีโอ</label>
+              <div class="upload-grid" id="videoGrid">
+                <label class="upload-box" title="แตะเพื่อถ่าย/เลือกวิดีโอ">
+                  <span class="material-symbols-outlined">videocam</span>
+                  <small>เพิ่มวิดีโอ</small>
+                  <input type="file" id="videoInput" accept="video/*" multiple hidden>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- แถบปุ่ม (ติดล่างจอ) -->
+        <div class="cf-actionbar">
+          <div class="cf-ready" id="cfReady">
+            <span class="material-symbols-outlined">checklist</span>
+            <span id="cfReadyText">กรอกข้อมูลให้ครบเพื่อส่งเคลม</span>
+          </div>
+          <button type="button" class="cf-btn-ghost" onclick="confirmClearClaim()" title="ล้างฟอร์ม">
+            <span class="material-symbols-outlined">restart_alt</span><span class="cf-hide-sm">ล้าง</span>
+          </button>
+          <button type="button" class="btn-draft cf-btn-outline" onclick="saveDraft()">
+            <span class="material-symbols-outlined">bookmark_add</span><span id="cfDraftLabel">บันทึกร่าง</span>
+          </button>
+          <button type="button" class="btn-submit cf-btn-primary" onclick="submitClaim(null)">
+            <span class="material-symbols-outlined">send</span>ส่งเคลม
+          </button>
+        </div>
+      </section>
+
+      <!-- ===================== ด้านข้าง ===================== -->
+      <aside class="cf-side">
+        <section class="card cf-panel" aria-label="สิ่งที่ต้องมีก่อนส่งเคลม">
+          <h2 class="cf-panel-title"><span class="material-symbols-outlined">fact_check</span> ก่อนส่งเคลมต้องมี</h2>
+          <ul class="cf-check" id="cfChecklist">
+            <li data-key="customer" data-target="cfSecCustomer">เลือกร้านค้า</li>
+            <li data-key="product" data-target="cfSecProduct">ชื่อสินค้า</li>
+            <li data-key="qty" data-target="cfSecProduct">จำนวน</li>
+            <li data-key="types" data-target="cfSecTypes">ปัญหาที่พบ อย่างน้อย 1 ข้อ</li>
+            <li data-key="media" data-target="cfSecMedia">รูปหรือวิดีโอ อย่างน้อย 1 ไฟล์</li>
+          </ul>
+          <p class="cf-note">ยังไม่ครบก็กด “บันทึกร่าง” เก็บไว้ก่อนได้ (ต้องมีร้าน สินค้า และจำนวน)</p>
+        </section>
+
+        <section class="card cf-panel" id="cfDraftPanel" aria-label="ร่างที่บันทึกไว้">
+          <h2 class="cf-panel-title">
+            <span class="material-symbols-outlined">inventory</span> ร่างที่บันทึกไว้
+            <span class="cf-count" id="cfDraftCount">0</span>
+          </h2>
+          <div id="draftBody" class="cf-list">
+            <div class="cf-empty">กำลังโหลด...</div>
+          </div>
+        </section>
+      </aside>
     </div>
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="claimDate">📅 วันที่แจ้งเคลม <span style="color:#ef4444">*</span></label>
-        <input type="date" id="claimDate" required>
-      </div>
-      <div class="form-group">
-        <label for="customer">🏪 ลูกค้า / ร้านค้า <span style="color:#ef4444">*</span></label>
-        <select id="customer" required>
-          <option value="">⏳ กำลังโหลด...</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 2: ข้อมูลสินค้า                              -->
-  <!-- ===================================================== -->
-  <div class="section-card">
-    <h2>📦 ข้อมูลสินค้าที่ต้องการเคลม</h2>
-    <h4>กรอกข้อมูลเกี่ยวกับสินค้าที่พบปัญหา</h4>
-    <div class="section-divider"></div>
-
-    <div class="section-title">ℹ️ ข้อมูลทั่วไป</div>
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="buyDate">📄 วันที่เปิดบิล</label>
-        <input type="date" id="buyDate">
-      </div>
-      <div class="form-group">
-        <label for="mfgDate">🏭 วันที่ผลิตสินค้า</label>
-        <input type="date" id="mfgDate">
-      </div>
-    </div>
-
-    <div class="section-divider"></div>
-    <div class="section-title">🛍️ เลือกประเภทสินค้า</div>
-
-    <div class="product-grid">
-      <!-- JS จะ render product items ที่นี่ -->
-    </div>
-
-    <div class="section-title">📝 รายละเอียดสินค้า</div>
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="product">ชื่อสินค้า <span style="color:#ef4444">*</span></label>
-        <input type="text" id="product" placeholder="แตะเลือกประเภทสินค้าด้านบน หรือพิมพ์เอง" required>
-      </div>
-      <div class="form-group">
-        <label for="qty">จำนวน (ระบุหน่วย) <span style="color:#ef4444">*</span></label>
-        <input type="text" id="qty" placeholder="เช่น 10 ม้วน, 5 ถุง, 3 กก." required>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 3: ประเภทปัญหา                               -->
-  <!-- ===================================================== -->
-  <div class="card-cause">
-    <h2>⚠️ ประเภทปัญหา <span style="color:#ef4444;font-size:16px">*</span></h2>
-    <h4>เลือกประเภทปัญหาที่พบ (เลือกได้หลายรายการ)</h4>
-
-    <div class="claim-grid" id="claimTypes">
-      <div class="claim-item">ชำรุดจากขนส่ง</div>
-      <div class="claim-item">ฉีกขาด สภาพไม่สมบูรณ์</div>
-      <div class="claim-item">ซีลไม่ติด</div>
-      <div class="claim-item">อุปกรณ์ไม่ครบ</div>
-      <div class="claim-item">สภาพสินค้า</div>
-      <div class="claim-item">อื่นๆ</div>
-    </div>
-
-    <h3>📝 รายละเอียดเพิ่มเติม</h3>
-    <textarea
-      id="detail"
-      rows="5"
-      placeholder="อธิบายรายละเอียดปัญหาที่พบ เช่น ลักษณะความเสียหาย, จุดที่พบปัญหา, สภาพการใช้งาน..."
-    ></textarea>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 4: แนบไฟล์                                   -->
-  <!-- ===================================================== -->
-  <div class="card">
-    <h2>📷 แนบหลักฐาน <span style="color:#ef4444;font-size:16px">*</span></h2>
-    <h4>แนบรูปภาพหรือวิดีโอแสดงสภาพของสินค้าที่มีปัญหา</h4>
-
-    <div class="form-group" style="margin-bottom:20px">
-      <label>📸 รูปภาพ</label>
-      <div class="upload-grid" id="imageGrid">
-        <label class="upload-box" title="แตะเพื่อเพิ่มรูป">
-          📷
-          <input type="file" id="imageInput" accept="image/*" multiple hidden>
-        </label>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>🎥 วิดีโอ</label>
-      <div class="upload-grid" id="videoGrid">
-        <label class="upload-box" title="แตะเพื่อเพิ่มวิดีโอ">
-          🎬
-          <input type="file" id="videoInput" accept="video/*" multiple hidden>
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 5: ปุ่มบันทึกแบบร่าง                        -->
-  <!-- ===================================================== -->
-  <div class="actions">
-    <button class="btn-draft" onclick="saveDraft()">💾 บันทึกแบบร่าง</button>
-    <button class="btn-edit" onclick="submitEdit()">✏️ อัปเดท Draft</button>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 6: ปุ่มส่งเคลมจากฟอร์ม (กรอกข้อมูลใหม่)     -->
-  <!-- ===================================================== -->
-  <div class="actions">
-    <button class="btn-submit" onclick="submitClaim(null)">✅ ส่งเคลมทันที (จากฟอร์มด้านบน)</button>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- SECTION 7: ตาราง Draft + ปุ่มส่งแต่ละรายการ          -->
-  <!-- ===================================================== -->
-  <div class="card">
-    <h2>📋 รายการแบบร่าง (Draft)</h2>
-    <h4>เลือกรายการแล้วกด ✅ ส่งเคลม — หรือ ✏️ แก้ไขก่อนส่ง</h4>
-
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <table>
-        <thead>
-          <tr>
-            <th>วันที่ / ร้านค้า</th>
-            <th>สินค้า / ปัญหา</th>
-            <th>ไฟล์แนบ</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody id="draftBody">
-          <tr>
-            <td colspan="4" style="text-align:center;color:#9ca3af;padding:40px;">
-              ⏳ กำลังโหลด...
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
   </div><!-- /.container -->
    </div><!--claim-scope-->
   <!-- ===================================================== -->
@@ -245,7 +237,7 @@
   <div class="modal" id="productModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>🛍️ เลือกสินค้า</h3>
+        <h3>เลือกสินค้า</h3>
         <button class="modal-close-btn" onclick="closeProductModal()">✕</button>
       </div>
       <div id="modalBody"></div>
@@ -272,5 +264,7 @@
   <script src="/js/core/splash.js"></script> 
   <script src="/js/core/loadingSplash.js"></script>
 
-</body>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

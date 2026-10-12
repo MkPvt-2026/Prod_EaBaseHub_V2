@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="th">
   <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -23,11 +27,13 @@
     <link rel="stylesheet" href="/css/base/bass-layout.css" />
     <!-- <link rel="stylesheet" href="/css/base/layout.css" /> -->
     <link rel="stylesheet" href="/css/pages/report/report.css" />
+    <link rel="stylesheet" href="/css/pages/report/report-ux.css" />
+      <link rel="stylesheet" href="/css/base/ui-cards.css" />
   </head>
 
   
   <body>
-    <header class="app-header">
+    <header class="app-header ui-role-bar">
       <div class="logo">
         <div class="logo-circle">
           <img src="/assets/icons/icon-192.png" alt="logo" />
@@ -66,264 +72,195 @@
     </nav>
 
     <main>
-      <div class="container">
-        <!-- PAGE HEADER -->
-        <div class="page-header">
-          <h1>
-            <span class="material-symbols-outlined icon-xl">description</span>
-            Report Management
-          </h1>
-          <p>กรอกข้อมูล • Save Draft (เก็บในเครื่อง) • ส่งรายงานสัปดาห์</p>
-        </div>
-
-        <!-- ===================================================== -->
-        <!-- SECTION 1: FORM                                        -->
-        <!-- ===================================================== -->
-        <div class="card">
-          <h2>
-            <span class="material-symbols-outlined icon-xl icon-green"
-              >edit_note</span
-            >
-            กรอกข้อมูลรายงาน
-          </h2>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label>วันที่</label>
-              <input type="date" id="reportDate" />
-            </div>
-
-            <div class="form-group">
-              <label>จังหวัด</label>
-              <select id="provinceSelect">
-                <option value="">-- เลือกจังหวัด --</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>ร้านค้า</label>
-              <select id="shopSelect" disabled>
-                <option value="">-- เลือกจังหวัดก่อน --</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>สถานะการเยี่ยม</label>
-              <select id="status">
-                <option value="เข้าพบลูกค้า">เข้าพบลูกค้า</option>
-                <option value="รอเข้าพบรอบต่อไป">รอเข้าพบรอบต่อไป</option>
-              </select>
-            </div>
-
-            <div class="form-group full">
-              <label>รายละเอียด / หมายเหตุ</label>
-              <textarea
-                id="note"
-                rows="3"
-                placeholder="บันทึกสิ่งที่พูดคุย สิ่งที่ต้องติดตาม..."
-              ></textarea>
-            </div>
+      <div class="container rp">
+        <!-- หัวหน้า + ขั้นตอนการใช้งาน -->
+        <section class="rp-head ui-role-hero">
+          <div class="rp-head-text">
+            <h1>
+              <span class="material-symbols-outlined">storefront</span>
+              บันทึกการเยี่ยมร้าน
+            </h1>
+            <p>บันทึกทุกร้านที่เข้าเยี่ยม แล้วส่งรายงานให้หัวหน้าภายในสัปดาห์</p>
           </div>
+          <ol class="rp-steps" aria-label="ขั้นตอน">
+            <li><b>1</b><span>กรอกข้อมูลร้าน</span></li>
+            <li><b>2</b><span>กด “บันทึกร่าง”</span></li>
+            <li><b>3</b><span>กด “ส่งรายงาน”</span></li>
+          </ol>
+        </section>
 
-          <!-- ===================================================== -->
-          <!-- PRODUCT PICKER SECTION                                 -->
-          <!-- ===================================================== -->
+        <div class="rp-layout">
+          <!-- ===================== ฟอร์ม ===================== -->
+          <section class="rp-form card" id="reportForm" aria-label="ฟอร์มบันทึกการเยี่ยมร้าน">
+            <div class="rp-edit-banner" id="editBanner" hidden>
+              <span class="material-symbols-outlined">edit_note</span>
+              <span>กำลังแก้ไขร่าง <b id="editBannerShop"></b></span>
+              <button type="button" class="rp-link-btn" onclick="cancelEditDraft()">ยกเลิกการแก้ไข</button>
+            </div>
 
-          <div class="form-section-divider">
-            <span>
-              <span class="material-symbols-outlined icon-lg icon-green"
-                >inventory_2</span
-              >
-              สินค้าที่จำหน่ายกับร้านนี้
-            </span>
-          </div>
-
-          <!-- Picker: เลือกสินค้า 1 ชุด -->
-          <div class="product-picker">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>หมวดสินค้า</label>
-                <select id="pickerCategory">
-                  <option value="">-- เลือกหมวดสินค้า --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>สินค้า</label>
-                <select id="pickerProduct">
-                  <option value="">-- เลือกสินค้า --</option>
-                </select>
+            <!-- ขั้น 1 -->
+            <div class="rp-sec">
+              <h2 class="rp-sec-title"><b>1</b> ร้านที่เข้าเยี่ยม</h2>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="reportDate">วันที่เข้าเยี่ยม</label>
+                  <input type="date" id="reportDate" />
+                </div>
+                <div class="form-group">
+                  <label for="status">ผลการเยี่ยม</label>
+                  <select id="status">
+                    <option value="เข้าพบลูกค้า">เข้าพบลูกค้า</option>
+                    <option value="รอเข้าพบรอบต่อไป">รอเข้าพบรอบต่อไป</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="provinceSelect">จังหวัด</label>
+                  <select id="provinceSelect">
+                    <option value="">-- เลือกจังหวัด --</option>
+                  </select>
+                </div>
+                <div class="form-group" id="shopGroup">
+                  <label for="shopSelect">ร้านค้า <em class="rp-req">*</em></label>
+                  <select id="shopSelect" disabled>
+                    <option value="">-- เลือกจังหวัดก่อน --</option>
+                  </select>
+                  <small class="rp-field-error" id="shopError" hidden>กรุณาเลือกร้านค้า</small>
+                </div>
               </div>
             </div>
 
-            <!-- Attributes จะถูก render ตรงนี้ -->
-            <div id="pickerAttributes" class="picker-attributes"></div>
+            <!-- ขั้น 2 -->
+            <div class="rp-sec rp-sec-products">
+              <div class="rp-sec-head">
+                <h2 class="rp-sec-title"><b>2</b> สินค้าที่ร้านขายอยู่</h2>
+                <label class="rp-toggle product-status-card" for="noProductFlag">
+                  <span class="switch">
+                    <input type="checkbox" id="noProductFlag" />
+                    <span class="slider"></span>
+                  </span>
+                  <span class="toggle-label">ร้านนี้ยังไม่มีสินค้าของเรา</span>
+                </label>
+              </div>
 
-            <button type="button" class="btn-add-product" id="addProductBtn">
-              <span class="material-symbols-outlined">add_circle</span>
-              เพิ่มสินค้า
-            </button>
-          </div>
+              <div class="product-picker">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="pickerCategory">หมวดสินค้า</label>
+                    <select id="pickerCategory">
+                      <option value="">-- เลือกหมวดสินค้า --</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="pickerProduct">สินค้า</label>
+                    <select id="pickerProduct">
+                      <option value="">-- เลือกสินค้า --</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="pickerAttributes" class="picker-attributes"></div>
+                <button type="button" class="btn-add-product" id="addProductBtn">
+                  <span class="material-symbols-outlined">add</span>
+                  เพิ่มสินค้านี้
+                </button>
+              </div>
 
-          <div class="product-status-card">
-            <div class="status-left">
-              <span class="status-title">สินค้า</span>
-              <div class="status-count">
-                <span id="selectedProductCount">0</span>
-                <small>รายการ</small>
+              <div class="rp-picked">
+                <div class="rp-picked-head">
+                  สินค้าที่เพิ่มแล้ว <span class="rp-count" id="selectedProductCount">0</span>
+                </div>
+                <div id="productContainer">
+                  <div id="selectedProductList" class="selected-product-list">
+                    <div class="empty-product-list">ยังไม่มีสินค้า</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="status-right">
-              <label class="switch">
-                <input type="checkbox" id="noProductFlag" />
-                <span class="slider"></span>
-              </label>
-
-              <span class="toggle-label"> ร้านนี้ยังไม่มีสินค้า </span>
-            </div>
-          </div>
-
-          <!-- <div>
-        <div id="selectedProductList" class="selected-product-list">
-          <div class="empty-product-list">ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>
-        </div>
-      </div> -->
-
-          <!-- กล่องแสดงรายการสินค้า -->
-          <div id="productContainer" style="display: none">
-            <div id="selectedProductList" class="selected-product-list">
-              <div class="empty-product-list">
-                ยังไม่มีรายการสินค้าที่จำหน่ายกับร้านนี้ — เลือกจาก dropdown
-                ด้านบนแล้วกด "เพิ่มสินค้า"
+            <!-- ขั้น 3 -->
+            <div class="rp-sec">
+              <h2 class="rp-sec-title"><b>3</b> สิ่งที่ได้จากการเยี่ยม</h2>
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label for="note">รายละเอียด / สิ่งที่ต้องติดตาม</label>
+                  <textarea id="note" rows="3" placeholder="เช่น คุยเรื่องโปรโมชั่น ลูกค้าขอใบเสนอราคา นัดเข้าพบอีกครั้ง..."></textarea>
+                </div>
+                <div class="form-group full">
+                  <label for="productInterest">สินค้าที่ร้านอยากได้ / แนะนำ</label>
+                  <textarea id="productInterest" rows="2" placeholder="สินค้าที่ร้านสนใจหรือแนะนำ พร้อมเหตุผล"></textarea>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="form-section-divider">
-            <span>
-              <span class="material-symbols-outlined icon-lg icon-green"
-                >recommend</span
-              >
-              สินค้าที่ร้านแนะนำ (ต้องการซื้อ)
-            </span>
-          </div>
+            <!-- แถบปุ่ม (ติดล่างจอตอนเลื่อน) -->
+            <div class="rp-actionbar">
+              <p class="rp-actionbar-hint form-hint">
+                <span class="material-symbols-outlined">info</span>
+                บันทึกร่างเก็บไว้ในเครื่องนี้ — ยังไม่ส่งถึงหัวหน้า
+              </p>
+              <a href="#draftSection" class="rp-jump" id="draftJump" hidden>
+                <span class="material-symbols-outlined">outbox</span>
+                รอส่ง <b id="draftJumpCount">0</b>
+              </a>
+              <button type="button" class="rp-btn-ghost" onclick="confirmClearForm()">ล้างฟอร์ม</button>
+              <button type="button" class="btn-draft rp-btn-primary" id="saveDraftBtn" onclick="saveDraft()">
+                <span class="material-symbols-outlined">bookmark_add</span>
+                <span id="saveDraftLabel">บันทึกร่าง</span>
+              </button>
+            </div>
+          </section>
 
-          <div class="form-group full">
-            <label>ร้านค้าแนะนำสินค้า</label>
-            <textarea
-              id="productInterest"
-              rows="1"
-              placeholder="สินค้าที่ร้านค้าแนะนำ / เหตุผล"
-            ></textarea>
-          </div>
+          <!-- ===================== ด้านข้าง: รอส่ง + ส่งแล้ว ===================== -->
+          <aside class="rp-side">
+            <section class="card rp-panel draft-section" id="draftSection" aria-label="ร่างที่รอส่ง">
+              <div class="rp-panel-head">
+                <h2>
+                  <span class="material-symbols-outlined">outbox</span>
+                  รอส่ง
+                  <span class="rp-count rp-count-warn" id="draftCount">0</span>
+                  <span id="draftCount2" hidden>0</span>
+                </h2>
+              </div>
+              <div id="draftBody" class="rp-list"></div>
+              <div class="rp-draft-foot">
+                <button type="button" class="btn-submit-all rp-btn-primary rp-btn-block" id="submitAllBtn" onclick="submitAllDrafts()">
+                  <span class="material-symbols-outlined">send</span>
+                  ส่งรายงานทั้งหมด
+                </button>
+                <p class="draft-hint">
+                  <span class="material-symbols-outlined">warning</span>
+                  ร่างอยู่ในเครื่องนี้เท่านั้น ล้างเบราว์เซอร์หรือเปลี่ยนเครื่องแล้วจะหาย — ส่งก่อนสิ้นสัปดาห์
+                </p>
+              </div>
+            </section>
 
-          <!-- ปุ่ม Save Draft -->
-          <div class="actions">
-            <button class="btn-draft" onclick="saveDraft()">
-              <span class="material-symbols-outlined">save</span>
-              Save Draft
-              <span class="draft-badge" id="draftCount">0</span>
-            </button>
-          </div>
-
-          <p class="form-hint">
-            <span class="material-symbols-outlined">lightbulb</span>
-            <strong>Save Draft</strong> = เก็บในเครื่องนี้ ยังไม่ส่งให้ผู้บริหาร
-          </p>
-        </div>
-        <!-- End Card -->
-
-        <!-- ===================================================== -->
-        <!-- SECTION 2: DRAFT LIST                                 -->
-        <!-- ===================================================== -->
-        <div class="card draft-section" id="draftSection" style="display: none">
-          <h2>
-            <span class="material-symbols-outlined icon-lg icon-orange"
-              >edit_document</span
-            >
-            Draft ที่รอส่ง (<span id="draftCount2">0</span> รายการ)
-          </h2>
-
-          <div class="draft-hint">
-            <span class="material-symbols-outlined icon-lg icon-red"
-              >warning</span
-            >
-            Draft เก็บเฉพาะในเบราว์เซอร์นี้ — หากล้าง cache
-            หรือเปลี่ยนอุปกรณ์ข้อมูลจะหาย กรุณาส่งรายงานก่อนสิ้นสัปดาห์
-          </div>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>วันที่</th>
-                  <th>ร้านค้า</th>
-                  <th>สินค้า</th>
-                  <th>รายละเอียด</th>
-                  <th>บันทึกเมื่อ</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody id="draftBody"></tbody>
-            </table>
-          </div>
-
-          <div class="section-header-row" style="margin-top: 16px">
-            <button
-              class="btn-submit-all"
-              id="submitAllBtn"
-              onclick="submitAllDrafts()"
-            >
-              <span class="material-symbols-outlined">send</span>
-              ส่งรายงานประจำสัปดาห์ทั้งหมด
-            </button>
-          </div>
-        </div>
-
-        <!-- ===================================================== -->
-        <!-- SECTION 3: SUBMITTED REPORTS                           -->
-        <!-- ===================================================== -->
-        <div class="section">
-          <h2>
-            <span class="material-symbols-outlined icon-lg icon-green"
-              >task_alt</span
-            >
-            รายงานที่ส่งแล้ว
-          </h2>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>วันที่ส่ง</th>
-                  <th>ร้านค้า</th>
-                  <th>สถานะ</th>
-                  <th>รายละเอียด</th>
-                  <th>สินค้า</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody id="reportBody">
-                <tr>
-                  <td
-                    colspan="6"
-                    style="text-align: center; color: #aaa; padding: 24px"
-                  >
-                    ยังไม่มีข้อมูล
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <section class="card rp-panel section" aria-label="รายงานที่ส่งแล้ว">
+              <div class="rp-panel-head">
+                <h2>
+                  <span class="material-symbols-outlined">task_alt</span>
+                  ส่งแล้ว
+                </h2>
+              </div>
+              <div class="rp-filter">
+                <div class="rp-chips" role="tablist" id="sentPeriodChips">
+                  <button type="button" class="rp-chip active" data-period="week">สัปดาห์นี้ <span id="sentCountWeek">0</span></button>
+                  <button type="button" class="rp-chip" data-period="month">เดือนนี้ <span id="sentCountMonth">0</span></button>
+                  <button type="button" class="rp-chip" data-period="all">ทั้งหมด <span id="sentCountAll">0</span></button>
+                </div>
+                <div class="rp-search">
+                  <span class="material-symbols-outlined">search</span>
+                  <input type="search" id="sentSearch" placeholder="ค้นหาชื่อร้าน / สินค้า" />
+                </div>
+              </div>
+              <div id="reportBody" class="rp-list">
+                <div class="rp-empty">กำลังโหลด...</div>
+              </div>
+              <button type="button" class="rp-btn-ghost rp-btn-block" id="sentMoreBtn" hidden onclick="showMoreSent()">แสดงเพิ่ม</button>
+            </section>
+          </aside>
         </div>
       </div>
-      <!-- End Container -->
     </main>
 
-    <!-- ! End Container -->
-    <!-- * End Container -->
-    <!-- ? End Container -->
-    <!-- todo End Container -->
 
     <!-- ===================================================== -->
     <!-- MODAL                                                  -->
@@ -381,7 +318,7 @@
                 text-transform: uppercase;
                 letter-spacing: 0.4px;
               "
-              >Comment</label
+              >ความคิดเห็นจากหัวหน้า</label
             >
             <div id="m-manager-comments" style="margin-top: 8px"></div>
 
@@ -437,5 +374,7 @@
     <script src="/js/pages/report/report.js"></script>
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingSplash.js"></script>
+      <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
   </body>
 </html>

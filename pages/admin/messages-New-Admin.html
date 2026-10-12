@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — จัดการข้อความแจ้งเตือน</title>
@@ -164,8 +168,9 @@ textarea { resize:vertical; min-height:100px; }
 .toast.ok  { background:var(--green); }
 .toast.err { background:var(--danger); }
 </style>
-</head>
-<body>
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
+<body class="ui-dark">
 
 <header>
   <a href="/pages/dashboard/messages-New.html" class="back-btn">‹</a>
@@ -534,5 +539,6 @@ function toast(msg, err=false) {
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 </script>
-</body>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

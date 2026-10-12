@@ -165,9 +165,13 @@ const AnnouncementsModule = (() => {
         if (!btn) return;
 
         // Show add button only for admin/manager
+        // ปุ่ม "สร้างประกาศ" → พาไปหน้าจัดการของฝั่งตัวเอง (Admin / การตลาด) · ประกาศชุดเดียวกัน
         const role = currentUser?.role?.toLowerCase() || '';
-        if (['admin', 'adminqc', 'manager', 'marketing'].includes(role)) {
+        const target = role === 'admin' ? '/pages/admin/Adminannouncements.html'
+            : (role === 'manager' || role === 'marketing') ? '/pages/marketing/announcements.html' : '';
+        if (target) {
             btn.style.display = 'inline-flex';
+            btn.onclick = () => { location.href = target; };
         } else {
             btn.style.display = 'none';
         }

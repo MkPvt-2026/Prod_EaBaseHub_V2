@@ -1,0 +1,122 @@
+/* =====================================================
+   AddProductSpec-ux.css — สินค้าและหมวดหมู่ (Admin)
+   ใช้ร่วมกับ admintor-ux.css (โครง/ปุ่ม/ตาราง/หน้าต่าง) · โน้ตบุ๊กเป็นหลัก
+   ===================================================== */
+
+.ps-stats { display: flex; flex-wrap: wrap; gap: 6px; }
+.ps-stat {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px;
+  background: var(--ui-panel); border: 1px solid var(--ui-line); font-size: 13px; color: var(--ui-label);
+}
+.ps-stat .material-symbols-outlined { font-size: 17px; }
+.ps-stat b { color: var(--ui-num); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ps-stat.is-warn { border-color: rgba(251, 146, 60, 0.45); color: var(--ui-warn); }
+.ps-stat.is-warn b { color: var(--ui-warn); }
+
+.ps-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 14px; align-items: start; }
+.ps-layout .at-card { margin-bottom: 0; }
+
+/* ---------- หมวดหมู่ ---------- */
+.ps-cats { position: sticky; top: 12px; padding: 12px; }
+.ps-cats .at-card-head { margin-bottom: 6px; padding: 0 4px; }
+.ps-cats .at-card-head h2 .material-symbols-outlined { color: var(--ui-icon); }
+.ps-cat-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: calc(100vh - 290px); overflow-y: auto; }
+.ps-cat { position: relative; display: flex; align-items: center; border-radius: 10px; }
+.ps-cat-main {
+  flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; height: 40px; padding: 0 10px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ui-num); font-family: inherit; font-size: 14px; text-align: left; cursor: pointer;
+}
+.ps-cat-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-cat-main b { font-size: 12px; font-weight: 500; color: var(--ui-label); font-variant-numeric: tabular-nums; }
+.ps-cat:hover .ps-cat-main { background: var(--ui-hover); }
+.ps-cat.is-on .ps-cat-main { background: rgba(var(--role-rgb), 0.2); box-shadow: inset 3px 0 0 var(--role-color); }
+.ps-cat.is-on .ps-cat-main b { color: var(--ui-num); }
+.ps-cat-act { position: absolute; right: 36px; display: none; gap: 2px; }
+.ps-cat:hover .ps-cat-act, .ps-cat:focus-within .ps-cat-act { display: flex; }
+.ps-cat-act button { width: 28px; height: 28px; border: 0; border-radius: 7px; background: #1e2738; color: var(--ui-label); display: grid; place-items: center; cursor: pointer; }
+.ps-cat-act button:hover { color: var(--ui-num); }
+.ps-cat-act .material-symbols-outlined { font-size: 16px; }
+
+/* ---------- สินค้า ---------- */
+.ps-title { margin: 0 6px 0 0; font-size: 16px; font-weight: 600; color: var(--ui-num); white-space: nowrap; }
+.ps-prods .at-search { flex: 1 1 220px; }
+.ps-table-wrap { max-height: calc(100vh - 290px); }
+.ps-prow { cursor: pointer; }
+.ps-prow.is-on td { background: rgba(var(--role-rgb), 0.14) !important; }
+.ps-pname { font-weight: 500; }
+.ps-pdesc { display: block; max-width: 360px; font-size: 12px; color: var(--ui-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.at-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.at-table th[hidden] { display: none; }
+
+/* ---------- แผงรายละเอียด ---------- */
+.ps-drawer-bg { position: fixed; inset: 0; z-index: 1900; background: rgba(2, 6, 23, 0.45); }
+.ps-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 1901; width: min(600px, 100vw); display: flex; flex-direction: column;
+  background: #141b28; border-left: 1px solid var(--ui-line); box-shadow: -18px 0 40px rgba(0, 0, 0, 0.4); font-family: "Kanit", sans-serif; color: var(--ui-num);
+}
+.ps-drawer[hidden], .ps-drawer-bg[hidden] { display: none; }
+.ps-drawer-head { display: flex; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--ui-line); }
+.ps-drawer-head small { font-size: 12.5px; color: var(--ui-label); }
+.ps-drawer-head h3 { margin: 2px 0 6px; font-size: 19px; font-weight: 600; }
+.ps-drawer-actions { display: flex; align-items: flex-start; gap: 6px; }
+.ps-drawer-body { flex: 1; overflow-y: auto; padding: 14px 18px 24px; }
+.ps-desc { margin: 0 0 14px; font-size: 13.5px; color: var(--ui-label); line-height: 1.6; }
+.ps-desc[hidden] { display: none; }
+.ps-sec + .ps-sec { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--ui-divider); }
+.ps-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ps-sec-head h4 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 15px; font-weight: 600; }
+.ps-sec-head h4 .material-symbols-outlined { font-size: 19px; color: var(--ui-icon); }
+.ps-hint { margin: 2px 0 10px; font-size: 12px; color: var(--ui-label); }
+.ps-empty { margin: 8px 0 0; padding: 14px; border: 1px dashed var(--ui-line); border-radius: 10px; font-size: 13px; color: var(--ui-label); text-align: center; list-style: none; }
+
+.ps-attrs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ps-attr { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--ui-line); background: var(--ui-panel); }
+.ps-attr.is-bad { border-color: rgba(251, 146, 60, 0.5); }
+.ps-attr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ps-order { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--ui-icon-bg); color: var(--ui-icon); }
+.ps-attr-head b { font-size: 14.5px; font-weight: 500; }
+.ps-req { font-size: 11px; padding: 0 7px; border-radius: 999px; background: rgba(248, 113, 113, 0.16); color: var(--ui-bad); }
+.ps-type { font-size: 12px; color: var(--ui-label); }
+.ps-attr-act { margin-left: auto; display: flex; gap: 2px; }
+.ps-attr-act button { width: 30px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--ui-label); display: grid; place-items: center; cursor: pointer; }
+.ps-attr-act button:hover:not(:disabled) { background: var(--ui-hover); color: var(--ui-num); }
+.ps-attr-act button:disabled { opacity: 0.3; cursor: default; }
+.ps-attr-act .material-symbols-outlined { font-size: 17px; }
+.ps-opts { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 0 30px; }
+.ps-opt { padding: 1px 9px; border-radius: 999px; background: var(--ui-hover); border: 1px solid var(--ui-line); font-size: 12.5px; }
+.ps-warn { display: flex; align-items: center; gap: 4px; margin: 6px 0 0 30px; font-size: 12.5px; color: var(--ui-warn); }
+.ps-warn .material-symbols-outlined { font-size: 16px; }
+.ps-var-wrap { max-height: none; min-height: 0; margin-top: 8px; }
+
+.at-btn-ghost.is-text { height: 32px; padding: 0 10px; font-size: 13px; width: auto; }
+
+/* ---------- ฟอร์ม ---------- */
+.ps-full { grid-column: 1 / -1; }
+.at-form textarea {
+  width: 100%; border-radius: 10px; border: 1px solid var(--ui-line); background: var(--ui-hover); color: var(--ui-num);
+  font-family: inherit; font-size: 14px; padding: 8px 10px; box-sizing: border-box; resize: vertical;
+}
+.at-form textarea:focus { outline: none; border-color: var(--role-color); box-shadow: 0 0 0 3px rgba(var(--role-rgb), 0.22); }
+.ps-check { display: flex; align-items: center; gap: 8px; align-self: end; height: 38px; font-size: 14px; color: var(--ui-num); cursor: pointer; }
+.ps-check input { width: 18px; height: 18px; accent-color: var(--role-color); }
+#optBox > span small { color: var(--ui-label); font-size: 11.5px; }
+.ps-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; padding: 6px; border-radius: 10px; border: 1px dashed var(--ui-line); }
+.ps-chip { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 4px 0 10px; border-radius: 999px; background: var(--ui-hover); border: 1px solid var(--ui-line); font-size: 13px; }
+.ps-chip.is-new { border-color: rgba(var(--role-rgb), 0.6); }
+.ps-chip button { width: 20px; height: 20px; border: 0; border-radius: 50%; background: transparent; color: var(--ui-label); cursor: pointer; font-size: 15px; line-height: 1; }
+.ps-chip button:hover { background: rgba(248, 113, 113, 0.2); color: var(--ui-bad); }
+.ps-chip-add { display: flex; gap: 6px; margin-top: 6px; }
+.ps-chip-add input { flex: 1; }
+
+@media (max-width: 1100px) {
+  .ps-layout { grid-template-columns: 210px minmax(0, 1fr); }
+}
+@media (max-width: 800px) {
+  .ps-layout { grid-template-columns: 1fr; }
+  .ps-cats { position: static; }
+  .ps-cat-list { max-height: 220px; }
+}
+
+/* แผงรายละเอียดต้องอยู่เหนือหัวเว็บ และหน้าต่างฟอร์ม/แจ้งเตือนอยู่เหนือแผง */
+.at-modal { z-index: 2100; }
+.at-toast { z-index: 2200; }

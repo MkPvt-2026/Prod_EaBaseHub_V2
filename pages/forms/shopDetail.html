@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="th">
   <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -11,11 +15,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/css/base/layout.css" />
     <link rel="stylesheet" href="/css/pages/forms/shopDetail.css" />
+      <link rel="stylesheet" href="/css/base/ui-cards.css" />
   </head>
 
   <body>
 
-    <header class="app-header">
+    <header class="app-header ui-role-bar">
       <div class="logo">
         <div class="logo-circle">
           <img src="/assets/icons/icon-192.png" alt="logo">
@@ -153,5 +158,7 @@
 
     <script src="/js/core/splash.js"></script>
     <script src="/js/core/loadingOverlay.js"></script>
+      <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
   </body>
 </html>

@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="th" data-theme="dark">
   <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
     <!-- =====================================================
       META / PAGE TITLE
     ====================================================== -->
@@ -48,6 +51,7 @@
     ====================================================== -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <link rel="stylesheet" href="/css/pages/Qc-claim/external-claims.css" />
+      <link rel="stylesheet" href="/css/base/ui-cards.css" />
   </head>
 
   <body class="role-adminQc">
@@ -59,7 +63,7 @@
       <!-- =====================================================
         SIDEBAR
       ====================================================== -->
-      <aside class="app-sidebar collapsed" id="appSidebar">
+      <aside class="app-sidebar collapsed ui-role-side" id="appSidebar">
         <!-- Logo / Brand -->
         <div class="sidebar-logo">
           <div class="sidebar-logo-circle">
@@ -203,7 +207,7 @@
           <!-- =====================================================
             SUMMARY CARDS
           ====================================================== -->
-          <section class="qc-summary" aria-label="สรุปจำนวนเคลมลูกค้า">
+          <section class="qc-summary ui-strip" aria-label="สรุปจำนวนเคลมลูกค้า">
             <div class="summary-card total">
               <div class="summary-icon">
                 <span class="material-symbols-outlined">support_agent</span>
@@ -690,5 +694,7 @@
 
       updateHeaderDate();
     </script>
+      <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
   </body>
 </html>

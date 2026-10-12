@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | EABaseHub</title>
@@ -12,19 +15,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 
   <!-- CSS -->
   <link rel="stylesheet" href="/css/base/role-colors.css">
   <link rel="stylesheet" href="/css/pages/dashboard/adminDashboard.css" />
-</head>
-<body class="role-admin">
+  <link rel="stylesheet" href="/css/pages/dashboard/adminDashboard-ux.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
+<body class="ui-dark role-admin">
 
 <div class="app-layout">
 
   <!-- ═══════════ SIDEBAR ═══════════ -->
-  <aside class="app-sidebar collapsed" id="appSidebar">
+  <aside class="app-sidebar collapsed ui-role-side" id="appSidebar">
 
     <div class="sidebar-logo">
       <div class="sidebar-logo-circle">
@@ -39,47 +43,26 @@
     </div>
 
     <nav class="sidebar-nav" id="sidebarNav">
-
-      <a href="/pages/dashboard/adminDashboard.html"
-         class="sidebar-nav-item" title="หน้าหลัก">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">home</span>
-        </div>
+      <a href="/pages/dashboard/adminDashboard.html" class="sidebar-nav-item" title="หน้าหลัก Admin">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">space_dashboard</span></div>
         <span class="nav-label">หน้าหลัก</span>
       </a>
-
-      <a href="#"
-         class="sidebar-nav-item" title="รายงาน">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">assignment</span>
-        </div>
-        <span class="nav-label">รายงาน</span>
+      <a href="/pages/admin/admintor.html" class="sidebar-nav-item" title="ผู้ใช้งานและสิทธิ์">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">manage_accounts</span></div>
+        <span class="nav-label">ผู้ใช้งาน</span>
       </a>
-
-      <a href="#"
-         class="sidebar-nav-item" title="รายงาน">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">assignment</span>
-        </div>
-        <span class="nav-label">รายงาน</span>
+      <a href="/pages/admin/adminShops.html" class="sidebar-nav-item" title="ร้านค้า">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">storefront</span></div>
+        <span class="nav-label">ร้านค้า</span>
       </a>
-
-      <a href="#"
-         class="sidebar-nav-item" title="รายงาน">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">assignment</span>
-        </div>
-        <span class="nav-label">รายงาน</span>
+      <a href="/pages/admin/AddProductSpec.html" class="sidebar-nav-item" title="สินค้า">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">inventory_2</span></div>
+        <span class="nav-label">สินค้า</span>
       </a>
-
-      <a href="#"
-         class="sidebar-nav-item" title="ขออนุมัติ">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">approval_delegation</span>
-        </div>
-        <span class="nav-label">ขออนุมัติ</span>
+      <a href="/pages/admin/Adminannouncements.html" class="sidebar-nav-item" title="ประชาสัมพันธ์">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">campaign</span></div>
+        <span class="nav-label">ประชาสัมพันธ์</span>
       </a>
-
     </nav>
 
     <!-- Collapse toggle -->
@@ -111,7 +94,7 @@
           </div>
           Administration Console
         </div>
-        <div class="header-subtitle">จัดการผู้ใช้งาน สิทธิ์การเข้าถึง ข้อมูลพื้นฐาน และการตั้งค่าระบบทั้งหมดในที่เดียว</div>
+        <div class="header-subtitle">ภาพรวมผู้ใช้ ร้านค้า และงานที่ต้องจัดการ · เมนูตั้งค่าระบบทั้งหมดในที่เดียว</div>
       </div>
 
       <div class="header-right">
@@ -134,276 +117,91 @@
       </div>
     </header>
 
-    <!-- BREADCRUMB -->
-    <nav class="app-breadcrumb" aria-label="breadcrumb">
-      <a href="/pages/executive/executive-Dashboard.html">
-        <span class="material-symbols-outlined">home</span>
-        หน้าหลัก
-      </a>
-      <span class="bc-sep">›</span>
-      <span class="bc-current">
-        <span class="material-symbols-outlined">dashboard</span>
-        Admin Dashboard
-      </span>
-    </nav>
+
 
     <!-- PAGE CONTENT -->
     <main class="app-content" id="pageContent">
-      <div class="page-body">
-        <div class="container">
+      <div class="ad">
 
-          <!-- Menu Groups -->
-    <section id="adminMenuContainer" class="menu-layout">
-      <!-- JS จะ render เมนูตรงนี้ -->
-    </section>
-
-
-
-          <!-- QUICK ACTIONS -->
-          <div class="section-title">เมนูลัด</div>
-          <div class="quick-actions">
-
-            <a href="/index.html" class="quick-btn">
-              <div class="qb-icon">🏠</div>
-              <span class="qb-label">HOME</span>
-            </a>
-
-            <a href="/pages/admin/admintor.html" class="quick-btn">
-              <div class="qb-icon">👥</div>
-              <span class="qb-label">จัดการผู้ใช้งาน</span>
-            </a>
-
-            <a href="/pages/admin/adminSales.html" class="quick-btn">
-              <div class="qb-icon">🏬</div>
-              <span class="qb-label">จัดการ Sales</span>
-            </a>
-
-            <a href="/pages/admin/adminShops.html" class="quick-btn">
-              <div class="qb-icon">🏪</div>
-              <span class="qb-label">จัดการสิทธิ์ร้านค้า</span>
-            </a>
-
-            <a href="/pages/admin/AddProductSpec.html" class="quick-btn">
-              <div class="qb-icon">🏗</div>
-              <span class="qb-label">จัดการสินค้า</span>
-            </a>
-
-            <a href="/pages/admin/Adminannouncements.html" class="quick-btn">
-              <div class="qb-icon">📢</div>
-              <span class="qb-label">ประชาสัมพันธ์</span>
-            </a>
-
-            <a href="/pages/components/importData.html" class="quick-btn">
-              <div class="qb-icon">⚙️</div>
-              <span class="qb-label">นำข้อมูลเข้าระบบ</span>
-            </a>
-
-             <a href="/pages/admin/adminSales.html" class="quick-btn">
-              <div class="qb-icon">🏬</div>
-              <span class="qb-label">จัดการ Sales</span>
-            </a>
-
-            <a href="/pages/admin/adminShops.html" class="quick-btn">
-              <div class="qb-icon">🏪</div>
-              <span class="qb-label">จัดการสิทธิ์ร้านค้า</span>
-            </a>
-
-            <a href="/pages/admin/AddProductSpec.html" class="quick-btn">
-              <div class="qb-icon">🏗</div>
-              <span class="qb-label">จัดการสินค้า</span>
-            </a>
-
-            <a href="/pages/admin/Adminannouncements.html" class="quick-btn">
-              <div class="qb-icon">📢</div>
-              <span class="qb-label">ประชาสัมพันธ์</span>
-            </a>
-
-            <a href="/pages/components/importData.html" class="quick-btn">
-              <div class="qb-icon">⚙️</div>
-              <span class="qb-label">นำข้อมูลเข้าระบบ</span>
-            </a>
-
+        <!-- ภาพรวม -->
+        <section class="ad-kpis ui-strip" aria-label="ภาพรวมระบบ">
+          <a class="ad-kpi" href="/pages/admin/admintor.html">
+            <span class="stat-card-icon"><span class="material-symbols-outlined">group</span></span>
+            <span class="ad-kpi-body"><small>ผู้ใช้งานทั้งหมด</small><b id="kUsers">–</b><em id="kUsersSub">&nbsp;</em></span>
+          </a>
+          <a class="ad-kpi" href="/pages/admin/admintor.html">
+            <span class="stat-card-icon"><span class="material-symbols-outlined">person_off</span></span>
+            <span class="ad-kpi-body"><small>เข้าใช้งานไม่ได้</small><b id="kBlocked">–</b><em id="kBlockedSub">&nbsp;</em></span>
+          </a>
+          <a class="ad-kpi" href="/pages/admin/adminSales.html">
+            <span class="stat-card-icon"><span class="material-symbols-outlined">badge</span></span>
+            <span class="ad-kpi-body"><small>ทีม Sales</small><b id="kSales">–</b><em id="kSalesSub">&nbsp;</em></span>
+          </a>
+          <a class="ad-kpi" href="/pages/admin/adminShops.html">
+            <span class="stat-card-icon"><span class="material-symbols-outlined">storefront</span></span>
+            <span class="ad-kpi-body"><small>ร้านค้าทั้งหมด</small><b id="kShops">–</b><em id="kShopsSub">&nbsp;</em></span>
+          </a>
+          <a class="ad-kpi" href="/pages/admin/adminShops.html">
+            <span class="stat-card-icon"><span class="material-symbols-outlined">person_alert</span></span>
+            <span class="ad-kpi-body"><small>ร้านไม่มีเซลล์ดูแล</small><b id="kOrphan">–</b><em id="kOrphanSub">&nbsp;</em></span>
+          </a>
+          <div class="ad-kpi is-static">
+            <span class="stat-card-icon"><span class="material-symbols-outlined">pending_actions</span></span>
+            <span class="ad-kpi-body"><small>คำขออนุมัติค้าง</small><b id="kApprovals">–</b><em id="kApprovalsSub">&nbsp;</em></span>
           </div>
+        </section>
+        <p class="ad-updated"><span id="updatedText">กำลังโหลดข้อมูล...</span>
+          <button type="button" class="ad-link" onclick="loadDashboardData()"><span class="material-symbols-outlined">refresh</span>รีเฟรช</button></p>
 
-          
+        <div class="ad-grid">
+          <!-- เมนูจัดการ -->
+          <section class="ad-card ad-menu">
+            <div class="ad-card-head">
+              <h2><span class="material-symbols-outlined">apps</span> เมนูจัดการระบบ</h2>
+              <label class="ad-search">
+                <span class="material-symbols-outlined">search</span>
+                <input type="search" id="menuSearch" placeholder="ค้นหาเมนู  ( / )" autocomplete="off" aria-label="ค้นหาเมนู">
+              </label>
+            </div>
+            <div id="adminMenuContainer"></div>
+          </section>
 
-          <!-- PAGE HEADER -->
-          <div class="page-header">
-            <div class="section-title" style="margin-top:24px">ภาพรวมระบบ</div>
+          <!-- ต้องตรวจ + Role -->
+          <div class="ad-side">
+            <section class="ad-card">
+              <div class="ad-card-head"><h2><span class="material-symbols-outlined">fact_check</span> ข้อมูลที่ควรตรวจ</h2></div>
+              <ul class="ad-health" id="healthList"><li class="ad-muted">กำลังตรวจ...</li></ul>
+            </section>
+            <section class="ad-card">
+              <div class="ad-card-head"><h2><span class="material-symbols-outlined">shield_person</span> ผู้ใช้ตามบทบาท</h2>
+                <a class="ad-link" href="/pages/admin/admintor.html">จัดการสิทธิ์ ›</a></div>
+              <ul class="ad-roles" id="roleList"><li class="ad-muted">กำลังโหลด...</li></ul>
+            </section>
           </div>
-
-          <!-- STAT CARDS -->
-          <div class="stats-grid">
-            
-
-            <div class="stat-card stat-blue">
-              <div class="stat-card-icon">👥</div>
-              <div class="stat-card-body">
-                <div class="stat-label">ผู้ใช้งานทั้งหมด</div>
-                <div class="stat-value" id="statTotalUsers">0</div>
-                <div class="stat-sub">ทั้งระบบ</div>
-              </div>
-            </div>
-
-            <div class="stat-card stat-green">
-              <div class="stat-card-icon">✅</div>
-              <div class="stat-card-body">
-                <div class="stat-label">Active</div>
-                <div class="stat-value" id="statActiveUsers">0</div>
-                <div class="stat-sub">เข้าใช้งานได้ปกติ</div>
-              </div>
-            </div>
-
-            <div class="stat-card stat-red">
-              <div class="stat-card-icon">🚫</div>
-              <div class="stat-card-body">
-                <div class="stat-label">Inactive</div>
-                <div class="stat-value" id="statInactiveUsers">0</div>
-                <div class="stat-sub">ถูกระงับการใช้งาน</div>
-              </div>
-            </div>
-
-            <div class="stat-card stat-orange">
-              <div class="stat-card-icon">🏪</div>
-              <div class="stat-card-body">
-                <div class="stat-label">ร้านค้าทั้งหมด</div>
-                <div class="stat-value" id="statTotalShops">0</div>
-                <div class="stat-sub">จาก Sales ทั้งหมด</div>
-              </div>
-            </div>
-
-            <div class="stat-card stat-purple">
-              <div class="stat-card-icon">🧑‍💼</div>
-              <div class="stat-card-body">
-                <div class="stat-label">ทีม Sales</div>
-                <div class="stat-value" id="statTotalSales">0</div>
-                <div class="stat-sub">พนักงานขาย</div>
-              </div>
-            </div>
-
-            <div class="stat-card stat-teal">
-              <div class="stat-card-icon">🔑</div>
-              <div class="stat-card-body">
-                <div class="stat-label">Admin & QC</div>
-                <div class="stat-value" id="statTotalAdmin">0</div>
-                <div class="stat-sub">ผู้ดูแลระบบ</div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- ROLE CHIPS -->
-          <div class="section-title">สรุปตามบทบาท (Role)</div>
-          <div class="role-chips">
-
-            <div class="role-chip chip-all">
-              <span>👥</span>
-              <span class="chip-count" id="chipAll">0</span>
-              <span class="chip-label">ทั้งหมด</span>
-            </div>
-            <div class="role-chip chip-admin">
-              <span>🛡️</span>
-              <span class="chip-count" id="chipAdmin">0</span>
-              <span class="chip-label">Admin</span>
-            </div>
-            <div class="role-chip chip-adminqc">
-              <span>🛡️</span>
-              <span class="chip-count" id="chipAdminQC">0</span>
-              <span class="chip-label">Admin QC</span>
-            </div>
-            <div class="role-chip chip-manager">
-              <span>⭐</span>
-              <span class="chip-count" id="chipManager">0</span>
-              <span class="chip-label">Manager</span>
-            </div>
-            <div class="role-chip chip-exec">
-              <span>⭐</span>
-              <span class="chip-count" id="chipExec">0</span>
-              <span class="chip-label">Executive</span>
-            </div>
-            <div class="role-chip chip-sales">
-              <span>🏬</span>
-              <span class="chip-count" id="chipSales">0</span>
-              <span class="chip-label">Sales</span>
-            </div>
-            <div class="role-chip chip-user">
-              <span>👤</span>
-              <span class="chip-count" id="chipUser">0</span>
-              <span class="chip-label">User</span>
-            </div>
-            <div class="role-chip chip-inactive">
-              <span>🚫</span>
-              <span class="chip-count" id="chipInactive">0</span>
-              <span class="chip-label">Inactive</span>
-            </div>
-
-          </div>
-
-          <!-- TWO COLUMN -->
-          <div class="two-col" style="margin-top:16px">
-
-            <!-- Recent Users -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">
-                  <span class="material-symbols-outlined">group</span>
-                  ผู้ใช้งานล่าสุด
-                </div>
-                <a href="/pages/admin/admintor.html" class="card-link">จัดการทั้งหมด →</a>
-              </div>
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>ชื่อที่แสดง</th>
-                    <th>Role</th>
-                    <th>สถานะ</th>
-                  </tr>
-                </thead>
-                <tbody id="recentUsersBody">
-                  <tr><td colspan="3" class="table-loading">กำลังโหลด...</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Sales Summary -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">
-                  <span class="material-symbols-outlined">storefront</span>
-                  สรุปทีม Sales
-                </div>
-                <a href="/pages/admin/adminSales.html" class="card-link">จัดการทั้งหมด →</a>
-              </div>
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>รหัส</th>
-                    <th>ชื่อ Sales</th>
-                    <th>พื้นที่</th>
-                    <th>ร้านค้า</th>
-                  </tr>
-                </thead>
-                <tbody id="salesBody">
-                  <tr><td colspan="4" class="table-loading">กำลังโหลด...</td></tr>
-                </tbody>
-              </table>
-
-              <!-- Shop Info -->
-              <div class="card-header" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft);">
-                <div class="card-title">
-                  <span class="material-symbols-outlined">store</span>
-                  สิทธิ์ร้านค้า
-                </div>
-                <a href="/pages/admin/adminShops.html" class="card-link">จัดการทั้งหมด →</a>
-              </div>
-              <div class="shop-info-box" id="shopInfoBox">
-                <div class="table-loading">กำลังโหลด...</div>
-              </div>
-            </div>
-
-          </div>
-
         </div>
+
+        <div class="ad-grid ad-grid-b">
+          <section class="ad-card">
+            <div class="ad-card-head">
+              <h2><span class="material-symbols-outlined">badge</span> ทีม Sales และร้านที่ดูแล</h2>
+              <a class="ad-link" href="/pages/admin/adminSales.html">จัดการ Sales ›</a>
+            </div>
+            <div class="ad-table-wrap">
+              <table class="ad-table">
+                <thead><tr><th>ชื่อ</th><th>รหัส</th><th>พื้นที่</th><th>สถานะ</th><th class="num">ร้าน Active</th><th class="num">ทั้งหมด</th></tr></thead>
+                <tbody id="salesBody"><tr><td colspan="6" class="ad-muted">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="ad-card">
+            <div class="ad-card-head">
+              <h2><span class="material-symbols-outlined">person_add</span> ผู้ใช้ที่เพิ่มล่าสุด</h2>
+              <a class="ad-link" href="/pages/admin/admintor.html">ทั้งหมด ›</a>
+            </div>
+            <ul class="ad-people" id="recentUsersBody"><li class="ad-muted">กำลังโหลด...</li></ul>
+          </section>
+        </div>
+
       </div>
     </main>
 
@@ -416,7 +214,6 @@
 <div id="toast" class="toast"></div>
 
 <!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="/js/core/supabaseClient.js"></script>
 <script src="/js/core/userService.js"></script>
 <script src="/js/core/roleConfig.js"></script>
@@ -424,5 +221,7 @@
 <script src="/js/core/loadingSplash.js"></script>
 <script src="/js/pages/dashboard/adminDashboard.js"></script>
 
-</body>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

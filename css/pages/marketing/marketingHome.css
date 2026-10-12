@@ -15,7 +15,7 @@
 
 .mk-page .app-header { height: 60px; padding: 0 20px; }
 .mk-page .header-user-avatar { color: #fff; font-weight: 600; font-size: 14px; }
-.mk-page .header-icon { background: #fce7f3; color: var(--mk-brand); }
+
 
 .mk-content {
   padding: 18px 24px 32px;
@@ -203,3 +203,82 @@
 /* hidden ต้องชนะ display:flex ด้านบน */
 .mk-empty[hidden],
 .mk-recent[hidden] { display: none !important; }
+
+/* =====================================================
+   การ์ดเมนูแบบเดียวกับหน้า Form Hub (ไอคอนใหญ่ตรงกลาง)
+   สีไอคอนคงแบบเดิมของหน้านี้ (พื้นอ่อน + ไอคอนสี จาก .c-*)
+   หน้านี้ใช้บนโน้ตบุ๊กเป็นหลัก → การ์ดกะทัดรัด 4–6 ใบต่อแถว
+   ===================================================== */
+.mk-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+.mk-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 168px;
+  padding: 20px 14px 16px;
+  background: #fff;
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.mk-card:hover { transform: translateY(-3px); border-color: var(--c); box-shadow: 0 12px 26px rgba(15, 23, 42, 0.09); }
+.mk-card:focus-visible { outline: none; border-color: var(--c); box-shadow: 0 0 0 3px var(--c-soft); }
+.mk-card-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-soft);
+  color: var(--c);
+}
+.mk-card-icon .material-symbols-outlined { font-size: 30px; color: var(--c); }
+.mk-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--mk-ink); line-height: 1.35; }
+.mk-card p { margin: 0 auto 10px; font-size: 12.5px; color: var(--mk-muted); line-height: 1.5; }
+.mk-card-soon {
+  display: inline-flex;
+  align-items: center;
+  margin-top: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.mk-card.is-soon { cursor: not-allowed; background: #fbfcfe; box-shadow: none; }
+.mk-card.is-soon .mk-card-icon { filter: grayscale(0.6); opacity: 0.7; }
+.mk-card.is-soon:hover { transform: none; box-shadow: none; border-color: var(--mk-line); }
+
+@media (min-width: 1700px) {
+  .mk-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .mk-cards { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .mk-card { min-height: 150px; padding: 16px 10px 12px; }
+  .mk-card-icon { width: 50px; height: 50px; border-radius: 14px; margin-bottom: 10px; }
+  .mk-card-icon .material-symbols-outlined { font-size: 26px; }
+}
+@media (pointer: coarse) {
+  .mk-card:hover { transform: none; }
+  .mk-card:active { transform: scale(0.98); }
+}
+
+/* โน้ตบุ๊ก/จอกว้าง: วางกลุ่มเมนูต่อกันในแถว (กลุ่มกว้างตามจำนวนการ์ด)
+   → เมนูทั้งหมดอยู่ใน 2–3 แถว ไม่ต้องเลื่อนยาวบนจอสูง 768px */
+@media (min-width: 900px) {
+  .mk-groups { flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 18px 28px; }
+  .mk-group { flex: 0 0 auto; max-width: 100%; }
+  .mk-group .mk-cards { grid-template-columns: repeat(var(--n, 3), 190px); }
+}

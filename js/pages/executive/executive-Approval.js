@@ -305,12 +305,22 @@ function getRequesterText(row) {
   return val(
     row?.requester_name,
     row?.request_by_name,
+    row?.sale_name, // คำขอจากฟอร์มเซลล์ (วงเงิน / ราคาพิเศษ)
     row?.created_by_name,
     row?.emp_name,
     row?.request_by,
     row?.created_by,
     "—"
   );
+}
+
+// คำขอราคาพิเศษจากฟอร์มใหม่มีขั้น Manager ก่อน — แสดงให้ผู้บริหารเมื่อ Manager อนุมัติแล้วเท่านั้น
+function isVisibleToExecutive(row) {
+  if (normalizeApprovalType(row?.request_type) !== "special_price") return true;
+  if (row?.request_status === "waiting_manager") return false;
+  const m = row?.payload?.manager;
+  if (m && m.decision !== "approved") return false; // Manager ไม่อนุมัติ / ขอข้อมูลเพิ่ม → จบที่ Manager
+  return true;
 }
 
 function getApprovalTitle(row) {
@@ -338,6 +348,7 @@ function getApprovalAmount(row) {
     row?.total_amount,
     row?.credit_amount,
     row?.price_amount,
+    row?.request_amount, // คำขอวงเงินชั่วคราว / ราคาพิเศษ
     ""
   );
 }
@@ -425,7 +436,8 @@ async function loadExecClaims() {
     ]);
 
     if (approvalRes.error) throw approvalRes.error;
-    const approvalRows = approvalRes.data || [];
+    // ราคาพิเศษ: ต้องผ่าน Manager (ขั้นที่ 1) ก่อน ผู้บริหารจึงเห็น
+    const approvalRows = (approvalRes.data || []).filter(isVisibleToExecutive);
 
     let claimRows = [];
     if (claimsRes.error) {
@@ -990,7 +1002,7 @@ function buildGenericInfoGrid(row) {
     </div>
     <div class="info-row full">
       <div class="info-label">รายละเอียดคำขอ</div>
-      <div class="info-value">${escapeHtml(getApprovalDetail(row))}</div>
+      <div class="info-value" style="white-space:pre-line">${escapeHtml(getApprovalDetail(row))}</div>
     </div>
     <div class="info-row full">
       <div class="info-label">แหล่งข้อมูลอ้างอิง</div>
@@ -1040,7 +1052,7 @@ function buildGenericDetailHtml(row) {
             <span class="material-symbols-outlined">description</span>
             รายละเอียดประกอบการตัดสินใจ
           </div>
-          <div class="qc-detail-value">${escapeHtml(getApprovalDetail(row))}</div>
+          <div class="qc-detail-value" style="white-space:pre-line">${escapeHtml(getApprovalDetail(row))}</div>
         </div>
       </div>
     </div>

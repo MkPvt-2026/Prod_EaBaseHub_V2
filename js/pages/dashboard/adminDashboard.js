@@ -1,782 +1,329 @@
 /* ==========================================================
-   ADMINISTRATION CONSOLE SCRIPT
-   ใช้ render เมนูจาก Array เพื่อให้เพิ่ม/ลบ/แก้เมนูง่าย
-   ========================================================== */
+   adminDashboard.js v2.0 — Administration Console (หน้าหลัก Admin)
+   ใช้บนโน้ตบุ๊กเป็นหลัก
 
+   ข้อมูลจริงจาก Supabase
+   - profiles          : id, username, display_name, role, status, area, created_at
+   - shops             : id, sale_id, status        (ดึงครบทุกแถว แบ่งหน้า 1,000 แถว)
+   - approval_requests : request_status, request_type (ถ้าไม่มีสิทธิ์อ่าน จะแสดง "—")
+
+   v2.0 แก้จากเดิม
+   - เดิมดึงร้านแค่ 1,000 แถวแรก (ค่าจำกัดของ Supabase) → ยอดร้านผิดเมื่อมีร้านเกิน 1,000
+   - "ร้านค้าทั้งหมด" เดิมนับเฉพาะร้านที่มีเซลล์ → นับทุกร้าน + แยกร้านที่ไม่มีเซลล์ดูแล
+   - Role marketing / accounting ไม่ถูกนับ, role "sale" ไม่ถูกนับเป็น Sales
+   - ช่องค้นหาเมนูไม่ทำงาน (ไม่มี #menuSearch), ลิงก์ "ดูทั้งหมด" / เมนูข้าง 4 อันเป็น "#"
+   - เมนูลัดซ้ำกัน 2 ชุด, ตาราง Sales แสดงซ้ำ 2 ที่, "กำหนดสิทธิ์ Role" ซ้ำกับ "จัดการผู้ใช้งาน"
+   - ปุ่มออกจากระบบผูก 2 ครั้ง (ไปคนละหน้า), breadcrumb "หน้าหลัก" ไปหน้า Executive
+   - ชื่อผู้ใช้บนหัวเว็บเดิมอ่านจาก user_metadata (ขึ้น "Executive"/อีเมล) → อ่านจาก profiles
+   - โหลดข้อมูลก่อนตรวจสิทธิ์ Admin เสร็จ → ตอนนี้ตรวจสิทธิ์ก่อน
+   - ชื่อ/พื้นที่ที่มีอักขระพิเศษ escape ก่อนแสดง
+   ========================================================== */
+"use strict";
 
 /* ----------------------------------------------------------
-   1) ข้อมูลเมนูทั้งหมด
-   ถ้าต้องการเพิ่มเมนูใหม่ ให้เพิ่ม item ใน array นี้ได้เลย
+   1) เมนู — เพิ่ม/แก้ที่นี่ที่เดียว (soon: true = ยังไม่เปิดใช้)
    ---------------------------------------------------------- */
-
 const adminMenus = [
   {
-    group: "User & Access",
-    icon: "group",
+    group: "ผู้ใช้งานและสิทธิ์", icon: "group",
     items: [
-      {
-        title: "จัดการผู้ใช้งาน",
-        desc: "เพิ่ม / แก้ไข / ปิดใช้งานบัญชีผู้ใช้งานในระบบ",
-        icon: "person",
-        url: "/pages/admin/admintor.html"
-      },
-      {
-        title: "กำหนดสิทธิ์ Role",
-        desc: "จัดการสิทธิ์การเข้าถึงของแต่ละบทบาท",
-        icon: "admin_panel_settings",
-        url: "/pages/admin/admintor.html"
-      },
-      {
-        title: "ประวัติการเข้าใช้งาน",
-        desc: "ตรวจสอบกิจกรรมการเข้าใช้งานของผู้ใช้",
-        icon: "history",
-        url: "/commingSoon.html"
-      }
-    ]
+      { title: "จัดการผู้ใช้งาน", desc: "เพิ่ม / แก้ไข / ระงับบัญชี และกำหนด Role", icon: "manage_accounts", url: "/pages/admin/admintor.html" },
+      { title: "จัดการทีม Sales", desc: "รหัสเซลล์ พื้นที่ และหัวหน้าทีม", icon: "badge", url: "/pages/admin/adminSales.html" },
+      { title: "ข้อความแจ้งเตือน", desc: "ส่ง / จัดการข้อความถึงผู้ใช้", icon: "notifications", url: "/pages/admin/messages-New-Admin.html" },
+    ],
   },
-
   {
-    group: "Master Data",
-    icon: "widgets",
+    group: "ข้อมูลหลัก", icon: "database",
     items: [
-      {
-        title: "จัดการร้านค้า",
-        desc: "ข้อมูลร้านค้า เขตพื้นที่ และเซลผู้ดูแล",
-        icon: "storefront",
-        url: "/pages/admin/adminShops.html"
-      },
-      {
-        title: "จัดการสินค้า",
-        desc: "หมวดหมู่สินค้า / รายการสินค้า / Attribute",
-        icon: "inventory_2",
-        url: "/pages/admin/AddProductSpec.html"
-      },
-      {
-        title: "รวมรหัสลูกค้า",
-        desc: "รวมลูกค้าที่มีหลายรหัสให้เป็นลูกค้าเดียวกัน",
-        icon: "merge",
-        url: "/pages/admin/merge-customers.html"
-      },
-      {
-        title: "Marketing Home",
-        desc: "เมนูรวมงานการตลาด (RFM, โปรโมชั่น, ประกาศ)",
-        icon: "campaign",
-        url: "/pages/marketing/marketingHome.html"
-      },
-      {
-        title: "จัดการพื้นที่ขาย",
-        desc: "โซน จังหวัด และเขตการขาย",
-        icon: "location_on",
-        url: "/commingSoon.html"
-      }
-    ]
+      { title: "ร้านค้าและสิทธิ์ร้าน", desc: "ร้านค้า เขตพื้นที่ และเซลล์ผู้ดูแล", icon: "storefront", url: "/pages/admin/adminShops.html" },
+      { title: "สินค้า", desc: "หมวดหมู่ / รายการสินค้า / Attribute", icon: "inventory_2", url: "/pages/admin/AddProductSpec.html" },
+      { title: "รวมรหัสลูกค้า", desc: "รวมลูกค้าที่มีหลายรหัสให้เป็นรายเดียว", icon: "merge", url: "/pages/admin/merge-customers.html" },
+    ],
   },
-
   {
-    group: "Workflow Settings",
-    icon: "account_tree",
+    // รายงานเข้าร้าน / Marketing Home / นำเข้าข้อมูล เป็นงานของ Manager — ไม่อยู่ในเมนู Admin
+    group: "สื่อสาร", icon: "campaign",
     items: [
-      {
-        title: "ตั้งค่าการอนุมัติ",
-        desc: "กำหนดลำดับการอนุมัติ Manager → Executive",
-        icon: "account_tree",
-        url: "/commingSoon.html"
-      },
-      {
-        title: "ตั้งค่าเอกสาร",
-        desc: "เลขที่เอกสาร / เวอร์ชัน / รูปแบบฟอร์ม",
-        icon: "description",
-        url: "/commingSoon.html"
-      },
-      {
-        title: "ตั้งค่าการแจ้งเตือน",
-        desc: "LINE / Email / Reminder แจ้งเตือนในระบบ",
-        icon: "notifications",
-        url: "/commingSoon.html"
-      }
-    ]
+      { title: "ประชาสัมพันธ์", desc: "ประกาศ / ข่าวสาร แสดงในหน้าแรกของเซลล์", icon: "campaign", url: "/pages/admin/Adminannouncements.html" },
+    ],
   },
-
   {
-    group: "System Tools",
-    icon: "construction",
+    group: "เร็ว ๆ นี้", icon: "schedule", soonGroup: true,
     items: [
-      {
-        title: "นำเข้า / ส่งออกข้อมูล",
-        desc: "CSV / Excel / Backup ข้อมูลระบบ",
-        icon: "upload_file",
-        url: "/pages/components/importData.html"
-      },
-      {
-        title: "Audit Log",
-        desc: "ประวัติการแก้ไขข้อมูลสำคัญในระบบ",
-        icon: "fact_check",
-        url: "/commingSoon.html"
-      },
-      {
-        title: "System Config",
-        desc: "ตั้งค่าระบบเพิ่มเติม และการเชื่อมต่อ",
-        icon: "settings",
-        url: "/commingSoon.html"
-      }
-    ]
-  }
+      { title: "ประวัติการเข้าใช้งาน", icon: "history", soon: true },
+      { title: "พื้นที่ขาย / โซน", icon: "location_on", soon: true },
+      { title: "ตั้งค่าการอนุมัติ", icon: "account_tree", soon: true },
+      { title: "ตั้งค่าเอกสาร", icon: "description", soon: true },
+      { title: "ตั้งค่าการแจ้งเตือน", icon: "notifications_active", soon: true },
+      { title: "Audit Log", icon: "fact_check", soon: true },
+      { title: "System Config", icon: "settings", soon: true },
+    ],
+  },
 ];
 
+/* ----------------------------------------------------------
+   2) ตัวช่วย
+   ---------------------------------------------------------- */
+function esc(t) { return String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+const fmtN = (n) => (Number(n) || 0).toLocaleString("th-TH");
+function fmtDate(iso) { if (!iso) return "-"; const d = new Date(iso); return isNaN(d) ? "-" : d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" }); }
+function isActive(s) { return String(s || "").trim().toLowerCase() === "active"; }
+
+// role ในฐานข้อมูลอาจสะกดต่างกัน (sale/sales, adminQc/adminqc)
+const ROLE_META = {
+  admin:     { label: "Admin", icon: "shield" },
+  adminqc:   { label: "Admin QC", icon: "verified_user" },
+  executive: { label: "Executive", icon: "workspace_premium" },
+  manager:   { label: "Manager", icon: "supervisor_account" },
+  marketing: { label: "Marketing", icon: "campaign" },
+  accounting:{ label: "Accounting", icon: "account_balance" },
+  sales:     { label: "Sales", icon: "badge" },
+  user:      { label: "User", icon: "person" },
+};
+function roleKey(role) {
+  const r = String(role || "").trim().toLowerCase().replace(/\s/g, "");
+  if (r === "sale") return "sales";
+  return r || "";
+}
+function roleLabel(role) { const k = roleKey(role); return ROLE_META[k]?.label || (k ? role : "ไม่มี Role"); }
 
 /* ----------------------------------------------------------
-   2) Render เมนูทั้งหมดลงหน้า HTML
+   3) เมนู
    ---------------------------------------------------------- */
-
 function renderAdminMenus(keyword = "") {
-  const container = document.getElementById("adminMenuContainer");
-  if (!container) return;
-
-  const searchText = keyword.trim().toLowerCase();
-
-  let html = "";
-  let foundCount = 0;
-
-  adminMenus.forEach(section => {
-    // กรองเมนูตามคำค้นหา
-    const filteredItems = section.items.filter(item => {
-      return (
-        item.title.toLowerCase().includes(searchText) ||
-        item.desc.toLowerCase().includes(searchText) ||
-        section.group.toLowerCase().includes(searchText)
-      );
-    });
-
-    // ถ้าไม่มีเมนูในหมวดนี้ ให้ข้าม
-    if (filteredItems.length === 0) return;
-
-    foundCount += filteredItems.length;
-
-    html += `
-      <div class="menu-section">
-        <div class="menu-section-header">
-          <div class="menu-section-title">
-            <span class="material-symbols-outlined">${section.icon}</span>
-            <h2>${section.group}</h2>
-          </div>
-          <a href="#">ดูทั้งหมด ›</a>
-        </div>
-
-        <div class="menu-card-grid">
-          ${filteredItems.map(item => `
-            <article class="menu-card" data-url="${item.url}">
-              <div class="menu-card-icon">
-                <span class="material-symbols-outlined">${item.icon}</span>
-              </div>
-              <h3>${item.title}</h3>
-              <p>${item.desc}</p>
-            </article>
-          `).join("")}
-        </div>
-      </div>
-    `;
+  const box = document.getElementById("adminMenuContainer");
+  if (!box) return;
+  const q = keyword.trim().toLowerCase();
+  let shown = 0;
+  const html = adminMenus.map((g) => {
+    const items = g.items.filter((i) => !q || `${i.title} ${i.desc || ""} ${g.group}`.toLowerCase().includes(q));
+    if (!items.length) return "";
+    shown += items.length;
+    if (g.soonGroup) {
+      return `<div class="ad-soon"><span class="ad-soon-label"><span class="material-symbols-outlined">${esc(g.icon)}</span>${esc(g.group)}</span>
+        ${items.map((i) => `<span class="ad-soon-chip" title="ยังไม่เปิดใช้"><span class="material-symbols-outlined">${esc(i.icon)}</span>${esc(i.title)}</span>`).join("")}</div>`;
+    }
+    return `<div class="ad-menu-group">
+      <h3><span class="material-symbols-outlined">${esc(g.icon)}</span>${esc(g.group)}</h3>
+      <div class="ad-tiles">
+        ${items.map((i) => `
+          <a class="ad-tile" href="${esc(i.url)}">
+            <span class="ad-tile-icon"><span class="material-symbols-outlined">${esc(i.icon)}</span></span>
+            <span class="ad-tile-text"><b>${esc(i.title)}</b><small>${esc(i.desc || "")}</small></span>
+          </a>`).join("")}
+      </div></div>`;
+  }).join("");
+  box.innerHTML = shown ? html : `<div class="ad-empty"><span class="material-symbols-outlined">search_off</span>ไม่พบเมนู “${esc(keyword)}”</div>`;
+}
+function setupSearch() {
+  const input = document.getElementById("menuSearch");
+  if (!input) return;
+  input.addEventListener("input", () => renderAdminMenus(input.value));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { const a = document.querySelector("#adminMenuContainer .ad-tile"); if (a) a.click(); }
+    if (e.key === "Escape") { input.value = ""; renderAdminMenus(); }
   });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement !== input && !/input|textarea|select/i.test(document.activeElement?.tagName || "")) { e.preventDefault(); input.focus(); }
+  });
+}
 
-  // ถ้าค้นหาแล้วไม่เจอ
-  if (foundCount === 0) {
-    html = `
-      <div class="empty-state">
-        <h3>ไม่พบเมนูที่ค้นหา</h3>
-        <p>ลองค้นหาด้วยคำอื่น เช่น ผู้ใช้งาน, ร้านค้า, เอกสาร, แจ้งเตือน</p>
-      </div>
-    `;
+/* ----------------------------------------------------------
+   4) ข้อมูล
+   ---------------------------------------------------------- */
+// ดึงครบทุกแถว (Supabase ส่งได้ครั้งละ 1,000 แถว)
+async function fetchAll(table, cols, pageSize = 1000) {
+  const out = [];
+  for (let from = 0; from < 200000; from += pageSize) {
+    const { data, error } = await supabaseClient.from(table).select(cols).range(from, from + pageSize - 1);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return out;
+}
+
+let _loading = false;
+async function loadDashboardData() {
+  if (_loading) return;
+  _loading = true;
+  setText("updatedText", "กำลังโหลดข้อมูล...");
+  try {
+    const [profilesRes, shops, approvals] = await Promise.all([
+      supabaseClient.from("profiles").select("id, username, display_name, role, status, area, created_at").order("created_at", { ascending: false }),
+      fetchAll("shops", "id, sale_id, status"),
+      supabaseClient.from("approval_requests").select("request_status, request_type").then((r) => (r.error ? null : r.data || []), () => null),
+    ]);
+    if (profilesRes.error) throw profilesRes.error;
+    const profiles = profilesRes.data || [];
+    render(profiles, shops, approvals);
+    setText("updatedText", `อัปเดตล่าสุด ${new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`);
+  } catch (err) {
+    console.error("[AdminDashboard]", err);
+    setText("updatedText", "โหลดข้อมูลไม่สำเร็จ: " + (err.message || err));
+    ["healthList", "roleList", "recentUsersBody"].forEach((id) => { const el = document.getElementById(id); if (el) el.innerHTML = `<li class="ad-muted is-error">โหลดข้อมูลไม่สำเร็จ</li>`; });
+    const sb = document.getElementById("salesBody"); if (sb) sb.innerHTML = `<tr><td colspan="6" class="ad-muted is-error">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+  } finally {
+    _loading = false;
+  }
+}
+
+function render(profiles, shops, approvals) {
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const total = profiles.length;
+  const active = profiles.filter((p) => isActive(p.status)).length;
+  const blocked = total - active;
+  const statusCount = {};
+  profiles.filter((p) => !isActive(p.status)).forEach((p) => { const k = String(p.status || "ไม่ระบุ").trim() || "ไม่ระบุ"; statusCount[k] = (statusCount[k] || 0) + 1; });
+
+  const sales = profiles.filter((p) => roleKey(p.role) === "sales");
+  const salesActive = sales.filter((p) => isActive(p.status));
+
+  // ร้าน
+  const shopActive = (s) => isActive(s.status);
+  const perSale = {};
+  let orphan = 0, orphanActive = 0, toBlockedSale = 0, toNonSale = 0;
+  shops.forEach((s) => {
+    if (!s.sale_id) { orphan++; if (shopActive(s)) orphanActive++; return; }
+    const owner = byId.get(s.sale_id);
+    if (!owner) { orphan++; if (shopActive(s)) orphanActive++; return; } // ผู้ดูแลถูกลบไปแล้ว
+    const k = (perSale[s.sale_id] ||= { all: 0, active: 0 });
+    k.all++; if (shopActive(s)) k.active++;
+    if (!isActive(owner.status) && shopActive(s)) toBlockedSale++;
+    if (roleKey(owner.role) !== "sales") toNonSale++;
+  });
+  const shopsActive = shops.filter(shopActive).length;
+
+  // KPI
+  setText("kUsers", fmtN(total));
+  setText("kUsersSub", `ใช้งานได้ ${fmtN(active)} คน`);
+  setText("kBlocked", fmtN(blocked));
+  setText("kBlockedSub", blocked ? Object.entries(statusCount).map(([k, n]) => `${k} ${n}`).join(" · ") : "ทุกบัญชีใช้งานได้");
+  setText("kSales", fmtN(sales.length));
+  setText("kSalesSub", `ใช้งานได้ ${fmtN(salesActive.length)} คน`);
+  setText("kShops", fmtN(shops.length));
+  setText("kShopsSub", `Active ${fmtN(shopsActive)} ร้าน`);
+  setText("kOrphan", fmtN(orphan));
+  setText("kOrphanSub", orphan ? `ในนี้ Active ${fmtN(orphanActive)} ร้าน` : "ทุกร้านมีเซลล์ดูแล");
+  document.getElementById("kOrphan")?.classList.toggle("is-warn", orphan > 0);
+  document.getElementById("kBlocked")?.classList.toggle("is-warn", blocked > 0);
+
+  if (approvals === null) { setText("kApprovals", "—"); setText("kApprovalsSub", "ไม่มีสิทธิ์อ่านข้อมูลนี้"); }
+  else {
+    // ค้าง = ยังรอผู้อนุมัติ (ไม่นับที่ปิดแล้ว และที่ส่งกลับให้ผู้ขอเพิ่มข้อมูล)
+    const closed = ["approved", "rejected", "exec_approved", "exec_rejected", "cancelled", "request_more_info"];
+    const open = approvals.filter((a) => !closed.includes(String(a.request_status || "").toLowerCase()));
+    const waitMgr = open.filter((a) => a.request_status === "waiting_manager").length;
+    setText("kApprovals", fmtN(open.length));
+    setText("kApprovalsSub", open.length ? `รอ Manager ${fmtN(waitMgr)} · ขั้นอื่น ${fmtN(open.length - waitMgr)}` : "ไม่มีคำขอค้าง");
   }
 
-  container.innerHTML = html;
+  // ข้อมูลที่ควรตรวจ
+  const salesNoArea = sales.filter((p) => isActive(p.status) && !String(p.area || "").trim()).length;
+  const noRole = profiles.filter((p) => !ROLE_META[roleKey(p.role)]).length;
+  const salesNoShop = salesActive.filter((p) => !(perSale[p.id]?.all)).length;
+  const checks = [
+    { n: orphan, label: "ร้านที่ไม่มีเซลล์ดูแล", hint: "กำหนดเซลล์ผู้ดูแลให้ร้าน", url: "/pages/admin/adminShops.html" },
+    { n: toBlockedSale, label: "ร้าน Active ที่เซลล์ผู้ดูแลถูกระงับ", hint: "ย้ายร้านให้เซลล์ที่ใช้งานอยู่", url: "/pages/admin/adminShops.html" },
+    { n: toNonSale, label: "ร้านที่ผู้ดูแลไม่ใช่ role Sales", hint: "ตรวจผู้ดูแลร้าน", url: "/pages/admin/adminShops.html" },
+    { n: salesNoArea, label: "เซลล์ที่ยังไม่ระบุพื้นที่ขาย", hint: "ระบุพื้นที่ในข้อมูลเซลล์", url: "/pages/admin/adminSales.html" },
+    { n: salesNoShop, label: "เซลล์ที่ยังไม่มีร้านในความดูแล", hint: "ตรวจการแบ่งร้าน", url: "/pages/admin/adminShops.html" },
+    { n: noRole, label: "ผู้ใช้ที่ไม่มี Role หรือ Role ไม่รู้จัก", hint: "เข้าใช้งานหน้าใดไม่ได้", url: "/pages/admin/admintor.html" },
+  ];
+  const hl = document.getElementById("healthList");
+  const issues = checks.filter((c) => c.n > 0);
+  hl.innerHTML = (issues.length ? issues : []).map((c) => `
+      <li><a href="${esc(c.url)}" class="ad-health-item is-warn">
+        <b>${fmtN(c.n)}</b><span>${esc(c.label)}<small>${esc(c.hint)}</small></span><span class="material-symbols-outlined">chevron_right</span></a></li>`).join("")
+    + checks.filter((c) => c.n === 0).map((c) => `<li class="ad-health-ok"><span class="material-symbols-outlined">check_circle</span>${esc(c.label)} — ไม่มี</li>`).join("");
 
-  bindMenuCardClick();
+  // Role
+  const counts = {};
+  profiles.forEach((p) => { const k = ROLE_META[roleKey(p.role)] ? roleKey(p.role) : "_other"; counts[k] = (counts[k] || 0) + 1; });
+  const rows = Object.keys(ROLE_META).filter((k) => counts[k]).map((k) => ({ k, label: ROLE_META[k].label, icon: ROLE_META[k].icon, n: counts[k] }));
+  if (counts._other) rows.push({ k: "_other", label: "ไม่มี / ไม่รู้จัก", icon: "help", n: counts._other });
+  const max = Math.max(1, ...rows.map((r) => r.n));
+  document.getElementById("roleList").innerHTML = rows.length ? rows.map((r) => `
+    <li><span class="material-symbols-outlined">${esc(r.icon)}</span><span class="ad-role-name">${esc(r.label)}</span>
+      <span class="ad-bar"><i style="width:${Math.round((r.n / max) * 100)}%"></i></span><b>${fmtN(r.n)}</b></li>`).join("")
+    : `<li class="ad-muted">ยังไม่มีผู้ใช้</li>`;
+
+  // ทีม Sales (ร้านมากสุดก่อน · ถูกระงับไว้ท้าย)
+  const sb = document.getElementById("salesBody");
+  const salesSorted = sales.slice().sort((a, b) => (isActive(b.status) - isActive(a.status)) || ((perSale[b.id]?.active || 0) - (perSale[a.id]?.active || 0)) || String(a.display_name || "").localeCompare(String(b.display_name || ""), "th"));
+  sb.innerHTML = salesSorted.length ? salesSorted.map((p) => {
+    const c = perSale[p.id] || { all: 0, active: 0 };
+    return `<tr class="${isActive(p.status) ? "" : "is-off"}">
+      <td><b>${esc(p.display_name || "-")}</b></td>
+      <td><span class="ad-code">${esc(p.username || "-")}</span></td>
+      <td>${p.area ? esc(p.area) : `<span class="ad-flag">ไม่ระบุ</span>`}</td>
+      <td>${isActive(p.status) ? `<span class="ad-pill is-ok">ใช้งาน</span>` : `<span class="ad-pill is-off">${esc(p.status || "ระงับ")}</span>`}</td>
+      <td class="num"><b>${fmtN(c.active)}</b></td>
+      <td class="num">${fmtN(c.all)}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="ad-muted">ยังไม่มีผู้ใช้ role Sales</td></tr>`;
+
+  // ผู้ใช้ล่าสุด
+  document.getElementById("recentUsersBody").innerHTML = profiles.slice(0, 8).map((p) => `
+    <li>
+      <span class="ad-avatar">${esc((p.display_name || p.username || "?").trim().charAt(0).toUpperCase())}</span>
+      <span class="ad-person"><b>${esc(p.display_name || p.username || "-")}</b><small>${esc(roleLabel(p.role))}${p.area ? " · " + esc(p.area) : ""}</small></span>
+      <span class="ad-pill ${isActive(p.status) ? "is-ok" : "is-off"}">${isActive(p.status) ? "ใช้งาน" : esc(p.status || "ระงับ")}</span>
+      <span class="ad-date">${fmtDate(p.created_at)}</span>
+    </li>`).join("") || `<li class="ad-muted">ยังไม่มีผู้ใช้</li>`;
 }
 
-
 /* ----------------------------------------------------------
-   3) คลิกการ์ดแล้วเปลี่ยนหน้า
+   5) หัวเว็บ / เมนูข้าง
    ---------------------------------------------------------- */
-
-function bindMenuCardClick() {
-  const cards = document.querySelectorAll(".menu-card");
-
-  cards.forEach(card => {
-    card.addEventListener("click", () => {
-      const url = card.dataset.url;
-
-      if (!url) return;
-
-      // ถ้ายังไม่อยากให้เปลี่ยนหน้าจริง ให้เปลี่ยนเป็น console.log(url)
-      window.location.href = url;
-    });
-  });
+function toggleSidebar() {
+  const sidebar = document.getElementById("appSidebar"), main = document.querySelector(".app-main");
+  if (!sidebar) return;
+  const expand = sidebar.classList.contains("collapsed");
+  sidebar.classList.toggle("collapsed", !expand);
+  sidebar.classList.toggle("expanded", expand);
+  if (main) main.style.marginLeft = expand ? "220px" : "";
+}
+function setActiveNavItem() {
+  const path = window.location.pathname;
+  document.querySelectorAll(".sidebar-nav-item").forEach((a) => a.classList.toggle("active", (a.getAttribute("href") || "") === path));
+}
+function updateHeaderDate() {
+  setText("headerDateText", new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+}
+function renderHeaderUser() {
+  const cu = window.currentUser || {};
+  const name = cu.display_name || cu.full_name || cu.email || "Admin";
+  setText("userName", name);
+  const av = document.getElementById("userAvatar");
+  if (av) { av.innerHTML = ""; av.textContent = name.trim().charAt(0).toUpperCase(); }
+}
+async function logout() {
+  try { await supabaseClient.auth.signOut(); } catch (e) { /* ignore */ }
+  window.location.href = "/pages/auth/login.html";
+}
+function showToast(message, type = "success", duration = 3000) {
+  const t = document.getElementById("toast"); if (!t) return;
+  t.textContent = message;
+  t.style.background = { success: "#10b981", danger: "#ef4444", info: "#3b82f6", warning: "#f59e0b" }[type] || "#10b981";
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), duration);
 }
 
-
 /* ----------------------------------------------------------
-   4) ค้นหาเมนูแบบ real-time
+   6) เริ่มทำงาน — ตรวจสิทธิ์ Admin ก่อนโหลดข้อมูล
    ---------------------------------------------------------- */
-
-function setupSearch() {
-  const searchInput = document.getElementById("menuSearch");
-  if (!searchInput) return;
-
-  searchInput.addEventListener("input", event => {
-    renderAdminMenus(event.target.value);
-  });
-}
-
-
-/* ----------------------------------------------------------
-   5) เริ่มทำงานเมื่อโหลดหน้าเสร็จ
-   ---------------------------------------------------------- */
-
 document.addEventListener("DOMContentLoaded", async () => {
-  // หน้านี้สำหรับ Admin เท่านั้น
-  if (typeof protectPage === "function") await protectPage(["admin"]);
+  updateHeaderDate();
+  setActiveNavItem();
   renderAdminMenus();
   setupSearch();
-});
-
-
-
-
-
-
-
-
-
-
-/* ===========================================
-   adminDashboard.js
-   path: /js/pages/dashboard/adminDashboard.js
-
-   ใช้ table จริงจาก Supabase:
-   - profiles  : id, username, display_name, role, status, area
-   - shops     : id, sale_id, shop_code, shop_name, status
-=========================================== */
-/**
- * sidebar-header.js — Executive Layout Behaviors
- * ครอบคลุม: sidebar collapse/expand, header date, header user, logout
- * วิธีใช้: <script src="/js/core/sidebar-header.js"></script>
- *          เรียกใช้หลัง DOM โหลดเสร็จ (DOMContentLoaded)
- */
-
-/* ════════════════════════════════════════════════════
-   SIDEBAR TOGGLE
-════════════════════════════════════════════════════ */
-
-/**
- * สลับ collapsed / expanded ของ sidebar
- * อัปเดต margin-left ของ .app-main ตาม
- */
-function toggleSidebar() {
-  const sidebar = document.getElementById('appSidebar');
-  const main    = document.querySelector('.app-main');
-  if (!sidebar) return;
-
-  const isCollapsed = sidebar.classList.contains('collapsed');
-
-  if (isCollapsed) {
-    // → ขยาย
-    sidebar.classList.remove('collapsed');
-    sidebar.classList.add('expanded');
-    if (main) main.style.marginLeft = '220px';
-  } else {
-    // → ย่อ
-    sidebar.classList.remove('expanded');
-    sidebar.classList.add('collapsed');
-    if (main) main.style.marginLeft = '';
-  }
-}
-
-/**
- * ทำ nav item ตรงกับ URL ปัจจุบัน active อัตโนมัติ
- */
-function setActiveNavItem() {
-  const currentPath = window.location.pathname;
-  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-    const href = item.getAttribute('href') || '';
-    if (href && currentPath.endsWith(href.split('/').pop())) {
-      document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-    }
-  });
-}
-
-/* ════════════════════════════════════════════════════
-   HEADER — DATE
-════════════════════════════════════════════════════ */
-
-/**
- * แสดงวันที่ไทยใน element id="headerDateText"
- */
-function updateHeaderDate() {
-  const el = document.getElementById('headerDateText');
-  if (!el) return;
-  const now = new Date();
-  el.textContent = now.toLocaleDateString('th-TH', {
-    weekday: 'long',
-    day:     'numeric',
-    month:   'long',
-    year:    'numeric',
-  });
-}
-
-/* ════════════════════════════════════════════════════
-   HEADER — USER (ต้องการ supabaseClient)
-════════════════════════════════════════════════════ */
-
-/**
- * โหลดชื่อผู้ใช้และแสดงใน header
- * ต้องมี supabaseClient ใน global scope แล้ว
- */
-async function renderHeaderUser() {
-  const nameEl   = document.getElementById('userName');
-  const avatarEl = document.getElementById('userAvatar');
-  if (!nameEl || !avatarEl) return;
-
-  // รอ supabaseClient พร้อม (ไม่เกิน 5 วิ)
-  let retries = 0;
-  while (typeof supabaseClient === 'undefined' && retries < 50) {
-    await new Promise(r => setTimeout(r, 100));
-    retries++;
-  }
-  if (typeof supabaseClient === 'undefined') {
-    nameEl.textContent = 'Executive';
-    avatarEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>';
-    return;
-  }
-
-  try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const name =
-      user?.user_metadata?.display_name ||
-      user?.user_metadata?.full_name    ||
-      user?.email?.split('@')[0]        ||
-      'Executive';
-    nameEl.textContent = name;
-    // avatar แสดงตัวอักษรแรก
-    avatarEl.innerHTML = '';
-    avatarEl.textContent = name.charAt(0).toUpperCase();
-  } catch (err) {
-    console.warn('[Header] renderHeaderUser:', err);
-    nameEl.textContent = 'Executive';
-    avatarEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;color:white;">person</span>';
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   LOGOUT
-════════════════════════════════════════════════════ */
-
-/**
- * ออกจากระบบ — sign out จาก Supabase แล้ว redirect ไปหน้า login
- * @param {string} [redirectTo='/index.html'] — URL ที่จะ redirect
- */
-async function logout(redirectTo = '/index.html') {
-  try {
-    if (typeof supabaseClient !== 'undefined') {
-      await supabaseClient.auth.signOut();
-    }
-  } catch (err) {
-    console.warn('[Sidebar] logout error:', err);
-  } finally {
-    window.location.href = redirectTo;
-  }
-}
-
-/* ════════════════════════════════════════════════════
-   TOAST HELPER (global)
-════════════════════════════════════════════════════ */
-
-/**
- * แสดง toast notification
- * @param {string} message — ข้อความ
- * @param {'success'|'danger'|'info'|'warning'} [type='success']
- * @param {number} [duration=3000] — ms
- */
-function showToast(message, type = 'success', duration = 3000) {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-
-  const colorMap = {
-    success: '#10b981',
-    danger:  '#ef4444',
-    info:    '#3b82f6',
-    warning: '#f59e0b',
-  };
-
-  toast.textContent = message;
-  toast.style.background = colorMap[type] || colorMap.success;
-  toast.classList.add('show');
-
-  setTimeout(() => toast.classList.remove('show'), duration);
-}
-
-/* ════════════════════════════════════════════════════
-   INIT — รวม init ทุกอย่างในที่เดียว
-════════════════════════════════════════════════════ */
-
-/**
- * เรียกฟังก์ชันนี้ใน DOMContentLoaded หรือ script inline
- * เพื่อ init sidebar + header ทั้งหมด
- */
-function initExecutiveLayout() {
-  // 1) Default sidebar: collapsed
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar && !sidebar.classList.contains('expanded')) {
-    sidebar.classList.add('collapsed');
-  }
-
-  // 2) Active nav item
-  setActiveNavItem();
-
-  // 3) Header date
-  updateHeaderDate();
-
-  // 4) Header user (async)
+  document.querySelector(".sidebar-collapse-btn")?.addEventListener("click", toggleSidebar);
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  if (typeof supabaseClient === "undefined") { setText("updatedText", "ระบบยังไม่พร้อม กรุณารีเฟรชหน้า"); return; }
+  if (typeof protectPage === "function") await protectPage(["admin"]); // จะพาออกถ้าไม่ใช่ admin
+  if (!window.currentUser?.id && typeof loadCurrentUser === "function") await loadCurrentUser();
+  if (window.currentUser?.role && roleKey(window.currentUser.role) !== "admin") return; // กำลังถูกพาออกจากหน้า
   renderHeaderUser();
-
-  // 5) Collapse toggle button
-  const collapseBtn = document.querySelector('.sidebar-collapse-btn');
-  if (collapseBtn && !collapseBtn.dataset.bound) {
-    collapseBtn.dataset.bound = '1';
-    collapseBtn.addEventListener('click', toggleSidebar);
-  }
-
-  // 6) Logout button
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn && !logoutBtn.dataset.bound) {
-    logoutBtn.dataset.bound = '1';
-    logoutBtn.addEventListener('click', () => logout());
-  }
-}
-
-// Auto-init เมื่อ DOM พร้อม
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initExecutiveLayout);
-} else {
-  initExecutiveLayout();
-}
-
-// ================= END TEMPLATE ================= //
-
-
-
-
-
-
-
-/* ── ดึง supabase client instance (ไม่ใช่ library) ── */
-function getSupabase() {
-  return window.supabaseClient
-      || window._supabase
-      || null;
-}
-
-/* ── รอ Supabase พร้อม ── */
-async function waitForSupabase(maxTries = 50) {
-  for (let i = 0; i < maxTries; i++) {
-    const db = getSupabase();
-    if (db) return db;
-    await new Promise(r => setTimeout(r, 100));
-  }
-  return null;
-}
-
-/* ── Counter animation ── */
-function animateCounter(el, target) {
-  if (!el) return;
-  const duration = 900;
-  const start = performance.now();
-  function step(now) {
-    const p = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(eased * target).toLocaleString();
-    if (p < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-/* ── Role & Status helpers (ใช้ชื่อ ROLE_DISPLAY เพื่อไม่ซ้ำกับ roleConfig.js) ── */
-const ROLE_DISPLAY = {
-  user:      { label: 'User',    icon: '👤', cls: 'user'    },
-  sales:     { label: 'Sales',   icon: '🏬', cls: 'sales'   },
-  admin:     { label: 'Admin',   icon: '🛡️', cls: 'admin'   },
-  adminqc:   { label: 'AdminQC', icon: '🛡️', cls: 'adminQc' },
-  manager:   { label: 'Manager', icon: '⭐', cls: 'manager'  },
-  executive: { label: 'Exec',    icon: '⭐', cls: 'exec'    },
-};
-
-function roleKey(role = '') {
-  return role.toLowerCase().replace(/\s/g, '');
-}
-
-function roleBadgeHTML(role = '') {
-  const r = ROLE_DISPLAY[roleKey(role)] || { label: role, icon: '👤', cls: 'user' };
-  return `<span class="role-badge role-badge--${r.cls}">${r.icon} ${r.label}</span>`;
-}
-
-function statusBadgeHTML(status = '') {
-  const isActive = status?.toLowerCase() === 'active';
-  return `<span class="status-badge status-badge--${isActive ? 'active' : 'inactive'}">
-    ${isActive ? '✅' : '🚫'} ${isActive ? 'Active' : 'Inactive'}
-  </span>`;
-}
-
-/* ── Render Stats Cards & Role Chips ── */
-function renderStats(profiles, shopCountBySaleId) {
-  const total      = profiles.length;
-  const active     = profiles.filter(u => u.status?.toLowerCase() === 'active').length;
-  const inactive   = profiles.filter(u => u.status?.toLowerCase() !== 'active').length;
-  const totalShops = Object.values(shopCountBySaleId).reduce((s, c) => s + c, 0);
-  const totalSales = profiles.filter(u => roleKey(u.role) === 'sales').length;
-  const totalAdmin = profiles.filter(u => ['admin','adminqc'].includes(roleKey(u.role))).length;
-
-  console.log('[Dashboard] renderStats:', { total, active, inactive, totalShops, totalSales, totalAdmin });
-
-  animateCounter(document.getElementById('statTotalUsers'),    total);
-  animateCounter(document.getElementById('statActiveUsers'),   active);
-  animateCounter(document.getElementById('statInactiveUsers'), inactive);
-  animateCounter(document.getElementById('statTotalShops'),    totalShops);
-  animateCounter(document.getElementById('statTotalSales'),    totalSales);
-  animateCounter(document.getElementById('statTotalAdmin'),    totalAdmin);
-
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  const countByRole = (r) => profiles.filter(u => roleKey(u.role) === r).length;
-  set('chipAll',      total);
-  set('chipAdmin',    countByRole('admin'));
-  set('chipAdminQC',  countByRole('adminqc'));
-  set('chipManager',  countByRole('manager'));
-  set('chipExec',     countByRole('executive'));
-  set('chipSales',    countByRole('sales'));
-  set('chipUser',     countByRole('user'));
-  set('chipInactive', inactive);
-}
-
-/* ── Render Recent Users Table ── */
-function renderRecentUsers(profiles) {
-  const tbody = document.getElementById('recentUsersBody');
-  if (!tbody) return;
-  if (!profiles.length) {
-    tbody.innerHTML = `<tr><td colspan="3" class="table-loading">ไม่มีข้อมูล</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = profiles.slice(0, 7).map(u => `
-    <tr>
-      <td>${u.display_name || u.username || '-'}</td>
-      <td>${roleBadgeHTML(u.role)}</td>
-      <td>${statusBadgeHTML(u.status)}</td>
-    </tr>
-  `).join('');
-}
-
-/* ── Render Sales Table ── */
-function renderSalesTable(salesProfiles, shopCountBySaleId) {
-  const tbody = document.getElementById('salesBody');
-  if (!tbody) return;
-  if (!salesProfiles.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="table-loading">ไม่มีข้อมูล</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = salesProfiles.map(s => `
-    <tr>
-      <td><span class="username-badge">${s.username || '-'}</span></td>
-      <td><strong>${s.display_name || '-'}</strong></td>
-      <td>
-        <span class="area-badge">
-          ${s.area || '-'}
-        </span>
-      </td>
-      <td style="font-weight:700;color:#1a73e8;">🏪 ${(shopCountBySaleId[s.id] || 0).toLocaleString()} ร้าน</td>
-    </tr>
-  `).join('');
-}
-
-/* ── Render Shop Info Box ── */
-function renderShopInfo(salesProfiles, shopCountBySaleId) {
-  const box = document.getElementById('shopInfoBox');
-  if (!box) return;
-  if (!salesProfiles.length) {
-    box.innerHTML = `<div class="table-loading">ไม่มีข้อมูล</div>`;
-    return;
-  }
-  box.innerHTML = salesProfiles.map(s => `
-    <div class="shop-info-row">
-      <span class="shop-label">${s.username || '-'}</span>
-      <span class="shop-area">${s.area || '-'}</span>
-      <span class="shop-count">🏪 ${(shopCountBySaleId[s.id] || 0).toLocaleString()} ร้าน</span>
-    </div>
-  `).join('');
-}
-
-/* ── Main ── */
-async function loadDashboardData() {
-  const db = getSupabase();
-  if (!db) {
-    console.error('[Dashboard] ไม่พบ supabase client instance');
-    return;
-  }
-
-  console.log('[Dashboard] กำลังโหลดข้อมูล...');
-
-  try {
-    // ── ดึง profiles และ shops พร้อมกัน
-    const [profilesRes, shopsRes] = await Promise.all([
-      db.from('profiles')
-        .select('id, username, display_name, role, status, area')
-        .order('created_at', { ascending: false }),
-      db.from('shops')
-        .select('id, sale_id')
-    ]);
-
-    console.log('[Dashboard] profilesRes:', profilesRes);
-    console.log('[Dashboard] shopsRes:', shopsRes);
-
-    if (profilesRes.error) {
-      console.error('[Dashboard] profiles error:', profilesRes.error);
-      throw profilesRes.error;
-    }
-    if (shopsRes.error) {
-      console.error('[Dashboard] shops error:', shopsRes.error);
-      throw shopsRes.error;
-    }
-
-    const profiles = profilesRes.data || [];
-    const shops    = shopsRes.data    || [];
-
-    console.log('[Dashboard] profiles count:', profiles.length);
-    console.log('[Dashboard] shops count:', shops.length);
-
-    // ── นับ shop ต่อ sale
-    const shopCountBySaleId = {};
-    shops.forEach(shop => {
-      if (shop.sale_id) {
-        shopCountBySaleId[shop.sale_id] = (shopCountBySaleId[shop.sale_id] || 0) + 1;
-      }
-    });
-
-    const salesProfiles = profiles.filter(u => roleKey(u.role) === 'sales');
-    console.log('[Dashboard] salesProfiles count:', salesProfiles.length);
-
-    // ── Render
-    renderStats(profiles, shopCountBySaleId);
-    renderRecentUsers(profiles);
-    renderSalesTable(salesProfiles, shopCountBySaleId);
-    renderShopInfo(salesProfiles, shopCountBySaleId);
-
-    console.log('[Dashboard] โหลดข้อมูลสำเร็จ');
-
-  } catch (err) {
-    console.error('[Dashboard] loadDashboardData error:', err);
-    const el1 = document.getElementById('recentUsersBody');
-    const el2 = document.getElementById('salesBody');
-    const el3 = document.getElementById('shopInfoBox');
-    if (el1) el1.innerHTML = `<tr><td colspan="3" class="table-loading" style="color:#dc2626;">โหลดข้อมูลไม่สำเร็จ: ${err.message || err}</td></tr>`;
-    if (el2) el2.innerHTML = `<tr><td colspan="4" class="table-loading" style="color:#dc2626;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
-    if (el3) el3.innerHTML = `<div class="table-loading" style="color:#dc2626;">โหลดข้อมูลไม่สำเร็จ</div>`;
-  }
-}
-
-/* ── โหลดข้อมูล user ปัจจุบัน (fallback ถ้าไม่มี userService) ── */
-async function loadCurrentUserFallback() {
-  const db = getSupabase();
-  if (!db) return null;
-
-  try {
-    const { data: { user }, error } = await db.auth.getUser();
-    if (error || !user) {
-      console.warn('[Dashboard] ไม่พบ user session');
-      return null;
-    }
-
-    // ดึง profile จาก profiles table
-    const { data: profile, error: profileError } = await db
-      .from('profiles')
-      .select('id, username, display_name, role, status')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) {
-      console.warn('[Dashboard] ไม่พบ profile:', profileError);
-      return { ...user, display_name: user.email };
-    }
-
-    return profile;
-  } catch (err) {
-    console.error('[Dashboard] loadCurrentUserFallback error:', err);
-    return null;
-  }
-}
-
-/* ── Init ── */
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[Dashboard] DOMContentLoaded');
-
-  const db = await waitForSupabase();
-  if (!db) {
-    console.error('[Dashboard] Supabase ไม่พร้อมหลังรอ 5 วินาที');
-    document.getElementById('userName').textContent = 'ไม่พบ Supabase';
-    return;
-  }
-
-  console.log('[Dashboard] Supabase พร้อมแล้ว');
-
-  // ตรวจสอบว่า loadCurrentUser มีหรือไม่
-  const hasUserService = typeof loadCurrentUser === 'function' && typeof updateUserNameDisplay === 'function';
-  console.log('[Dashboard] hasUserService:', hasUserService);
-
-  try {
-    if (hasUserService) {
-      // ใช้ userService.js
-      await Promise.all([
-        loadCurrentUser().then(() => {
-          updateUserNameDisplay('#userName');
-        }),
-        loadDashboardData()
-      ]);
-    } else {
-      // fallback: โหลด user เอง
-      const [currentUser] = await Promise.all([
-        loadCurrentUserFallback(),
-        loadDashboardData()
-      ]);
-
-      // แสดงชื่อ user
-      const userNameEl = document.getElementById('userName');
-      if (userNameEl && currentUser) {
-        userNameEl.textContent = currentUser.display_name || currentUser.username || currentUser.email || '-';
-      } else if (userNameEl) {
-        userNameEl.textContent = 'ไม่พบข้อมูลผู้ใช้';
-      }
-    }
-  } catch (err) {
-    console.error('[Dashboard] Init error:', err);
-  }
-
-  // logout button
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      const db = getSupabase();
-      if (db) {
-        await db.auth.signOut();
-      }
-      window.location.href = '/pages/auth/login.html';
-    });
-  }
-
-  // ── Loading popup สำหรับลิงก์นำทาง (เช็คว่ามี LoadingPopup หรือไม่)
-  if (typeof LoadingPopup !== 'undefined' && LoadingPopup.show) {
-    document.querySelectorAll('a[href]').forEach(link => {
-      const href = link.getAttribute('href');
-      if (!href || href === '#') return;
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        LoadingPopup.show('กำลังโหลด...');
-        setTimeout(() => { window.location.href = href; }, 150);
-      });
-    });
-  }
+  await loadDashboardData();
 });

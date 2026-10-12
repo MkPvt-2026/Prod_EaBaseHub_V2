@@ -1,0 +1,80 @@
+/* =====================================================
+   Adminannouncements-admin.css — ประชาสัมพันธ์ (ฝั่ง Admin)
+   ใช้คู่กับ admintor-ux.css (โครงหน้า Admin พื้นเข้ม) · โน้ตบุ๊กเป็นหลัก
+   ตกแต่ง class ที่ Adminannouncements.js สร้าง (ใช้ JS ร่วมกับฝั่งการตลาด)
+   ===================================================== */
+
+.an-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.an .admin-announce-filter-btn.active { background: rgba(var(--role-rgb), 0.18); border-color: var(--role-color); color: var(--ui-num); }
+.an .at-search { flex: 1 1 240px; }
+.an .at-table-wrap { max-height: calc(100vh - 290px); }
+
+/* ---------- ตาราง ---------- */
+.admin-announce-table .c-pin { width: 34px; }
+.admin-announce-table td:first-child { text-align: center; }
+.pin-indicator { color: var(--ui-warn); font-size: 19px !important; }
+.td-title { min-width: 260px; max-width: 460px; }
+.td-title span { display: block; font-weight: 500; color: var(--ui-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.td-title small { display: block; font-size: 12px; color: var(--ui-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-announce-table td:nth-child(5), .admin-announce-table td:nth-child(6) { white-space: nowrap; color: var(--ui-label); }
+
+.announce-category { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12px; white-space: nowrap; background: var(--ui-hover); color: var(--ui-num); }
+.announce-category.category-important { background: rgba(248, 113, 113, 0.16); color: var(--ui-bad); }
+.announce-category.category-update { background: rgba(96, 165, 250, 0.16); color: #93c5fd; }
+.announce-category.category-event { background: rgba(192, 132, 252, 0.16); color: #d8b4fe; }
+
+.status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 10px 1px 6px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+.status-badge .material-symbols-outlined { font-size: 15px !important; }
+.status-badge.status-published { background: rgba(74, 222, 128, 0.14); color: var(--ui-ok); }
+.status-badge.status-draft { background: rgba(251, 146, 60, 0.16); color: var(--ui-warn); }
+.status-badge.status-archived, .status-badge.status-unknown { background: var(--ui-hover); color: var(--ui-label); }
+
+.admin-announce-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.admin-announce-actions button {
+  width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: 8px;
+  border: 1px solid var(--ui-line); background: transparent; color: var(--ui-label); cursor: pointer;
+}
+.admin-announce-actions .material-symbols-outlined { font-size: 17px !important; }
+.admin-announce-actions button:hover { background: var(--ui-hover); color: var(--ui-num); }
+.admin-announce-actions .btn-pin:hover { color: var(--ui-warn); }
+.admin-announce-actions .btn-delete:hover { color: var(--ui-bad); border-color: rgba(248, 113, 113, 0.5); }
+
+/* ---------- ฟอร์ม (เปิดด้วย class .active จาก JS) ---------- */
+.announce-form-overlay:not(.active) { display: none !important; }
+.announce-form-modal { width: min(720px, 100%); }
+.an-wide { grid-column: 1 / -1; }
+.at-modal textarea {
+  width: 100%; min-height: 130px; resize: vertical; box-sizing: border-box; padding: 9px 10px; border-radius: 10px;
+  border: 1px solid var(--ui-line); background: var(--ui-hover); color: var(--ui-num); font-family: inherit; font-size: 14px; line-height: 1.6;
+}
+.at-modal textarea:focus { outline: none; border-color: var(--role-color); box-shadow: 0 0 0 3px rgba(var(--role-rgb), 0.22); }
+.at-modal input[type="file"] { height: auto; padding: 7px 10px; font-size: 13px; }
+.at-modal .at-field > span small { font-size: 11.5px; }
+.announce-cover-preview { display: none; max-height: 180px; max-width: 100%; object-fit: contain; border-radius: 10px; border: 1px solid var(--ui-line); justify-self: start; }
+.announce-cover-preview.visible { display: block; }
+.an-pin { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; background: var(--ui-hover); font-size: 14px; cursor: pointer; }
+.an-pin input { width: 18px; height: 18px; accent-color: var(--role-color); margin: 0; }
+.an-pin .material-symbols-outlined { font-size: 18px; color: var(--ui-warn); }
+
+/* ---------- ยืนยันลบ (สร้างโดย JS) ---------- */
+.confirm-overlay { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 20px; background: rgba(2, 6, 23, 0.6); }
+.confirm-box { width: min(400px, 100%); padding: 22px; border-radius: 16px; text-align: center; background: #161d2b; border: 1px solid var(--ui-line); color: var(--ui-num); font-family: "Kanit", sans-serif; }
+.confirm-box > .material-symbols-outlined { font-size: 40px; color: var(--ui-bad); }
+.confirm-box h3 { margin: 6px 0; font-size: 17px; font-weight: 600; }
+.confirm-box p { margin: 0 0 16px; font-size: 13.5px; line-height: 1.6; color: var(--ui-label); }
+.confirm-buttons { display: flex; justify-content: center; gap: 8px; }
+.confirm-buttons button { height: 38px; padding: 0 16px; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; }
+.confirm-buttons .btn-cancel { border: 1px solid var(--ui-line); background: transparent; color: var(--ui-num); }
+.confirm-buttons .btn-danger { border: 0; background: #dc2626; color: #fff; }
+
+/* ---------- Toast (สร้างโดย JS) ---------- */
+#toastContainer { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 2200; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+#toastContainer .toast {
+  display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; font-family: "Kanit", sans-serif; font-size: 14px; color: #fff;
+  background: #166534; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); opacity: 0; transform: translateY(12px); transition: opacity 0.2s, transform 0.2s;
+}
+#toastContainer .toast.show { opacity: 1; transform: none; }
+#toastContainer .toast-error { background: #b91c1c; }
+#toastContainer .toast-warning { background: #b45309; }
+.loading-spinner-small { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: an-spin 0.8s linear infinite; }
+@keyframes an-spin { to { transform: rotate(360deg); } }

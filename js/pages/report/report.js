@@ -22,6 +22,9 @@ let isSubmittingReply = false;
 
 // รายการสินค้าที่เลือกแล้ว (in-memory)
 let selectedProducts = [];
+let editingDraftId = null; // ร่างที่กำลังแก้ไข (ยังไม่ลบออกจากเครื่องจนกว่าจะบันทึก)
+let sentPeriod = "week"; // ตัวกรองรายการที่ส่งแล้ว: week | month | all
+let sentLimit = 10;
 
 // Unread comment counts per report
 let unreadCommentCountsMap = {};
@@ -103,9 +106,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   ]);
   setDefaultDate();
   setupEventListeners();
+  setupSentFilters();
+  document.getElementById("shopSelect")?.addEventListener("change", (e) => {
+    if (e.target.value) showFieldError(false);
+  });
   setupLogout();
   await renderDraftList();
   renderSelectedProducts();
+
+  // มาจากหน้า "ร้านของฉัน" (?shop=ID) → เลือกจังหวัดและร้านให้อัตโนมัติ
+  const shopParam = new URLSearchParams(location.search).get("shop");
+  if (shopParam) await preselectShop(shopParam);
 
   // เปิดรายงานอัตโนมัติเมื่อมาจากลิงก์ ?id=xxx (เช่น จากหน้าแจ้งเตือน)
   const openId = new URLSearchParams(location.search).get("id");
@@ -337,6 +348,7 @@ function addSelectedProduct() {
 
   renderSelectedProducts();
   resetPicker();
+  document.querySelector(".rp-sec-products")?.classList.remove("has-error");
   showToast(`เพิ่ม "${truncate(productName, 20)}" แล้ว`);
 }
 
@@ -363,13 +375,13 @@ async function renderSelectedProducts() {
 
   if (countEl) countEl.textContent = selectedProducts.length;
 
-  // ซ่อน/แสดงกล่อง productContainer ตามจำนวนสินค้า
-  if (productBox) {
-    productBox.style.display = selectedProducts.length > 0 ? "block" : "none";
-  }
+  if (productBox) productBox.style.display = "block";
 
   if (!selectedProducts.length) {
-    container.innerHTML = `<div class="empty-product-list">ยังไม่มีสินค้าที่เลือก — เลือกจาก dropdown ด้านบนแล้วกด "เพิ่มสินค้า"</div>`;
+    const noProd = document.getElementById("noProductFlag")?.checked;
+    container.innerHTML = noProd
+      ? `<div class="empty-product-list">ร้านนี้ยังไม่มีสินค้าของเรา — บันทึกร่างได้เลย</div>`
+      : `<div class="empty-product-list">ยังไม่มีสินค้า — เลือกหมวดและสินค้าด้านบน แล้วกด “เพิ่มสินค้านี้”</div>`;
     return;
   }
 
@@ -392,24 +404,91 @@ async function renderSelectedProducts() {
 // SAVE DRAFT → localStorage
 // =====================================================
 function saveDraft() {
-  const data = collectFormData();
-  if (!data.report_date) {
-    alert("กรุณาเลือกวันที่ก่อน");
-    return;
+  // เลือกสินค้าไว้แล้วแต่ลืมกด "เพิ่มสินค้านี้" → เพิ่มให้อัตโนมัติ
+  const pendingProduct = document.getElementById("pickerProduct")?.value;
+  if (pendingProduct && !document.getElementById("noProductFlag")?.checked) {
+    addSelectedProduct();
   }
 
-  const drafts = getDrafts();
-  drafts.push({
-    ...data,
-    id: genDraftId(),
-    saved_at: new Date().toISOString(),
-    is_draft: true,
-  });
+  const data = collectFormData();
+  if (!data.report_date) {
+    alert("กรุณาเลือกวันที่เข้าเยี่ยม");
+    document.getElementById("reportDate")?.focus();
+    return;
+  }
+  if (!data.shop_id) {
+    showFieldError(true);
+    document.getElementById("shopGroup")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    showToast("กรุณาเลือกร้านค้าก่อนบันทึก");
+    return;
+  }
+  showFieldError(false);
+  if (!data.products.length && !data.no_product) {
+    const sec = document.querySelector(".rp-sec-products");
+    sec?.classList.add("has-error");
+    sec?.scrollIntoView({ behavior: "smooth", block: "center" });
+    showToast("เพิ่มสินค้าที่ร้านขายอย่างน้อย 1 รายการ หรือเปิด “ร้านนี้ยังไม่มีสินค้าของเรา”");
+    return;
+  }
+  document.querySelector(".rp-sec-products")?.classList.remove("has-error");
+
+  let drafts = getDrafts();
+  const wasEditing = !!editingDraftId && drafts.some((x) => x.id === editingDraftId);
+  if (wasEditing) {
+    drafts = drafts.map((x) =>
+      x.id === editingDraftId ? { ...x, ...data, saved_at: new Date().toISOString() } : x,
+    );
+  } else {
+    drafts.push({
+      ...data,
+      id: genDraftId(),
+      saved_at: new Date().toISOString(),
+      is_draft: true,
+    });
+  }
   saveDraftsToStorage(drafts);
 
-  showToast("บันทึก Draft ลงเครื่องแล้ว");
+  showToast(wasEditing ? "บันทึกการแก้ไขแล้ว" : "บันทึกร่างแล้ว — กรอกร้านถัดไปได้เลย");
+  setEditingDraft(null);
   clearForm();
   renderDraftList();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showFieldError(show) {
+  const g = document.getElementById("shopGroup");
+  const e = document.getElementById("shopError");
+  if (g) g.classList.toggle("has-error", !!show);
+  if (e) e.hidden = !show;
+}
+
+// แสดง/ซ่อนแถบ "กำลังแก้ไขร่าง" และเปลี่ยนชื่อปุ่ม
+function setEditingDraft(draft) {
+  editingDraftId = draft ? draft.id : null;
+  const banner = document.getElementById("editBanner");
+  const label = document.getElementById("saveDraftLabel");
+  const shopEl = document.getElementById("editBannerShop");
+  if (banner) banner.hidden = !draft;
+  if (shopEl) shopEl.textContent = draft ? shopsMap[draft.shop_id] || "" : "";
+  if (label) label.textContent = draft ? "บันทึกการแก้ไข" : "บันทึกร่าง";
+  document.getElementById("reportForm")?.classList.toggle("is-editing", !!draft);
+  document.querySelectorAll(".rp-draft").forEach((el) =>
+    el.classList.toggle("is-editing", !!draft && el.dataset.id === draft.id),
+  );
+}
+
+function cancelEditDraft() {
+  setEditingDraft(null);
+  clearForm();
+  showToast("ยกเลิกการแก้ไข — ร่างเดิมยังอยู่");
+}
+
+function confirmClearForm() {
+  const d = collectFormData();
+  const hasData = d.shop_id || d.note || d.product_interest || d.products.length;
+  if (hasData && !confirm("ล้างข้อมูลที่กรอกไว้ในฟอร์ม?")) return;
+  setEditingDraft(null);
+  clearForm();
 }
 
 // =====================================================
@@ -420,8 +499,7 @@ async function editDraftToForm(draftId) {
   const d = drafts.find((x) => x.id === draftId);
   if (!d) return;
 
-  saveDraftsToStorage(drafts.filter((x) => x.id !== draftId));
-
+  showFieldError(false);
   if (d.report_date)
     document.getElementById("reportDate").value = d.report_date;
   if (d.status_visit) document.getElementById("status").value = d.status_visit;
@@ -467,18 +545,22 @@ async function editDraftToForm(draftId) {
   }
 
   renderSelectedProducts();
-  renderDraftList();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  showToast("โหลด Draft ขึ้น form แล้ว");
+  setEditingDraft(d);
+  document.getElementById("reportForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  showToast("เปิดร่างขึ้นฟอร์มแล้ว — แก้ไขแล้วกด “บันทึกการแก้ไข”");
 }
 
 // =====================================================
 // DELETE DRAFT
 // =====================================================
 function deleteDraft(draftId) {
-  if (!confirm("ลบ Draft นี้?")) return;
+  if (!confirm("ลบร่างนี้? (ลบแล้วกู้คืนไม่ได้)")) return;
   saveDraftsToStorage(getDrafts().filter((x) => x.id !== draftId));
-  showToast("ลบ Draft แล้ว");
+  if (editingDraftId === draftId) {
+    setEditingDraft(null);
+    clearForm();
+  }
+  showToast("ลบร่างแล้ว");
   renderDraftList();
 }
 
@@ -489,59 +571,70 @@ async function renderDraftList() {
   const drafts = getDrafts();
   const counter = document.getElementById("draftCount");
   const counter2 = document.getElementById("draftCount2");
-  const tbody = document.getElementById("draftBody");
+  const list = document.getElementById("draftBody");
   const section = document.getElementById("draftSection");
   const submitAllBtn = document.getElementById("submitAllBtn");
 
   if (counter) counter.textContent = drafts.length;
   if (counter2) counter2.textContent = drafts.length;
-  if (submitAllBtn) submitAllBtn.disabled = drafts.length === 0;
-  if (!tbody || !section) return;
+  if (submitAllBtn) {
+    submitAllBtn.disabled = drafts.length === 0;
+    submitAllBtn.innerHTML = `<span class="material-symbols-outlined">send</span> ${
+      drafts.length ? `ส่งรายงานทั้งหมด (${drafts.length} ร้าน)` : "ยังไม่มีร่างที่รอส่ง"
+    }`;
+  }
+  if (section) section.classList.toggle("is-empty", drafts.length === 0);
+  const jump = document.getElementById("draftJump");
+  const jumpCount = document.getElementById("draftJumpCount");
+  if (jump) jump.hidden = drafts.length === 0;
+  if (jumpCount) jumpCount.textContent = drafts.length;
+  if (!list) return;
 
-  section.style.display = drafts.length > 0 ? "block" : "none";
+  if (!drafts.length) {
+    list.innerHTML = `<div class="rp-empty">
+      <span class="material-symbols-outlined">inbox</span>
+      ยังไม่มีร่าง — กรอกฟอร์มแล้วกด “บันทึกร่าง”</div>`;
+    return;
+  }
 
   await resolveShopNames(drafts.map((d) => d.shop_id));
 
-  tbody.innerHTML = "";
-
-  for (const d of drafts) {
-    const shopName = shopsMap[d.shop_id] || "—";
-    const prodSummary =
-      (d.products || [])
-        .map((p) => productsMap[p.product_id] || "—")
-        .join(", ") || "—";
-    const savedAt = new Date(d.saved_at).toLocaleString("th-TH", {
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td data-label="วันที่">${d.report_date || "—"}</td>
-      <td data-label="ร้านค้า" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
-      <td data-label="สินค้า" title="${escapeHtml(prodSummary)}">
-        <div style="font-weight:500;">${escapeHtml(truncate(prodSummary, 24))}</div>
-        <div class="attr-sub">${(d.products || []).length} รายการ</div>
-      </td>
-      <td data-label="รายละเอียด" title="${escapeHtml(d.note || "")}">${escapeHtml(truncate(d.note || "—", 28))}</td>
-      <td data-label="บันทึกเมื่อ" style="color:#888;font-size:11px;">${savedAt}</td>
-      <td>
-        <div class="action-buttons">
-          <button onclick="editDraftToForm('${d.id}')" title="แก้ไข" class="btn-action-edit">
-            <span class="material-symbols-outlined icon-orange">edit_document</span><span>แก้</span>
+  list.innerHTML = drafts
+    .map((d) => {
+      const shopName = shopsMap[d.shop_id] || "ยังไม่ได้เลือกร้าน";
+      const nProd = (d.products || []).length;
+      const incomplete = !d.shop_id || (!d.no_product && !nProd);
+      const prodNames = (d.products || []).map((p) => productsMap[p.product_id] || "—");
+      const prodText = d.no_product
+        ? "ไม่มีสินค้าของเรา"
+        : nProd
+          ? `${prodNames[0]}${nProd > 1 ? ` +${nProd - 1}` : ""}`
+          : "ยังไม่ได้เพิ่มสินค้า";
+      return `
+      <div class="rp-draft${editingDraftId === d.id ? " is-editing" : ""}${incomplete ? " is-incomplete" : ""}" data-id="${d.id}">
+        <div class="rp-draft-main">
+          <div class="rp-item-title">${escapeHtml(shopName)}${incomplete ? ` <span class="rp-badge is-warn">ข้อมูลไม่ครบ</span>` : ""}</div>
+          <div class="rp-item-sub">
+            <span>${formatDateShort(d.report_date)}</span>
+            <span>${escapeHtml(d.status_visit || "")}</span>
+            <span>${escapeHtml(prodText)}</span>
+          </div>
+          ${d.note ? `<div class="rp-item-note">${escapeHtml(truncate(d.note, 80))}</div>` : ""}
+        </div>
+        <div class="rp-draft-actions">
+          <button type="button" class="rp-icon-btn" onclick="editDraftToForm('${d.id}')" title="แก้ไข">
+            <span class="material-symbols-outlined">edit</span><span>แก้ไข</span>
           </button>
-          <button onclick="submitOneDraft('${d.id}')" title="ส่งรายการนี้" class="btn-action-submit">
-            <span class="material-symbols-outlined">forward_to_inbox</span><span>ส่ง</span>
-          </button>
-          <button onclick="deleteDraft('${d.id}')" title="ลบ" class="btn-action-del">
+          <button type="button" class="rp-icon-btn is-danger" onclick="deleteDraft('${d.id}')" title="ลบ">
             <span class="material-symbols-outlined">delete</span><span>ลบ</span>
           </button>
+          <button type="button" class="rp-icon-btn is-primary" onclick="submitOneDraft('${d.id}')" title="ส่งร้านนี้">
+            <span class="material-symbols-outlined">send</span><span>ส่ง</span>
+          </button>
         </div>
-      </td>`;
-    tbody.appendChild(tr);
-  }
+      </div>`;
+    })
+    .join("");
 }
 
 // =====================================================
@@ -607,6 +700,10 @@ async function submitOneDraft(draftId) {
     if (error) throw error;
 
     saveDraftsToStorage(drafts.filter((x) => x.id !== draftId));
+    if (editingDraftId === draftId) {
+      setEditingDraft(null);
+      clearForm();
+    }
     showToast("ส่งรายงานสำเร็จ");
     await renderDraftList();
     await loadSubmittedReports();
@@ -622,7 +719,7 @@ async function submitOneDraft(draftId) {
 async function submitAllDrafts() {
   const drafts = getDrafts();
   if (!drafts.length) {
-    alert("ไม่มี Draft ที่รอส่ง");
+    alert("ไม่มีร่างที่รอส่ง");
     return;
   }
 
@@ -632,7 +729,7 @@ async function submitAllDrafts() {
   );
   if (incomplete.length) {
     alert(
-      `มี ${incomplete.length} รายการที่ข้อมูลยังไม่ครบ\nกรุณาเลือกร้านค้า และเลือกสินค้า (หรือติ๊ก "ร้านนี้ยังไม่มีสินค้า")`,
+      `มี ${incomplete.length} ร่างที่ข้อมูลยังไม่ครบ (มีป้าย "ข้อมูลไม่ครบ")\nกด "แก้ไข" แล้วเลือกร้านค้า และเพิ่มสินค้า (หรือเปิด "ร้านนี้ยังไม่มีสินค้าของเรา")`,
     );
     return;
   }
@@ -696,6 +793,10 @@ async function submitAllDrafts() {
 
     saveDraftsToStorage([]);
     showToast(`ส่งรายงาน ${rows.length} รายการสำเร็จ!`);
+    if (editingDraftId) {
+      setEditingDraft(null);
+      clearForm();
+    }
     await renderDraftList();
     await loadSubmittedReports();
   } catch (e) {
@@ -710,7 +811,7 @@ async function submitAllDrafts() {
 async function loadSubmittedReports() {
   const tbody = document.getElementById("reportBody");
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center">กำลังโหลด...</td></tr>`;
+  tbody.innerHTML = `<div class="rp-empty">กำลังโหลด...</div>`;
   try {
     const {
       data: { session },
@@ -752,7 +853,7 @@ async function loadSubmittedReports() {
     await renderSubmittedTable();
   } catch (e) {
     console.error("loadSubmittedReports", e);
-    tbody.innerHTML = `<tr><td colspan="6">เกิดข้อผิดพลาด</td></tr>`;
+    tbody.innerHTML = `<div class="rp-empty is-error">โหลดรายงานไม่สำเร็จ — ลองรีเฟรชหน้า</div>`;
   }
 }
 
@@ -832,74 +933,120 @@ function groupSubmittedReports(reports) {
   );
 }
 
-async function renderSubmittedTable() {
-  const tbody = document.getElementById("reportBody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
+// ช่วงเวลา: สัปดาห์นี้ (จันทร์–อาทิตย์) / เดือนนี้ — เทียบจากวันที่เข้าเยี่ยม
+function inSentPeriod(g, period) {
+  if (period === "all") return true;
+  const raw = g.report_date || g.submitted_at;
+  if (!raw) return false;
+  const d = new Date(String(raw).length <= 10 ? raw + "T00:00:00" : raw);
+  const now = new Date();
+  if (period === "month") return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+  const nextMonday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7);
+  return d >= monday && d < nextMonday;
+}
 
-  // รวม rows ก่อน render
+function showMoreSent() {
+  sentLimit += 10;
+  renderSubmittedTable();
+}
+
+function setupSentFilters() {
+  document.querySelectorAll("#sentPeriodChips .rp-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sentPeriod = btn.dataset.period;
+      sentLimit = 10;
+      document.querySelectorAll("#sentPeriodChips .rp-chip").forEach((b) =>
+        b.classList.toggle("active", b === btn),
+      );
+      renderSubmittedTable();
+    });
+  });
+  const search = document.getElementById("sentSearch");
+  if (search) {
+    let t;
+    search.addEventListener("input", () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        sentLimit = 10;
+        renderSubmittedTable();
+      }, 200);
+    });
+  }
+}
+
+async function renderSubmittedTable() {
+  const list = document.getElementById("reportBody");
+  const moreBtn = document.getElementById("sentMoreBtn");
+  if (!list) return;
+
   const grouped = groupSubmittedReports(submittedReports);
 
-  if (!grouped.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#888;padding:24px;">ยังไม่มีรายงานที่ส่ง</td></tr>`;
+  const setCount = (id, n) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = n;
+  };
+  setCount("sentCountWeek", grouped.filter((g) => inSentPeriod(g, "week")).length);
+  setCount("sentCountMonth", grouped.filter((g) => inSentPeriod(g, "month")).length);
+  setCount("sentCountAll", grouped.length);
+
+  const q = (document.getElementById("sentSearch")?.value || "").trim().toLowerCase();
+  const filtered = grouped.filter((g) => {
+    if (!inSentPeriod(g, sentPeriod)) return false;
+    if (!q) return true;
+    const hay = [shopsMap[g.shop_id], g.note, ...g.products.map((p) => productsMap[p.product_id])]
+      .join(" ")
+      .toLowerCase();
+    return hay.includes(q);
+  });
+
+  if (!filtered.length) {
+    const msg = !grouped.length
+      ? "ยังไม่มีรายงานที่ส่ง"
+      : q
+        ? "ไม่พบรายงานที่ตรงกับคำค้น"
+        : sentPeriod === "week"
+          ? "สัปดาห์นี้ยังไม่ได้ส่งรายงาน"
+          : "ไม่มีรายงานในช่วงนี้";
+    list.innerHTML = `<div class="rp-empty"><span class="material-symbols-outlined">description</span>${msg}</div>`;
+    if (moreBtn) moreBtn.hidden = true;
     return;
   }
 
-  for (const g of grouped) {
+  const shown = filtered.slice(0, sentLimit);
+  let html = "";
+  for (const g of shown) {
     const shopName = shopsMap[g.shop_id] || "—";
-
-    // รวมชื่อสินค้าทุกตัวใน group
     const prodNames = g.products.map((p) => productsMap[p.product_id] || "—");
     const prodDisplay = prodNames.length
       ? prodNames.length === 1
         ? prodNames[0]
         : `${prodNames[0]} +${prodNames.length - 1}`
-      : "—";
-    const prodFull = prodNames.join(", ") || "—";
+      : "ไม่มีสินค้า";
+    const unreadCount = g.ids.reduce((sum, id) => sum + (unreadCommentCountsMap[id] || 0), 0);
+    const d = new Date(String(g.report_date || g.submitted_at || "").length <= 10 ? g.report_date + "T00:00:00" : g.report_date || g.submitted_at);
+    const day = isNaN(d) ? "—" : d.getDate();
+    const mon = isNaN(d) ? "" : d.toLocaleDateString("th-TH", { month: "short" });
 
-    // แสดง attribute ของสินค้าตัวแรกเป็นตัวอย่าง (ถ้ามี)
-    const firstAttr = g.products[0]?.attributes;
-    const attrText = firstAttr ? await formatAttrInline(firstAttr) : "";
-    const attrShort = truncate(attrText, 36);
-
-    const ackBadge = g.manager_acknowledged
-      ? `<span class="badge-ack">✅ อ่านแล้ว</span>`
-      : "";
-
-    // นับ unread comment รวมทุก id ใน group
-    const unreadCount = g.ids.reduce(
-      (sum, id) => sum + (unreadCommentCountsMap[id] || 0),
-      0,
-    );
-    const commentBadge =
-      unreadCount > 0
-        ? `<span class="comment-notify-badge" title="${unreadCount} ความคิดเห็นใหม่">${unreadCount}</span>`
-        : "";
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td data-label="วันที่ส่ง" class="col-date">${formatDateShort(g.submitted_at || g.report_date)}</td>
-      <td data-label="ร้านค้า" class="col-shop" title="${escapeHtml(shopName)}">${escapeHtml(truncate(shopName, 10))}</td>
-      <td data-label="สถานะ" class="col-status">${ackBadge || "—"}</td>
-      <td data-label="รายละเอียด" class="col-note" title="${escapeHtml(g.note || "")}">${escapeHtml(truncate(g.note || "—", 22))}</td>
-      <td data-label="สินค้า" class="col-product" title="${escapeHtml(prodFull)}">
-        <div style="font-weight:500;">${escapeHtml(truncate(prodDisplay, 16))}</div>
-        ${
-          prodNames.length > 1
-            ? `<div class="attr-sub">${prodNames.length} รายการ</div>`
-            : attrShort && attrShort !== "—"
-              ? `<div class="attr-sub">${escapeHtml(attrShort)}</div>`
-              : ""
-        }
-      </td>
-      <td class="col-action">
-        <div class="action-buttons">
-          <button onclick="handleView('${g.id}')" title="ดูรายละเอียด" class="btn-action-view" data-report-id="${g.id}">
-            <span class="material-symbols-outlined icon-md icon-orange">visibility</span>${commentBadge}
-          </button>
-        </div>
-      </td>`;
-    tbody.appendChild(tr);
+    html += `
+      <button type="button" class="rp-item" onclick="handleView('${g.id}')" data-report-id="${g.id}">
+        <span class="rp-item-date"><b>${day}</b><small>${mon}</small></span>
+        <span class="rp-item-body">
+          <span class="rp-item-title">${escapeHtml(shopName)}</span>
+          <span class="rp-item-sub">${escapeHtml(prodDisplay)}</span>
+          ${g.note ? `<span class="rp-item-note1">${escapeHtml(g.note)}</span>` : ""}
+        </span>
+        <span class="rp-item-meta">
+          ${unreadCount > 0 ? `<span class="rp-badge is-new" title="${unreadCount} ความคิดเห็นใหม่"><span class="material-symbols-outlined">chat</span>${unreadCount}</span>` : ""}
+          ${g.manager_acknowledged ? `<span class="rp-badge is-ok">อ่านแล้ว</span>` : `<span class="rp-badge">ส่งแล้ว</span>`}
+        </span>
+        <span class="material-symbols-outlined rp-item-go">chevron_right</span>
+      </button>`;
+  }
+  list.innerHTML = html;
+  if (moreBtn) {
+    moreBtn.hidden = filtered.length <= sentLimit;
+    moreBtn.textContent = `แสดงเพิ่ม (อีก ${filtered.length - shown.length})`;
   }
 }
 
@@ -1390,6 +1537,31 @@ function clearForm() {
   renderSelectedProducts();
 }
 
+async function preselectShop(shopId) {
+  try {
+    const { data: shop } = await supabaseClient
+      .from("shops")
+      .select("id,shop_name,province")
+      .eq("id", shopId)
+      .single();
+    if (!shop?.province) return;
+    const provSel = document.getElementById("provinceSelect");
+    if (!provSel) return;
+    if (![...provSel.options].some((o) => o.value === shop.province)) {
+      provSel.add(new Option(shop.province, shop.province));
+    }
+    provSel.value = shop.province;
+    await loadShopsByProvince(shop.province);
+    const shopSel = document.getElementById("shopSelect");
+    if (shopSel && [...shopSel.options].some((o) => String(o.value) === String(shop.id))) {
+      shopSel.value = shop.id;
+      showToast(`เลือกร้าน “${shop.shop_name}” ให้แล้ว`);
+    }
+  } catch (e) {
+    console.warn("preselectShop", e);
+  }
+}
+
 function setDefaultDate() {
   const d = document.getElementById("reportDate");
   if (d) d.valueAsDate = new Date();
@@ -1488,7 +1660,6 @@ function setupEventListeners() {
 
       if (isChecked) {
         selectedProducts = [];
-        renderSelectedProducts();
         document.getElementById("pickerCategory").value = "";
         document.getElementById("pickerProduct").innerHTML =
           `<option value="">-- เลือกสินค้า --</option>`;
@@ -1498,11 +1669,13 @@ function setupEventListeners() {
       document
         .querySelector(".product-picker")
         .classList.toggle("disabled", isChecked);
+      renderSelectedProducts();
+      if (isChecked) document.querySelector(".rp-sec-products")?.classList.remove("has-error");
 
       if (label) {
         label.textContent = isChecked
-          ? "ร้านนี้ยังไม่มีสินค้า (บันทึกได้เลย)"
-          : "ยังไม่มีสินค้าที่จำหน่ายกับร้านนี้";
+          ? "ร้านนี้ยังไม่มีสินค้าของเรา (บันทึกได้เลย)"
+          : "ร้านนี้ยังไม่มีสินค้าของเรา";
       }
     });
 

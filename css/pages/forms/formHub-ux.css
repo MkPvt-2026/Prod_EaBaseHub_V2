@@ -1,0 +1,115 @@
+/* =====================================================
+   formHub-ux.css — หน้าแบบฟอร์ม (Forms Hub)
+   โครงหน้าเหมือนหน้าเซลล์อื่น (หัวเว็บ + แถบเมนู + หัวข้อสีตาม role)
+   การ์ดเมนูคงรูปแบบเดิม (ไอคอนสีใหญ่ตรงกลาง กดง่าย) — ย้ายมาจาก formHub.css
+   ===================================================== */
+
+body { background: #f3f5f9 !important; font-family: "Kanit", sans-serif; }
+
+.fh {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 16px 20px 40px;
+  color: #1f2937;
+}
+
+/* หัวข้อหน้า (แบบเดียวกับหน้ารายงาน / แจ้งเคลม) */
+.fh-head {
+  padding: 18px 22px;
+  border-radius: 16px;
+  color: #fff;
+  margin-bottom: 20px;
+}
+.fh-head h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+}
+.fh-head h1 .material-symbols-outlined { font-size: 26px; }
+.fh-head p { margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.88); }
+
+/* ---------- การ์ดเมนู (รูปแบบเดิม) ---------- */
+.forms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.form-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #edf3f1;
+  border-radius: 18px;
+  min-height: 210px;
+  padding: 26px 14px 22px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.form-card:hover { transform: translateY(-5px); box-shadow: 0 16px 36px rgba(0, 0, 0, 0.11); }
+.form-card:focus-visible { outline: 3px solid var(--role-border, #bfdbfe); outline-offset: 3px; }
+.form-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  margin: 4px auto 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.form-icon .material-symbols-outlined { font-size: 38px; color: #fff; }
+.form-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; color: #1f2937; }
+.form-card p { margin: 0 auto 14px; font-size: 13.5px; color: #64748b; line-height: 1.6; }
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  margin-top: auto;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; }
+.status.ready { background: #e5f7ef; color: #109160; }
+.status.ready::before { background: #10a86c; }
+.status.approve { background: #fff0e6; color: #e76513; }
+.status.approve::before { background: #f07000; }
+
+.blue   { background: linear-gradient(135deg, #1687e8, #2563eb); }
+.green  { background: linear-gradient(135deg, #22a76f, #46b55d); }
+.orange { background: linear-gradient(135deg, #ff9f1c, #f97316); }
+.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.pink   { background: linear-gradient(135deg, #ec4899, #db2777); }
+.teal   { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.red    { background: linear-gradient(135deg, #fb7185, #ef4444); }
+.indigo { background: linear-gradient(135deg, #3b82f6, #4f46e5); }
+
+/* ---------- ขนาดจอ ---------- */
+@media (max-width: 1023px) {
+  .forms-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+@media (max-width: 767px) {
+  .fh { padding: 12px 12px 32px; }
+  .fh-head { padding: 14px 16px; }
+  .fh-head h1 { font-size: 19px; }
+  .forms-grid { gap: 12px; }
+  .form-card { min-height: 180px; padding: 20px 10px 16px; }
+  .form-icon { width: 60px; height: 60px; border-radius: 18px; margin-bottom: 14px; }
+  .form-icon .material-symbols-outlined { font-size: 32px; }
+  .form-card h3 { font-size: 15.5px; }
+  .form-card p { font-size: 12.5px; }
+}
+@media (pointer: coarse) {
+  .form-card:hover { transform: none; }
+  .form-card:active { transform: scale(0.98); }
+}

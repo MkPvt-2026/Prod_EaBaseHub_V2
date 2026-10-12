@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ข้อความแจ้งเตือน</title>
@@ -146,8 +150,9 @@ header {
 .stbtn { position:fixed; bottom:26px; right:22px; width:40px; height:40px; border-radius:50%; background:var(--accent); border:none; color:#fff; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(233,69,96,.4); opacity:0; pointer-events:none; transition:opacity .3s; }
 .stbtn.show { opacity:1; pointer-events:auto; }
 </style>
-</head>
-<body>
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
+<body class="ui-dark">
 
 <header>
   <a href="/pages/executive/executive-Dashboard.html" class="back-btn">‹</a>
@@ -354,5 +359,7 @@ window.addEventListener('scroll', () => {
   document.getElementById('stbtn').classList.toggle('show', window.scrollY > 200);
 });
 </script>
-</body>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

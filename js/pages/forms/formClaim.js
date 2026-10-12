@@ -39,14 +39,14 @@ function showToast(msg, type = "success") {
 
   Object.assign(toast.style, {
     position:     "fixed",
-    bottom:       "30px",
+    bottom:       "104px",
     left:         "50%",
     transform:    "translateX(-50%) translateY(80px)",
     background:   c.bg,
     color:        "#fff",
     padding:      "14px 24px",
     borderRadius: "12px",
-    fontFamily:   "Sarabun, sans-serif",
+    fontFamily:   "Kanit, sans-serif",
     fontSize:     "15px",
     fontWeight:   "600",
     boxShadow:    "0 8px 32px rgba(0,0,0,0.25)",
@@ -124,9 +124,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupMediaUpload();
     setupClaimTypes();
     setupModalOverlay();
+    setupChecklist();
     hideSkeletonLoading();
 
     await Promise.allSettled([loadCustomerList(), loadDrafts(), loadProductGrid()]);
+    // มาจากหน้า "ร้านของฉัน" (?shop=ชื่อร้าน) → เลือกร้านให้อัตโนมัติ
+    const shopParam = new URLSearchParams(location.search).get("shop");
+    const custSel = document.getElementById("customer");
+    if (shopParam && custSel) {
+      if (![...custSel.options].some((o) => o.value === shopParam)) custSel.add(new Option(shopParam, shopParam));
+      custSel.value = shopParam;
+      updateChecklist();
+    }
     console.log("✅ หน้า formClaim พร้อมใช้งาน!");
   } catch (error) {
     console.error("❌ Error initializing page:", error);
@@ -136,18 +145,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function showSkeletonLoading() {
-  document.querySelectorAll(".card, .section-card, .card-cause").forEach((card) => {
+  document.querySelectorAll(".cf-form, .cf-panel").forEach((card) => {
     card.style.opacity = "0.5"; card.style.pointerEvents = "none";
   });
 }
 function hideSkeletonLoading() {
-  document.querySelectorAll(".card, .section-card, .card-cause").forEach((card) => {
+  document.querySelectorAll(".cf-form, .cf-panel").forEach((card) => {
     card.style.opacity = ""; card.style.pointerEvents = "";
   });
 }
 function showFatalError(msg) {
   hideSkeletonLoading();
-  document.querySelector("main")?.insertAdjacentHTML("afterbegin",
+  (document.querySelector(".cf") || document.body).insertAdjacentHTML("afterbegin",
     `<div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:12px;padding:20px;margin-bottom:20px;color:#dc2626;font-size:15px;font-weight:600;text-align:center;">
       ❌ ${msg}<br>
       <button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:#dc2626;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;">รีเฟรชหน้า</button>
@@ -468,6 +477,7 @@ async function showAttributeSelectors(productId, productName) {
 window.closeProductModal = function () {
   const modal = document.getElementById("productModal");
   if (modal) { modal.style.display = "none"; modal._readyToClose = false; }
+  updateChecklist();
 };
 
 function setupModalOverlay() {
@@ -496,7 +506,14 @@ function setupMediaUpload() {
 
 function setupClaimTypes() {
   document.querySelectorAll(".claim-item").forEach((item) => {
-    item.addEventListener("click", function () { this.classList.toggle("selected"); });
+    item.addEventListener("click", function () {
+      this.classList.toggle("selected");
+      this.setAttribute("aria-pressed", this.classList.contains("selected"));
+      updateChecklist();
+    });
+    item.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.click(); }
+    });
   });
 }
 
@@ -547,10 +564,11 @@ function handleImageUpload(e) {
       previewBox._file = file;
       const img = document.createElement("img");
       img.src = event.target.result; img.alt = file.name;
-      const removeBtn = createRemoveBtn(() => { previewBox.remove(); showToast("ลบรูปแล้ว", "info"); });
+      const removeBtn = createRemoveBtn(() => { previewBox.remove(); showToast("ลบรูปแล้ว", "info"); updateChecklist(); });
       previewBox.appendChild(img); previewBox.appendChild(removeBtn);
       const uploadLabel = imageGrid.querySelector("label.upload-box");
       imageGrid.insertBefore(previewBox, uploadLabel);
+      updateChecklist();
     };
     reader.readAsDataURL(file);
   });
@@ -569,10 +587,11 @@ function handleVideoUpload(e) {
       previewBox._file = file;
       const video = document.createElement("video");
       video.src = event.target.result; video.controls = true; video.muted = true; video.playsInline = true;
-      const removeBtn = createRemoveBtn(() => { previewBox.remove(); showToast("ลบวิดีโอแล้ว", "info"); });
+      const removeBtn = createRemoveBtn(() => { previewBox.remove(); showToast("ลบวิดีโอแล้ว", "info"); updateChecklist(); });
       previewBox.appendChild(video); previewBox.appendChild(removeBtn);
       const uploadLabel = videoGrid.querySelector("label.upload-box");
       videoGrid.insertBefore(previewBox, uploadLabel);
+      updateChecklist();
     };
     reader.readAsDataURL(file);
   });
@@ -591,21 +610,90 @@ function getSelectedClaimTypes() {
   return Array.from(document.querySelectorAll(".claim-item.selected")).map((item) => item.textContent.trim());
 }
 
+// ----- สถานะความครบของฟอร์ม (ใช้ทั้ง checklist และตอนตรวจก่อนส่ง) -----
+function countMedia() {
+  const fresh = document.querySelectorAll("#imageGrid .preview, #videoGrid .preview").length;
+  return fresh + (window.currentDraftMedia?.length || 0);
+}
+
+function getFormStatus() {
+  const v = (id) => document.getElementById(id)?.value?.trim();
+  return {
+    customer: !!v("customer"),
+    product: !!v("product"),
+    qty: !!v("qty"),
+    types: getSelectedClaimTypes().length > 0,
+    media: countMedia() > 0,
+  };
+}
+
+function updateChecklist() {
+  const st = getFormStatus();
+  const keys = Object.keys(st);
+  const missing = keys.filter((k) => !st[k]).length;
+  document.querySelectorAll("#cfChecklist li").forEach((li) => {
+    li.classList.toggle("is-done", !!st[li.dataset.key]);
+  });
+  const ready = document.getElementById("cfReady");
+  const text = document.getElementById("cfReadyText");
+  if (ready) ready.classList.toggle("is-ready", missing === 0);
+  if (text) text.textContent = missing === 0 ? "ข้อมูลครบ ส่งเคลมได้เลย" : `ยังขาดอีก ${missing} อย่างก่อนส่งเคลม`;
+  const otherSelected = getSelectedClaimTypes().includes("อื่นๆ");
+  document.getElementById("cfDetailHint")?.classList.toggle("is-required", otherSelected);
+}
+
+function setupChecklist() {
+  ["customer", "product", "qty", "detail", "claimDate"].forEach((id) => {
+    const el = document.getElementById(id);
+    el?.addEventListener("input", updateChecklist);
+    el?.addEventListener("change", updateChecklist);
+  });
+  // แตะรายการใน checklist → เลื่อนไปที่ส่วนนั้น
+  document.querySelectorAll("#cfChecklist li").forEach((li) => {
+    li.addEventListener("click", () => focusSection(li.dataset.target));
+  });
+  // แตะข้อความ "ยังขาดอีก n อย่าง" ที่แถบล่าง → ไปที่ส่วนแรกที่ยังไม่ครบ
+  document.getElementById("cfReady")?.addEventListener("click", () => {
+    const st = getFormStatus();
+    const first = [...document.querySelectorAll("#cfChecklist li")].find((li) => !st[li.dataset.key]);
+    if (first) focusSection(first.dataset.target);
+  });
+  updateChecklist();
+}
+
+function focusSection(id) {
+  const sec = document.getElementById(id);
+  if (!sec) return;
+  sec.scrollIntoView({ behavior: "smooth", block: "center" });
+  sec.classList.remove("cf-flash");
+  void sec.offsetWidth;
+  sec.classList.add("cf-flash");
+}
+
+const FIELD_SECTION = { claimDate: "cfSecCustomer", customer: "cfSecCustomer", product: "cfSecProduct", qty: "cfSecProduct" };
+
 function validateForm(requireMedia = false) {
   const fields = [
     { id: "claimDate", label: "วันที่แจ้งเคลม" },
-    { id: "customer",  label: "ลูกค้า / ร้านค้า" },
+    { id: "customer",  label: "ร้านค้า / ลูกค้า" },
     { id: "product",   label: "ชื่อสินค้า" },
     { id: "qty",       label: "จำนวน" },
   ];
   for (const { id, label } of fields) {
     const el = document.getElementById(id);
-    if (!el?.value?.trim()) { showToast(`กรุณากรอก: ${label}`, "warning"); el?.focus(); return false; }
+    if (!el?.value?.trim()) {
+      showToast(`กรุณากรอก: ${label}`, "warning");
+      focusSection(FIELD_SECTION[id]);
+      setTimeout(() => el?.focus({ preventScroll: true }), 300);
+      return false;
+    }
   }
   if (requireMedia) {
-    const hasMedia = document.querySelectorAll("#imageGrid .preview, #videoGrid .preview").length > 0;
-    if (!hasMedia) { showToast("กรุณาแนบรูปภาพหรือวิดีโออย่างน้อย 1 ไฟล์", "warning"); return false; }
-    if (getSelectedClaimTypes().length === 0) { showToast("กรุณาเลือกประเภทปัญหาอย่างน้อย 1 รายการ", "warning"); return false; }
+    if (getSelectedClaimTypes().length === 0) { showToast("กรุณาเลือกปัญหาที่พบอย่างน้อย 1 ข้อ", "warning"); focusSection("cfSecTypes"); return false; }
+    if (getSelectedClaimTypes().includes("อื่นๆ") && !document.getElementById("detail").value.trim()) {
+      showToast("เลือก “อื่นๆ” แล้ว กรุณาอธิบายรายละเอียดปัญหา", "warning"); focusSection("cfSecTypes"); return false;
+    }
+    if (countMedia() === 0) { showToast("กรุณาแนบรูปภาพหรือวิดีโออย่างน้อย 1 ไฟล์", "warning"); focusSection("cfSecMedia"); return false; }
   }
   if (!window.currentUser?.id) { showToast("ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินใหม่", "error"); return false; }
   return true;
@@ -650,7 +738,7 @@ window.saveDraft = async function () {
       const { error } = await supabaseClient.from("claims").update(updateData).eq("id", window.currentDraftId);
       if (error) throw error;
       claimId = window.currentDraftId;
-      showToast("อัปเดท Draft สำเร็จ!");
+      showToast("บันทึกการแก้ไขร่างแล้ว");
     } else {
       const draftData = {
   ...buildClaimData("draft"),
@@ -666,7 +754,7 @@ const { data, error } = await supabaseClient
   .single();
       if (error) throw error;
       claimId = data.id;
-      showToast("บันทึก Draft สำเร็จ!");
+      showToast("บันทึกร่างแล้ว");
     }
     const mediaUrls = await uploadMediaFiles(claimId);
     if (mediaUrls.length > 0) {
@@ -685,48 +773,81 @@ const { data, error } = await supabaseClient
   }
 };
 
+function isVideoUrl(url) { return /\.(mp4|mov|avi|webm|m4v)(\?|$)/i.test(url || ""); }
+
 async function loadDrafts() {
-  const draftBody = document.getElementById("draftBody");
-  if (!draftBody) return;
+  const list = document.getElementById("draftBody");
+  const countEl = document.getElementById("cfDraftCount");
+  if (!list) return;
   if (!window.currentUser?.id) {
-    draftBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:30px;">กรุณาล็อกอินเพื่อดู Draft</td></tr>';
+    list.innerHTML = '<div class="cf-empty">กรุณาล็อกอินเพื่อดูร่าง</div>';
     return;
   }
-  draftBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:30px;">⏳ กำลังโหลด...</td></tr>';
+  list.innerHTML = '<div class="cf-empty">กำลังโหลด...</div>';
   try {
     const { data, error } = await supabaseClient.from("claims").select("*")
       .eq("user_id", window.currentUser.id).eq("status", "draft")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    if (!data || data.length === 0) {
-      draftBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:40px;font-size:15px;">📭 ยังไม่มี Draft</td></tr>';
+    window._claimDrafts = data || [];
+    if (countEl) countEl.textContent = window._claimDrafts.length;
+    if (!window._claimDrafts.length) {
+      list.innerHTML = '<div class="cf-empty"><span class="material-symbols-outlined">inbox</span>ยังไม่มีร่าง</div>';
       return;
     }
-    draftBody.innerHTML = "";
-    data.forEach((draft) => {
-      const row = document.createElement("tr");
-      const thumbHtml = draft.media_urls?.length > 0
-        ? `<div class="draft-thumbs">${draft.media_urls.slice(0,3).map((url) => /\.(mp4|mov|avi|webm)$/i.test(url) ? `<div class="draft-thumb video-thumb">🎥</div>` : `<img class="draft-thumb" src="${url}" loading="lazy" onerror="this.style.display='none'">`).join("")}${draft.media_urls.length > 3 ? `<div class="draft-thumb more-thumb">+${draft.media_urls.length - 3}</div>` : ""}</div>`
-        : `<span class="draft-no-media">ไม่มีไฟล์</span>`;
-      const typesHtml = draft.claim_types?.length > 0
-        ? draft.claim_types.map((t) => `<span class="draft-type-tag">${t}</span>`).join("")
-        : '<span style="color:#9ca3af;font-size:0.8rem">ไม่ระบุ</span>';
-      row.innerHTML = `
-        <td><div class="draft-date">📅 ${formatDate(draft.claim_date)}</div><div class="draft-customer">🏪 ${draft.customer || "-"}</div></td>
-        <td><div class="draft-product">📦 ${draft.product}</div><div class="draft-qty">🔢 ${draft.qty || ""}</div><div class="draft-types">${typesHtml}</div></td>
-        <td>${thumbHtml}</td>
-        <td><div class="draft-actions">
-          <button class="btn-draft-submit" onclick="submitClaim('${draft.id}')">✅ ส่งเคลม</button>
-          <button class="btn-draft-edit"   onclick="editDraft('${draft.id}')">✏️ แก้ไข</button>
-          <button class="btn-draft-del"    onclick="deleteDraft('${draft.id}')">🗑️</button>
-        </div></td>`;
-      draftBody.appendChild(row);
-    });
-    console.log(`✅ โหลด ${data.length} draft(s)`);
+    list.innerHTML = window._claimDrafts.map((d) => {
+      const media = d.media_urls || [];
+      const firstImg = media.find((u) => !isVideoUrl(u));
+      const thumb = firstImg
+        ? `<img src="${esc(firstImg)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'material-symbols-outlined',textContent:'image'}))">`
+        : `<span class="material-symbols-outlined">${media.length ? "videocam" : "hide_image"}</span>`;
+      const types = d.claim_types || [];
+      const missing = [];
+      if (!types.length) missing.push("ปัญหาที่พบ");
+      if (!media.length) missing.push("รูป/วิดีโอ");
+      return `
+      <div class="cf-draft${window.currentDraftId === d.id ? " is-editing" : ""}${missing.length ? " is-incomplete" : ""}" data-id="${d.id}">
+        <div class="cf-draft-main">
+          <div class="cf-draft-thumb">${thumb}${media.length > 1 ? `<i>${media.length}</i>` : ""}</div>
+          <div class="cf-draft-text">
+            <div class="cf-draft-title">${esc(d.product || "ยังไม่ระบุสินค้า")}</div>
+            <div class="cf-draft-sub"><span>${esc(d.customer || "—")}</span><span>${formatDate(d.claim_date)}</span>${d.qty ? `<span>${esc(d.qty)}</span>` : ""}</div>
+            <div class="cf-draft-tags">
+              ${types.map((t) => `<span class="cf-tag">${esc(t)}</span>`).join("")}
+              ${missing.length ? `<span class="cf-tag is-warn">ยังขาด: ${missing.join(", ")}</span>` : ""}
+            </div>
+          </div>
+        </div>
+        <div class="cf-draft-actions">
+          <button type="button" class="cf-icon-btn" onclick="editDraft('${d.id}')"><span class="material-symbols-outlined">edit</span>แก้ไข</button>
+          <button type="button" class="cf-icon-btn is-danger" onclick="deleteDraft('${d.id}')"><span class="material-symbols-outlined">delete</span>ลบ</button>
+          <button type="button" class="cf-icon-btn is-primary" data-submit="${d.id}" onclick="submitClaim('${d.id}')"><span class="material-symbols-outlined">send</span>ส่งเคลม</button>
+        </div>
+      </div>`;
+    }).join("");
   } catch (err) {
     console.error("❌ Error loading drafts:", err);
-    draftBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;"><div style="color:#ef4444;font-size:14px;margin-bottom:12px;">❌ โหลด Draft ไม่สำเร็จ</div><button onclick="loadDrafts()" style="padding:8px 18px;background:#0d9488;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">ลองใหม่</button></td></tr>`;
+    list.innerHTML = `<div class="cf-empty is-error">โหลดร่างไม่สำเร็จ <button type="button" class="cf-link-btn" onclick="loadDrafts()">ลองใหม่</button></div>`;
   }
+}
+window.loadDrafts = loadDrafts;
+
+function esc(t) {
+  return String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// แสดงไฟล์ที่แนบไว้แล้วของร่างที่กำลังแก้ไข
+function renderExistingMedia() {
+  const box = document.getElementById("cfExistingMedia");
+  if (!box) return;
+  const media = window.currentDraftMedia || [];
+  box.hidden = media.length === 0;
+  box.innerHTML = media.length
+    ? `<div class="cf-existing-head">ไฟล์ที่แนบไว้แล้ว ${media.length} ไฟล์ (เพิ่มรูปใหม่ได้ด้านล่าง)</div>
+       <div class="cf-existing-grid">${media.map((u) => isVideoUrl(u)
+         ? `<a class="cf-existing-item" href="${esc(u)}" target="_blank" rel="noopener"><span class="material-symbols-outlined">videocam</span></a>`
+         : `<a class="cf-existing-item" href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="" loading="lazy"></a>`).join("")}</div>`
+    : "";
 }
 
 window.editDraft = async function (draftId) {
@@ -745,10 +866,15 @@ window.editDraft = async function (draftId) {
         item.classList.toggle("selected", data.claim_types.includes(item.textContent.trim()));
       });
     }
+    // ไฟล์ใหม่ที่ค้างอยู่ในฟอร์ม (ของงานก่อนหน้า) ไม่ให้ติดไปกับร่างนี้
+    document.querySelectorAll("#imageGrid .preview, #videoGrid .preview").forEach((el) => el.remove());
     window.currentDraftId = draftId;
+    window.currentDraftMedia = data.media_urls || [];
+    renderExistingMedia();
     showDraftEditBanner(draftId, data.product);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    showToast("โหลด Draft แล้ว — กดบันทึก/ส่งเคลมได้เลย", "info");
+    updateChecklist();
+    document.getElementById("claimForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    showToast("เปิดร่างขึ้นฟอร์มแล้ว — แก้ไขแล้วกดบันทึกร่าง หรือส่งเคลม", "info");
   } catch (err) {
     console.error("❌ Error editing draft:", err);
     showToast("โหลด Draft ไม่สำเร็จ: " + err.message, "error");
@@ -756,11 +882,12 @@ window.editDraft = async function (draftId) {
 };
 
 window.deleteDraft = async function (draftId) {
-  if (!confirm("⚠️ ต้องการลบ Draft นี้หรือไม่?\n\nการลบจะไม่สามารถกู้คืนได้")) return;
+  if (!confirm("ลบร่างเคลมนี้?\n\nลบแล้วกู้คืนไม่ได้")) return;
   try {
     const { error } = await supabaseClient.from("claims").delete().eq("id", draftId);
     if (error) throw error;
-    showToast("ลบ Draft สำเร็จ");
+    showToast("ลบร่างแล้ว");
+    if (window.currentDraftId === draftId) clearForm();
     await loadDrafts();
   } catch (err) {
     console.error("❌ Error deleting draft:", err);
@@ -774,14 +901,26 @@ window.submitEdit = async function () {
 };
 
 window.submitClaim = async function (draftId = null) {
+  // ร่างที่เปิดแก้อยู่ในฟอร์ม → ส่งจากฟอร์ม (รวมการแก้ไขล่าสุด)
+  if (draftId && draftId === window.currentDraftId) draftId = null;
   if (draftId) {
-    if (!confirm("✅ ยืนยันการส่งเคลมรายการนี้?\n\nข้อมูลจะถูกส่งและไม่สามารถแก้ไขได้")) return;
-    const rowBtn = document.querySelector(`button[onclick="submitClaim('${draftId}')"]`);
-    if (rowBtn) { rowBtn.disabled = true; rowBtn.textContent = "⏳ กำลังส่ง..."; }
+    const cached = (window._claimDrafts || []).find((d) => d.id === draftId);
+    if (cached) {
+      const missing = [];
+      if (!cached.claim_types?.length) missing.push("ปัญหาที่พบ");
+      if (!cached.media_urls?.length) missing.push("รูป/วิดีโอหลักฐาน");
+      if (missing.length) {
+        if (confirm(`ร่างนี้ยังขาด: ${missing.join(" และ ")}\n\nเปิดร่างขึ้นฟอร์มเพื่อเพิ่มข้อมูลเลยไหม?`)) window.editDraft(draftId);
+        return;
+      }
+    }
+    if (!confirm("ยืนยันส่งเคลมรายการนี้?\n\nส่งแล้วจะแก้ไขไม่ได้")) return;
+    const rowBtn = document.querySelector(`button[data-submit="${draftId}"]`);
+    if (rowBtn) { rowBtn.disabled = true; rowBtn.textContent = "กำลังส่ง..."; }
     try {
       const { data: draft, error: fetchErr } = await supabaseClient.from("claims").select("*").eq("id", draftId).single();
       if (fetchErr) throw fetchErr;
-      const newMediaUrls = await uploadMediaFiles(draftId);
+      const newMediaUrls = [];
       const allMediaUrls = [...(draft.media_urls ?? []), ...newMediaUrls];
       const { error } = await supabaseClient
   .from("claims")
@@ -800,12 +939,12 @@ window.submitClaim = async function (draftId = null) {
     } catch (err) {
       console.error("❌ Error submitting draft claim:", err);
       showToast("ส่งเคลมไม่สำเร็จ: " + err.message, "error");
-      if (rowBtn) { rowBtn.disabled = false; rowBtn.textContent = "✅ ส่งเคลม"; }
+      if (rowBtn) { rowBtn.disabled = false; rowBtn.textContent = "ส่งเคลม"; }
     }
     return;
   }
   if (!validateForm(true)) return;
-  if (!confirm("✅ ยืนยันการส่งเคลม?\n\nข้อมูลจะถูกส่งและไม่สามารถแก้ไขได้")) return;
+  if (!confirm("ยืนยันส่งเคลม?\n\nส่งแล้วจะแก้ไขไม่ได้")) return;
   const btn = document.querySelector(".btn-submit");
   setButtonLoading(btn, true);
   const notifyPayload = { shop: document.getElementById("customer").value, product: document.getElementById("product").value, qty: document.getElementById("qty").value, sales: window.currentUser.display_name || window.currentUser.full_name };
@@ -833,7 +972,7 @@ window.submitClaim = async function (draftId = null) {
     notifyPayload.detail = document.getElementById("detail").value ?? "";
     sendLineNotify(notifyPayload).catch((e) => console.warn("⚠️ Line Notify:", e));
     window.currentDraftId = null;
-    showToast("ส่งเคลมสำเร็จ! 🎉");
+    showToast("ส่งเคลมสำเร็จ — ฝ่าย QC จะตรวจสอบต่อ");
     clearForm();
     await loadDrafts();
   } catch (err) {
@@ -876,8 +1015,18 @@ function clearForm() {
   document.querySelectorAll(".claim-item.selected").forEach((el) => el.classList.remove("selected"));
   document.querySelectorAll("#imageGrid .preview, #videoGrid .preview").forEach((el) => el.remove());
   window.currentDraftId = null;
+  window.currentDraftMedia = [];
+  renderExistingMedia();
   hideDraftEditBanner();
+  updateChecklist();
 }
+
+window.confirmClearClaim = function () {
+  const st = getFormStatus();
+  const hasData = st.customer || st.product || st.qty || st.types || st.media || document.getElementById("detail").value.trim();
+  if (hasData && !confirm("ล้างข้อมูลที่กรอกไว้ในฟอร์ม?")) return;
+  clearForm();
+};
 
 function formatDate(dateString) {
   if (!dateString) return "-";
@@ -886,22 +1035,28 @@ function formatDate(dateString) {
 }
 
 function showDraftEditBanner(draftId, productName) {
-  hideDraftEditBanner();
-  const banner = document.createElement("div");
-  banner.id = "draftEditBanner";
-  Object.assign(banner.style, { position: "sticky", top: "126px", zIndex: "900", background: "linear-gradient(135deg, #0d9488, #0f766e)", color: "#fff", padding: "12px 24px", fontSize: "14px", fontWeight: "600", fontFamily: "Sarabun, sans-serif", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", boxShadow: "0 4px 12px rgba(13,148,136,0.35)", borderBottom: "2px solid #14b8a6" });
-  banner.innerHTML = `<span>✏️ กำลังแก้ไข Draft: <strong>${productName || draftId.slice(0,8)+"..."}</strong></span><button onclick="cancelDraftEdit()" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);color:#fff;padding:5px 14px;border-radius:6px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:13px;font-weight:600;min-height:unset;flex:none;">✕ ยกเลิก</button>`;
-  const container = document.querySelector(".container");
-  if (container) container.insertAdjacentElement("beforebegin", banner);
+  const banner = document.getElementById("cfEditBanner");
+  const name = document.getElementById("cfEditName");
+  if (name) name.textContent = productName || "";
+  if (banner) banner.hidden = false;
+  document.getElementById("claimForm")?.classList.add("is-editing");
+  const lbl = document.getElementById("cfDraftLabel");
+  if (lbl) lbl.textContent = "บันทึกการแก้ไข";
+  document.querySelectorAll(".cf-draft").forEach((el) => el.classList.toggle("is-editing", el.dataset.id === draftId));
 }
 
-function hideDraftEditBanner() { document.getElementById("draftEditBanner")?.remove(); }
+function hideDraftEditBanner() {
+  const banner = document.getElementById("cfEditBanner");
+  if (banner) banner.hidden = true;
+  document.getElementById("claimForm")?.classList.remove("is-editing");
+  const lbl = document.getElementById("cfDraftLabel");
+  if (lbl) lbl.textContent = "บันทึกร่าง";
+  document.querySelectorAll(".cf-draft.is-editing").forEach((el) => el.classList.remove("is-editing"));
+}
 
 window.cancelDraftEdit = function () {
-  window.currentDraftId = null;
-  hideDraftEditBanner();
   clearForm();
-  showToast("ยกเลิกการแก้ไข Draft แล้ว", "info");
+  showToast("ยกเลิกการแก้ไข — ร่างเดิมยังอยู่", "info");
 };
 
 async function logout() {
@@ -957,14 +1112,17 @@ async function loadProductGrid() {
         <span class="product-name">${cat.name}</span>
       `;
       
+      item.setAttribute("role", "button");
+      item.tabIndex = 0;
       item.addEventListener("click", () => openProductModal(cat.id, cat.name));
+      item.addEventListener("keydown", (e) => { if (e.key === "Enter") openProductModal(cat.id, cat.name); });
       grid.appendChild(item);
     });
 
     console.log(`✅ โหลด ${data.length} หมวดสินค้า`);
   } catch (err) {
     console.error("❌ loadProductGrid error:", err);
-    showToast("โหลดหมวดสินค้าไม่สำเร็จ", "error");
+    grid.innerHTML = '<div class="cf-empty is-error">โหลดหมวดสินค้าไม่สำเร็จ — พิมพ์ชื่อสินค้าเองในช่องด้านล่างได้</div>';
   }
 }
 

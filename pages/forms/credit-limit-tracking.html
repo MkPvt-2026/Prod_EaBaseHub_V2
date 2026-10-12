@@ -3,6 +3,15 @@
 <html lang="th">
 
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <!-- ea-guard: สคริปต์ตรวจสิทธิ์กลาง (หน้านี้เดิมไม่มี) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>ระบบขออนุมัติวงเงินเกิน - ติดตามสถานะ</title>
@@ -10,7 +19,8 @@
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&amp;family=Noto+Serif+Thai:wght@400;600;700&amp;display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="/css/pages/forms/credit-limit-tracking.css" />
-</head>
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
 
 <body>
     <!-- SIGNATURE MODAL -->
@@ -93,37 +103,37 @@
                         <button class="btn btn-primary btn-sm" onclick="goPage('sale')">+ สร้างคำขอใหม่</button>
                     </div>
                     <!-- Stats -->
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+                    <div class="ui-strip" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
                         <div
                             style="background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);">
                             <div
-                                style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
+                                class="ui-label" style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
                                 คำขอทั้งหมด</div>
-                            <div style="font-size:28px;font-weight:800;color:var(--purple);">18</div>
+                            <div class="ui-num" style="font-size:28px;font-weight:800;color:var(--purple);">18</div>
                             <div style="font-size:11px;color:var(--gray-400);">เดือนนี้</div>
                         </div>
                         <div
                             style="background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);">
                             <div
-                                style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
+                                class="ui-label" style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
                                 รอดำเนินการ</div>
-                            <div style="font-size:28px;font-weight:800;color:var(--orange);">4</div>
+                            <div class="ui-num is-warn" style="font-size:28px;font-weight:800;color:var(--orange);">4</div>
                             <div style="font-size:11px;color:var(--gray-400);">คำขอ</div>
                         </div>
                         <div
                             style="background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);">
                             <div
-                                style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
+                                class="ui-label" style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
                                 อนุมัติแล้ว</div>
-                            <div style="font-size:28px;font-weight:800;color:var(--green);">12</div>
+                            <div class="ui-num is-ok" style="font-size:28px;font-weight:800;color:var(--green);">12</div>
                             <div style="font-size:11px;color:var(--gray-400);">คำขอ</div>
                         </div>
                         <div
                             style="background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);">
                             <div
-                                style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
+                                class="ui-label" style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
                                 ไม่อนุมัติ</div>
-                            <div style="font-size:28px;font-weight:800;color:var(--red);">2</div>
+                            <div class="ui-num is-bad" style="font-size:28px;font-weight:800;color:var(--red);">2</div>
                             <div style="font-size:11px;color:var(--gray-400);">คำขอ</div>
                         </div>
                     </div>
@@ -218,6 +228,8 @@
     </div>
 
     <script src="/js/pages/forms/credit-limit-tracking.js"></script>
-</body>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 
 </html>

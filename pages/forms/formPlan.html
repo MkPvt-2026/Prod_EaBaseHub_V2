@@ -1,146 +1,205 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>แผนการเดินทางและเบิกทดลองจ่าย ๑</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-  <link rel="stylesheet" href="/css/pages/forms/formPlan.css">
-</head>
-<body>
+  <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>EABaseHub | แผนการเดินทาง (ฟอร์ม ๑)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/formPlan-ux.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
+  <body>
+    <header class="app-header ui-role-bar">
+      <div class="logo">
+        <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo" /></div>
+        <h2>EABaseHub</h2>
+      </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info"><div class="user-name" id="userName">กำลังโหลด...</div></div>
+        <button id="logoutBtn" class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </header>
 
-<div class="layout">
-  <!-- ===== Sidebar ===== -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo"></div>
-      <span class="logo-text">EABaseHub</span>
-    </div>
-    <nav class="sidebar-menu">
-      <a href="/index.html"><span class="material-symbols-outlined">home</span>หน้าแรก</a>
-      <a href="/pages/reports/report.html"><span class="material-symbols-outlined">assignment</span>รายงานเยี่ยมร้านค้า</a>
-      <a href="/pages/forms/formPlan.html" class="active"><span class="material-symbols-outlined">map</span>ฟอร์ม ๑ แผนการเดินทาง</a>
-      <a href="/pages/forms/formActual.html"><span class="material-symbols-outlined">check_circle</span>ฟอร์ม ๒ เคลียร์ค่าใช้จ่าย</a>
+    <nav class="app-nav">
+      <a href="/index.html">หน้าแรก</a>
+      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
+      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
+      <a href="/pages/forms/formHub.html" class="active">แบบฟอร์ม</a>
+      <a href="/pages/forms/shopUser.html">ร้านของฉัน</a>
     </nav>
-    <div class="sidebar-logout">
-      <span id="sidebarEmail" class="sidebar-email"></span>
-      <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
-    </div>
-  </aside>
 
-  <!-- ===== Main Content ===== -->
-  <main class="main-content">
-    <div class="page">
-      <div class="paper"><h1>ฟอร์มแผนการเดินทางและเบิกจ่าย ๑</h1></div>
-
-
-      
-
-      <!-- SECTION: ข้อมูลพนักงาน -->
-      <div class="section summary-section">
-        <h3>ข้อมูลพนักงาน / ช่วงเวลา</h3>
-        <div class="form-row">
-          <div class="form-group"><label for="empName">พนักงานขาย</label><input id="empName" readonly></div>
-          <div class="form-group"><label for="area">เขตการขาย</label><input id="area" readonly></div>
+    <main class="fp">
+      <section class="fp-head ui-role-hero">
+        <div>
+          <a class="fp-back" href="/pages/forms/formHub.html"><span class="material-symbols-outlined">arrow_back</span>แบบฟอร์ม</a>
+          <h1>แผนการเดินทางและเบิกทดลองจ่าย <span class="fp-no">ฟอร์ม ๑</span></h1>
+          <p>วางแผนวัน–จังหวัด–ร้านที่จะเข้าพบ และขอเบิกค่าใช้จ่ายล่วงหน้า · เดินทางเสร็จแล้วไปทำ <a href="/pages/forms/formActual.html">ฟอร์ม ๒ ใบเดินทางจริง</a></p>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label for="startDate">ระหว่างวันที่</label><input type="date" id="startDate"></div>
-          <div class="form-group"><label for="endDate">ถึงวันที่</label><input type="date" id="endDate"></div>
-        </div>
-      </div>
+      </section>
 
-      <!-- SECTION: แผนการเดินทาง -->
-      <div class="section summary-section">
-        <h3>แผนการเดินทาง</h3>
-        <div class="badge">ร้านในความรับผิดชอบ <span id="shopCount">0</span> ร้าน</div>
-        <table id="tripTable" class="trip-table">
-          <thead><tr><th>ว/ด/ป</th><th>จากจังหวัด</th><th>ไปจังหวัด</th><th>ร้านค้า 1</th><th>ร้านค้า 2</th><th>ร้านค้า 3</th><th>หมายเหตุ</th></tr></thead>
-          <tbody id="tripTableBody"></tbody>
-        </table>
-        <div class="actions">
-          <button type="button" onclick="addRow()">➕ เพิ่มแถว</button>
-          <button type="button" onclick="removeRow()">➖ ลบแถว</button>
-          <button class="btn-save" onclick="saveDraftToLocal()" style="background:#FAEEDA;color:#633806;border:1px solid #EF9F27;">💾 Save Draft</button>
-          <button type="button" onclick="clearForm()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;padding:8px 16px;font-size:14px;cursor:pointer;font-family:inherit;">🔄 สร้างใหม่</button>
-        </div>
-      </div>
-
-      <!-- SECTION: สรุปค่าใช้จ่าย -->
-      <div class="section summary-section">
-        <h3>สรุปแผนการเดินทางและเบิกจ่าย</h3>
-        <div class="summary-grid">
-          <div class="summary-item"><label>เบี้ยเลี้ยง</label><input type="number" id="allowanceRate" placeholder="บาท/วัน"></div>
-          <div class="summary-item"><label>ค่าที่พัก(ราคา)</label><input type="number" id="hotelRate" placeholder="บาท/คืน"></div>
-          <div class="summary-item"><label>ค่าใช้จ่ายอื่นๆ</label><input type="number" id="otherCost" placeholder="บาท"></div>
-          <div class="summary-item"><label>จำนวน(วัน)</label><input type="number" id="allowanceDays" placeholder="จำนวน(วัน)"></div>
-          <div class="summary-item"><label>รวมพัก(คืน)</label><input type="number" id="hotelNights" placeholder="จำนวน(คืน)"></div>
-          <div class="summary-item total"><label>รวมเบิกทั้งหมด</label><input type="text" id="grandTotal" placeholder="บาท" readonly></div>
-        </div>
-        <div class="actions">
-          <button onclick="openPreview()">🔍 ดูตัวอย่าง</button>
-        </div>
-      </div>
-
-      <!-- SECTION: Draft (localStorage) -->
-      <div class="section summary-section" id="localDraftSection">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="margin:0;border:none;padding:0;">📝 แบบร่าง (Draft — ในเครื่อง)
-            <span id="localDraftCountBadge" style="background:#FAEEDA;color:#633806;font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid #EF9F27;margin-left:8px;font-weight:500;vertical-align:middle;">0 รายการ</span>
-          </h3>
-          <button type="button" onclick="loadLocalDraftList()" style="background:none;border:1px solid #ccc;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;">🔄 รีเฟรช</button>
-        </div>
-        <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Draft เก็บไว้ในเครื่องนี้เท่านั้น — ยังไม่ส่งเข้าระบบ จนกว่าจะกด "บันทึกเข้าระบบ"</p>
-        <div id="localDraftList"><p style="text-align:center;color:#aaa;padding:20px 0;font-size:13px;">กำลังโหลด...</p></div>
-      </div>
-
-    <!-- ===========================================================
-     แก้ไข SECTION: Completed (Supabase) ใน formPlan.html
-     เปลี่ยนจาก Export All CSV → Export All PDF
-     =========================================================== -->
-
-      <!-- SECTION: Completed (Supabase) — ✅ UPDATED v3.6 -->
-      <div class="section summary-section" id="completedSection">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <h3 style="margin:0;border:none;padding:0;">✅ แผนที่บันทึกในระบบแล้ว
-            <span id="completedCountBadge" style="background:#e8f5f4;color:#0f6e56;font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid #5DCAA5;margin-left:8px;font-weight:500;vertical-align:middle;">0 รายการ</span>
-          </h3>
-          <div style="display:flex;gap:6px">
-            <button type="button" onclick="exportAllCompletedPDF()" style="background:#EFF6FF;color:#1E40AF;border:1px solid #93C5FD;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-weight:600;">📤 Export All PDF</button>
-            <button type="button" onclick="loadCompletedList()" style="background:none;border:1px solid #ccc;border-radius:8px;padding:5px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;">🔄 รีเฟรช</button>
+      <div class="fp-layout">
+        <!-- ===================== ฟอร์ม ===================== -->
+        <section class="fp-card fp-form" id="planForm">
+          <div class="fp-edit-banner" id="fpEditBanner" hidden>
+            <span class="material-symbols-outlined">edit_note</span>
+            <span id="fpEditText">กำลังแก้ไข</span>
+            <button type="button" class="fp-link-btn" onclick="clearForm()">เริ่มแผนใหม่</button>
           </div>
-        </div>
-        <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">กดที่การ์ดเพื่อดูรายละเอียด · กด 👁 ดูข้อมูล เพื่อเปิด Preview · Export PDF ได้ทันที</p>
-        <div id="completedList"><p style="text-align:center;color:#aaa;padding:20px 0;font-size:13px;">กำลังโหลด...</p></div>
+
+          <!-- 1 ช่วงเวลา -->
+          <div class="fp-sec">
+            <h2 class="fp-sec-title"><b>1</b> ช่วงเวลาเดินทาง</h2>
+            <div class="fp-grid fp-grid-dates">
+              <div class="fp-field">
+                <label for="startDate">ตั้งแต่วันที่</label>
+                <input type="date" id="startDate" />
+              </div>
+              <div class="fp-field">
+                <label for="endDate">ถึงวันที่</label>
+                <input type="date" id="endDate" />
+              </div>
+              <div class="fp-field fp-period">
+                <span class="fp-period-label">รวม</span>
+                <b id="periodDays">–</b>
+              </div>
+            </div>
+            <div class="fp-reporter">
+              <span class="material-symbols-outlined">badge</span>
+              พนักงานขาย <input id="empName" readonly aria-label="พนักงานขาย" />
+              <span class="fp-dot">·</span> เขต <input id="area" readonly aria-label="เขตการขาย" />
+              <span class="fp-dot">·</span> ร้านที่ดูแล <b id="shopCount">0</b> ร้าน
+            </div>
+          </div>
+
+          <!-- 2 แผน -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>2</b> แผนรายวัน</h2>
+              <span class="fp-hint">เลือกจังหวัดปลายทางก่อน แล้วเลือกร้านได้สูงสุด 3 ร้านต่อวัน</span>
+            </div>
+            <div class="fp-table-wrap">
+              <table class="fp-table" id="tripTable">
+                <thead>
+                  <tr>
+                    <th class="c-date">วันที่</th>
+                    <th class="c-prov">จากจังหวัด</th>
+                    <th class="c-prov">ไปจังหวัด</th>
+                    <th>ร้านค้า 1</th>
+                    <th>ร้านค้า 2</th>
+                    <th>ร้านค้า 3</th>
+                    <th class="c-note">หมายเหตุ</th>
+                    <th class="c-del"></th>
+                  </tr>
+                </thead>
+                <tbody id="tripTableBody"></tbody>
+              </table>
+              <div class="fp-empty-rows" id="emptyRows">ยังไม่มีแผน — กด “เพิ่มวัน” เพื่อเริ่ม</div>
+            </div>
+            <div class="fp-row-actions">
+              <button type="button" class="fp-btn-soft" onclick="addRow()"><span class="material-symbols-outlined">add</span>เพิ่มวัน</button>
+              <button type="button" class="fp-btn-ghost" onclick="fillDaysFromRange()" title="สร้างแถวครบทุกวันในช่วงเวลา"><span class="material-symbols-outlined">date_range</span>สร้างแถวตามช่วงวันที่</button>
+              <span class="fp-row-count" id="rowCount"></span>
+            </div>
+          </div>
+
+          <!-- 3 ค่าใช้จ่าย -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>3</b> ขอเบิกค่าใช้จ่าย</h2>
+              <button type="button" class="fp-link-btn" onclick="autoFillDays()">ใช้จำนวนวันจากแผน</button>
+            </div>
+            <div class="fp-expense">
+              <div class="fp-exp-row">
+                <span class="fp-exp-name">เบี้ยเลี้ยง</span>
+                <label class="fp-money"><input type="number" inputmode="decimal" min="0" id="allowanceRate" placeholder="0" /><em>บาท/วัน</em></label>
+                <span class="fp-x">×</span>
+                <label class="fp-money"><input type="number" inputmode="numeric" min="0" id="allowanceDays" placeholder="0" /><em>วัน</em></label>
+                <span class="fp-eq" id="subAllowance">0</span>
+              </div>
+              <div class="fp-exp-row">
+                <span class="fp-exp-name">ค่าที่พัก</span>
+                <label class="fp-money"><input type="number" inputmode="decimal" min="0" id="hotelRate" placeholder="0" /><em>บาท/คืน</em></label>
+                <span class="fp-x">×</span>
+                <label class="fp-money"><input type="number" inputmode="numeric" min="0" id="hotelNights" placeholder="0" /><em>คืน</em></label>
+                <span class="fp-eq" id="subHotel">0</span>
+              </div>
+              <div class="fp-exp-row">
+                <span class="fp-exp-name">ค่าใช้จ่ายอื่น ๆ</span>
+                <label class="fp-money fp-span"><input type="number" inputmode="decimal" min="0" id="otherCost" placeholder="0" /><em>บาท</em></label>
+                <span class="fp-eq" id="subOther">0</span>
+              </div>
+              <div class="fp-exp-total">
+                <span>รวมขอเบิกทั้งหมด</span>
+                <output id="grandTotal">0.00</output>
+                <em>บาท</em>
+              </div>
+            </div>
+            <div class="fp-warn" id="fpWarn" hidden></div>
+          </div>
+
+          <!-- แถบปุ่ม -->
+          <div class="fp-actionbar">
+            <span class="fp-status" id="fpStatus">แผนใหม่ (ยังไม่บันทึก)</span>
+            <button type="button" class="fp-btn-ghost" onclick="clearForm()"><span class="material-symbols-outlined">restart_alt</span><span class="fp-hide-sm">ล้าง</span></button>
+            <button type="button" class="fp-btn-outline" onclick="saveDraftToLocal()"><span class="material-symbols-outlined">bookmark_add</span>บันทึกร่าง</button>
+            <button type="button" class="fp-btn-primary" onclick="openPreview()"><span class="material-symbols-outlined">preview</span>ตรวจ &amp; ส่งเข้าระบบ</button>
+          </div>
+        </section>
+
+        <!-- ===================== ด้านข้าง ===================== -->
+        <aside class="fp-side">
+          <section class="fp-card fp-panel" id="localDraftSection">
+            <h2 class="fp-panel-title">
+              <span class="material-symbols-outlined">inventory</span> ร่างในเครื่องนี้
+              <span class="fp-count" id="localDraftCountBadge">0</span>
+            </h2>
+            <div id="localDraftList" class="fp-list"></div>
+          </section>
+
+          <section class="fp-card fp-panel" id="completedSection">
+            <h2 class="fp-panel-title">
+              <span class="material-symbols-outlined">task_alt</span> แผนที่ส่งเข้าระบบแล้ว
+              <span class="fp-count" id="completedCountBadge">0</span>
+              <button type="button" class="fp-icon-only" onclick="exportAllCompletedPDF()" title="พิมพ์ / PDF ทุกแผน"><span class="material-symbols-outlined">print</span></button>
+              <button type="button" class="fp-icon-only" onclick="loadCompletedList()" title="รีเฟรช"><span class="material-symbols-outlined">refresh</span></button>
+            </h2>
+            <div id="completedList" class="fp-list"></div>
+          </section>
+        </aside>
       </div>
-      
-    </div><!-- /page -->
-  </main>
-</div>
+    </main>
 
-<!-- PREVIEW MODAL -->
-<div id="previewModal" class="preview-modal">
-  <div class="preview-wrapper">
-    <div class="preview-actions">
-      <button onclick="saveCompletedToDatabase()" style="background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit;">✅ บันทึกเข้าระบบ</button>
-      <button onclick="saveDraftToLocal()" style="background:#FAEEDA;color:#633806;border:1px solid #EF9F27;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit;">💾 Save Draft</button>
-      <button onclick="printPreview()">🖨 Print</button>
-      <button onclick="exportPDF()">📤 Export PDF</button>
-      <button onclick="closePreview()">✖ ปิด</button>
+    <!-- ตัวอย่างเอกสารก่อนส่ง -->
+    <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="ตัวอย่างเอกสาร">
+      <div class="preview-wrapper">
+        <div class="preview-actions">
+          <span class="preview-title">ตรวจเอกสารก่อนส่ง</span>
+          <button type="button" class="pa-primary" onclick="saveCompletedToDatabase()"><span class="material-symbols-outlined">send</span>ส่งเข้าระบบ</button>
+          <button type="button" onclick="saveDraftToLocal()"><span class="material-symbols-outlined">bookmark_add</span>บันทึกร่าง</button>
+          <button type="button" onclick="printPreview()"><span class="material-symbols-outlined">print</span>พิมพ์ / PDF</button>
+          <button type="button" class="pa-close" onclick="closePreview()" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div id="previewIssues" class="preview-issues" hidden></div>
+        <div id="previewContent" class="a4-page"></div>
+      </div>
     </div>
-    <div id="previewContent" class="a4-page"></div>
-  </div>
-</div>
 
-<footer class="footer">© 2026 EABaseHub</footer>
-
-<script src="/js/core/supabaseClient.js"></script>
-<script src="/js/core/userService.js"></script>
-<script src="/js/core/roleConfig.js"></script>
-  <script src="/js/core/auth.js"></script>
-<script src="/js/pages/forms/formPlan.js"></script>
-<script src="/js/core/splash.js"></script>
-<script src="/js/core/loadingSplash.js"></script>
-</body>
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/formPlan.js"></script>
+    <script src="/js/core/splash.js"></script>
+    <script src="/js/core/loadingSplash.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

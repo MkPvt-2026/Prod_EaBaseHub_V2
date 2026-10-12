@@ -1,0 +1,174 @@
+/* =====================================================
+   sidebar-marketing.css — ธีม sidebar ชุด Marketing (ใช้ร่วม 5 หน้า)
+   Marketing Home · Dashboard · รายงานเข้าร้าน · ประชาสัมพันธ์ · RFM
+   โหลดเป็นไฟล์ CSS สุดท้ายของหน้า เพื่อ override ธีมเดิมของแต่ละหน้า
+
+   แนวสี: พื้นกรมท่าเข้ม (อ่านง่าย ไม่แย่งสายตาจากเนื้อหา)
+          เมนูที่เลือก = แถบฟ้าด้านซ้าย + พื้นฟ้าอ่อนโปร่ง + ไอคอนทึบ
+   ===================================================== */
+
+:root {
+  --sb-bg-1: #0f1f3d;
+  --sb-bg-2: #142a52;
+  --sb-text: #c7d2e5;
+  --sb-icon: #8fa3c4;
+  --sb-muted: #7f93b5;
+  --sb-hover: rgba(255, 255, 255, 0.07);
+  --sb-active-bg: rgba(56, 189, 248, 0.16);
+  --sb-active: #38bdf8;
+  --sb-active-icon: #7dd3fc;
+  --sb-line: rgba(255, 255, 255, 0.09);
+  --sb-w-open: 232px;
+  --sb-w-closed: 64px;
+}
+
+/* ---------- พื้น ---------- */
+#appSidebar.app-sidebar {
+  background: linear-gradient(180deg, var(--sb-bg-1) 0%, var(--sb-bg-2) 100%) !important;
+  box-shadow: 1px 0 0 rgba(15, 23, 42, 0.4), 4px 0 18px rgba(15, 23, 42, 0.18) !important;
+  border-right: 0 !important;
+}
+#appSidebar.app-sidebar.expanded { width: var(--sb-w-open) !important; }
+#appSidebar.app-sidebar.collapsed { width: var(--sb-w-closed) !important; }
+
+/* ---------- โลโก้ ---------- */
+#appSidebar .sidebar-logo { color: inherit; }
+#appSidebar .sidebar-logo::after { background: var(--sb-line) !important; }
+#appSidebar .sidebar-logo-circle {
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+#appSidebar .sidebar-brand-title { color: #fff !important; }
+#appSidebar .sidebar-brand-sub {
+  color: var(--sb-active-icon) !important;
+  font-weight: 500 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase;
+  font-size: 10.5px !important;
+}
+
+/* ---------- เมนู (pill ทั้งตอนย่อและขยาย, ไอคอนอยู่ตำแหน่งเดิม) ---------- */
+#appSidebar .sidebar-nav { gap: 2px !important; padding: 10px 0 !important; }
+
+#appSidebar .sidebar-nav-item {
+  height: 44px !important;
+  margin: 0 8px !important;
+  width: calc(100% - 16px) !important;
+  border-radius: 10px !important;
+  color: var(--sb-text) !important;
+  background: transparent !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+#appSidebar .sidebar-nav-item .nav-icon-wrap {
+  width: 48px !important;
+  min-width: 48px;
+  color: var(--sb-icon);
+  transition: color 0.15s;
+}
+#appSidebar .sidebar-nav-item .nav-label {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: inherit !important;
+}
+
+#appSidebar .sidebar-nav-item:hover {
+  background: var(--sb-hover) !important;
+  color: #fff !important;
+}
+#appSidebar .sidebar-nav-item:hover .nav-icon-wrap { color: #e2e8f0; }
+
+#appSidebar .sidebar-nav-item.active {
+  background: var(--sb-active-bg) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+#appSidebar .sidebar-nav-item.active .nav-icon-wrap { color: var(--sb-active-icon); }
+#appSidebar .sidebar-nav-item.active .material-symbols-outlined {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24 !important;
+}
+#appSidebar .sidebar-nav-item.active::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 10px !important;
+  bottom: 10px !important;
+  width: 3px !important;
+  border-radius: 0 4px 4px 0 !important;
+  background: var(--sb-active) !important;
+  display: block !important;
+}
+#appSidebar .sidebar-nav-item:focus-visible {
+  outline: 2px solid var(--sb-active);
+  outline-offset: -2px;
+}
+
+/* ---------- เมนูล่าง "หน้าหลักระบบ" (แยกกลุ่ม, สีจางกว่า) ---------- */
+#appSidebar .sidebar-nav-bottom {
+  border-top: 1px solid var(--sb-line);
+  padding-top: 8px !important;
+  margin-top: 4px;
+}
+#appSidebar .sidebar-nav-bottom .sidebar-nav-item { color: var(--sb-muted) !important; }
+#appSidebar .sidebar-nav-bottom .sidebar-nav-item .nav-label { font-size: 12.5px !important; font-weight: 400 !important; }
+
+/* ---------- เส้นคั่น / ออกจากระบบ ---------- */
+#appSidebar .sidebar-divider { background: var(--sb-line) !important; }
+#appSidebar .sidebar-logout {
+  margin: 0 8px 10px !important;
+  width: calc(100% - 16px) !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+  color: var(--sb-muted) !important;
+  background: transparent !important;
+}
+#appSidebar .sidebar-logout { justify-content: flex-start !important; }
+#appSidebar .sidebar-logout .nav-icon-wrap { width: 48px !important; min-width: 48px; }
+#appSidebar .sidebar-logout .nav-label {
+  text-align: left !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+}
+#appSidebar .sidebar-logout .material-symbols-outlined { color: inherit !important; }
+#appSidebar .sidebar-logout:hover {
+  color: #fecaca !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+
+/* ---------- ปุ่มย่อ/ขยาย ---------- */
+#appSidebar .sidebar-collapse-btn {
+  background: #fff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18) !important;
+  width: 24px !important;
+  height: 24px !important;
+  right: -12px !important;
+}
+#appSidebar .sidebar-collapse-btn .material-symbols-outlined {
+  color: var(--sb-bg-1) !important;
+  font-size: 16px !important;
+  transition: transform 0.2s;
+}
+#appSidebar.expanded .sidebar-collapse-btn .material-symbols-outlined { transform: rotate(180deg); }
+#appSidebar .sidebar-collapse-btn:hover { background: #f1f5f9 !important; }
+
+/* ---------- tooltip ตอนย่อ ---------- */
+#appSidebar.collapsed .sidebar-nav-item[title]:hover::after,
+#appSidebar.collapsed .sidebar-logout[title]:hover::after {
+  background: #0f172a !important;
+}
+
+/* ---------- เนื้อหาหลักเลื่อนตามความกว้าง sidebar ---------- */
+.app-main.sb-open { margin-left: var(--sb-w-open) !important; }
+.app-main.sb-closed { margin-left: var(--sb-w-closed) !important; }
+.app-main { transition: margin-left 0.2s ease; }
+
+/* ตอนโหลดหน้า: ไม่ต้องเล่นอนิเมชันย่อ→ขยาย */
+.sb-no-anim #appSidebar,
+.sb-no-anim #appSidebar *,
+.sb-no-anim .app-main { transition: none !important; }
+
+/* ขนาดไอคอนเท่ากันทุกหน้า */
+#appSidebar .sidebar-nav-item .material-symbols-outlined { font-size: 22px !important; }
+#appSidebar .sidebar-logout .material-symbols-outlined { font-size: 20px !important; }

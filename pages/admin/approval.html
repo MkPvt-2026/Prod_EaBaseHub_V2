@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="th" data-theme="dark">
 <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
   <meta charset="UTF-8">
   <title>EABaseHub | Approval</title>
 
@@ -16,7 +20,8 @@
     .btn-approve { background:#16a34a; color:#fff; }
     .btn-reject { background:#dc2626; color:#fff; }
   </style>
-</head>
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+  </head>
 
 <body>
 
@@ -82,5 +87,7 @@
 
 <script src="/js/pages/admin/approval.js"></script>
 
-</body>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
 </html>

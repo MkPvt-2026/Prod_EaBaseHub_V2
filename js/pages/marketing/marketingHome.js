@@ -46,17 +46,21 @@ const MARKETING_MENU = [
     items: [
       {
         title: "ขออนุมัติราคาพิเศษ",
-        desc: "ส่งคำขอราคาพิเศษ และติดตามสถานะ",
+        desc: "ส่งคำขอราคาพิเศษ และติดตามผลอนุมัติ",
         icon: "request_quote",
         color: "orange",
         url: "/pages/forms/special-price-sale.html",
+        roles: ["admin", "marketing"], // Manager อนุมัติอย่างเดียว ไม่ได้เป็นผู้ขอ
       },
       {
-        title: "ติดตามคำขอราคาพิเศษ",
-        desc: "ดูสถานะคำขอทั้งหมด",
-        icon: "track_changes",
+        // ขั้นที่ 1 ของการอนุมัติราคาพิเศษ (อนุมัติแล้วส่งต่อผู้บริหาร)
+        // เดิมลิงก์ไป special-price-tracking.html ซึ่งเป็นหน้าตัวอย่างข้อมูลตายตัว
+        title: "อนุมัติราคาพิเศษ (Manager)",
+        desc: "พิจารณาคำขอจากทีมขาย ก่อนส่งต่อผู้บริหาร",
+        icon: "fact_check",
         color: "orange",
-        url: "/pages/forms/special-price-tracking.html",
+        url: "/pages/forms/special-price-manager.html",
+        roles: ["admin", "manager"],
       },
       {
         title: "จัดการโปรโมชั่น",
@@ -85,7 +89,7 @@ const MARKETING_MENU = [
         desc: "สร้างประกาศถึงทีมขายและพนักงาน",
         icon: "newspaper",
         color: "teal",
-        url: "/pages/admin/Adminannouncements.html",
+        url: "/pages/marketing/announcements.html",
       },
       {
         title: "คลังสื่อการตลาด",
@@ -177,6 +181,20 @@ function tileHTML(item, compact = false) {
     </a>`;
 }
 
+// การ์ดเมนูแบบเดียวกับหน้า Form Hub (ไอคอนสีใหญ่ตรงกลาง กดง่าย)
+function cardHTML(item) {
+  return `
+    <a class="mk-card c-${mkEsc(item.color || "blue")} ${item.soon ? "is-soon" : ""}"
+       href="${item.soon ? "#" : mkEsc(item.url)}"
+       data-url="${mkEsc(item.url)}" data-title="${mkEsc(item.title)}"
+       ${item.soon ? 'aria-disabled="true" tabindex="-1"' : ""}>
+      <span class="mk-card-icon"><span class="material-symbols-outlined">${mkEsc(item.icon)}</span></span>
+      <h3>${mkEsc(item.title)}</h3>
+      <p>${mkEsc(item.desc || "")}</p>
+      ${item.soon ? `<span class="mk-card-soon">เร็ว ๆ นี้</span>` : ""}
+    </a>`;
+}
+
 function renderMenu(keyword = "") {
   const wrap = document.getElementById("mkGroups");
   const empty = document.getElementById("mkEmpty");
@@ -190,9 +208,9 @@ function renderMenu(keyword = "") {
     if (!items.length) return "";
     shown += items.length;
     return `
-      <section class="mk-group">
+      <section class="mk-group" style="--n:${items.length}">
         <h2 class="mk-group-title"><span class="material-symbols-outlined">${mkEsc(g.icon)}</span> ${mkEsc(g.group)}</h2>
-        <div class="mk-grid">${items.map((i) => tileHTML(i)).join("")}</div>
+        <div class="mk-cards">${items.map(cardHTML).join("")}</div>
       </section>`;
   }).join("");
 
@@ -245,16 +263,7 @@ async function loadUser() {
   document.getElementById("mkGreeting").textContent = `${hello}, ${name}`;
 }
 
-// ---------- sidebar (เหมือนหน้า Manager) ----------
-function toggleSidebar() {
-  const sidebar = document.getElementById("appSidebar");
-  const main = document.querySelector(".app-main");
-  const collapsed = sidebar.classList.contains("collapsed");
-  sidebar.classList.toggle("collapsed", !collapsed);
-  sidebar.classList.toggle("expanded", collapsed);
-  main.classList.toggle("sidebar-expanded", collapsed);
-}
-window.toggleSidebar = toggleSidebar;
+// ---------- sidebar: ย่อ/ขยาย อยู่ใน js/components/sidebar-manager.js ----------
 
 // ---------- init ----------
 document.addEventListener("DOMContentLoaded", async () => {
@@ -273,7 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   search.addEventListener("input", () => renderMenu(search.value));
   search.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      const first = document.querySelector("#mkGroups .mk-tile:not(.is-soon)");
+      const first = document.querySelector("#mkGroups .mk-card:not(.is-soon)");
       if (first) first.click();
     }
     if (e.key === "Escape") { search.value = ""; renderMenu(); }
@@ -288,7 +297,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // คลิกปุ่มเมนู → จำไว้ใน "ใช้ล่าสุด"; ปุ่มที่ยังไม่เปิดใช้กดไม่ได้
   document.addEventListener("click", (e) => {
-    const tile = e.target.closest(".mk-tile");
+    const tile = e.target.closest(".mk-tile, .mk-card");
     if (!tile) return;
     if (tile.classList.contains("is-soon")) {
       e.preventDefault();

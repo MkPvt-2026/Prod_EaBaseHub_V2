@@ -166,6 +166,12 @@ const AdminAnnouncements = (() => {
         const empty = document.getElementById('announceEmpty');
         const filtered = getFiltered();
 
+        // ตัวเลขบนปุ่มกรอง (หน้าที่มี [data-count])
+        document.querySelectorAll('[data-count]').forEach(el => {
+            const k = el.dataset.count;
+            el.textContent = k === 'all' ? allAnnouncements.length : allAnnouncements.filter(a => a.status === k).length;
+        });
+
         if (!tbody) return;
 
         if (filtered.length === 0) {
@@ -408,8 +414,9 @@ const AdminAnnouncements = (() => {
                 if (status === 'published' && existing?.status !== 'published') {
                     payload.published_at = new Date().toISOString();
                 }
-                const { error } = await sb.from('announcements').update(payload).eq('id', editingId);
+                const { data: upd, error } = await sb.from('announcements').update(payload).eq('id', editingId).select('id');
                 if (error) throw error;
+                if (!upd || !upd.length) throw new Error('ไม่มีสิทธิ์แก้ไขประกาศนี้ หรือประกาศถูกลบไปแล้ว');
                 showToast('อัปเดตประกาศสำเร็จ');
             } else {
                 // Create new
@@ -417,7 +424,7 @@ const AdminAnnouncements = (() => {
                     payload.published_at = new Date().toISOString();
                 }
                 payload.created_by = currentUser?.id || null;
-                payload.created_by_name = currentUser?.full_name || currentUser?.display_name || 'Admin';
+                payload.created_by_name = currentUser?.display_name || currentUser?.full_name || currentUser?.username || currentUser?.email || '-';
                 
                 const { error } = await sb.from('announcements').insert(payload);
                 if (error) throw error;
@@ -438,16 +445,18 @@ const AdminAnnouncements = (() => {
     async function togglePin(id, pinState) {
         try {
             const sb = await getSupabase();
-            const { error } = await sb
+            const { data, error } = await sb
                 .from('announcements')
                 .update({ is_pinned: pinState, updated_at: new Date().toISOString() })
-                .eq('id', id);
+                .eq('id', id)
+                .select('id');
             if (error) throw error;
+            if (!data || !data.length) throw new Error('ไม่มีสิทธิ์แก้ไขประกาศนี้');
             showToast(pinState ? 'ปักหมุดแล้ว' : 'เลิกปักหมุดแล้ว');
             await fetchAll();
         } catch (err) {
             console.error('[AdminAnnouncements] Pin error:', err);
-            showToast('เกิดข้อผิดพลาด', 'error');
+            showToast('เกิดข้อผิดพลาด: ' + (err.message || ''), 'error');
         }
     }
 
@@ -485,8 +494,9 @@ const AdminAnnouncements = (() => {
     async function deleteAnnouncement(id) {
         try {
             const sb = await getSupabase();
-            const { error } = await sb.from('announcements').delete().eq('id', id);
+            const { data, error } = await sb.from('announcements').delete().eq('id', id).select('id');
             if (error) throw error;
+            if (!data || !data.length) throw new Error('ไม่มีสิทธิ์ลบประกาศนี้');
             showToast('ลบประกาศสำเร็จ');
             await fetchAll();
         } catch (err) {
@@ -526,11 +536,15 @@ const AdminAnnouncements = (() => {
             console.log('🚀 AdminAnnouncements initializing...');
 
             // ตรวจสิทธิ์ (ให้ตรงกับปุ่ม "สร้างประกาศ" ใน Announcements.js)
+            // สิทธิ์เข้าหน้า: ใช้รายการกลาง roleConfig.js (หน้า Admin = admin · หน้าการตลาด = manager, marketing)
             if (typeof protectPage === 'function') {
-                await protectPage(['admin', 'adminQc', 'adminqc', 'manager', 'marketing']);
+                await protectPage(['admin', 'manager', 'marketing']);
             }
             
-            // Get current user
+            // Get current user (โหลดเองถ้ายังไม่มี — ใช้เป็นชื่อผู้สร้างประกาศ)
+            if (!window.currentUser?.id && typeof loadCurrentUser === 'function') {
+                try { await loadCurrentUser(); } catch (e) { /* ignore */ }
+            }
             currentUser = window.currentUser || null;
             
             setupFilterButtons();

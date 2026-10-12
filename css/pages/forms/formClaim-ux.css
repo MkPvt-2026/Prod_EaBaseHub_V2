@@ -1,0 +1,579 @@
+/* =====================================================
+   formClaim-ux.css — หน้าแจ้งเคลมสินค้า (เซลล์) · แท็บเล็ตเป็นหลัก
+   โหลดต่อจาก formClaim*.css · สีเน้นใช้ var(--role-*)
+
+   - ฟอร์ม 4 ส่วน: ลูกค้า → สินค้า → ปัญหา → รูปหลักฐาน
+   - แถบปุ่มติดล่างจอ: ล้าง / บันทึกร่าง / ส่งเคลม + บอกว่ายังขาดกี่อย่าง
+   - ด้านข้าง: เช็กลิสต์ "ก่อนส่งเคลมต้องมี" (อัปเดตทันที) + ร่างที่บันทึกไว้
+   ===================================================== */
+
+body:has(.cf) { background: #f3f5f9 !important; }
+
+.claim-scope .cf {
+  --cf-line: #e5e7eb;
+  --cf-soft: #eef0f4;
+  --cf-text: #1f2937;
+  --cf-muted: #64748b;
+  max-width: 1240px;
+  padding: 16px 20px 40px;
+  color: var(--cf-text);
+}
+
+/* ---------- หัวหน้า ---------- */
+.claim-scope .cf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+  border-radius: 16px;
+  color: #fff;
+  margin-bottom: 16px;
+}
+.claim-scope .cf-head h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff !important;
+  background: none !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.claim-scope .cf-head h1 .material-symbols-outlined { font-size: 26px; }
+.claim-scope .cf-head p { margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.88) !important; }
+.cf-steps { display: flex; gap: 8px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.cf-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.cf-steps b {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: #fff;
+  color: var(--role-color);
+  font-size: 12px;
+}
+
+/* ---------- เลย์เอาต์ ---------- */
+.cf-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+.cf-side { display: grid; gap: 16px; min-width: 0; position: sticky; top: 12px; }
+
+.claim-scope .cf .card {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--cf-line) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  animation: none !important;
+  transform: none !important;
+}
+.claim-scope .cf .card:hover { border-color: var(--cf-line) !important; }
+.claim-scope .cf-form.is-editing { border-color: var(--role-color) !important; box-shadow: 0 0 0 3px rgba(var(--role-rgb), 0.12) !important; }
+
+.cf-edit-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: var(--role-soft);
+  color: var(--role-text);
+  border-bottom: 1px solid var(--role-border);
+  border-radius: 16px 16px 0 0;
+  font-size: 14px;
+}
+.cf-edit-banner[hidden] { display: none; }
+.cf-edit-banner .cf-link-btn { margin-left: auto; }
+
+/* ---------- ส่วนของฟอร์ม ---------- */
+.cf-sec { padding: 20px 22px; border-bottom: 1px solid var(--cf-soft); scroll-margin: 80px; }
+.cf-sec.cf-flash { animation: cfFlash 1.2s ease; }
+@keyframes cfFlash {
+  0%, 100% { background: transparent; }
+  25% { background: rgba(var(--role-rgb), 0.08); }
+}
+.claim-scope .cf .cf-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--cf-text) !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.claim-scope .cf .cf-sec-title::after,
+.claim-scope .cf .cf-sec-title::before { display: none !important; }
+.cf-sec-title b {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: var(--role-color);
+  color: #fff;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.cf-sec-hint { margin: 0 0 14px 36px; font-size: 13px; color: var(--cf-muted); }
+.cf-sec > .form-grid:first-of-type { margin-top: 14px; }
+.cf-req { color: #dc2626; font-style: normal; }
+.cf-opt { color: #94a3b8; font-weight: 400; }
+.cf-opt.is-required { color: #b45309; font-weight: 500; }
+
+.claim-scope .cf .form-grid { gap: 14px 16px; margin-bottom: 0; }
+.claim-scope .cf label {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+}
+.claim-scope .cf input:not([type="checkbox"]):not([type="file"]),
+.claim-scope .cf select,
+.claim-scope .cf textarea {
+  min-height: 46px;
+  border: 1px solid #d5dbe3 !important;
+  border-radius: 10px !important;
+  background-color: #fff !important;
+  font-size: 15px !important;
+  color: var(--cf-text) !important;
+  box-shadow: none !important;
+}
+.claim-scope .cf textarea { min-height: 96px; }
+.claim-scope .cf input:focus,
+.claim-scope .cf select:focus,
+.claim-scope .cf textarea:focus {
+  border-color: var(--role-color) !important;
+  box-shadow: 0 0 0 3px rgba(var(--role-rgb), 0.14) !important;
+}
+
+/* ผู้แจ้ง (อ่านอย่างเดียว) — แสดงเป็นบรรทัดเล็ก */
+.cf-reporter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--cf-muted);
+}
+.cf-reporter .material-symbols-outlined { font-size: 18px; color: #94a3b8; }
+.claim-scope .cf .cf-reporter input {
+  min-height: 0 !important;
+  width: auto !important;
+  max-width: 220px;
+  padding: 2px 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 13.5px !important;
+  font-weight: 500;
+  color: #334155 !important;
+  field-sizing: content;
+}
+.cf-dot { color: #cbd5e1; }
+
+/* หมวดสินค้า */
+.claim-scope .cf .product-grid {
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.claim-scope .cf .product-item {
+  min-height: 96px;
+  padding: 12px 8px !important;
+  border: 1px solid var(--cf-line) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.claim-scope .cf .product-item:hover { border-color: var(--role-border) !important; background: var(--role-soft) !important; }
+.claim-scope .cf .product-icon { width: 44px; height: 44px; margin: 0; background: #f8fafc; }
+.claim-scope .cf .product-icon .material-symbols-outlined { font-size: 26px; }
+.claim-scope .cf .product-name { font-size: 13px; color: #334155 !important; }
+
+/* ประเภทปัญหา: ชิปเลือกหลายข้อ */
+.claim-scope .cf .claim-grid {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.claim-scope .cf .claim-item {
+  position: relative;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px 10px 38px !important;
+  border: 1px solid #d5dbe3 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: #334155 !important;
+  font-size: 14.5px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  animation: none !important;
+  text-align: left;
+}
+.claim-scope .cf .claim-item::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border: 2px solid #cbd5e1;
+  border-radius: 5px;
+  background: #fff;
+}
+.claim-scope .cf .claim-item:hover { border-color: var(--role-border) !important; }
+.claim-scope .cf .claim-item.selected {
+  background: var(--role-soft) !important;
+  border-color: var(--role-color) !important;
+  color: var(--role-text) !important;
+  font-weight: 600 !important;
+}
+.claim-scope .cf .claim-item.selected::before {
+  border-color: var(--role-color);
+  background: var(--role-color) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10' viewBox='0 0 12 10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat;
+}
+
+/* รูป / วิดีโอ */
+.cf-media { display: grid; gap: 14px; }
+.claim-scope .cf .upload-grid {
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+.claim-scope .cf .upload-box {
+  height: 112px;
+  flex-direction: column;
+  gap: 4px;
+  border: 1.5px dashed #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #f8fafc !important;
+  color: var(--role-color) !important;
+  font-size: 13px;
+  transform: none !important;
+}
+.claim-scope .cf .upload-box .material-symbols-outlined { font-size: 30px; }
+.claim-scope .cf .upload-box small { font-size: 12.5px; color: #475569; }
+.claim-scope .cf .upload-box:hover { border-color: var(--role-color) !important; background: var(--role-soft) !important; }
+.claim-scope .cf .upload-box.preview { border: 1px solid var(--cf-line) !important; background: #0f172a !important; }
+.claim-scope .cf .remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 30px !important;
+  height: 30px;
+  border-radius: 50% !important;
+  background: rgba(15, 23, 42, 0.7) !important;
+  color: #fff !important;
+  border: 0 !important;
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.cf-existing { margin-bottom: 14px; padding: 12px; border: 1px solid var(--role-border); border-radius: 12px; background: var(--role-soft); }
+.cf-existing[hidden] { display: none; }
+.cf-existing-head { font-size: 13px; color: var(--role-text); margin-bottom: 8px; }
+.cf-existing-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.cf-existing-item {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: var(--role-color);
+  border: 1px solid var(--cf-line);
+}
+.cf-existing-item img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- แถบปุ่มติดล่างจอ ---------- */
+.cf-actionbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid var(--cf-line);
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.05);
+}
+.cf-ready {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: #b45309;
+}
+.cf-ready .material-symbols-outlined { font-size: 20px; }
+.cf-ready.is-ready { color: #15803d; }
+.cf-ready span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.claim-scope .cf .cf-btn-primary,
+.claim-scope .cf .cf-btn-outline,
+.claim-scope .cf .cf-btn-ghost {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 18px !important;
+  border-radius: 12px !important;
+  font-family: inherit;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  flex: 0 0 auto !important;
+  animation: none !important;
+  transform: none;
+}
+.claim-scope .cf .cf-btn-primary {
+  border: 0 !important;
+  background: var(--role-color) !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(var(--role-rgb), 0.25) !important;
+}
+.claim-scope .cf .cf-btn-primary:hover { background: var(--role-hover) !important; }
+.claim-scope .cf .cf-btn-outline {
+  border: 1.5px solid var(--role-color) !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: var(--role-color) !important;
+  box-shadow: none !important;
+}
+.claim-scope .cf .cf-btn-outline:hover { background: var(--role-soft) !important; }
+.claim-scope .cf .cf-btn-ghost {
+  border: 1px solid var(--cf-line) !important;
+  background: #fff !important;
+  color: #475569 !important;
+  font-weight: 500 !important;
+  padding: 0 14px !important;
+  box-shadow: none !important;
+}
+.claim-scope .cf :is(.cf-btn-primary, .cf-btn-outline, .cf-btn-ghost) .material-symbols-outlined { font-size: 20px; color: inherit !important; }
+.claim-scope .cf :is(.cf-btn-primary, .cf-btn-outline):disabled { opacity: 0.6; cursor: wait; }
+.cf-link-btn {
+  border: 0;
+  background: none;
+  color: var(--role-color);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 4px;
+  text-decoration: underline;
+  min-height: 0 !important;
+}
+
+/* ---------- แผงด้านข้าง ---------- */
+.claim-scope .cf .cf-panel { padding: 16px !important; }
+.claim-scope .cf .cf-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--cf-text) !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.claim-scope .cf .cf-panel-title::after,
+.claim-scope .cf .cf-panel-title::before { display: none !important; }
+.cf-panel-title .material-symbols-outlined { font-size: 21px; color: var(--role-color); }
+.cf-count {
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12.5px;
+}
+
+.cf-check { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.cf-check li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+}
+.cf-check li:hover { background: #f8fafc; }
+.cf-check li::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.cf-check li.is-done { color: #15803d; }
+.cf-check li.is-done::before {
+  border-color: #16a34a;
+  background: #16a34a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10' viewBox='0 0 12 10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 10px no-repeat;
+}
+.cf-note { margin: 10px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--cf-muted); }
+
+.cf-list { display: grid; gap: 8px; max-height: 60vh; overflow-y: auto; }
+.cf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 12px;
+  border: 1px dashed #d5dbe3;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--cf-muted);
+}
+.cf-empty .material-symbols-outlined { font-size: 28px; color: #cbd5e1; }
+.cf-empty.is-error { color: #b91c1c; border-color: #fecaca; }
+
+.cf-draft { border: 1px solid var(--cf-line); border-radius: 12px; background: #fff; overflow: hidden; }
+.cf-draft.is-editing { border-color: var(--role-color); box-shadow: 0 0 0 2px rgba(var(--role-rgb), 0.15); }
+.cf-draft.is-incomplete { border-color: #fcd34d; }
+.cf-draft-main { display: flex; gap: 10px; padding: 10px 12px; }
+.cf-draft-thumb {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+}
+.cf-draft-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.cf-draft-thumb i {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+}
+.cf-draft-text { min-width: 0; flex: 1; }
+.cf-draft-title { font-size: 14.5px; font-weight: 600; color: var(--cf-text); overflow-wrap: anywhere; }
+.cf-draft-sub { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: 12.5px; color: var(--cf-muted); margin-top: 2px; }
+.cf-draft-sub span + span::before { content: "·"; margin-right: 8px; color: #cbd5e1; }
+.cf-draft-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.cf-tag { padding: 2px 8px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 11.5px; }
+.cf-tag.is-warn { background: #fffbeb; color: #b45309; }
+.cf-draft-actions { display: grid; grid-template-columns: 1fr 1fr 1.3fr; border-top: 1px solid var(--cf-soft); }
+.claim-scope .cf .cf-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 6px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #475569 !important;
+  font-family: inherit;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  width: auto !important;
+}
+.claim-scope .cf .cf-icon-btn + .cf-icon-btn { border-left: 1px solid var(--cf-soft) !important; }
+.claim-scope .cf .cf-icon-btn .material-symbols-outlined { font-size: 18px; }
+.claim-scope .cf .cf-icon-btn:hover { background: #f8fafc !important; }
+.claim-scope .cf .cf-icon-btn.is-danger { color: #b91c1c !important; }
+.claim-scope .cf .cf-icon-btn.is-primary { color: var(--role-color) !important; font-weight: 600 !important; }
+
+/* โมดอลเลือกสินค้า */
+#productModal .modal-content { border-radius: 18px !important; }
+#productModal .modal-chip.selected,
+#productModal .modal-confirm-btn { background: var(--role-color) !important; border-color: var(--role-color) !important; color: #fff !important; }
+#productModal .modal-list-item:hover { background: var(--role-soft) !important; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1099px) {
+  .cf-layout { grid-template-columns: 1fr; }
+  .cf-side { position: static; grid-template-columns: 1fr 1fr; align-items: start; }
+  .cf-list { max-height: none; }
+}
+@media (max-width: 860px) {
+  .cf-side { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+  .claim-scope .cf { padding: 12px 12px 32px; }
+  .claim-scope .cf-head { padding: 14px 16px; }
+  .claim-scope .cf-head h1 { font-size: 19px; }
+  .cf-steps { display: none; }
+  .cf-sec { padding: 16px; }
+  .cf-sec-hint { margin-left: 0; }
+  .claim-scope .cf .form-grid { grid-template-columns: 1fr !important; }
+  .claim-scope .cf .claim-grid { grid-template-columns: 1fr 1fr; }
+  .claim-scope .cf .product-grid { grid-template-columns: repeat(3, 1fr); }
+  .cf-actionbar { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+  .cf-ready { flex-basis: 100%; font-size: 12.5px; }
+  .claim-scope .cf .cf-btn-outline,
+  .claim-scope .cf .cf-btn-primary { flex: 1 1 0 !important; padding: 0 10px !important; }
+  .cf-hide-sm { display: none; }
+}
+@media (pointer: coarse) {
+  .claim-scope .cf .claim-item:active,
+  .claim-scope .cf .product-item:active { transform: scale(0.98) !important; }
+}
+.claim-scope .cf .btn-submit::after,
+.claim-scope .cf .btn-draft::after { display: none !important; }
+.claim-scope .cf .cf-reporter input[data-user-readonly] { border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.cf-ready { cursor: pointer; }
