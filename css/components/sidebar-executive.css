@@ -1,0 +1,35 @@
+/* =====================================================
+   sidebar-executive.css — sidebar หน้าผู้บริหาร ให้เหมือนชุด Marketing
+   ใช้คู่กับ sidebar-marketing.css + js/components/sidebar-manager.js
+   (เปิดหน้าแล้ว "ขยาย" เสมอ 232px · เมนูมีชื่อ · ย่อได้ด้วยปุ่ม) · โน้ตบุ๊กเป็นหลัก
+   สีพื้นใช้สีผู้บริหาร (ui-cards.css · .ui-role-side)
+   ===================================================== */
+
+/* เนื้อหาหลัก: โครงหน้าผู้บริหารกำหนด width เอง → ให้ตรงกับความกว้าง sidebar */
+.app-main.sb-open { width: calc(100% - var(--sb-w-open)) !important; }
+.app-main.sb-closed { width: calc(100% - var(--sb-w-closed)) !important; }
+#appSidebar.app-sidebar.expanded ~ .app-main { margin-left: var(--sb-w-open) !important; width: calc(100% - var(--sb-w-open)) !important; }
+#appSidebar.app-sidebar.collapsed ~ .app-main { margin-left: var(--sb-w-closed) !important; width: calc(100% - var(--sb-w-closed)) !important; }
+
+/* โลโก้เป็นลิงก์กลับหน้าหลัก (แบบ Marketing) */
+#appSidebar a.sidebar-logo { text-decoration: none; }
+
+/* ขยาย: เมนูชิดซ้าย มีชื่อเมนู (โครงผู้บริหารเดิมจัดกึ่งกลางแบบไอคอน) */
+#appSidebar.expanded .sidebar-nav-item { justify-content: flex-start !important; padding: 0 !important; gap: 0 !important; }
+#appSidebar.expanded .sidebar-nav-item .nav-label { display: inline !important; opacity: 1 !important; visibility: visible !important; width: auto !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#appSidebar.expanded .sidebar-logout .nav-label { display: inline !important; opacity: 1 !important; visibility: visible !important; width: auto !important; }
+#appSidebar.collapsed .sidebar-nav-item .nav-label,
+#appSidebar.collapsed .sidebar-logout .nav-label { display: none !important; }
+#appSidebar.collapsed .sidebar-nav-item,
+#appSidebar.collapsed .sidebar-logout { justify-content: flex-start !important; padding: 0 !important; }
+
+/* ป้ายตัวเลขงานรออนุมัติ (อนุมัติงาน) */
+#appSidebar .ed-nav-badge { top: 4px; right: 4px; }
+
+/* ไอคอนเมนู + ออกจากระบบ ตรงแนวเดียวกัน (คอลัมน์ไอคอน 48px แบบ sidebar-marketing.css)
+   — โครงหน้าผู้บริหารเดิมกำหนดขนาดไอคอนต่างกันในแต่ละหน้า */
+#appSidebar.app-sidebar .sidebar-nav-item .nav-icon-wrap,
+#appSidebar.app-sidebar .sidebar-logout .nav-icon-wrap { width: 48px !important; min-width: 48px !important; flex: 0 0 48px !important; height: 44px !important; margin: 0 !important; }
+#appSidebar.app-sidebar .sidebar-logout { padding: 0 !important; gap: 0 !important; }
+#appSidebar.app-sidebar .sidebar-nav-item .nav-label,
+#appSidebar.app-sidebar .sidebar-logout .nav-label { padding: 0 12px 0 2px !important; }

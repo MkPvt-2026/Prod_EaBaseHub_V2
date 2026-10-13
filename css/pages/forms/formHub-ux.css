@@ -113,3 +113,26 @@ body { background: #f3f5f9 !important; font-family: "Kanit", sans-serif; }
   .form-card:hover { transform: none; }
   .form-card:active { transform: scale(0.98); }
 }
+
+/* การ์ดที่ยังไม่เปิดใช้ ("เร็ว ๆ นี้") */
+.form-card.is-soon { cursor: not-allowed; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05); }
+.form-card.is-soon .form-icon { filter: grayscale(0.35); opacity: 0.8; }
+.form-card.is-soon:hover, .form-card.is-soon:active { transform: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05); }
+.status.soon { background: #f1f5f9; color: #64748b; }
+.status.soon::before { background: #94a3b8; }
+
+/* ---------- ปุ่มกลับหน้าหลัก (หน้า Form Hub ไม่มีเมนูด้านข้าง — การ์ดใหญ่คือเมนู) ---------- */
+.fh-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.fh-home {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px;
+  border-radius: 999px; background: #fff; color: var(--role-text, #166534); text-decoration: none;
+  font-size: 15px; font-weight: 600; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fh-home:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16); }
+.fh-home:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.7); outline-offset: 2px; }
+.fh-home .material-symbols-outlined { font-size: 22px; }
+@media (max-width: 600px) {
+  .fh-head { flex-direction: column; align-items: stretch; }
+  .fh-home { justify-content: center; }
+}

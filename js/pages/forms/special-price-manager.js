@@ -24,10 +24,8 @@ let _deciding = false;
 document.addEventListener("DOMContentLoaded", async () => {
   if (typeof supabaseClient === "undefined") { alert("ระบบยังไม่พร้อม กรุณารีเฟรชหน้า"); return; }
   try { if (typeof protectPage === "function") await protectPage(MGR_ROLES); } catch (e) { console.error(e); return; }
+  if (!window.currentUser?.id && typeof loadCurrentUser === "function") { try { await loadCurrentUser(); } catch (e) { /* ignore */ } }
   me = await spLoadMe();
-  setText("mgrName", me.name || "-");
-  setText("mgrRole", me.position || "-");
-  mgrSig = createSignaturePad("mgrSigCanvas", "mgrSigWrap", "mgrSigHint");
   document.querySelectorAll("#queueTabs button").forEach((b) => b.addEventListener("click", () => {
     _tab = b.dataset.f;
     document.querySelectorAll("#queueTabs button").forEach((x) => x.classList.toggle("is-on", x === b));
@@ -37,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadTeam();
   await loadQueue();
   const q = new URLSearchParams(location.search).get("id");
-  if (q && findReq(q)) selectRequest(q);
+  if (q) { location.replace(`/pages/forms/special-price-manager-doc.html?id=${encodeURIComponent(q)}`); return; }
 });
 
 // =====================================================
@@ -114,7 +112,12 @@ function renderQueue() {
 // =====================================================
 // 🔎 รายละเอียด
 // =====================================================
+// เปิดคำขอ → หน้าเอกสาร (A4 + แผงพิจารณา) แบบเดียวกับหน้าผู้บริหาร
 function selectRequest(id) {
+  location.href = `/pages/forms/special-price-manager-doc.html?id=${encodeURIComponent(id)}`;
+}
+// แผงรายละเอียดเดิม (ไม่ได้ใช้จากรายการแล้ว)
+function selectRequestInline(id) {
   if (String(id) !== String(_selectedId) && hasUnsavedDecision() && !confirm("ความเห็น/ลายเซ็นที่กรอกไว้จะหาย — เปิดคำขออื่น?")) return;
   _selectedId = id;
   document.getElementById("mgrComment").value = "";
@@ -123,7 +126,7 @@ function selectRequest(id) {
   mgrSig.clear();
   if (window.innerWidth <= 900) document.getElementById("detailCard").scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function hasUnsavedDecision() { return !!(document.getElementById("mgrComment").value.trim() || mgrSig?.get()); }
+function hasUnsavedDecision() { return !!(document.getElementById("mgrComment")?.value.trim() || mgrSig?.get()); }
 function clearDetail() {
   _selectedId = null;
   document.getElementById("detailEmpty").hidden = false;

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>EABaseHub | ขอเปิดร้านค้าใหม่</title>
+    <link rel="icon" href="/assets/icons/icon-192.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/formPlan-ux.css" />
+    <link rel="stylesheet" href="/css/pages/forms/special-price-sale-ux.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+    <link rel="stylesheet" href="/css/pages/forms/new-shop.css" />
+    <link rel="stylesheet" href="/css/components/sidebar-forms.css" />
+  </head>
+  <body>
+    <header class="app-header ui-role-bar">
+      <div class="logo">
+        <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo" /></div>
+        <h2>EABaseHub</h2>
+      </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info"><div class="user-name" id="userName">กำลังโหลด...</div></div>
+        <button id="logoutBtn" class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </header>
+
+
+    <main class="fp sp cl ns">
+      <section class="fp-head ui-role-hero sp-head">
+        <div>
+          <a class="fp-back" href="/pages/forms/formHub.html"><span class="material-symbols-outlined">arrow_back</span>แบบฟอร์ม</a>
+          <h1>ขอเปิดร้านค้าใหม่</h1>
+          <p>ขอเปิดลูกค้า / ร้านค้าใหม่ในระบบ · Manager พิจารณา → ผู้บริหารอนุมัติ · ติดตามผลได้ที่ “คำขอของฉัน”</p>
+        </div>
+        <ol class="sp-steps" aria-label="ขั้นตอน">
+          <li class="is-now"><b>1</b>กรอกคำขอ</li>
+          <li><b>2</b>Manager</li>
+          <li><b>3</b>ผู้บริหาร</li>
+        </ol>
+      </section>
+
+      <div class="fp-layout">
+        <!-- ===================== ฟอร์ม ===================== -->
+        <section class="fp-card fp-form" id="nsForm">
+          <div class="fp-edit-banner" id="fpEditBanner" hidden>
+            <span class="material-symbols-outlined">edit_note</span>
+            <span id="fpEditText">กำลังแก้ไข</span>
+            <button type="button" class="fp-link-btn" onclick="clearForm()">เริ่มคำขอใหม่</button>
+          </div>
+          <div class="cl-revise" id="reviseBox" hidden></div>
+
+          <!-- 1 ข้อมูลร้าน -->
+          <div class="fp-sec">
+            <div class="fp-sec-head"><h2 class="fp-sec-title"><b>1</b> ข้อมูลร้าน</h2></div>
+            <div class="cl-grid">
+              <div class="fp-field cl-span2">
+                <label for="shopName">ชื่อร้าน <i>*</i></label>
+                <input id="shopName" type="text" maxlength="150" placeholder="ชื่อร้านตามป้าย / ชื่อจดทะเบียน" autocomplete="off" />
+                <div class="ns-dup" id="dupBox" hidden></div>
+              </div>
+              <div class="fp-field cl-span2">
+                <label>ประเภทร้าน <i>*</i></label>
+                <div class="sp-chips" id="typeChips" role="radiogroup" aria-label="ประเภทร้าน"></div>
+              </div>
+              <div class="fp-field">
+                <label for="taxId">เลขประจำตัวผู้เสียภาษี</label>
+                <input id="taxId" type="text" inputmode="numeric" maxlength="17" placeholder="13 หลัก (ถ้ามี)" />
+              </div>
+              <div class="fp-field">
+                <label for="products">สินค้าที่สนใจ</label>
+                <input id="products" type="text" maxlength="200" placeholder="เช่น สินค้ากลุ่ม A, B" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 ที่ตั้ง -->
+          <div class="fp-sec">
+            <div class="fp-sec-head"><h2 class="fp-sec-title"><b>2</b> ที่ตั้งร้าน</h2></div>
+            <div class="cl-grid">
+              <div class="fp-field cl-span2">
+                <label for="address">ที่อยู่ <i>*</i></label>
+                <input id="address" type="text" maxlength="250" placeholder="เลขที่ ถนน ตำบล" />
+              </div>
+              <div class="fp-field">
+                <label for="district">อำเภอ / เขต <i>*</i></label>
+                <input id="district" type="text" maxlength="80" />
+              </div>
+              <div class="fp-field">
+                <label for="province">จังหวัด <i>*</i></label>
+                <input id="province" type="text" maxlength="80" list="provinceList" />
+                <datalist id="provinceList"></datalist>
+              </div>
+              <div class="fp-field">
+                <label for="postcode">รหัสไปรษณีย์</label>
+                <input id="postcode" type="text" inputmode="numeric" maxlength="5" />
+              </div>
+              <div class="fp-field">
+                <label for="gps">พิกัด GPS</label>
+                <div class="ns-gps">
+                  <input id="gps" type="text" placeholder="ละติจูด, ลองจิจูด" autocomplete="off" />
+                  <button type="button" class="fp-btn-outline" id="gpsBtn" onclick="useMyLocation()"><span class="material-symbols-outlined">my_location</span><span class="fp-hide-sm">ตำแหน่งปัจจุบัน</span></button>
+                </div>
+                <a class="ns-maplink" id="mapLink" target="_blank" rel="noopener" hidden><span class="material-symbols-outlined">map</span>ดูบนแผนที่</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 ผู้ติดต่อ -->
+          <div class="fp-sec">
+            <div class="fp-sec-head"><h2 class="fp-sec-title"><b>3</b> ผู้ติดต่อ</h2></div>
+            <div class="cl-grid ns-grid3">
+              <div class="fp-field">
+                <label for="contactName">ชื่อผู้ติดต่อ <i>*</i></label>
+                <input id="contactName" type="text" maxlength="100" />
+              </div>
+              <div class="fp-field">
+                <label for="phone">เบอร์โทร <i>*</i></label>
+                <input id="phone" type="tel" inputmode="tel" maxlength="20" placeholder="0xx-xxx-xxxx" />
+              </div>
+              <div class="fp-field">
+                <label for="lineId">LINE ID</label>
+                <input id="lineId" type="text" maxlength="60" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 การค้า -->
+          <div class="fp-sec">
+            <div class="fp-sec-head"><h2 class="fp-sec-title"><b>4</b> ข้อมูลการค้า</h2></div>
+            <div class="cl-grid">
+              <div class="fp-field">
+                <label for="estMonthly">ยอดซื้อคาดการณ์ (บาท / เดือน) <i>*</i></label>
+                <input id="estMonthly" type="text" inputmode="decimal" placeholder="0.00" />
+              </div>
+              <div class="fp-field">
+                <label>เงื่อนไขชำระเงิน <i>*</i></label>
+                <div class="sp-chips" role="radiogroup" aria-label="เงื่อนไขชำระเงิน">
+                  <label><input type="radio" name="payTerm" value="cash" /><span>เงินสด</span></label>
+                  <label><input type="radio" name="payTerm" value="credit" /><span>เครดิต</span></label>
+                </div>
+              </div>
+              <div class="fp-field" data-credit hidden>
+                <label for="creditDays">เครดิต (วัน) <i>*</i></label>
+                <input id="creditDays" type="text" inputmode="numeric" maxlength="3" placeholder="เช่น 30" />
+              </div>
+              <div class="fp-field" data-credit hidden>
+                <label for="creditLimit">วงเงินเครดิตที่ขอ (บาท) <i>*</i></label>
+                <input id="creditLimit" type="text" inputmode="decimal" placeholder="0.00" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 รูปร้าน -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>5</b> รูปร้าน <i class="sp-req">*</i></h2>
+              <span class="fp-hint">อย่างน้อย 1 รูป (หน้าร้าน / ป้ายร้าน) · สูงสุด 4 รูป</span>
+            </div>
+            <div class="ns-photos" id="photoGrid"></div>
+            <input type="file" id="photoInput" accept="image/*" multiple hidden />
+          </div>
+
+          <!-- 6 เหตุผล -->
+          <div class="fp-sec">
+            <div class="fp-sec-head"><h2 class="fp-sec-title"><b>6</b> เหตุผล / โอกาสทางการขาย <i class="sp-req">*</i></h2></div>
+            <div class="fp-field sp-reason">
+              <label for="reasonText">ให้ผู้อนุมัติเห็นภาพ เช่น ศักยภาพร้าน คู่แข่งในพื้นที่ สินค้าที่จะเข้า</label>
+              <textarea id="reasonText" rows="3" maxlength="500" placeholder="เช่น ร้านใหญ่ในอำเภอ ยังไม่มีสินค้าเรา ลูกค้าสนใจสั่งเดือนละ 2 ครั้ง"></textarea>
+              <span class="sp-count" id="reasonCount">0/500</span>
+            </div>
+          </div>
+
+          <!-- 7 ลายเซ็น -->
+          <div class="fp-sec">
+            <div class="fp-sec-head">
+              <h2 class="fp-sec-title"><b>7</b> ลายเซ็นผู้ขอ <i class="sp-req">*</i></h2>
+              <button type="button" class="fp-link-btn" onclick="clearSignature()">ล้างลายเซ็น</button>
+            </div>
+            <div class="sp-sign">
+              <div class="sp-sign-pad" id="sigWrap">
+                <canvas id="sigCanvas" aria-label="ช่องเซ็นชื่อ"></canvas>
+                <span class="sp-sign-hint" id="sigHint"><span class="material-symbols-outlined">draw</span>เซ็นชื่อในกรอบนี้</span>
+              </div>
+              <div class="sp-sign-meta">
+                <div><span>ผู้ขอ</span><b id="requesterName">-</b></div>
+                <div><span>ตำแหน่ง</span><b id="requesterRole">-</b></div>
+              </div>
+            </div>
+            <div class="fp-warn" id="fpWarn" hidden></div>
+          </div>
+
+          <!-- แถบปุ่ม -->
+          <div class="fp-actionbar">
+            <span class="fp-status" id="fpStatus">คำขอใหม่ (ยังไม่บันทึก)</span>
+            <button type="button" class="fp-btn-ghost" onclick="clearForm()"><span class="material-symbols-outlined">restart_alt</span><span class="fp-hide-sm">ล้าง</span></button>
+            <button type="button" class="fp-btn-outline" id="draftBtn" onclick="saveDraft()"><span class="material-symbols-outlined">bookmark_add</span>บันทึกร่าง</button>
+            <button type="button" class="fp-btn-primary" onclick="openPreview()"><span class="material-symbols-outlined">preview</span><span id="submitText">ตรวจ &amp; ส่งคำขอ</span></button>
+          </div>
+        </section>
+
+        <!-- ===================== ด้านข้าง ===================== -->
+        <aside class="fp-side">
+          <section class="fp-card fp-panel">
+            <h2 class="fp-panel-title">
+              <span class="material-symbols-outlined">fact_check</span> คำขอของฉัน
+              <span class="fp-count" id="requestCountBadge">0</span>
+              <button type="button" class="fp-icon-only" onclick="loadMyRequests()" title="รีเฟรช"><span class="material-symbols-outlined">refresh</span></button>
+            </h2>
+            <div class="sp-filter" id="reqFilter" role="tablist">
+              <button type="button" class="is-on" data-f="all">ทั้งหมด</button>
+              <button type="button" data-f="action">ต้องแก้ไข <em id="cntAction"></em></button>
+              <button type="button" data-f="pending">กำลังพิจารณา</button>
+              <button type="button" data-f="done">ทราบผล</button>
+            </div>
+            <div id="requestList" class="fp-list"></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+    <script src="/js/components/form-sidebar.js"></script>
+
+    <!-- ตัวอย่างเอกสารก่อนส่ง -->
+    <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="ตัวอย่างเอกสาร">
+      <div class="preview-wrapper">
+        <div class="preview-actions">
+          <span class="preview-title" id="previewTitle">ตรวจคำขอก่อนส่ง</span>
+          <button type="button" class="pa-primary" id="sendBtn" onclick="submitRequest()"><span class="material-symbols-outlined">send</span><span id="sendText">ส่งให้ Manager</span></button>
+          <button type="button" onclick="printPreview()"><span class="material-symbols-outlined">print</span>พิมพ์ / PDF</button>
+          <button type="button" class="pa-close" onclick="closePreview()" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div id="previewIssues" class="preview-issues" hidden></div>
+        <div id="previewContent" class="a4-page"></div>
+      </div>
+    </div>
+
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/special-price-common.js"></script>
+    <script src="/js/pages/forms/new-shop-common.js"></script>
+    <script src="/js/pages/forms/new-shop-sale.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
+</html>

@@ -35,7 +35,8 @@ async function loadCurrentUser() {
     console.log("🔄 Loading user data...");
 
     // 1️⃣ ดึง session ปัจจุบัน
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    const shared = typeof eaGetMyProfile === "function" ? await eaGetMyProfile() : null;
+    const { data: { session }, error: sessionError } = shared ? { data: { session: shared.session }, error: null } : await supabaseClient.auth.getSession();
     
     if (sessionError) {
       console.error("❌ Session error:", sessionError);
@@ -48,11 +49,9 @@ async function loadCurrentUser() {
     }
 
     // 2️⃣ ดึงข้อมูล User จาก profiles table
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    const { data: profile, error: profileError } = shared
+      ? { data: shared.profile, error: shared.error }
+      : await supabaseClient.from("profiles").select("*").eq("id", session.user.id).single();
 
     if (profileError) {
       console.error("❌ Profile error:", profileError);

@@ -22,7 +22,7 @@ const ROLE_HOME = {
   admin: "/pages/dashboard/adminDashboard.html",
   adminQc: "/pages/dashboard/QcDashboard.html",
   manager: "/pages/marketing/marketingHome.html",
-  executive: "/pages/executive/executive-Dashboard.html",
+  executive: "/pages/executive/executive-Hub.html",
   sales: "/index.html",
   marketing: "/pages/marketing/marketingHome.html",
   accounting: "/pages/Accounting/credit-limit-finance.html",
@@ -59,9 +59,15 @@ const PAGE_ACCESS = {
   // ---------- ราคาพิเศษ (ผู้ขอ → Manager → ผู้บริหาร) ----------
   "/pages/forms/special-price-sale.html":       ["sales", "marketing"],
   "/pages/forms/special-price-manager.html":    ["manager"],
+  "/pages/forms/special-price-manager-doc.html": ["manager"], // เอกสารขออนุมัติ (Manager)
+
+  // ---------- เปิดร้านค้าใหม่ (เซลล์ → Manager → ผู้บริหาร · approval_requests.request_type = new_area_shop) ----------
+  "/pages/forms/new-shop-sale.html":            ["sales", "manager"],
+  "/pages/forms/new-shop-manager.html":         ["manager"],
+  "/pages/forms/new-shop-manager-doc.html":     ["manager"],
 
   // ---------- วงเงินชั่วคราว ----------
-  "/pages/forms/credit-limit-sale.html":        ["sales", "manager", "accounting", "executive"],
+  "/pages/forms/credit-limit-sale.html":        ["sales", "manager"], // ผู้ขอ (เซลล์) · บัญชี/ผู้บริหารมีหน้าของตัวเอง
   "/pages/forms/credit-limit-detail.html":      ["sales", "manager", "accounting", "executive"],
   "/pages/forms/credit-limit-tracking.html":    ["sales", "manager", "accounting", "executive"],
   "/pages/forms/credit-limit-a4-document.html": ["sales", "manager", "accounting", "executive"],
@@ -72,18 +78,20 @@ const PAGE_ACCESS = {
   // ---------- Manager / การตลาด ----------
   "/pages/marketing/marketingHome.html":        ["manager", "marketing"],
   "/pages/dashboard/managerDashboard.html":     ["manager"],
-  "/pages/reports/reportTracker.html":          ["manager", "marketing", "executive"],
-  "/pages/dashboard/RfmDashboard.html":         ["manager", "marketing", "executive"],
+  "/pages/reports/reportTracker.html":          ["manager", "marketing"], // ผู้บริหารใช้หน้าของตัวเอง (executiveHome)
+  "/pages/dashboard/RfmDashboard.html":         [], // RFM ยกเลิกทั้งระบบ (เหลือ Admin เปิดดูข้อมูลเดิม)
   "/pages/dashboard/salesDashboard.html":       ["sales", "manager", "marketing"],
-  "/pages/components/rfmImport.html":           ["manager", "marketing"],
+  "/pages/components/rfmImport.html":           [], // RFM ยกเลิกทั้งระบบ
   "/pages/components/importData.html":          ["manager", "marketing"],
   "/pages/marketing/announcements.html":        ["manager", "marketing"], // ประชาสัมพันธ์ ฝั่งการตลาด (Admin ใช้หน้าของ Admin)
   "/pages/admin/messages-New-Admin.html":       ["manager", "adminQc"],
 
   // ---------- ผู้บริหาร (อนุมัติขั้นสุดท้ายต่อจาก Manager) ----------
+  "/pages/executive/executive-Hub.html":        ["executive"], // หน้าหลัก (ปุ่มเมนูแบบ Form Hub)
   "/pages/executive/executive-Dashboard.html":  ["executive"],
   "/pages/executive/executiveHome.html":        ["executive"],
   "/pages/executive/executive-Approval.html":   ["executive"],
+  "/pages/executive/executive-ApprovalDoc.html": ["executive"], // เอกสารขออนุมัติ (ดู/อนุมัติ)
 
   // ---------- QC ----------
   "/pages/dashboard/QcDashboard.html":          ["adminQc", "manager"],

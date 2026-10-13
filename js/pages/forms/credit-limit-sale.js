@@ -1,994 +1,470 @@
-/* =========================================================
-   CREDIT LIMIT SALE PAGE
-   ใช้กับตาราง shops ปัจจุบัน:
-   shops: id, shop_code, shop_name, province, sale_id, status, created_at
-========================================================= */
-
+// =====================================================
+// credit-limit-sale.js v2.0 — ขออนุมัติวงเงินเครดิตชั่วคราว (ฝั่งเซลล์)
+// ต้องโหลด special-price-common.js + credit-limit-common.js ก่อน
+//
+// ส่งคำขอ → approval_requests: request_type "credit_limit_temp", status / request_status "accounting_review"
+//   → ฝ่ายบัญชีตรวจ (credit-limit-finance): ส่งต่อ Manager หรือ "ส่งกลับให้แก้ไข" (status "revision_required")
+//   → Manager → ผู้บริหาร (executive-ApprovalDoc) อนุมัติขั้นสุดท้าย
+// บัญชีส่งกลับ → เซลล์กด "แก้ไขแล้วส่งกลับ" = อัปเดตคำขอเดิม (ไม่สร้างใหม่) แล้วกลับไปขั้นบัญชี
+// ร่างเก็บในเครื่อง 1 ร่างต่อผู้ใช้ · ยกเลิกได้เฉพาะตอนบัญชียังไม่ส่งต่อ
+// =====================================================
 "use strict";
 
-/* =========================================================
-   PAGE NAVIGATION
-========================================================= */
-const pageLinks = {
-  sale: "credit-limit-sale.html",
-  a4: "credit-limit-a4-document.html",
-  sign: "credit-limit-signature.html",
-  detail: "credit-limit-detail.html",
-  finance: "/pages/Accounting/credit-limit-finance.html",
-  approval: "credit-limit-approval.html",
-  tracking: "credit-limit-tracking.html",
-};
+const ALLOWED_ROLES = ["admin", "sales", "sale", "manager"];
+const DRAFT_KEY = () => `creditLimitDraft:v2:${me.id || "x"}`;
 
-function goPage(id) {
-  const target = pageLinks[id];
-  if (target) window.location.href = target;
-}
+let me = { id: null, name: "", role: "" };
+let pickedShop = null;
+let sig = null;
+let editingId = null;     // แก้ไขคำขอที่บัญชีส่งกลับ
+let _dirty = false;
+let _saving = false;
+let _requests = [];
+let _reqFilter = "all";
+let _searchTimer = null;
+let _searchSeq = 0;
 
-function showPage(id) {
-  goPage(id);
-}
-
-/* =========================================================
-   STATE
-========================================================= */
-let currentUser = null;
-let currentProfile = null;
-let currentShops = [];
-let selectedShop = null;
-let sigData = null;
-
-/* =========================================================
-   INIT
-========================================================= */
+// =====================================================
+// 🚀 INIT
+// =====================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    setToday();
-    updateCount();
-    setupCanvas("sigCanvas", "sigHint");
-
-    await initAuthAndProfile();
-    await loadSaleShops();
-    await loadRequestCards();
-
-    restoreDraft();
-  } catch (err) {
-    console.error("Init error:", err);
-    alert("โหลดหน้าไม่สำเร็จ: " + (err.message || err));
-  }
+  for (let i = 0; i < 50 && typeof supabaseClient === "undefined"; i++) await new Promise((r) => setTimeout(r, 100));
+  if (typeof supabaseClient === "undefined") { alert("ระบบยังไม่พร้อม กรุณารีเฟรชหน้า"); return; }
+  if (typeof protectPage === "function") protectPage(ALLOWED_ROLES);
+  if (!window.currentUser?.id && typeof loadCurrentUser === "function") { try { await loadCurrentUser(); } catch (e) { /* ignore */ } }
+  me = await spLoadMe();
+  setText("requesterName", me.name || "-");
+  setText("requesterRole", me.position || "-");
+  setText("shopScopeHint", isSales() ? "แสดงเฉพาะร้านที่คุณดูแล" : "ค้นหาได้ทุกร้านที่เปิดใช้งาน");
+  const nav = document.getElementById("salesNav"); if (nav) nav.hidden = !isSales();
+  setupEvents();
+  sig = createSignaturePad("sigCanvas", "sigWrap", "sigHint", markDirty);
+  document.getElementById("docDate").value = todayISO();
+  recalc(); updateReasonCount();
+  restoreDraft();
+  updateStatus();
+  await loadMyRequests();
+  const q = new URLSearchParams(location.search).get("revise");
+  if (q) startRevise(q);
 });
 
-/* =========================================================
-   AUTH + ROLE CHECK
-========================================================= */
-async function initAuthAndProfile() {
-  const db = window.supabaseClient;
+const isSales = () => me.role === "sales" || me.role === "sale";
 
-  if (!db?.auth) {
-    throw new Error("supabaseClient ยังไม่พร้อมใช้งาน");
-  }
-
-  const {
-    data: { session },
-    error: sessionError,
-  } = await db.auth.getSession();
-
-  if (sessionError) throw sessionError;
-
-  if (!session?.user) {
-    window.location.href = "/pages/auth/login.html";
-    return;
-  }
-
-  currentUser = session.user;
-
-  const { data: profile, error: profileError } = await db
-    .from("profiles")
-    .select("id, username, display_name, email, role, area, status, avatar_url")
-    .eq("id", currentUser.id)
-    .single();
-
-  if (profileError) throw profileError;
-  if (!profile) throw new Error("ไม่พบข้อมูลผู้ใช้งานใน profiles");
-
-  currentProfile = profile;
-
-  const role = String(profile.role || "").toLowerCase();
-  const status = String(profile.status || "").toLowerCase();
-
-  const allowRoles = [
-    "sale",
-    "sales",
-    "accounting",
-    "manager",
-    "executive",
-    "admin",
-    "adminqc",
-  ];
-
-  if (!allowRoles.includes(role)) {
-    alert("ไม่มีสิทธิ์เข้าใช้งานหน้านี้");
-    window.location.href = "/index.html";
-    return;
-  }
-
-  if (status && status !== "active") {
-    alert("บัญชีผู้ใช้งานนี้ไม่ได้อยู่ในสถานะ Active");
-    await db.auth.signOut();
-    window.location.href = "/pages/auth/login.html";
-    return;
-  }
-
-  renderCurrentUser();
-}
-
-function renderCurrentUser() {
-  const username = currentProfile.username || currentProfile.email || "Sale";
-  const displayName = currentProfile.display_name || username;
-  const avatarText = getAvatarText(displayName || username);
-
-  setText("sidebarAvatar", avatarText);
-  setText("sidebarDisplayName", username);
-  setText("sidebarUsername", username);
-  setText("topbarAvatar", avatarText);
-  setText("topbarUsername", displayName);
-
-  setValue("saleOwner", `${username} - ${displayName}`);
-
-  setText("sigModalTitle", `✍️ เซ็นชื่อผู้ขออนุมัติ (${username})`);
-  setText("sigNameText", `${displayName} (${username})`);
-}
-
-function getAvatarText(value) {
-  const text = String(value || "S").trim();
-  if (!text) return "S";
-  return text.slice(0, 2).toUpperCase();
-}
-
-/* =========================================================
-   LOAD SHOPS
-   ดึงอัตโนมัติจาก shops เฉพาะ:
-   shop_name / shop_code / province
-========================================================= */
-async function loadSaleShops() {
-  const db = window.supabaseClient;
-
-  const select = document.getElementById("shopSelect");
-  if (select) {
-    select.innerHTML = `<option value="">กำลังโหลดรายชื่อลูกค้า...</option>`;
-  }
-
-  const { data, error } = await db
-    .from("shops")
-    .select("id, shop_code, shop_name, province, sale_id, status")
-    .eq("sale_id", currentProfile.id)
-    .ilike("status", "active")
-    .order("shop_name", { ascending: true });
-
-  if (error) throw error;
-
-  currentShops = data || [];
-  renderShopOptions(currentShops);
-}
-
-function renderShopOptions(shops) {
-  const select = document.getElementById("shopSelect");
-  if (!select) return;
-
-  select.innerHTML = `<option value="">-- เลือกลูกค้า --</option>`;
-
-  if (!shops.length) {
-    select.innerHTML = `<option value="">ไม่พบลูกค้าที่ผูกกับ Sale คนนี้</option>`;
-    return;
-  }
-
-  shops.forEach((shop) => {
-    const option = document.createElement("option");
-    option.value = shop.id;
-
-    const code = shop.shop_code ? `${shop.shop_code} - ` : "";
-    const province = shop.province ? ` (${shop.province})` : "";
-
-    option.textContent = `${code}${shop.shop_name || "-"}${province}`;
-    select.appendChild(option);
+function setupEvents() {
+  const s = document.getElementById("shopSearch");
+  s.addEventListener("input", () => { if (pickedShop && s.value !== shopLabel(pickedShop)) { pickedShop = null; renderPickedShop(); } scheduleShopSearch(); markDirty(); });
+  s.addEventListener("focus", () => { if (s.value.trim() && !pickedShop) scheduleShopSearch(); });
+  s.addEventListener("keydown", onShopKey);
+  document.addEventListener("click", (e) => { if (!e.target.closest(".sp-combo")) hideShopResults(); });
+  ["currentLimit", "requestAmount"].forEach((id) => {
+    const el = document.getElementById(id);
+    el.addEventListener("input", () => { recalc(); markDirty(); });
+    el.addEventListener("blur", () => { const n = numOf(el.value); el.value = el.value.trim() ? n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""; });
+    el.addEventListener("focus", () => { if (el.value) el.value = String(numOf(el.value) || ""); });
   });
+  ["creditTerm", "soNo", "docDate", "reasonText"].forEach((id) => document.getElementById(id).addEventListener("input", markDirty));
+  document.getElementById("reasonText").addEventListener("input", updateReasonCount);
+  document.querySelectorAll('input[name="pay"]').forEach((c) => c.addEventListener("change", markDirty));
+  document.querySelectorAll("#reqFilter button").forEach((b) => b.addEventListener("click", () => {
+    _reqFilter = b.dataset.f;
+    document.querySelectorAll("#reqFilter button").forEach((x) => x.classList.toggle("is-on", x === b));
+    renderRequests();
+  }));
+  document.getElementById("previewModal")?.addEventListener("click", (ev) => { if (ev.target.id === "previewModal") closePreview(); });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") { closePreview(); closeViewPopup(); hideShopResults(); } });
 }
 
-function onShopChange() {
-  const shopId = document.getElementById("shopSelect")?.value || "";
-  selectedShop = currentShops.find((shop) => shop.id === shopId) || null;
-
-  // ดึงจากตาราง shops อัตโนมัติ
-  setValue("shopCode", selectedShop?.shop_code || "");
-  setValue("shopProvince", selectedShop?.province || "");
-
-  // ดึงข้อมูล Sale ผู้รับผิดชอบอัตโนมัติจาก profiles
-  const saleDisplay =
-    currentProfile?.display_name ||
-    currentProfile?.username ||
-    currentProfile?.email ||
-    "";
-
-  setValue("saleOwner", saleDisplay);
-
-  // ช่องนี้ให้ Sale กรอกเอง
-  setValue("currentCreditLimit", "");
-  setValue("creditTerm", "");
-}
-// ช่องอื่นให้ผู้ใช้กรอกเอง ไม่ดึงจาก shops
-
-/* =========================================================
-   CHAR COUNT
-========================================================= */
-function updateCount() {
-  const t = document.getElementById("reasonText");
-  const c = document.getElementById("charCount");
-  if (t && c) c.textContent = String(t.value.length);
-}
-
-/* =========================================================
-   SIGNATURE CANVAS
-========================================================= */
-function setupCanvas(canvasId, hintId) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return null;
-
-  const ctx = canvas.getContext("2d");
-  ctx.strokeStyle = "#1a1a2e";
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  let drawing = false;
-
-  function getPos(e) {
-    const r = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / r.width;
-    const scaleY = canvas.height / r.height;
-
-    if (e.touches?.[0]) {
-      return [
-        (e.touches[0].clientX - r.left) * scaleX,
-        (e.touches[0].clientY - r.top) * scaleY,
-      ];
-    }
-
-    return [(e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY];
-  }
-
-  function hideHint() {
-    if (!hintId) return;
-    document.getElementById(hintId)?.classList.add("hidden");
-  }
-
-  canvas.addEventListener("mousedown", (e) => {
-    drawing = true;
-    const [x, y] = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    hideHint();
-  });
-
-  canvas.addEventListener("mousemove", (e) => {
-    if (!drawing) return;
-    const [x, y] = getPos(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  });
-
-  canvas.addEventListener("mouseup", () => {
-    drawing = false;
-  });
-
-  canvas.addEventListener("mouseleave", () => {
-    drawing = false;
-  });
-
-  canvas.addEventListener(
-    "touchstart",
-    (e) => {
-      e.preventDefault();
-      drawing = true;
-      const [x, y] = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      hideHint();
-    },
-    { passive: false },
-  );
-
-  canvas.addEventListener(
-    "touchmove",
-    (e) => {
-      e.preventDefault();
-      if (!drawing) return;
-      const [x, y] = getPos(e);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    },
-    { passive: false },
-  );
-
-  canvas.addEventListener("touchend", () => {
-    drawing = false;
-  });
-
-  return { ctx, canvas };
-}
-
-function openSigModal() {
-  document.getElementById("sigModal")?.classList.add("open");
-}
-
-function closeSigModal() {
-  document.getElementById("sigModal")?.classList.remove("open");
-}
-
-function clearSig() {
-  const c = document.getElementById("sigCanvas");
-  if (!c) return;
-
-  c.getContext("2d").clearRect(0, 0, c.width, c.height);
-  document.getElementById("sigHint")?.classList.remove("hidden");
-}
-
-function saveSig() {
-  const c = document.getElementById("sigCanvas");
-  if (!c) return;
-
-  sigData = c.toDataURL("image/png");
-
-  const disp = document.getElementById("sigDisplay");
-  if (disp) {
-    const dCtx = disp.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      dCtx.clearRect(0, 0, disp.width, disp.height);
-      dCtx.drawImage(img, 0, 0, disp.width, disp.height);
-    };
-
-    img.src = sigData;
-  }
-
-  setDisplay("sigPlaceholder", "none");
-  setDisplay("sigDisplayWrap", "block");
-  setText("sigDateText", formatThaiDateTime(new Date()));
-
-  closeSigModal();
-}
-
-function clearDisplaySig() {
-  const disp = document.getElementById("sigDisplay");
-  if (disp) {
-    disp.getContext("2d").clearRect(0, 0, disp.width, disp.height);
-  }
-
-  setDisplay("sigPlaceholder", "block");
-  setDisplay("sigDisplayWrap", "none");
-  setText("sigDateText", "-");
-
-  sigData = null;
-  clearSig();
-}
-
-/* =========================================================
-   FORM DATA COLLECTION
-========================================================= */
-function collectFormData(status = "pending") {
-  const shopId = getValue("shopSelect");
-  const shop = currentShops.find((item) => item.id === shopId) || null;
-
-  const paymentMethods = Array.from(
-    document.querySelectorAll('input[name="payment_method"]:checked'),
-  ).map((input) => input.value);
-
-  return {
-    request_type: "credit_limit_temp",
-    request_title: "ขออนุมัติวงเงินเกิน",
-    request_detail: getValue("reasonText"),
-    request_status: status,
-
-    status,
-
-    sale_id: currentUser.id,
-    created_by: currentUser.id,
-    request_by: currentUser.id,
-
-    shop_id: shop?.id || null,
-    shop_code: shop?.shop_code || null,
-    shop_name: shop?.shop_name || null,
-    province: shop?.province || null,
-
-    sale_name:
-      currentProfile.display_name ||
-      currentProfile.username ||
-      currentProfile.email,
-
-    current_credit_limit: toNumber(getValue("currentCreditLimit")),
-    credit_term: getValue("creditTerm") || null,
-    payment_methods: paymentMethods,
-
-    sale_order_no: getValue("saleOrderNo") || null,
-    request_date: getValue("requestDate") || null,
-    request_amount: toNumber(getValue("requestAmount")),
-
-    reason: getValue("reasonText"),
-    signature: sigData,
-
-    payload: {
-      profile: {
-        id: currentProfile.id,
-        username: currentProfile.username,
-        display_name: currentProfile.display_name,
-        email: currentProfile.email,
-        role: currentProfile.role,
-        area: currentProfile.area,
-      },
-      shop,
-      form_version: "credit-limit-sale-v1",
-    },
-  };
-}
-
-function validateForm(data, requireSignature = true) {
-  if (!data.shop_id) {
-    alert("กรุณาเลือกลูกค้า");
-    return false;
-  }
-
-  if (!data.current_credit_limit || data.current_credit_limit <= 0) {
-    alert("กรุณากรอกวงเงินปัจจุบัน");
-    return false;
-  }
-
-  if (!data.credit_term) {
-    alert("กรุณากรอกเครดิต");
-    return false;
-  }
-
-  if (!data.request_amount || data.request_amount <= 0) {
-    alert("กรุณากรอกยอดที่ต้องการเปิดบิล / ขออนุมัติวงเงิน");
-    return false;
-  }
-
-  if (!data.payment_methods?.length) {
-    alert("กรุณาเลือกวิธีการชำระเงินอย่างน้อย 1 รายการ");
-    return false;
-  }
-
-  if (!data.reason || data.reason.trim().length < 5) {
-    alert("กรุณากรอกเหตุผลอย่างน้อย 5 ตัวอักษร");
-    return false;
-  }
-
-  if (requireSignature && !data.signature) {
-    alert("กรุณาเซ็นลายเซ็นก่อนส่งคำขอ");
-    return false;
-  }
-
-  return true;
-}
-
-/* =========================================================
-   SAVE DRAFT
-========================================================= */
-async function saveDraft() {
+// =====================================================
+// 🏪 ลูกค้า (ค้นหาจาก shops · เซลล์เห็นเฉพาะร้านที่ดูแล)
+// =====================================================
+function shopLabel(s) { return s ? `${s.shop_code ? s.shop_code + " · " : ""}${s.shop_name || "-"}` : ""; }
+function scheduleShopSearch() { clearTimeout(_searchTimer); _searchTimer = setTimeout(searchShops, 220); }
+async function searchShops() {
+  const q = document.getElementById("shopSearch").value.trim();
+  const box = document.getElementById("shopResults");
+  if (pickedShop || !q) { hideShopResults(); return; }
+  const seq = ++_searchSeq;
+  box.hidden = false;
+  box.innerHTML = `<div class="sp-combo-empty">กำลังค้นหา...</div>`;
   try {
-    const data = collectFormData("draft");
-
-    if (!data.shop_id) {
-      alert("กรุณาเลือกลูกค้าก่อนบันทึกร่าง");
-      return;
-    }
-
-    localStorage.setItem(getDraftKey(), JSON.stringify(data));
-    alert("บันทึกร่างในเครื่องเรียบร้อยแล้ว");
-  } catch (err) {
-    console.error("Save draft error:", err);
-    alert("บันทึกร่างไม่สำเร็จ: " + (err.message || err));
-  }
-}
-
-/* =========================================================
-   SUBMIT REQUEST
-========================================================= */
-async function submitRequest(evt) {
-  const submitBtn = evt?.currentTarget || evt?.target || null;
-
-  try {
-    const data = collectFormData("accounting_review");
-    if (!validateForm(data, true)) return;
-
-    setButtonLoading(submitBtn, true, "กำลังส่ง...");
-
-    const { data: inserted, error } = await window.supabaseClient
-      .from("approval_requests")
-      .insert(data)
-      .select("id")
-      .single();
-
+    const safe = q.replace(/[%,()*]/g, " ").trim();
+    let query = supabaseClient.from("shops").select("id,shop_code,shop_name,province,sale_id,status")
+      .ilike("status", "active").or(`shop_name.ilike.%${safe}%,shop_code.ilike.%${safe}%`)
+      .order("shop_name", { ascending: true }).limit(20);
+    if (isSales()) query = query.eq("sale_id", me.id);
+    const { data, error } = await query;
+    if (seq !== _searchSeq) return;
     if (error) throw error;
-
-    localStorage.removeItem(getDraftKey());
-
-    alert("ส่งคำขออนุมัติเรียบร้อยแล้ว");
-
-    await loadRequestCards();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  } catch (err) {
-    console.error("Submit error:", err);
-    alert("ส่งคำขอไม่สำเร็จ: " + (err.message || err));
-  } finally {
-    setButtonLoading(submitBtn, false);
+    window._shopResults = data || [];
+    box.innerHTML = window._shopResults.length ? window._shopResults.map((s, i) => `
+      <button type="button" class="sp-combo-item" role="option" onclick="pickShop(${i})">
+        <b>${escHtml(s.shop_name || "-")}</b><span>${escHtml(s.shop_code || "ไม่มีรหัส")}${s.province ? " · " + escHtml(s.province) : ""}</span>
+      </button>`).join("") : `<div class="sp-combo-empty">ไม่พบร้าน “${escHtml(q)}”${isSales() ? " ในร้านที่คุณดูแล" : ""}</div>`;
+  } catch (e) {
+    if (seq === _searchSeq) box.innerHTML = `<div class="sp-combo-empty is-error">ค้นหาไม่สำเร็จ: ${escHtml(e.message)}</div>`;
   }
 }
-
-/* ========================================================= */
-/*   DRAFT RESTORE
-/* ========================================================= */
-function restoreDraft() {
-  const raw = localStorage.getItem(getDraftKey());
-  if (!raw) return;
-
-  try {
-    const draft = JSON.parse(raw);
-    if (!draft) return;
-
-    if (!confirm("พบข้อมูลร่างที่เคยบันทึกไว้ ต้องการโหลดกลับมาหรือไม่?")) {
-      return;
-    }
-
-    setValue("shopSelect", draft.shop_id || "");
-    onShopChange();
-
-    setValue("currentCreditLimit", draft.current_credit_limit || "");
-    setValue("creditTerm", draft.credit_term || "");
-    setValue("saleOrderNo", draft.sale_order_no || "");
-    setValue("requestDate", draft.request_date || "");
-    setValue("requestAmount", draft.request_amount || "");
-    setValue("reasonText", draft.reason || "");
-
-    updateCount();
-
-    document
-      .querySelectorAll('input[name="payment_method"]')
-      .forEach((input) => {
-        input.checked = Array.isArray(draft.payment_methods)
-          ? draft.payment_methods.includes(input.value)
-          : false;
-      });
-  } catch (err) {
-    console.warn("Restore draft failed:", err);
-  }
+function onShopKey(e) {
+  const box = document.getElementById("shopResults");
+  const items = [...box.querySelectorAll(".sp-combo-item")];
+  if (!items.length || box.hidden) return;
+  let i = items.findIndex((x) => x.classList.contains("is-hl"));
+  if (e.key === "ArrowDown") { e.preventDefault(); i = Math.min(items.length - 1, i + 1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); i = Math.max(0, i - 1); }
+  else if (e.key === "Enter") { e.preventDefault(); pickShop(i >= 0 ? i : 0); return; }
+  else return;
+  items.forEach((x, k) => x.classList.toggle("is-hl", k === i));
+  items[i]?.scrollIntoView({ block: "nearest" });
+}
+function pickShop(i) { const s = (window._shopResults || [])[i]; if (s) { setPickedShop(s); markDirty(); document.getElementById("currentLimit").focus(); } }
+function setPickedShop(s) {
+  pickedShop = s ? { id: s.id, shop_code: s.shop_code || "", shop_name: s.shop_name || "", province: s.province || "", sale_id: s.sale_id || null } : null;
+  document.getElementById("shopSearch").value = pickedShop ? shopLabel(pickedShop) : "";
+  hideShopResults(); renderPickedShop();
+}
+function clearShop() { pickedShop = null; const s = document.getElementById("shopSearch"); s.value = ""; s.focus(); renderPickedShop(); markDirty(); }
+function hideShopResults() { const b = document.getElementById("shopResults"); if (b) b.hidden = true; }
+function renderPickedShop() {
+  const box = document.getElementById("shopPicked");
+  document.getElementById("shopClear").hidden = !(pickedShop || document.getElementById("shopSearch").value.trim());
+  document.querySelector(".sp-combo-box")?.classList.toggle("is-picked", !!pickedShop);
+  if (pickedShop) {
+    box.hidden = false;
+    box.innerHTML = `<span class="material-symbols-outlined">storefront</span><b>${escHtml(pickedShop.shop_name)}</b><span>${escHtml(pickedShop.shop_code || "ไม่มีรหัส")}${pickedShop.province ? " · " + escHtml(pickedShop.province) : ""}</span>`;
+  } else { box.hidden = true; box.innerHTML = ""; }
 }
 
-function getDraftKey() {
-  return `creditLimitDraft:${currentUser?.id || "unknown"}`;
+// =====================================================
+// 🔢 ตัวเลข / ฟอร์ม
+// =====================================================
+const payments = () => [...document.querySelectorAll('input[name="pay"]:checked')].map((c) => c.value);
+function setPayments(list) { document.querySelectorAll('input[name="pay"]').forEach((c) => { c.checked = (list || []).includes(c.value); }); }
+function recalc() {
+  const lim = numOf(document.getElementById("currentLimit").value), amt = numOf(document.getElementById("requestAmount").value);
+  setText("sumLimit", fmtMoney(lim));
+  setText("sumAmount", fmtMoney(amt));
+  const r = document.getElementById("sumRatio");
+  if (lim > 0 && amt > 0) { const p = (amt / lim) * 100; r.textContent = `${p.toLocaleString("th-TH", { maximumFractionDigits: 0 })}% ของวงเงิน`; r.classList.toggle("is-high", p > 100); }
+  else { r.textContent = "-"; r.classList.remove("is-high"); }
 }
+function updateReasonCount() { setText("reasonCount", `${document.getElementById("reasonText").value.length}/500`); }
+function clearSignature() { sig.clear(); markDirty(); }
 
-/* =========================================================
-   REQUEST STATUS / HISTORY CARDS
-========================================================= */
-const ACTIVE_STATUSES = [
-  "pending",
-  "accounting_review",
-  "finance_review",
-  "manager_review",
-  "executive_review",
-  "waiting_manager",
-  "waiting_ceo",
-  "waiting_approval",
-];
-
-const FINAL_STATUSES = [
-  "approved",
-  "rejected",
-  "exec_approved",
-  "exec_rejected",
-];
-
-function isSaleRole() {
-  const role = String(currentProfile?.role || "").toLowerCase();
-  return ["sale", "sales"].includes(role);
-}
-
-async function loadRequestCards() {
-  if (!currentUser || !currentProfile) return;
-
-  try {
-    const [activeRows, historyRows] = await Promise.all([
-      fetchApprovalRequests(ACTIVE_STATUSES),
-      fetchApprovalRequests(FINAL_STATUSES),
-    ]);
-
-    renderActiveRequests(activeRows);
-    renderHistoryRequests(historyRows);
-  } catch (err) {
-    console.warn("Load request cards failed:", err);
-  }
-}
-
-async function fetchApprovalRequests(statuses) {
-  const db = window.supabaseClient;
-  let query = db
-    .from("approval_requests")
-    .select("*")
-    .eq("request_type", "credit_limit_temp")
-    .in("status", statuses)
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  // Sale เห็นเฉพาะรายการของตัวเองเท่านั้น
-  // Manager / Executive / Admin / Accounting ให้ RLS ฝั่ง Supabase คุมสิทธิ์เพิ่มเติม
-  if (isSaleRole()) {
-    query = query.eq("sale_id", currentUser.id);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
-}
-
-function renderActiveRequests(rows) {
-  const list = document.getElementById("activeRequestsList");
-  const count = document.getElementById("activeRequestCount");
-  if (!list) return;
-
-  setText("activeRequestCount", `${rows.length} รายการ`);
-
-  if (!rows.length) {
-    list.innerHTML = `<div class="empty-state">ยังไม่มีคำขอที่กำลังดำเนินการ</div>`;
-    return;
-  }
-
-  list.innerHTML = rows.map(renderActiveRequestCard).join("");
-}
-
-function renderHistoryRequests(rows) {
-  const section = document.getElementById("historyRequestsSection");
-  const list = document.getElementById("historyRequestsList");
-  if (!section || !list) return;
-
-  setText("historyRequestCount", `${rows.length} รายการ`);
-
-  if (!rows.length) {
-    list.innerHTML = `<div class="empty-state">ยังไม่มีประวัติคำขอ</div>`;
-    return;
-  }
-
-  list.innerHTML = rows.map(renderHistoryItem).join("");
-}
-
-function renderActiveRequestCard(row, index = 0) {
-  const docNo = getDocNo(row);
-  const amount = formatMoney(row.request_amount);
-  const creator = escapeHtml(
-    row.sale_name ||
-      currentProfile?.display_name ||
-      currentProfile?.username ||
-      "-"
-  );
-  const createdAt = formatDateText(row.created_at || row.request_date);
-  const statusText = getStatusText(row.status);
-  const progress = getProgressState(row.status);
-  const avatar = getAvatarText(creator);
-
-  const collapsedClass = index === 0 ? "" : "collapsed";
-
-  return `
-    <article class="request-card request-card-active ${collapsedClass}">
-      <button class="request-accordion-head" type="button" onclick="toggleRequestCard(this)">
-        <div class="request-accordion-left">
-          <span class="expand-icon">⌄</span>
-          <div>
-            <h3>${docNo}</h3>
-            <p class="request-subtitle">${statusText}</p>
-          </div>
-        </div>
-
-        <span class="status-pill ${getStatusClass(row.status)}">● ${statusText}</span>
-      </button>
-
-      <div class="request-accordion-content">
-        <div class="request-body request-body-compact">
-          <div class="info-left">
-            <p class="group-title">ข้อมูลลูกค้า</p>
-
-            <div class="customer-grid">
-              <div class="customer-item">
-                <label>บริษัท</label>
-                <strong>${escapeHtml(row.shop_name || "-")}</strong>
-              </div>
-
-              <div class="customer-item">
-                <label>รหัสลูกค้า</label>
-                <strong>${escapeHtml(row.shop_code || "-")}</strong>
-              </div>
-
-              <div class="customer-item">
-                <label>เลขที่บิล</label>
-                <strong>${escapeHtml(row.sale_order_no || "-")}</strong>
-              </div>
-
-              <div class="customer-item">
-                <label>ยอดบิล</label>
-                <strong class="text-red">${amount}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="approval-progress" aria-label="สถานะคำขอ">
-          <div class="progress-line"></div>
-          <div class="progress-line-fill" style="width:${progress.fill}%"></div>
-
-          <div class="progress-step ${progress.step1}">
-            <span class="step-dot">✓</span>
-            <span class="step-label">ส่งคำขอ</span>
-          </div>
-
-          <div class="progress-step ${progress.step2}">
-            <span class="step-dot">!</span>
-            <span class="step-label">กำลังตรวจสอบ</span>
-          </div>
-
-          <div class="progress-step ${progress.step3}">
-            <span class="step-dot">${progress.finalIcon}</span>
-            <span class="step-label">อนุมัติ / ไม่อนุมัติ</span>
-          </div>
-        </div>
-
-        <div class="request-footer">
-          <div class="creator">
-            <div class="avatar-mini">${avatar}</div>
-            <div>
-              <strong>ผู้ขอ: ${creator}</strong>
-              <small>วันที่: ${createdAt}</small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </article>
-  `;
-}
-
-
-function toggleRequestCard(button) {
-  const card = button.closest(".request-card");
-  if (!card) return;
-
-  card.classList.toggle("collapsed");
-}
-
-
-
-function renderHistoryItem(row) {
-  const statusText = getStatusText(row.status);
-  return `
-    <article class="history-item">
-      <div>
-        <strong>${getDocNo(row)}</strong>
-        <small>${escapeHtml(row.shop_name || "-")} • ${formatDateText(row.created_at || row.request_date)}</small>
-      </div>
-      <div class="history-right">
-        <strong class="text-red">${formatMoney(row.request_amount)}</strong>
-        <span class="status-pill ${getStatusClass(row.status)}">${statusText}</span>
-      </div>
-    </article>
-  `;
-}
-
-function getProgressState(status) {
-  const value = String(status || "").toLowerCase();
-
-  if (["approved", "exec_approved"].includes(value)) {
-    return {
-      fill: 100,
-      step1: "done",
-      step2: "done",
-      step3: "done",
-      finalIcon: "✓",
-    };
-  }
-
-  if (["rejected", "exec_rejected"].includes(value)) {
-    return {
-      fill: 100,
-      step1: "done",
-      step2: "done",
-      step3: "rejected",
-      finalIcon: "✕",
-    };
-  }
-
+function formSnapshot() {
   return {
-    fill: 50,
-    step1: "done",
-    step2: "active",
-    step3: "wait",
-    finalIcon: "...",
+    user_id: me.id, shop: pickedShop,
+    current_credit_limit: numOf(document.getElementById("currentLimit").value),
+    credit_term: document.getElementById("creditTerm").value.trim(),
+    payment_methods: payments(),
+    sale_order_no: document.getElementById("soNo").value.trim(),
+    request_date: document.getElementById("docDate").value,
+    request_amount: numOf(document.getElementById("requestAmount").value),
+    reason: document.getElementById("reasonText").value,
+    signature: sig.get(),
   };
 }
+function applySnapshot(d) {
+  setPickedShop(d.shop || null);
+  const m = (n) => (n ? Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "");
+  document.getElementById("currentLimit").value = m(d.current_credit_limit);
+  document.getElementById("creditTerm").value = d.credit_term || "";
+  setPayments(d.payment_methods);
+  document.getElementById("soNo").value = d.sale_order_no || "";
+  document.getElementById("docDate").value = d.request_date || todayISO();
+  document.getElementById("requestAmount").value = m(d.request_amount);
+  document.getElementById("reasonText").value = d.reason || "";
+  updateReasonCount(); recalc();
+  sig.set(d.signature || null);
+}
 
-function getStatusText(status) {
-  const value = String(status || "pending").toLowerCase();
-  const map = {
-    draft: "แบบร่าง",
-    pending: "รอดำเนินการ",
-    accounting_review: "รอดำเนินการ",
-    finance_review: "รอดำเนินการ",
-    manager_review: "รอผู้จัดการอนุมัติ",
-    waiting_manager: "รอผู้จัดการอนุมัติ",
-    executive_review: "รอผู้บริหารอนุมัติ",
-    waiting_ceo: "รอผู้บริหารอนุมัติ",
-    waiting_approval: "รออนุมัติ",
-    approved: "อนุมัติแล้ว",
-    exec_approved: "อนุมัติแล้ว",
-    rejected: "ไม่อนุมัติ",
-    exec_rejected: "ไม่อนุมัติ",
+function validate() {
+  const errors = [], warnings = [], d = formSnapshot();
+  if (!pickedShop) errors.push("ยังไม่ได้เลือกลูกค้าจากรายชื่อในระบบ");
+  if (!(d.current_credit_limit > 0)) errors.push("ยังไม่ใส่วงเงินเครดิตปัจจุบัน");
+  if (!d.credit_term) errors.push("ยังไม่ใส่เครดิต (วัน)");
+  else if (!/^\d+$/.test(d.credit_term)) warnings.push(`เครดิต “${d.credit_term}” ควรเป็นจำนวนวัน`);
+  if (!d.payment_methods.length) errors.push("ยังไม่เลือกวิธีชำระเงิน");
+  if (!(d.request_amount > 0)) errors.push("ยังไม่ใส่ยอดบิลที่ต้องการเปิด");
+  else if (d.current_credit_limit > 0 && d.request_amount > d.current_credit_limit * 3) warnings.push(`ยอดบิลสูงกว่าวงเงินปัจจุบันมาก (${Math.round((d.request_amount / d.current_credit_limit) * 100)}%)`);
+  if (d.reason.trim().length < 10) errors.push("กรุณาเขียนเหตุผลอย่างน้อย 10 ตัวอักษร");
+  if (!d.signature) errors.push("ยังไม่ได้เซ็นชื่อผู้ขอ");
+  if (!d.request_date) errors.push("ยังไม่ใส่วันที่");
+  else if (d.request_date > todayISO()) warnings.push(`วันที่ ${formatDateTH(d.request_date)} เป็นวันในอนาคต`);
+  const dup = _requests.find((r) => !clStatus(r).done && r.shop_id && pickedShop && String(r.shop_id) === String(pickedShop.id) && String(r.id) !== String(editingId));
+  if (dup) warnings.push(`ร้านนี้มีคำขอที่ยังไม่ทราบผลอยู่แล้ว (${clDocNo(dup)} · ${clStatus(dup).label})`);
+  return { errors, warnings };
+}
+function showWarnBox(res) {
+  renderIssues("fpWarn", res, "ตรวจพบ");
+  const box = document.getElementById("fpWarn");
+  if (box && !box.hidden) box.querySelector("b").textContent = "ตรวจพบ";
+}
+
+// =====================================================
+// 🏷 สถานะฟอร์ม + ร่าง (1 ร่างต่อผู้ใช้ ในเครื่องนี้)
+// =====================================================
+function markDirty() {
+  _dirty = true; updateStatus();
+  const box = document.getElementById("fpWarn");
+  if (box && !box.hidden) showWarnBox(validate());
+}
+function updateStatus() {
+  let label = _dirty ? "คำขอใหม่ (ยังไม่บันทึก)" : "คำขอใหม่", banner = "";
+  if (editingId) {
+    const r = findRequest(editingId);
+    label = "กำลังแก้ไขคำขอที่บัญชีส่งกลับ";
+    banner = `แก้ไขคำขอ ${r ? clDocNo(r) : ""} — ส่งแล้วจะกลับไปที่ฝ่ายบัญชีอีกครั้ง`;
+  } else if (hasDraft()) label = _dirty ? "ร่าง (มีการแก้ไขที่ยังไม่บันทึก)" : "ร่าง (บันทึกในเครื่องแล้ว)";
+  setText("fpStatus", label);
+  const b = document.getElementById("fpEditBanner"); if (b) b.hidden = !banner;
+  setText("fpEditText", banner);
+  document.getElementById("clForm")?.classList.toggle("is-editing", !!banner);
+  setText("submitText", editingId ? "ตรวจ & ส่งกลับ" : "ตรวจ & ส่งคำขอ");
+  setText("sendText", editingId ? "ส่งกลับให้ฝ่ายบัญชี" : "ส่งให้ฝ่ายบัญชี");
+  document.getElementById("draftBtn").hidden = !!editingId;
+}
+function hasDraft() { try { return !!localStorage.getItem(DRAFT_KEY()); } catch (e) { return false; } }
+function saveDraft() {
+  const s = formSnapshot();
+  if (!s.shop && !s.request_amount && !s.reason.trim()) { alert("ยังไม่มีข้อมูลให้บันทึก"); return; }
+  try { localStorage.setItem(DRAFT_KEY(), JSON.stringify({ ...s, updated_at: new Date().toISOString() })); }
+  catch (e) { alert("บันทึกร่างไม่สำเร็จ (พื้นที่ในเครื่องเต็มหรือถูกปิดไว้)"); return; }
+  _dirty = false; updateStatus();
+  showNotification("บันทึกร่างในเครื่องแล้ว", "success");
+}
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY()) || localStorage.getItem(`creditLimitDraft:${me.id}`); // รวมร่างรุ่นเก่า
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.shop_id && !d.shop) d.shop = { id: d.shop_id, shop_code: d.shop_code, shop_name: d.shop_name, province: d.province };
+    if (d.signature === undefined) d.signature = null;
+    applySnapshot(d);
+    _dirty = false;
+    showNotification("เปิดร่างที่บันทึกไว้ในเครื่องแล้ว", "info");
+  } catch (e) { console.warn("restoreDraft:", e); }
+}
+
+// =====================================================
+// 📤 ส่งคำขอ (ใหม่) / ส่งกลับ (แก้ไขตามที่บัญชีขอ)
+// =====================================================
+function rowFromForm() {
+  const d = formSnapshot();
+  const reason = d.reason.trim();
+  return {
+    request_type: CL_TYPE,
+    request_title: `ขออนุมัติวงเงินเกิน ${pickedShop?.shop_name || ""} · ${fmtMoney(d.request_amount)} บาท`.trim(),
+    request_detail: reason,
+    sale_id: me.id, created_by: me.id, request_by: me.id, sale_name: me.name,
+    shop_id: pickedShop?.id || null, shop_code: pickedShop?.shop_code || null, shop_name: pickedShop?.shop_name || null, province: pickedShop?.province || null,
+    current_credit_limit: d.current_credit_limit, credit_term: d.credit_term || null, payment_methods: d.payment_methods,
+    sale_order_no: d.sale_order_no || null, request_date: d.request_date || null, request_amount: d.request_amount,
+    reason, signature: d.signature,
+    payload: { form_version: "credit-limit-sale-v2", requester: { id: me.id, name: me.name, role: me.role, area: me.area, position: me.position }, shop: pickedShop },
   };
-  return map[value] || value;
 }
+async function submitRequest() {
+  if (_saving) return;
+  const res = validate();
+  showWarnBox(res); renderIssues("previewIssues", res);
+  if (res.errors.length) { alert("ยังส่งไม่ได้:\n• " + res.errors.join("\n• ")); return; }
+  const d = formSnapshot();
+  if (!confirm((res.warnings.length ? "มีข้อควรตรวจ:\n• " + res.warnings.join("\n• ") + "\n\n" : "") +
+    `${editingId ? "ส่งคำขอที่แก้ไขกลับ" : "ส่งคำขอ"}วงเงินชั่วคราวของ ${pickedShop.shop_name}\nยอดบิล ${fmtMoney(d.request_amount)} บาท ไปที่ฝ่ายบัญชี?`)) return;
 
-function getStatusClass(status) {
-  const value = String(status || "").toLowerCase();
-  if (["approved", "exec_approved"].includes(value)) return "success";
-  if (["rejected", "exec_rejected"].includes(value)) return "danger";
-  return "warning";
-}
-
-function getDocNo(row) {
-  const id = row?.id || row?.request_no || "NEW";
-  if (row?.doc_no) return escapeHtml(row.doc_no);
-  return `CRD-${String(id).replace(/-/g, "").substring(0, 8).toUpperCase()}`;
-}
-
-function formatMoney(value) {
-  const n = Number(value || 0);
-  if (!Number.isFinite(n) || n <= 0) return "-";
-  return (
-    n.toLocaleString("th-TH", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }) + " บาท"
-  );
-}
-
-function formatDateText(value) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "-";
-  return formatThaiDateTime(d);
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function showRequestPreview(insertedId, formData) {
-  const card = document.getElementById("requestPreviewCard");
-  if (!card) return;
-
-  card.classList.remove("hidden");
-
-  const now = new Date();
-
-  const docNo = insertedId
-    ? `CRD-${String(insertedId)
-        .replace(/-/g, "")
-        .substring(0, 8)
-        .toUpperCase()}`
-    : "CRD-NEW";
-
-  const amount = formData.request_amount
-    ? Number(formData.request_amount).toLocaleString("th-TH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }) + " บาท"
-    : "-";
-
-  const creator =
-    formData.sale_name ||
-    currentProfile?.display_name ||
-    currentProfile?.username ||
-    "-";
-
-  const createdAt = formatThaiDateTime(now);
-
-  setText("previewDocNo", docNo);
-  setText("previewShopName", formData.shop_name || "-");
-  setText("previewShopCode", formData.shop_code || "-");
-  setText("previewSaleOrderNo", formData.sale_order_no || "-");
-  setText("previewRequestAmount", amount);
-
-  setText("previewCreator", `ผู้ขอ: ${creator}`);
-
-  setText("previewCreatedAt", createdAt);
-
-  setText("previewCreatedAtFooter", `วันที่: ${createdAt}`);
-
-  setText("previewAvatar", creator.substring(0, 1).toUpperCase());
-
-  card.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-}
-
-/* =========================================================
-   HELPERS
-========================================================= */
-function setToday() {
-  const input = document.getElementById("requestDate");
-  if (!input || input.value) return;
-
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-
-  input.value = `${yyyy}-${mm}-${dd}`;
-}
-
-function getValue(id) {
-  return document.getElementById(id)?.value?.trim() || "";
-}
-
-function setValue(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.value = value ?? "";
-}
-
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value ?? "";
-}
-
-function setDisplay(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = value;
-}
-
-function toNumber(value) {
-  if (value === null || value === undefined) return null;
-
-  const cleaned = String(value)
-    .replace(/,/g, "")
-    .replace(/[^\d.-]/g, "")
-    .trim();
-
-  if (!cleaned) return null;
-
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : null;
-}
-
-function formatThaiDateTime(date) {
-  return new Intl.DateTimeFormat("th-TH", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function setButtonLoading(button, loading, text) {
-  if (!button) return;
-
-  if (loading) {
-    button.dataset.oldText = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = text || "กำลังโหลด...";
-  } else {
-    button.disabled = false;
-    if (button.dataset.oldText) {
-      button.innerHTML = button.dataset.oldText;
+  _saving = true;
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  try {
+    const now = new Date().toISOString();
+    const row = { ...rowFromForm(), status: "accounting_review", request_status: "accounting_review", updated_at: now };
+    if (editingId) {
+      // แก้ไขคำขอเดิม — เฉพาะที่บัญชีส่งกลับมา
+      delete row.created_by; delete row.request_by; delete row.sale_id;
+      const { data, error } = await supabaseClient.from("approval_requests")
+        .update({ ...row, accounting_status: "resubmitted" })
+        .eq("id", editingId).eq("status", "revision_required").select("id");
+      if (error) throw error;
+      if (!data || !data.length) throw new Error("คำขอนี้ไม่ได้อยู่ในสถานะ “ส่งกลับให้แก้ไข” แล้ว หรือไม่มีสิทธิ์แก้ไข");
+    } else {
+      const { error } = await supabaseClient.from("approval_requests").insert({ ...row, created_at: now });
+      if (error) throw error;
+      try { localStorage.removeItem(DRAFT_KEY()); localStorage.removeItem(`creditLimitDraft:${me.id}`); } catch (e) { /* ignore */ }
     }
+    const wasEdit = !!editingId;
+    resetForm(); closePreview();
+    await loadMyRequests();
+    showNotification(wasEdit ? "ส่งคำขอที่แก้ไขกลับให้ฝ่ายบัญชีแล้ว" : "ส่งคำขอถึงฝ่ายบัญชีแล้ว — ติดตามผลได้ที่ “คำขอของฉัน”", "success");
+  } catch (e) {
+    alert("ส่งคำขอไม่สำเร็จ: " + e.message);
+  } finally {
+    _saving = false; btn.disabled = false;
   }
 }
+
+// บัญชีส่งกลับ → เปิดคำขอเดิมขึ้นฟอร์มเพื่อแก้ไข (ต้องเซ็นใหม่)
+function startRevise(id) {
+  const r = findRequest(id);
+  if (!r || clStatus(r).key !== "revision") return;
+  if (_dirty && !confirm("ข้อมูลในฟอร์มตอนนี้ยังไม่ได้บันทึก — แทนที่ด้วยคำขอที่ต้องแก้ไข?")) return;
+  editingId = r.id;
+  applySnapshot({
+    shop: r.payload?.shop || (r.shop_id ? { id: r.shop_id, shop_code: r.shop_code, shop_name: r.shop_name, province: r.province } : null),
+    current_credit_limit: r.current_credit_limit, credit_term: r.credit_term, payment_methods: clPayments(r),
+    sale_order_no: r.sale_order_no, request_date: r.request_date, request_amount: r.request_amount,
+    reason: r.reason || r.request_detail, signature: null,
+  });
+  const box = document.getElementById("reviseBox");
+  box.hidden = false;
+  box.innerHTML = `<span class="material-symbols-outlined">assignment_return</span><div><b>ฝ่ายบัญชีขอให้แก้ไข</b><p>${escHtml(r.accounting_recommendation || r.accounting_summary || "ไม่ได้ระบุรายละเอียด")}</p><small>แก้ไขข้อมูล เซ็นชื่อใหม่ แล้วกด “ตรวจ & ส่งกลับ”</small></div>`;
+  _dirty = true; updateStatus();
+  document.getElementById("clForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// =====================================================
+// 📋 คำขอของฉัน
+// =====================================================
+async function loadMyRequests() {
+  const c = document.getElementById("requestList");
+  c.innerHTML = `<div class="fp-empty">กำลังโหลด...</div>`;
+  try {
+    const { data, error } = await supabaseClient.from("approval_requests")
+      .select("id, request_type, request_status, status, accounting_status, shop_id, shop_code, shop_name, province, sale_name, request_amount, current_credit_limit, credit_term, payment_methods, sale_order_no, request_date, reason, request_detail, accounting_recommendation, accounting_summary, accounting_checked_at, approval_comment, approved_at, created_at, payload")
+      .eq("request_type", CL_TYPE).eq("request_by", me.id)
+      .order("created_at", { ascending: false }).limit(100);
+    let rows = data;
+    if (error) { // คอลัมน์ไม่ตรง → ดึงแบบเต็ม
+      console.warn("loadMyRequests (light):", error.message);
+      const r2 = await supabaseClient.from("approval_requests").select("*").eq("request_type", CL_TYPE).eq("request_by", me.id).order("created_at", { ascending: false }).limit(100);
+      if (r2.error) throw r2.error;
+      rows = r2.data;
+    }
+    _requests = rows || [];
+    renderRequests();
+  } catch (e) {
+    c.innerHTML = `<div class="fp-empty is-error">โหลดไม่สำเร็จ: ${escHtml(e.message)}<br><button type="button" class="fp-link-btn" onclick="loadMyRequests()">ลองใหม่</button></div>`;
+  }
+}
+function findRequest(id) { return _requests.find((r) => String(r.id) === String(id)) || null; }
+function renderRequests() {
+  const c = document.getElementById("requestList");
+  setText("requestCountBadge", _requests.length);
+  const nAct = _requests.filter((r) => clStatus(r).action).length;
+  setText("cntAction", nAct ? nAct : "");
+  const pick = (r) => { const s = clStatus(r); return _reqFilter === "all" || (_reqFilter === "action" ? s.action : _reqFilter === "done" ? s.done : !s.done && !s.action); };
+  const rows = _requests.filter(pick);
+  if (!rows.length) { c.innerHTML = `<div class="fp-empty">${_requests.length ? "ไม่มีรายการในกลุ่มนี้" : "ยังไม่มีคำขอวงเงินชั่วคราว"}</div>`; return; }
+  c.innerHTML = rows.map((r) => {
+    const st = clStatus(r), id = escHtml(r.id);
+    const notes = [];
+    if (st.key === "revision" && (r.accounting_recommendation || r.accounting_summary)) notes.push(`<span class="sp-comment is-warn"><span class="material-symbols-outlined">forum</span><b>บัญชี:</b> ${escHtml(r.accounting_recommendation || r.accounting_summary)}</span>`);
+    if (st.done && r.approval_comment) notes.push(`<span class="sp-comment"><span class="material-symbols-outlined">forum</span><b>ผู้บริหาร:</b> ${escHtml(r.approval_comment)}</span>`);
+    return `
+      <div class="fp-item${st.action ? " is-attn" : ""}">
+        <button type="button" class="fp-item-main" onclick="openViewPopup('${id}')">
+          <span class="fp-item-title">${escHtml(r.shop_name || "-")} <span class="fp-badge ${st.cls}">${escHtml(st.label)}</span></span>
+          <span class="fp-item-sub"><span>ยอดบิล ${fmtMoney(r.request_amount)}</span><span>${clDocNo(r)}</span><span>${formatDateTimeTH(r.created_at)}</span></span>
+          ${miniSteps(r)}
+          ${notes.join("")}
+        </button>
+        <div class="fp-item-actions">
+          ${st.action ? `<button type="button" class="is-primary" onclick="startRevise('${id}')"><span class="material-symbols-outlined">edit</span>แก้ไขแล้วส่งกลับ</button>` : ""}
+          <button type="button" onclick="openViewPopup('${id}')"><span class="material-symbols-outlined">visibility</span>ดู</button>
+          <button type="button" onclick="printRequestById('${id}')"><span class="material-symbols-outlined">print</span>พิมพ์</button>
+          ${st.key === "accounting" && !["forwarded_to_manager"].includes(r.accounting_status) ? `<button type="button" class="is-danger" onclick="cancelRequest('${id}')"><span class="material-symbols-outlined">block</span>ยกเลิก</button>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+}
+function miniSteps(r) {
+  const s = clStatus(r);
+  const cls = (n) => (s.stage > n ? "is-ok" : s.stage === n ? (s.key === "revision" ? "is-warn" : "is-now") : "");
+  const ex = s.key === "approved" ? "is-ok" : s.key === "rejected" ? "is-bad" : cls(4);
+  return `<span class="sp-mini"><i class="is-ok">ส่ง</i><i class="${cls(2)}">บัญชี</i><i class="${cls(3)}">Manager</i><i class="${ex}">ผู้บริหาร</i></span>`;
+}
+// ยกเลิกได้เฉพาะตอนยังอยู่ขั้นบัญชี (ยังไม่ส่งต่อ)
+async function cancelRequest(id) {
+  const r = findRequest(id);
+  if (!confirm(`ยกเลิกคำขอวงเงินของ ${r?.shop_name || ""}?\n(ลบออกจากระบบ ฝ่ายบัญชีจะไม่เห็นรายการนี้อีก)`)) return;
+  try {
+    const { data, error } = await supabaseClient.from("approval_requests").delete()
+      .eq("id", id).in("status", ["accounting_review", "pending"]).select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("คำขอนี้ถูกส่งต่อไปแล้ว หรือไม่มีสิทธิ์ยกเลิก");
+    showNotification("ยกเลิกคำขอแล้ว", "success");
+    await loadMyRequests();
+  } catch (e) { alert("ยกเลิกไม่สำเร็จ: " + e.message); }
+}
+
+// =====================================================
+// 🧾 เอกสาร: ตัวอย่างก่อนส่ง / ดู / พิมพ์
+// =====================================================
+function docFromForm() {
+  const d = formSnapshot();
+  return { customer: pickedShop?.shop_name || document.getElementById("shopSearch").value.trim(), shop_code: pickedShop?.shop_code, province: pickedShop?.province,
+    requester: me.name, sale_order_no: d.sale_order_no, current_credit_limit: d.current_credit_limit || null, credit_term: d.credit_term,
+    payment_methods: d.payment_methods, request_amount: d.request_amount || null, reason: d.reason.trim(), signature: d.signature, doc_date: d.request_date };
+}
+function openPreview() {
+  const res = validate();
+  showWarnBox(res); renderIssues("previewIssues", res);
+  document.getElementById("sendBtn").disabled = res.errors.length > 0;
+  setText("previewTitle", editingId ? "ตรวจคำขอที่แก้ไขก่อนส่งกลับ" : "ตรวจคำขอก่อนส่ง");
+  document.getElementById("previewContent").innerHTML = clBuildDocHTML(docFromForm());
+  document.getElementById("previewModal").style.display = "flex";
+}
+function closePreview() { const m = document.getElementById("previewModal"); if (m) m.style.display = "none"; }
+function printPreview() { spOpenPrint(clPrintPage(clBuildDocHTML(docFromForm()))); }
+
+// ดู/พิมพ์คำขอที่ส่งแล้ว — ดึงแถวเต็ม (มีลายเซ็น / ผลบัญชี) เฉพาะตอนเปิด
+async function fullRow(id) {
+  const { data, error } = await supabaseClient.from("approval_requests").select("*").eq("id", id).maybeSingle();
+  if (error || !data) throw error || new Error("ไม่พบคำขอ");
+  return data;
+}
+async function printRequestById(id) {
+  try { spOpenPrint(clPrintPage(clBuildDocHTML(clDocFromRow(await fullRow(id))))); } catch (e) { alert("เปิดเอกสารไม่สำเร็จ: " + e.message); }
+}
+async function openViewPopup(id) {
+  let m = document.getElementById("viewPopupModal");
+  if (!m) {
+    m = document.createElement("div"); m.id = "viewPopupModal"; m.className = "preview-modal";
+    m.innerHTML = `<div class="preview-wrapper"><div class="preview-actions" id="viewPopupActions"></div><div id="viewPopupTl" class="sp-tl-wrap"></div><div id="viewPopupContent" class="a4-page"></div></div>`;
+    m.addEventListener("click", (e) => { if (e.target === m) closeViewPopup(); });
+    document.body.appendChild(m);
+  }
+  document.getElementById("viewPopupContent").innerHTML = `<div class="fp-empty">กำลังโหลด...</div>`;
+  m.style.display = "flex";
+  try {
+    const r = await fullRow(id);
+    const st = clStatus(r), sid = escHtml(r.id);
+    document.getElementById("viewPopupTl").innerHTML = clTimelineHTML(r);
+    document.getElementById("viewPopupContent").innerHTML = clBuildDocHTML(clDocFromRow(r));
+    document.getElementById("viewPopupActions").innerHTML = `
+      <span class="preview-title">${escHtml(r.shop_name || "คำขอวงเงิน")} · ${escHtml(st.label)}</span>
+      ${st.action ? `<button type="button" class="pa-primary" onclick="closeViewPopup();startRevise('${sid}')"><span class="material-symbols-outlined">edit</span>แก้ไขแล้วส่งกลับ</button>` : ""}
+      <button type="button" onclick="printRequestById('${sid}')"><span class="material-symbols-outlined">print</span>พิมพ์ / PDF</button>
+      <button type="button" class="pa-close" onclick="closeViewPopup()" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>`;
+  } catch (e) {
+    document.getElementById("viewPopupContent").innerHTML = `<div class="fp-empty is-error">เปิดเอกสารไม่สำเร็จ: ${escHtml(e.message || "")}</div>`;
+  }
+}
+function closeViewPopup() { const m = document.getElementById("viewPopupModal"); if (m) m.style.display = "none"; }
+
+// =====================================================
+// 🔄 CLEAR
+// =====================================================
+function resetForm() {
+  editingId = null;
+  document.getElementById("reviseBox").hidden = true;
+  applySnapshot({ shop: null, request_date: todayISO(), payment_methods: [], signature: null });
+  _dirty = false;
+  updateStatus(); showWarnBox({ errors: [], warnings: [] });
+}
+function clearForm() {
+  if ((_dirty || editingId) && !confirm("เริ่มคำขอใหม่? ข้อมูลที่ยังไม่บันทึกในฟอร์มจะหาย")) return;
+  try { localStorage.removeItem(DRAFT_KEY()); } catch (e) { /* ignore */ }
+  resetForm();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+window.addEventListener("beforeunload", (e) => { if (_dirty && !_saving) { e.preventDefault(); e.returnValue = ""; } });

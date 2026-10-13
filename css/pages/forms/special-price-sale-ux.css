@@ -236,3 +236,38 @@
 .spm .fp-actionbar { flex-wrap: wrap; row-gap: 8px; }
 .spm .fp-actionbar .fp-status { flex-basis: 100%; }
 .spm .spm-actions { margin-left: auto; }
+
+/* ---------- Manager: รายการคำขอเต็มความกว้าง (กดคำขอ → หน้าเอกสาร special-price-manager-doc) ---------- */
+.spm.spm-list .fp-layout { grid-template-columns: 1fr; }
+.spm.spm-list .fp-side { position: static; }
+.spm.spm-list .fp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+.spm.spm-list .fp-list .fp-empty { grid-column: 1 / -1; }
+.spm.spm-list .fp-item { margin: 0; }
+.spm.spm-list .spm-queue .fp-search, .spm.spm-list .spm-tabs { max-width: 640px; }
+
+/* =====================================================
+   ขออนุมัติวงเงินเครดิตชั่วคราว (credit-limit-sale · .cl) — ใช้โครงเดียวกับราคาพิเศษ
+   ===================================================== */
+.cl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
+.cl-span2 { grid-column: 1 / -1; }
+.cl .cl-amount { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cl-totals { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.cl-totals b.is-high { color: #c2410c; }
+.cl-note { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; }
+.cl-note .material-symbols-outlined { font-size: 17px; }
+.cl .sp-chips label span { min-width: 84px; justify-content: center; }
+.cl-revise { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; background: #fff7ed; border: 1px solid #fdba74; color: #7c2d12; }
+.cl-revise[hidden] { display: none; }
+.cl-revise > .material-symbols-outlined { font-size: 24px; color: #ea580c; }
+.cl-revise b { display: block; font-size: 14.5px; }
+.cl-revise p { margin: 2px 0 4px; font-size: 14px; white-space: pre-wrap; }
+.cl-revise small { color: #9a3412; }
+.sp-tl.is-4 { grid-template-columns: repeat(4, 1fr); }
+.fp-item.is-attn { border-color: #fdba74; box-shadow: inset 3px 0 0 #f97316; }
+.sp-comment.is-warn { background: #fff7ed; color: #9a3412; }
+.sp-comment.is-warn .material-symbols-outlined { color: #ea580c; }
+.sp .fp-item-actions button.is-primary { background: var(--role-color); color: #fff; border-color: var(--role-color); }
+@media (max-width: 640px) {
+  .cl-grid { grid-template-columns: 1fr; }
+  .cl-totals { grid-template-columns: 1fr !important; }
+}

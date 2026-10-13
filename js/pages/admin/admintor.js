@@ -22,7 +22,7 @@
 const ROLES = [
   { v: "sales", label: "Sales", icon: "badge", help: "พนักงานขาย — รายงานเยี่ยมร้าน แบบฟอร์ม เคลม" },
   { v: "manager", label: "Manager", icon: "supervisor_account", help: "หัวหน้าทีม — ดูรายงานทีม อนุมัติราคาพิเศษขั้นที่ 1" },
-  { v: "marketing", label: "Marketing", icon: "campaign", help: "การตลาด — RFM ประชาสัมพันธ์ ขอราคาพิเศษ" },
+  { v: "marketing", label: "Marketing", icon: "campaign", help: "การตลาด — ประชาสัมพันธ์ ขอราคาพิเศษ" },
   { v: "executive", label: "Executive", icon: "workspace_premium", help: "ผู้บริหาร — ภาพรวม และอนุมัติขั้นสุดท้าย" },
   { v: "accounting", label: "Accounting", icon: "account_balance", help: "บัญชี — วงเงินลูกค้า" },
   { v: "adminQc", label: "Admin QC", icon: "verified_user", help: "QC — งานเคลมและตรวจคุณภาพ" },

@@ -10,19 +10,12 @@
 
 const MARKETING_ALLOWED_ROLES = ["admin", "manager", "executive", "marketing"];
 
+// ยกเลิก RFM (วิเคราะห์ลูกค้า + นำเข้าข้อมูล RFM) ทั้งระบบแล้ว — ไม่อยู่ในเมนู
 const MARKETING_MENU = [
   {
-    group: "วิเคราะห์ลูกค้า & ยอดขาย",
+    group: "ยอดขาย & ลูกค้า",
     icon: "insights",
     items: [
-      {
-        title: "วิเคราะห์ลูกค้า (RFM)",
-        desc: "แบ่งกลุ่มลูกค้าตามความถี่ ยอดซื้อ และความล่าสุด",
-        icon: "bar_chart",
-        color: "blue",
-        url: "/pages/dashboard/RfmDashboard.html",
-        roles: ["admin", "manager", "marketing"],
-      },
       {
         title: "ภาพรวมยอดขาย",
         desc: "ยอดขาย ภูมิภาค และแนวโน้มรายวัน",
@@ -113,6 +106,15 @@ const MARKETING_MENU = [
         url: "/pages/reports/reportTracker.html",
       },
       {
+        // ขั้นที่ 1 ของการขอเปิดร้านค้าใหม่ (อนุมัติแล้วส่งต่อผู้บริหาร)
+        title: "อนุมัติเปิดร้านค้าใหม่ (Manager)",
+        desc: "พิจารณาคำขอเปิดร้านจากทีมขาย ก่อนส่งต่อผู้บริหาร",
+        icon: "add_business",
+        color: "teal",
+        url: "/pages/forms/new-shop-manager.html",
+        roles: ["admin", "manager"],
+      },
+      {
         title: "ข้อมูลสินค้า",
         desc: "หมวดหมู่ รายการสินค้า และ Attribute",
         icon: "inventory_2",
@@ -126,14 +128,6 @@ const MARKETING_MENU = [
     group: "นำเข้าข้อมูล",
     icon: "upload_file",
     items: [
-      {
-        title: "นำเข้าข้อมูล RFM",
-        desc: "อัปโหลดไฟล์ยอดขายสำหรับวิเคราะห์ลูกค้า",
-        icon: "cloud_upload",
-        color: "slate",
-        url: "/pages/components/rfmImport.html",
-        roles: ["admin", "manager", "marketing"],
-      },
       {
         title: "นำเข้ายอดขายรายวัน",
         desc: "อัปโหลดรายงานยอดขายจากระบบบัญชี",

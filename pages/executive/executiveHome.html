@@ -1,657 +1,221 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
+<!doctype html>
+<html lang="th" data-theme="light">
+  <head>
     <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
-    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
     <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EABaseHub | สรุปการเข้าร้านค้า</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <!-- โครงหน้าผู้บริหาร (sidebar + header) · การ์ด/ตัวเลขชุดเดียวกับหน้าภาพรวม (executive-Dashboard-ux.css) -->
     <link rel="stylesheet" href="/css/base/role-colors.css" />
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รายงานการเข้าร้านค้า | Executive</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-
-  <link rel="stylesheet" href="/css/base/baseExecutive.css">
-  <link rel="stylesheet" href="/css/pages/executive/executiveHome.css">
-  <!-- 🆕 Sidebar + Header styles -->
-  <!-- <link rel="stylesheet" href="/css/base/sidebar-header.css"> -->
+    <link rel="stylesheet" href="/css/base/baseExecutive.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Approval.css" />
+    <!-- sidebar แบบเดียวกับหน้า Marketing -->
+    <link rel="stylesheet" href="/css/components/sidebar-marketing.css" />
+    <link rel="stylesheet" href="/css/components/sidebar-executive.css" />
     <link rel="stylesheet" href="/css/base/ui-cards.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Dashboard-ux.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executiveHome.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
-<body class="role-executive">
-<!-- ══════════════════════════════════════════════════
-     APP LAYOUT WRAPPER
-══════════════════════════════════════════════════ -->
-<div class="app-layout">
-  <!-- ══════════════════════════════════════════════════
-       🆕 SIDEBAR
-  ══════════════════════════════════════════════════ -->
-  <aside class="app-sidebar ui-role-side" id="appSidebar">
 
-    <!-- Logo -->
-    <div class="sidebar-logo">
-      
-      <div class="sidebar-logo-circle">
-        <img src="/assets/icons/icon-192.png" alt="EABaseHub logo"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-        <span style="display:none">E</span>
-      </div>
-
-
-       <div class="sidebar-brand-text">
-    <div class="sidebar-brand-title">EABaseHub</div>
-    <div class="sidebar-brand-sub">Executive Command Center</div>
-  </div>
-    </div>
-
-
-    <!-- Navigation Items -->
-    <nav class="sidebar-nav" id="sidebarNav">
-
-      <a href="/pages/executive/executive-Dashboard.html"
-         class="sidebar-nav-item"
-         title="หน้าหลัก">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">home</span>
-        </div>
-        <span class="nav-label">หน้าหลัก</span>
-      </a>
-
-      <a href="/pages/executive/executiveHome.html"
-         class="sidebar-nav-item active"
-         title="รายงาน">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">assignment</span>
-        </div>
-        <span class="nav-label">รายงาน</span>
-      </a>
-
-      <a href="/pages/executive/executive-Approval.html"
-         class="sidebar-nav-item"
-         title="ร้านค้า">
-        <div class="nav-icon-wrap">
-          <span class="material-symbols-outlined">approval_delegation</span>
-        </div>
-        <span class="nav-label">ขออนุมัติ</span>
-      </a>
-
-     
-  
-</nav>
-
-<!-- Collapse toggle button -->
-<div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
-  <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
-</div>
-
-<div class="sidebar-divider"></div>
-    <!-- Logout -->
-    <button class="sidebar-logout" id="logoutBtn" onclick="logout()" title="ออกจากระบบ">
-      <div class="nav-icon-wrap">
-        <span class="material-symbols-outlined">logout</span>
-      </div>
-      <span class="nav-label">ออกจากระบบ</span>
-    </button>
-
-  </aside>
-
-
-  <!-- ══════════════════════════════════════════════════
-       MAIN CONTENT
-  ══════════════════════════════════════════════════ -->
-  <div class="app-main">
-
-    <!-- ══════════════════════════════════════════════════
-         🆕 HEADER (White)
-    ══════════════════════════════════════════════════ -->
-    <header class="app-header">
-
-      <!-- Left: System name + subtitle -->
-      <div class="header-left">
-        <div class="header-system-name">
-          <div class="header-icon">
-            <span class="material-symbols-outlined">assignment</span>
+  <body class="role-executive">
+    <div class="app-layout">
+      <!-- ================= SIDEBAR (ชุดเดียวกับหน้าผู้บริหารอื่น) ================= -->
+      <aside class="app-sidebar ui-role-side expanded" id="appSidebar">
+        <a class="sidebar-logo" href="/pages/executive/executive-Hub.html" title="หน้าหลักผู้บริหาร">
+          <div class="sidebar-logo-circle">
+            <img src="/assets/icons/icon-192.png" alt="EABaseHub logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+            <span style="display: none">E</span>
           </div>
-          รายงานการเข้าร้านค้า
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-title">EABaseHub</div>
+            <div class="sidebar-brand-sub">Executive</div>
+          </div>
+        </a>
+        <nav class="sidebar-nav" id="sidebarNav">
+          <!-- เมนูผู้บริหาร (เหมือนกันทุกหน้า: หน้าหลัก / ภาพรวม / อนุมัติงาน / รายงานเข้าร้านค้า) -->
+          <a href="/pages/executive/executive-Hub.html" class="sidebar-nav-item" title="หน้าหลัก">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">home</span></div>
+            <span class="nav-label">หน้าหลัก</span>
+          </a>
+          <a href="/pages/executive/executive-Dashboard.html" class="sidebar-nav-item" title="ภาพรวม">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">space_dashboard</span></div>
+            <span class="nav-label">ภาพรวม</span>
+          </a>
+          <a href="/pages/executive/executive-Approval.html" class="sidebar-nav-item" title="อนุมัติงาน">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">approval_delegation</span><b class="ed-nav-badge" id="navPendingBadge" hidden>0</b></div>
+            <span class="nav-label">อนุมัติงาน</span>
+          </a>
+          <a href="/pages/executive/executiveHome.html" class="sidebar-nav-item active" title="รายงานเข้าร้านค้า">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">assignment</span></div>
+            <span class="nav-label">รายงานเข้าร้านค้า</span>
+          </a>
+        </nav>
+        <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+          <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
         </div>
-        <div class="header-subtitle">ดูรายงานทั้งหมด • Comment • ติดตามทีมงาน</div>
-      </div>
+        <div class="sidebar-divider"></div>
+        <button class="sidebar-logout" id="logoutBtn" type="button" onclick="logout()" title="ออกจากระบบ">
+          <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+          <span class="nav-label">ออกจากระบบ</span>
+        </button>
+      </aside>
 
-      <div class="header-right">
+      <div class="app-main">
+        <header class="app-header">
+          <div class="header-left">
+            <div class="header-system-name">
+              <div class="header-icon"><span class="material-symbols-outlined">assignment</span></div>
+              <span>สรุปการเข้าร้านค้า</span>
+            </div>
+            <div class="header-subtitle">ติดตามการลงพื้นที่ของทีมขาย · เทียบช่วงก่อนหน้า · ส่งความคิดเห็นถึงเซลล์</div>
+          </div>
+          <div class="header-right">
             <div class="page-header-badge" title="สิทธิ์การใช้งาน">
-              <span class="material-symbols-outlined" style="font-size:20px;color:#d97706;">workspace_premium</span>
-              <span>Executive</span>
+              <span class="material-symbols-outlined" style="font-size: 20px; color: #d97706">workspace_premium</span>
+              <span>ผู้บริหาร</span>
             </div>
-
-      <!-- Right: date + action + user -->
-      <!-- <div class="header-right"> -->
-
-        <!-- Current date pill -->
-        <div class="header-date-pill" id="headerDatePill">
-          <span class="material-symbols-outlined">calendar_month</span>
-          <span id="headerDateText">—</span>
-        </div>
-
-         <!-- User avatar -->
-        <div class="header-user">
-          <div class="header-user-avatar" id="userAvatar">
-            <span class="material-symbols-outlined" style="font-size:16px!important;color:white!important">person</span>
+            <div class="header-date-pill">
+              <span class="material-symbols-outlined">calendar_month</span>
+              <span id="headerDateText">—</span>
+            </div>
+            <div class="header-user">
+              <div class="header-user-avatar" id="userAvatar"><span class="material-symbols-outlined" style="font-size: 16px !important; color: white !important">person</span></div>
+              <span class="header-user-name" id="userName">กำลังโหลด...</span>
+            </div>
           </div>
-          <span class="header-user-name" id="userName">กำลังโหลด...</span>
-        </div>
-      </div>
-    </header>
+        </header>
 
-    <!-- Breadcrumb -->
-    <div class="app-breadcrumb">
-      <a href="/pages/executive/executiveHome.html">
-        <span class="material-symbols-outlined">home</span>
-        หน้าหลัก
-      </a>
-      <span class="bc-sep">›</span>
-      <span class="bc-current">
-        <span class="material-symbols-outlined">assignment</span>
-        รายงานการเข้าร้านค้า
-      </span>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════
-         PAGE CONTENT
-    ══════════════════════════════════════════════════ -->
-    <main class="app-content">
-      <div class="container">
-
-        <!-- ══════════════════════════════════════════════════
-             DATE RANGE PICKER
-        ══════════════════════════════════════════════════ -->
-        <div class="date-range-section">
-          <div class="date-range-header">
-            <div class="date-range-title">
-              <span class="icon">
-                <span class="material-symbols-outlined icon-md">calendar_clock</span>
-                <span>ช่วงเวลา</span>
-              </span>
-              <span class="date-range-label" id="dateRangeLabel">—</span>
+        <main class="app-content ed er">
+          <!-- ================= ช่วงเวลา + ส่งออก ================= -->
+          <section class="er-bar">
+            <div class="er-periods" role="tablist" aria-label="ช่วงเวลา">
+              <button type="button" class="er-chip" data-period="week">สัปดาห์นี้</button>
+              <button type="button" class="er-chip" data-period="lastweek">สัปดาห์ก่อน</button>
+              <button type="button" class="er-chip" data-period="month">เดือนนี้</button>
+              <button type="button" class="er-chip" data-period="lastmonth">เดือนก่อน</button>
+              <button type="button" class="er-chip" data-period="quarter">ไตรมาสนี้</button>
+              <button type="button" class="er-chip" data-period="custom">กำหนดเอง</button>
             </div>
+            <div class="er-custom" id="erCustom" hidden>
+              <input type="date" id="erFrom" aria-label="ตั้งแต่" /> – <input type="date" id="erTo" aria-label="ถึง" />
+              <button type="button" class="er-btn" id="erApply">ดู</button>
+            </div>
+            <div class="er-range" id="erRange">—</div>
+            <div class="er-actions">
+              <button type="button" class="er-btn is-ghost" id="erCsv" title="ส่งออกตารางเซลล์เป็น Excel (.csv)"><span class="material-symbols-outlined">download</span>Excel</button>
+              <button type="button" class="er-btn is-ghost" onclick="window.print()" title="พิมพ์ / บันทึกเป็น PDF"><span class="material-symbols-outlined">print</span>พิมพ์ / PDF</button>
+            </div>
+          </section>
 
-            <div class="date-range-controls">
-              <div class="date-input-group">
-                <label>เริ่ม</label>
-                <input type="date" id="dateStart">
+          <!-- ================= ตัวเลขหลัก ================= -->
+          <section class="ed-kpis er-kpis ui-strip" aria-label="ตัวเลขหลัก">
+            <div class="ed-kpi is-static"><span class="ed-kpi-icon"><span class="material-symbols-outlined">storefront</span></span>
+              <span class="ed-kpi-body"><span class="ed-kpi-label">การเข้าร้าน (ครั้ง)</span><b class="ed-kpi-num" id="kVisits">–</b><small id="kVisitsSub">&nbsp;</small></span></div>
+            <div class="ed-kpi is-static"><span class="ed-kpi-icon"><span class="material-symbols-outlined">store</span></span>
+              <span class="ed-kpi-body"><span class="ed-kpi-label">ร้านค้าที่เข้าเยี่ยม</span><b class="ed-kpi-num" id="kShops">–</b><small id="kShopsSub">&nbsp;</small></span></div>
+            <div class="ed-kpi is-static"><span class="ed-kpi-icon"><span class="material-symbols-outlined">donut_large</span></span>
+              <span class="ed-kpi-body"><span class="ed-kpi-label">ครอบคลุมร้านในความดูแล</span><b class="ed-kpi-num" id="kCover">–</b><small id="kCoverSub">&nbsp;</small></span></div>
+            <div class="ed-kpi is-static"><span class="ed-kpi-icon"><span class="material-symbols-outlined">handshake</span></span>
+              <span class="ed-kpi-body"><span class="ed-kpi-label">เข้าพบลูกค้าสำเร็จ</span><b class="ed-kpi-num" id="kMet">–</b><small id="kMetSub">&nbsp;</small></span></div>
+            <div class="ed-kpi is-static"><span class="ed-kpi-icon"><span class="material-symbols-outlined">event_available</span></span>
+              <span class="ed-kpi-body"><span class="ed-kpi-label">วันลงพื้นที่เฉลี่ย / คน</span><b class="ed-kpi-num" id="kDays">–</b><small id="kDaysSub">&nbsp;</small></span></div>
+          </section>
+
+          <div class="er-grid">
+            <!-- แนวโน้ม -->
+            <section class="ed-card" aria-labelledby="trendTitle">
+              <div class="ed-card-head">
+                <h2 id="trendTitle"><span class="material-symbols-outlined">bar_chart</span> แนวโน้มการเข้าร้าน</h2>
+                <span class="ed-hint is-inline" id="trendHint"></span>
               </div>
-              <div class="date-input-group">
-                <label>สิ้นสุด</label>
-                <input type="date" id="dateEnd">
+              <div class="ed-chart" id="trendChart"><div class="ed-state">กำลังโหลด...</div></div>
+              <div class="ed-chart-foot" id="trendFoot"></div>
+            </section>
+
+            <!-- ต้องติดตาม -->
+            <section class="ed-card er-watch" aria-labelledby="watchTitle">
+              <div class="ed-card-head">
+                <h2 id="watchTitle"><span class="material-symbols-outlined">notification_important</span> ต้องติดตาม</h2>
               </div>
-            </div>
+              <ul class="er-watch-list" id="watchList"><li class="ed-state">กำลังโหลด...</li></ul>
+            </section>
           </div>
 
-          <div class="quick-range-btns">
-            <button class="quick-range-btn" data-range="today">วันนี้</button>
-            <button class="quick-range-btn" data-range="7days">7 วัน</button>
-            <button class="quick-range-btn active" data-range="thisWeek">สัปดาห์นี้</button>
-            <button class="quick-range-btn" data-range="lastWeek">สัปดาห์ที่แล้ว</button>
-            <button class="quick-range-btn" data-range="30days">30 วัน</button>
-            <button class="quick-range-btn" data-range="thisMonth">เดือนนี้</button>
-            <button class="quick-range-btn" data-range="lastMonth">เดือนที่แล้ว</button>
+          <!-- ตารางเซลล์ -->
+          <section class="ed-card er-table-card" aria-labelledby="salesTitle">
+            <div class="ed-card-head">
+              <h2 id="salesTitle"><span class="material-symbols-outlined">groups</span> ทีมขาย <span class="ed-hint is-inline">กดชื่อเพื่อดูรายงานและส่งความคิดเห็น</span></h2>
+              <label class="er-search"><span class="material-symbols-outlined">search</span><input type="search" id="erSearch" placeholder="ค้นหาเซลล์ / พื้นที่" autocomplete="off" /></label>
+            </div>
+            <div class="er-table-wrap">
+              <table class="er-table">
+                <thead>
+                  <tr>
+                    <th data-sort="name">เซลล์</th>
+                    <th data-sort="visits" class="num">เข้าร้าน</th>
+                    <th data-sort="delta" class="num">เทียบช่วงก่อน</th>
+                    <th data-sort="shops" class="num">ร้าน</th>
+                    <th data-sort="cover" class="num">ครอบคลุม</th>
+                    <th data-sort="met" class="num">เข้าพบสำเร็จ</th>
+                    <th data-sort="days" class="num">วันลงพื้นที่</th>
+                    <th data-sort="last">ส่งล่าสุด</th>
+                    <th data-sort="comments" class="num" title="ความคิดเห็นในช่วงนี้">ความเห็น</th>
+                  </tr>
+                </thead>
+                <tbody id="salesBody"><tr><td colspan="9" class="ed-state">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="er-grid is-half">
+            <section class="ed-card" aria-labelledby="provTitle">
+              <div class="ed-card-head"><h2 id="provTitle"><span class="material-symbols-outlined">map</span> ตามจังหวัด</h2><span class="ed-hint is-inline">10 อันดับแรก</span></div>
+              <ol class="er-hbars" id="provList"><li class="ed-state">กำลังโหลด...</li></ol>
+            </section>
+            <section class="ed-card" aria-labelledby="prodTitle">
+              <div class="ed-card-head"><h2 id="prodTitle"><span class="material-symbols-outlined">inventory_2</span> สินค้าที่เซลล์นำเสนอมากสุด</h2><span class="ed-hint is-inline">นับจำนวนร้าน</span></div>
+              <ol class="er-hbars" id="prodList"><li class="ed-state">กำลังโหลด...</li></ol>
+            </section>
           </div>
-        </div>
-
-        <!-- ══════════════════════════════════════════════════
-             SUMMARY CARDS
-        ══════════════════════════════════════════════════ -->
-        <div class="summary-cards ui-strip">
-          <div class="sum-card total-theme">
-            <div class="sum-icon-desc">
-              <span class="material-symbols-outlined icon-blue">description</span>
-            </div>
-            <div class="sum-content">
-              <div class="sum-value" id="totalReports">—</div>
-              <div class="sum-label">รายงานทั้งหมด</div>
-            </div>
-          </div>
-
-          <div class="sum-card un-read">
-            <div class="sum-icon-unread">
-              <span class="material-symbols-outlined icon-orange">schedule</span>
-            </div>
-            <div class="sum-content">
-              <div class="sum-value" id="unreadReports">—</div>
-              <div class="sum-label">ยังไม่อ่าน</div>
-            </div>
-          </div>
-
-          <div class="sum-card">
-            <div class="sum-icon">
-              <span class="material-symbols-outlined icon-green">check_circle</span>
-            </div>
-            <div class="sum-content">
-              <div class="sum-value" id="readReports">—</div>
-              <div class="sum-label">อ่านแล้ว</div>
-            </div>
-          </div>
-
-          <div class="sum-card">
-            <div class="sum-icon-cyan">
-              <span class="material-symbols-outlined icon-cyan">chat</span>
-            </div>
-            <div class="sum-content">
-              <div class="sum-value" id="commentedReports">—</div>
-              <div class="sum-label">มี Comment</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══════════════════════════════════════════════════
-             SALES OVERVIEW
-        ══════════════════════════════════════════════════ -->
-        <div class="card">
-          <div class="card-header">
-            <h2>
-              <span class="material-symbols-outlined">groups</span>
-              ภาพรวมทีมเซลล์
-            </h2>
-            <span class="card-hint">คลิกการ์ดเพื่อดูรายงานทั้งหมดของเซลล์ในตารางเดียว</span>
-          </div>
-          <div class="sales-grid" id="salesGrid">
-            <div class="loading">กำลังโหลด...</div>
-          </div>
-        </div>
-
-        <!-- ══════════════════════════════════════════════════
-             FILTERS
-        ══════════════════════════════════════════════════ -->
-        <div class="filter-section">
-          <div class="filter-row">
-
-            <div class="filter-group">
-              <label>เซลล์</label>
-              <select id="filterSales">
-                <option value="">— ทั้งหมด —</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label>สถานะ</label>
-              <select id="filterStatus">
-                <option value="">— ทั้งหมด —</option>
-                <option value="unread">ยังไม่อ่าน</option>
-                <option value="read">อ่านแล้ว</option>
-                <option value="commented">มี Comment</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label>ค้นหา</label>
-              <input type="text" id="searchInput" placeholder="ชื่อร้าน, สินค้า, จังหวัด...">
-            </div>
-          </div>
-
-          <div class="filter-actions">
-            <button onclick="applyFilter()" class="btn btn-primary">
-              <span class="material-symbols-outlined icon-white">search</span>
-              กรอง
-            </button>
-
-            <button onclick="resetFilter()" class="btn btn-secondary">
-              <span class="material-symbols-outlined">refresh</span>
-              รีเซ็ต
-            </button>
-
-            <button onclick="exportCSV()" class="btn btn-export">
-              <span class="material-symbols-outlined icon-orange">download</span>
-              Export CSV
-            </button>
-          </div>
-        </div>
-
-        <!-- ══════════════════════════════════════════════════
-             REPORTS LIST + VIEW TOGGLE
-        ══════════════════════════════════════════════════ -->
-        <div class="card">
-          <div class="card-header">
-            <h2>
-              <span class="material-symbols-outlined">list_alt</span>
-              รายการรายงาน
-            </h2>
-
-            <div class="header-actions">
-              <!-- View Toggle -->
-              <div class="view-toggle" role="tablist" aria-label="โหมดแสดงผล">
-                <button class="view-toggle-btn active" data-view="list" onclick="switchView('list')">
-                  <span class="material-symbols-outlined icon-sm">view_list</span>
-                  List
-                </button>
-                <button class="view-toggle-btn" data-view="table" onclick="switchView('table')">
-                  <span class="material-symbols-outlined icon-sm">table_rows</span>
-                  Table by Sales
-                </button>
-              </div>
-
-              <span id="reportCount" class="card-hint"></span>
-            </div>
-          </div>
-
-          <!-- LIST VIEW -->
-          <div id="listView" class="view-panel active">
-            <div class="reports-container" id="reportsContainer">
-              <div class="loading">กำลังโหลด...</div>
-            </div>
-            <div class="pagination" id="pagination"></div>
-          </div>
-
-          <!-- TABLE BY SALES VIEW -->
-          <div id="tableView" class="view-panel">
-            <div class="table-by-sales-hint">
-              <span class="material-symbols-outlined icon-blue">info</span>
-              คลิกการ์ดเซลล์ด้านบนเพื่อดูรายงานทั้งหมดในตารางเดียว — หรือเลือกจากด้านล่างนี้
-            </div>
-            <div class="sales-quick-pick" id="salesQuickPick">
-              <div class="loading">กำลังโหลด...</div>
-            </div>
-          </div>
-
-        </div>
-
-      </div><!-- /.container -->
-    </main><!-- /.app-content -->
-
-    <!-- Footer -->
-    <footer class="footer">© 2026 EABaseHub | Executive</footer>
-
-  </div><!-- /.app-main -->
-</div><!-- /.app-layout -->
-
-<!-- ══════════════════════════════════════════════════
-     MODAL: REPORT DETAIL (เดิม)
-══════════════════════════════════════════════════ -->
-<div id="reportModal" class="modal">
-  <div class="modal-content">
-    <button class="close-btn" onclick="closeModal()" title="ปิด">
-      <span class="material-symbols-outlined icon-sm">close</span>
-    </button>
-
-    <div class="modal-header">
-      <h3 id="modalTitle">รายละเอียดรายงาน</h3>
-      <div class="modal-badges">
-        <span id="modalStatus" class="badge">—</span>
+        </main>
       </div>
     </div>
 
-    <div class="modal-body">
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">
-            <span class="material-symbols-outlined icon-blue-dark">calendar_month</span>
-            รายงานวันที่
-          </span>
-          <span id="mReportDate" class="info-value">—</span>
-        </div>
-
-        <div class="info-item">
-          <span class="info-label">
-            <span class="material-symbols-outlined icon-blue-dark">account_box</span>
-            เซลล์ผู้รับผิดชอบ
-          </span>
-          <span id="mSalesName" class="info-value">—</span>
-        </div>
-
-        <div class="info-item">
-          <span class="info-label">
-            <span class="material-symbols-outlined icon-blue-dark">storefront</span>
-            ร้านค้า
-          </span>
-          <span id="mShopName" class="info-value">—</span>
-        </div>
-
-        <div class="info-item">
-          <span class="info-label">
-            <span class="material-symbols-outlined icon-blue-dark">location_on</span>
-            จังหวัด
-          </span>
-          <span id="mProvince" class="info-value">—</span>
-        </div>
-
-        <div class="info-item">
-          <span class="info-label">
-            <span class="material-symbols-outlined icon-blue-dark">inventory_2</span>
-            สินค้าที่ติดต่อจำหน่ายกับร้าน
-          </span>
-          <span id="mProduct" class="info-value">—</span>
-        </div>
-
-        <div class="info-item">
-          <span class="info-label">
-            <span class="material-symbols-outlined icon-primary">inventory</span>
-            จำนวน
-          </span>
-          <span id="mQty" class="info-value">—</span>
-        </div>
-
-        <span id="mManagerName" style="display:none">—</span>
-        <span id="mSource" style="display:none">—</span>
+    <!-- ================= รายละเอียดเซลล์ (แผงขวา) ================= -->
+    <div class="er-drawer-bg" id="drawerBg" hidden></div>
+    <aside class="er-drawer" id="drawer" hidden aria-labelledby="dName" role="dialog">
+      <div class="er-drawer-head">
+        <span class="ed-av" id="dAv">?</span>
+        <div class="er-drawer-who"><h3 id="dName">-</h3><small id="dSub">-</small></div>
+        <button type="button" class="er-icon-btn" id="dClose" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>
       </div>
+      <div class="er-drawer-stats" id="dStats"></div>
+      <div class="er-drawer-body" id="dList"></div>
+    </aside>
 
-      <div class="info-section">
-        <div class="info-label">
-          <span class="material-symbols-outlined icon-brown icon-lg">edit_note</span>
-          รายละเอียดการเข้าพบ
-        </div>
-        <div id="mNote" class="note-box">—</div>
-      </div>
+    <div class="er-toast" id="erToast" role="status" aria-live="polite"></div>
 
-      <div class="comment-section">
-        <div class="comment-header">
-          <span class="material-symbols-outlined icon-blue-dark">forum</span>
-          ความคิดเห็น
-        </div>
-
-        <div id="commentsHistory" class="comments-list"></div>
-
-        <textarea id="commentInput"
-                  placeholder="พิมพ์ความคิดเห็น คำแนะนำ หรือข้อเสนอแนะ..."
-                  rows="3"></textarea>
-
-        <div class="modal-actions">
-          <button onclick="saveComment()" class="btn btn-primary">
-            <span class="material-symbols-outlined icon-white">add_comment</span>
-            บันทึกความคิดเห็น
-          </button>
-          <button onclick="markAsRead()" class="btn btn-success">
-            <span class="material-symbols-outlined icon-white">check_circle</span>
-            ทำเครื่องหมายว่าอ่านแล้ว
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════
-     MODAL: SALES TABLE
-══════════════════════════════════════════════════ -->
-<div id="salesTableModal" class="modal modal-xl">
-  <div class="modal-content modal-content-xl">
-    <button class="close-btn" onclick="closeSalesTableModal()" title="ปิด">
-      <span class="material-symbols-outlined icon-sm">close</span>
-    </button>
-
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="sales-modal-avatar" id="salesModalAvatar">A</div>
-        <div>
-          <h3 id="salesModalTitle">รายงานของเซลล์</h3>
-          <div class="sales-modal-subtitle" id="salesModalSubtitle">—</div>
-        </div>
-      </div>
-      <div class="modal-badges">
-        <span class="badge badge-info" id="salesModalCount">— ร้าน</span>
-      </div>
-    </div>
-
-    <div class="modal-body">
-      <div class="mini-summary">
-        <div class="mini-stat">
-          <span class="mini-label">ร้านที่เข้า</span>
-          <span class="mini-value" id="stShops">—</span>
-        </div>
-        <div class="mini-stat">
-          <span class="mini-label">จังหวัด</span>
-          <span class="mini-value" id="stProvinces">—</span>
-        </div>
-        <div class="mini-stat">
-          <span class="mini-label">ยังไม่อ่าน</span>
-          <span class="mini-value" style="color:#f59e0b" id="stUnread">—</span>
-        </div>
-        <div class="mini-stat">
-          <span class="mini-label">มี Comment</span>
-          <span class="mini-value" style="color:#0093ad" id="stCommented">—</span>
-        </div>
-      </div>
-
-      <div class="sales-table-wrapper">
-        <table class="sales-table" id="salesReportTable">
-          <thead>
-            <tr>
-              <th style="width:88px;">วันที่</th>
-              <th style="width:150px;">ร้านค้า</th>
-              <th style="width:95px;">จังหวัด</th>
-              <th style="width:150px;">สินค้าที่จำหน่าย</th>
-              <th style="width:110px;">สินค้าที่ลูกค้าแนะนำ</th>
-              <th>รายละเอียดการเข้าเยี่ยม</th>
-              <th style="width:70px;" class="col-status">สถานะ</th>
-              <th style="width:80px;" class="col-action">Comment</th>
-            </tr>
-          </thead>
-          <tbody id="salesTableBody">
-            <tr><td colspan="8" class="loading">กำลังโหลด...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════
-     MODAL: COMMENT POPUP
-══════════════════════════════════════════════════ -->
-<div id="commentPopupModal" class="modal modal-sm">
-  <div class="modal-content modal-content-sm">
-    <button class="close-btn" onclick="closeCommentPopup()" title="ปิด">
-      <span class="material-symbols-outlined icon-sm">close</span>
-    </button>
-
-    <div class="modal-header">
-      <h3>
-        <span class="material-symbols-outlined icon-blue-dark">forum</span>
-        Comment
-      </h3>
-      <div class="modal-badges">
-        <span id="popupStatus" class="badge">—</span>
-      </div>
-    </div>
-
-    <div class="modal-body">
-      <div class="popup-shop-info">
-        <div class="popup-shop-row">
-          <span class="material-symbols-outlined icon-sm icon-blue">storefront</span>
-          <span id="pShopName" class="popup-shop-name">—</span>
-          <span id="pProvince" class="popup-province">—</span>
-        </div>
-        <div class="popup-shop-row popup-shop-date">
-          <span class="material-symbols-outlined icon-sm icon-blue-dark">calendar_month</span>
-          <span id="pReportDate">—</span>
-        </div>
-      </div>
-
-      <div class="comment-section" style="margin-top:12px; padding-top:12px;">
-        <div class="comment-header">
-          <span class="material-symbols-outlined icon-blue-dark">chat</span>
-          ความคิดเห็น
-        </div>
-
-        <div id="popupCommentsHistory" class="comments-list"></div>
-
-        <textarea id="popupCommentInput"
-                  placeholder="พิมพ์ความคิดเห็น..."
-                  rows="3"></textarea>
-
-        <div class="modal-actions">
-          <button onclick="savePopupComment()" class="btn btn-primary">
-            <span class="material-symbols-outlined icon-white">add_comment</span>
-            บันทึก
-          </button>
-          <button onclick="markPopupAsRead()" class="btn btn-success">
-            <span class="material-symbols-outlined icon-white">check_circle</span>
-            ทำเครื่องหมายว่าอ่านแล้ว
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="toast" class="toast"></div>
-
-<!-- ══════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════ -->
-<script src="/js/core/supabaseClient.js"></script>
-<script src="/js/core/roleConfig.js"></script>
-<script src="/js/core/userService.js"></script>
-<script src="/js/core/auth.js"></script>
-<script src="/js/pages/executive/executiveHome.js"></script>
-
-<script>
-  // ── Sidebar collapse toggle ──
-  const sidebar = document.getElementById('appSidebar');
-  const main = document.querySelector('.app-main');
-  const icon = document.getElementById('collapseIcon');
-
-  // ✅ Default: collapsed
-  sidebar.classList.add('collapsed');
-
-  function toggleSidebar() {
-    const isCollapsed = sidebar.classList.contains('collapsed');
-
-    if (isCollapsed) {
-      // → ขยาย
-      sidebar.classList.remove('collapsed');
-      sidebar.classList.add('expanded');
-      if (main) main.style.marginLeft = '220px';
-    } else {
-      // → ย่อ
-      sidebar.classList.remove('expanded');
-      sidebar.classList.add('collapsed');
-      if (main) main.style.marginLeft = '64px';
-    }
-  }
-
-  // ── Set active nav based on current URL ──
-  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-    if (item.getAttribute('href') === window.location.pathname) {
-      document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-    }
-  });
-
-  // ── Header date display ──
-  function updateHeaderDate() {
-    const el = document.getElementById('headerDateText');
-    if (!el) return;
-    const now = new Date();
-    el.textContent = now.toLocaleDateString('th-TH', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  }
-  updateHeaderDate();
-</script>
-
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/components/sidebar-manager.js"></script>
     <script src="/js/pages/auth/role-theme.js"></script>
-    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+    <script src="/js/pages/executive/executive-rules.js"></script>
+    <script src="/js/pages/executive/executiveHome.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof RoleTheme !== "undefined") RoleTheme.init();
+      });
+    </script>
   </body>
 </html>

@@ -730,3 +730,7 @@ padding: 16px;
 /* =====================================================
    END OF FILE
    ===================================================== */
+/* ป้ายตัวเลขงานรออนุมัติบนเมนู "อนุมัติงาน" (sidebar ผู้บริหารทุกหน้า · executive-rules.js setExecNavBadge) */
+.sidebar-nav-item .nav-icon-wrap { position: relative; }
+.ed-nav-badge { position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: #ea580c; color: #fff; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; font-family: "Kanit", sans-serif; }
+.ed-nav-badge[hidden] { display: none; }

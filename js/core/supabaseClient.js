@@ -89,3 +89,21 @@ window.supabaseClient = supabaseClient;
 window.APP_ENV = ENV;
 
 console.log('✅ Supabase client initialized');
+// ===== 5. โปรไฟล์ของผู้ใช้ปัจจุบัน — ดึงครั้งเดียวต่อหน้า แล้วใช้ร่วมกัน =====
+// เดิมแต่ละสคริปต์ (ตรวจสิทธิ์, userService, sidebar, ธีม) ดึง profiles ของตัวเองซ้ำกัน 4–5 ครั้งต่อหน้า
+// → ใช้ eaGetMyProfile() แทน: ทุกที่ได้ผลลัพธ์เดียวกันจากการดึงครั้งเดียว
+// คืนค่า { session, profile, error } (profile = แถวเต็มจาก profiles หรือ null)
+let _eaProfilePromise = null;
+function eaGetMyProfile(force) {
+  if (_eaProfilePromise && !force) return _eaProfilePromise;
+  _eaProfilePromise = (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return { session: null, profile: null, error: null };
+    const { data: profile, error } = await supabaseClient.from("profiles").select("*").eq("id", session.user.id).single();
+    return { session, profile: profile || null, error: error || null };
+  })();
+  // ดึงไม่สำเร็จ (เช่นเน็ตหลุด) → ครั้งต่อไปลองใหม่
+  _eaProfilePromise.then((r) => { if (r.error && r.error.code !== "PGRST116") _eaProfilePromise = null; }, () => { _eaProfilePromise = null; });
+  return _eaProfilePromise;
+}
+window.eaGetMyProfile = eaGetMyProfile;

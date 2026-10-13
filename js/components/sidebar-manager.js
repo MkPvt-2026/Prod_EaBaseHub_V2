@@ -1,6 +1,6 @@
 // =====================================================
 // sidebar-manager.js — เมนูข้าง (sidebar) ชุดเดียวกันของหน้า
-//   Manager Dashboard · รายงานเข้าร้าน · ประชาสัมพันธ์ · RFM · Marketing Home
+//   Manager Dashboard · รายงานเข้าร้าน · ประชาสัมพันธ์ · Marketing Home
 //
 // markup ของเมนูอยู่ในแต่ละหน้า (เหมือนกันทุกหน้า) ไฟล์นี้ทำ 2 อย่าง:
 //   1) ไฮไลต์เมนูของหน้าปัจจุบัน
@@ -20,10 +20,14 @@
   async function filterByRole() {
     if (typeof supabaseClient === "undefined") return;
     try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) return;
-      const { data: p } = await supabaseClient
-        .from("profiles").select("role").eq("id", session.user.id).single();
+      let p = null;
+      if (typeof eaGetMyProfile === "function") { p = (await eaGetMyProfile()).profile; } // ใช้โปรไฟล์ที่ดึงครั้งเดียวต่อหน้า
+      else {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
+        ({ data: p } = await supabaseClient.from("profiles").select("role").eq("id", session.user.id).single());
+      }
+      if (!p) return;
       let role = p?.role || "";
       if (typeof normalizeRole === "function") role = normalizeRole(role);
       if (role === "admin") return;

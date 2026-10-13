@@ -91,6 +91,10 @@ const RoleTheme = (() => {
     }
 
     try {
+      if (typeof eaGetMyProfile === 'function') {
+        const r = await eaGetMyProfile(); // โปรไฟล์ที่ดึงครั้งเดียวต่อหน้า
+        return r.profile?.role ? applyRole(r.profile.role) : null;
+      }
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.user) {
         console.log('[RoleTheme] No session — using default role');

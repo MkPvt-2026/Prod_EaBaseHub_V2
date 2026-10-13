@@ -145,7 +145,8 @@ async function protectPage(allowedRoles = []) {
     console.log("🔒 Checking page protection...");
 
     // 1️⃣ ดึง session
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    const shared = typeof eaGetMyProfile === "function" ? await eaGetMyProfile() : null;
+    const { data: { session }, error: sessionError } = shared ? { data: { session: shared.session }, error: null } : await supabaseClient.auth.getSession();
 
     if (sessionError || !session) {
       console.warn("⚠️ No active session");
@@ -156,11 +157,9 @@ async function protectPage(allowedRoles = []) {
     console.log("✅ Session found:", session.user.email);
 
     // 2️⃣ ดึง role และ status จาก DB ตรงๆ ทุกครั้ง
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role, status")
-      .eq("id", session.user.id)
-      .single();
+    const { data: profile, error: profileError } = shared
+      ? { data: shared.profile, error: shared.error }
+      : await supabaseClient.from("profiles").select("role, status").eq("id", session.user.id).single();
 
     if (profileError || !profile) {
       console.error("❌ Profile not found");
@@ -286,7 +285,7 @@ console.log("✅ auth.js loaded");
 
   const st = document.createElement("style");
   st.id = "eaGuardStyle";
-  st.textContent = "html.ea-guarding body{visibility:hidden!important}";
+  st.textContent = "html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}"; // opacity: กันเมนูที่ CSS บังคับ visibility:visible โผล่ก่อน
   (document.head || document.documentElement).appendChild(st);
   document.documentElement.classList.add("ea-guarding");
   const reveal = () => document.documentElement.classList.remove("ea-guarding");
@@ -332,9 +331,11 @@ console.log("✅ auth.js loaded");
     try {
       for (let i = 0; i < 50 && typeof supabaseClient === "undefined"; i++) await new Promise((r) => setTimeout(r, 100));
       if (typeof supabaseClient === "undefined") throw new Error("ระบบยังไม่พร้อม");
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      // ดึงโปรไฟล์ครั้งเดียว ใช้ร่วมกับ userService / sidebar / ธีม (supabaseClient.js · eaGetMyProfile)
+      const { session, profile, error } = typeof eaGetMyProfile === "function"
+        ? await eaGetMyProfile()
+        : await (async () => { const { data: { session } } = await supabaseClient.auth.getSession(); if (!session) return { session }; const r = await supabaseClient.from("profiles").select("role, status").eq("id", session.user.id).single(); return { session, profile: r.data, error: r.error }; })();
       if (!session) { go("/pages/auth/login.html"); return; }
-      const { data: profile, error } = await supabaseClient.from("profiles").select("role, status").eq("id", session.user.id).single();
       if (error && error.code === "PGRST116") { go("/pages/auth/login.html"); return; } // ไม่มีโปรไฟล์
       if (error) throw error;
       if (!profile) { go("/pages/auth/login.html"); return; }

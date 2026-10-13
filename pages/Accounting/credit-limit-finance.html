@@ -1,735 +1,234 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" data-theme="light">
   <head>
     <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
-    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
     <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
-    <link rel="stylesheet" href="/css/base/role-colors.css" />
-    <!-- ================= META / PAGE SETUP ================= -->
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Accounting Review - ตรวจสอบคำขอวงเงินเกิน</title>
+    <title>EABaseHub | ตรวจสอบวงเงินชั่วคราว (ฝ่ายบัญชี)</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
-    <!-- ================= FONTS / ICONS ================= -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
+    <!-- โครงหน้าเดียวกับหน้าผู้บริหาร / Marketing (sidebar + header) · โน้ตบุ๊กเป็นหลัก -->
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <link rel="stylesheet" href="/css/base/baseExecutive.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Approval.css" />
+    <link rel="stylesheet" href="/css/components/sidebar-marketing.css" />
+    <link rel="stylesheet" href="/css/components/sidebar-executive.css" />
+    <link rel="stylesheet" href="/css/components/sidebar-accounting.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Dashboard-ux.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executiveHome.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-ApprovalDoc.css" />
+    <link rel="stylesheet" href="/css/pages/Accounting/credit-limit-finance-ux.css" />
 
-    <!-- ================= PAGE CSS ================= -->
-    <link
-      rel="stylesheet"
-      href="/css/pages/Accounting/credit-limit-finance.css"
-    />
-      <link rel="stylesheet" href="/css/base/ui-cards.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
 
-  <body>
-    <div class="app">
-      <!-- ================= MOBILE SIDEBAR BACKDROP ================= -->
-      <button
-        class="sidebar-backdrop"
-        type="button"
-        onclick="closeSidebar()"
-        aria-label="ปิด sidebar"
-      ></button>
-
+  <body class="role-accounting">
+    <div class="app-layout">
       <!-- ================= SIDEBAR ================= -->
-      <aside class="sidebar ui-role-side" id="mainSidebar">
-        <div class="sidebar-logo">
+      <aside class="app-sidebar ui-role-side expanded" id="appSidebar">
+        <a class="sidebar-logo" href="/pages/Accounting/credit-limit-finance.html" title="หน้าหลักฝ่ายบัญชี">
           <div class="sidebar-logo-circle">
-            <img src="/assets/icons/icon-192.png" alt="EABaseHub" />
+            <img src="/assets/icons/icon-192.png" alt="EABaseHub logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+            <span style="display: none">E</span>
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-title">EABaseHub</div>
             <div class="sidebar-brand-sub">Accounting</div>
           </div>
-        </div>
-
-        <nav class="nav-section">
-          <a class="nav-item" href="/index.html">
-            <span class="material-symbols-outlined" aria-hidden="true"
-              >home</span
-            >
-            หน้าหลัก
-          </a>
-          <a class="nav-item active" href="credit-limit-finance.html">
-            <span class="material-symbols-outlined" aria-hidden="true"
-              >fact_check</span
-            >
-            ตรวจวงเงินเกิน
-          </a>
-          <a class="nav-item" href="/pages/forms/credit-limit-tracking.html">
-            <span class="material-symbols-outlined" aria-hidden="true"
-              >query_stats</span
-            >
-            ติดตามคำขอ
+        </a>
+        <nav class="sidebar-nav" id="sidebarNav">
+          <a href="/pages/Accounting/credit-limit-finance.html" class="sidebar-nav-item active" title="ตรวจวงเงินชั่วคราว">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">fact_check</span><b class="ed-nav-badge" id="navPendingBadge" hidden>0</b></div>
+            <span class="nav-label">ตรวจวงเงินชั่วคราว</span>
           </a>
         </nav>
-
-        <div class="sidebar-user">
-          <div class="user-avatar" id="sidebarAvatar">A</div>
-          <div class="user-info">
-            <div class="user-name" id="sidebarDisplayName">Accounting</div>
-            <div class="user-role" id="sidebarRole">accounting</div>
-          </div>
-          <button
-            class="sidebar-logout"
-            type="button"
-            id="logoutBtn"
-            title="ออกจากระบบ"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true"
-              >logout</span
-            >
-          </button>
+        <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+          <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
         </div>
+        <div class="sidebar-divider"></div>
+        <button class="sidebar-logout" id="logoutBtn" type="button" onclick="logout()" title="ออกจากระบบ">
+          <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+          <span class="nav-label">ออกจากระบบ</span>
+        </button>
       </aside>
 
-      <!-- ================= MAIN AREA ================= -->
-      <main class="main-area">
-        <header class="topbar">
-          <button
-            class="topbar-menu-btn"
-            type="button"
-            onclick="openSidebar()"
-            aria-label="เปิดเมนู"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true"
-              >menu</span
-            >
-          </button>
-          <div>
-            <h1>ตรวจสอบคำขอวงเงินเกิน</h1>
-            <p>Accounting Review Console</p>
+      <div class="app-main">
+        <header class="app-header">
+          <div class="header-left">
+            <div class="header-system-name">
+              <div class="header-icon"><span class="material-symbols-outlined">fact_check</span></div>
+              <span>ตรวจสอบวงเงินชั่วคราว</span>
+            </div>
+            <div class="header-subtitle">เซลล์ส่ง → <b>ฝ่ายบัญชีตรวจสอบ</b> → Manager → ผู้บริหาร</div>
           </div>
-          <div class="topbar-user">
-            <div class="user-avatar" id="topbarAvatar">A</div>
-            <span id="topbarUsername">Accounting</span>
+          <div class="header-right">
+            <div class="page-header-badge" title="สิทธิ์การใช้งาน">
+              <span class="material-symbols-outlined" style="font-size: 20px; color: var(--role-color)">account_balance</span>
+              <span>ฝ่ายบัญชี</span>
+            </div>
+            <div class="header-date-pill">
+              <span class="material-symbols-outlined">calendar_month</span>
+              <span id="headerDateText">—</span>
+            </div>
+            <div class="header-user">
+              <div class="header-user-avatar" id="userAvatar"><span class="material-symbols-outlined" style="font-size: 16px !important; color: white !important">person</span></div>
+              <span class="header-user-name" id="userName">กำลังโหลด...</span>
+            </div>
           </div>
         </header>
 
-        <section class="content">
-          <!-- ================= SUMMARY CARDS ================= -->
-          <section class="summary-grid ui-strip">
-            <article
-              class="summary-card active"
-              data-filter="accounting_review"
-              onclick="setFilter('accounting_review')"
-              role="button"
-              tabindex="0"
-            >
-              <span>รอตรวจสอบ</span>
-              <strong id="countPending">0</strong>
-            </article>
-            <article
-              class="summary-card"
-              data-filter="manager_review"
-              onclick="setFilter('manager_review')"
-              role="button"
-              tabindex="0"
-            >
-              <span>ส่งต่อผู้จัดการแล้ว</span>
-              <strong id="countForwarded">0</strong>
-            </article>
-            <article
-              class="summary-card"
-              data-filter="all"
-              onclick="setFilter('all')"
-              role="button"
-              tabindex="0"
-            >
-              <span>ทั้งหมด</span>
-              <strong id="countAll">0</strong>
-            </article>
-          </section>
-
-          <!-- ================= SEARCH / REFRESH ================= -->
-          <section class="toolbar-card">
-            <div class="search-box">
-              <span class="material-symbols-outlined" aria-hidden="true"
-                >search</span
-              >
-              <input
-                id="searchInput"
-                type="search"
-                placeholder="ค้นหาเลขที่เอกสาร / บริษัท / เลขที่บิล"
-                oninput="renderRequests()"
-                autocomplete="off"
-              />
+        <main class="app-content cf">
+          <!-- ================= รายการคำขอ ================= -->
+          <aside class="cf-list ed-card">
+            <div class="cf-tabs" id="cfTabs" role="tablist" aria-label="สถานะคำขอ">
+              <button type="button" class="is-on" data-tab="review">รอตรวจสอบ <em id="cntReview">0</em></button>
+              <button type="button" data-tab="revision">ส่งกลับแก้ไข <em id="cntRevision">0</em></button>
+              <button type="button" data-tab="forwarded">ส่งต่อแล้ว <em id="cntForwarded">0</em></button>
+              <button type="button" data-tab="closed">ปิดแล้ว <em id="cntClosed">0</em></button>
             </div>
-            <button
-              class="btn btn-outline"
-              type="button"
-              onclick="loadAccountingRequests()"
-            >
-              <span class="material-symbols-outlined" aria-hidden="true"
-                >refresh</span
-              >
-              รีเฟรช
-            </button>
-          </section>
+            <div class="cf-search">
+              <span class="material-symbols-outlined">search</span>
+              <input type="search" id="cfSearch" placeholder="ค้นหาร้าน / เลขที่ / เซลล์ / SO" autocomplete="off" />
+              <button type="button" class="er-icon-btn" onclick="loadList()" title="รีเฟรช" aria-label="รีเฟรช"><span class="material-symbols-outlined">refresh</span></button>
+            </div>
+            <div class="cf-items" id="cfItems"><div class="ed-state">กำลังโหลด...</div></div>
+          </aside>
 
-          <!-- ================= REQUEST LIST ================= -->
-          <section id="requestList" aria-live="polite" aria-atomic="false">
-            <div class="empty-state">กำลังโหลดข้อมูล...</div>
-          </section>
-        </section>
-      </main>
-    </div>
+          <!-- ================= รายละเอียด / ตรวจสอบ ================= -->
+          <section class="cf-detail" id="cfDetail">
+            <div class="ed-card cf-empty" id="cfEmpty">
+              <span class="material-symbols-outlined">fact_check</span>
+              <b>เลือกคำขอจากรายการด้านซ้าย</b>
+              <span>ตรวจยอดค้างชำระ ยืนยันวงเงิน ลงความเห็นและลงนาม แล้วส่งต่อ Manager หรือส่งกลับให้เซลล์แก้ไข</span>
+            </div>
 
-    <!-- ================= TOAST MESSAGE ================= -->
-    <div
-      id="toast"
-      class="toast"
-      role="alert"
-      aria-live="assertive"
-      aria-atomic="true"
-    ></div>
-
-
-    <!-- Success Modal -->
-<div id="successModal" class="success-modal hidden">
-  <div class="success-modal-box">
-
-    <div class="success-icon">
-      <span class="material-symbols-outlined">
-        check_circle
-      </span>
-    </div>
-
-    <h3 id="successTitle">
-      สำเร็จ
-    </h3>
-
-    <p id="successMessage">
-      ระบบดำเนินการเรียบร้อยแล้ว
-    </p>
-
-    <button
-      type="button"
-      class="btn btn-primary"
-      onclick="closeSuccessModal()"
-    >
-      ตกลง
-    </button>
-
-  </div>
-</div>
-
-    <!-- ================================================================
-       TEMPLATES — ไม่ render บนหน้าจอ, JS clone ไปใช้งาน
-       แก้ UI ที่นี่ได้เลย ได้ syntax highlight / Emmet ครบ
-  ================================================================ -->
-
-    <!-- ── Template: request-card ──────────────────────────────────── -->
-    <template id="tpl-request-card">
-      <article class="request-card" data-request-id="">
-        <!-- Accordion header -->
-        <button
-          class="request-head"
-          type="button"
-          onclick="toggleRequestCard(this)"
-          aria-expanded="false"
-        >
-          <div class="request-head-left">
-            <span class="expand-icon" aria-hidden="true">⌄</span>
-            <div class="request-title">
-
-  <!-- ชื่อร้าน + เลขที่บิล -->
-  <h3>
-    <span data-bind="shopName"></span>
-    <span class="bill-separator">•</span>
-    <span data-bind="saleOrderNo"></span>
-  </h3>
-
-  <!-- เลขที่เอกสาร -->
-  <p class="doc-no">
-    เลขที่เอกสาร :
-    <span data-bind="docNo"></span>
-  </p>
-
-</div>
-        </button>
-
-        <!-- Accordion body -->
-        <div class="request-content">
-          <div class="request-body">
-            <div class="review-layout">
-              <!-- ── Left column: ข้อมูลหลัก + งานที่บัญชีรับผิดชอบ ─────────────── -->
-              <div class="left-stack">
-                <!-- =======================================================
-                     SECTION : ข้อมูลคำขอ
-                     class: panel-request
-                     ใช้สำหรับแสดงข้อมูลคำขอจาก Sale
-                ======================================================= -->
-                <section class="panel panel-request">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
-                      ข้อมูลคำขอ
-                    </div>
+            <div id="cfBody" hidden>
+              <!-- หัวคำขอ -->
+              <section class="ed-card cf-head">
+                <div class="cf-head-top">
+                  <div>
+                    <div class="cf-head-meta"><span class="er-pill" id="dStatus">-</span><span id="dNo">-</span><span id="dResub" class="cf-tag" hidden>เซลล์แก้ไขแล้วส่งกลับ</span></div>
+                    <h2 id="dShop">-</h2>
+                    <small id="dSub">-</small>
                   </div>
-
-                  <div class="panel-body">
-                    <div class="customer-grid">
-                      <div class="customer-item">
-                        <label>บริษัท</label>
-                        <strong data-bind="shopName2"></strong>
-                      </div>
-
-                      <div class="customer-item">
-                        <label>รหัสลูกค้า</label>
-                        <strong data-bind="shopCode"></strong>
-                      </div>
-
-                      <div class="customer-item">
-                        <label>เลขที่บิล</label>
-                        <strong data-bind="saleOrderNo2"></strong>
-                      </div>
-
-                      <div class="customer-item">
-                        <label>ยอดคำขอ</label>
-                        <strong class="text-red" data-bind="requestAmount"></strong>
-                      </div>
-
-                      <div class="customer-item">
-                        <label>วงเงินเครดิต</label>
-                        <strong data-bind="currentCreditLimit"></strong>
-                      </div>
-
-                      <div class="customer-item">
-                        <label>Sale</label>
-                        <strong data-bind="saleName"></strong>
-                      </div>
-
-                      <div class="customer-item">
-                        <label>วันที่ส่งคำขอ</label>
-                        <strong data-bind="createdAt"></strong>
-                      </div>
-                    </div>
+                  <div class="cf-head-actions">
+                    <button type="button" class="er-btn is-ghost" onclick="openDocPreview()"><span class="material-symbols-outlined">description</span>ดูเอกสาร A4</button>
                   </div>
-                </section>
+                </div>
+                <ol class="cf-steps" id="dSteps"></ol>
+              </section>
 
-                <!-- =======================================================
-                     SECTION : ผลวิเคราะห์จาก PDF
-                     class: panel-analysis
-                     ซ่อนอยู่ก่อน และจะแสดงเมื่ออ่าน/วิเคราะห์ PDF สำเร็จ
-                ======================================================= -->
-                <section class="panel panel-analysis js-analysis-panel" style="display: none">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true">insights</span>
-                      ผลวิเคราะห์จาก PDF
-                    </div>
-                    <span class="analysis-badge js-analysis-badge"></span>
-                  </div>
+              <div class="cf-grid">
+                <div class="cf-col">
+                  <!-- ข้อมูลคำขอจากเซลล์ -->
+                  <section class="ed-card">
+                    <h3 class="cf-h"><span class="material-symbols-outlined">receipt_long</span>ข้อมูลคำขอจากเซลล์</h3>
+                    <dl class="cf-info" id="dInfo"></dl>
+                    <div class="cf-reason" id="dReason"></div>
+                  </section>
 
-                  <div class="panel-body js-analysis-body"></div>
-                </section>
+                  <!-- รายงานลูกหนี้ (PDF) -->
+                  <section class="ed-card">
+                    <h3 class="cf-h"><span class="material-symbols-outlined">picture_as_pdf</span>รายงานลูกหนี้คงค้าง (Aging · PDF)
+                      <span class="cf-h-note" id="pdfBadge"></span></h3>
+                    <input type="file" id="pdfInput" accept="application/pdf,.pdf" hidden />
+                    <div class="cf-pdf" id="pdfBox"></div>
+                    <div class="cf-aging" id="agingBox" hidden></div>
+                  </section>
+                </div>
 
-                <!-- =======================================================
-                     SECTION : ข้อมูลฝ่ายบัญชี
-                     class: panel-accounting
-                     รวมข้อมูลที่บัญชีกรอก + ลายเซ็นผู้ตรวจสอบ
-                ======================================================= -->
-                <section class="panel panel-accounting">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                      ข้อมูลฝ่ายบัญชี
-                    </div>
-                  </div>
+                <div class="cf-col">
+                  <!-- ผลตรวจฝ่ายบัญชี -->
+                  <section class="ed-card" id="accCard">
+                    <h3 class="cf-h"><span class="material-symbols-outlined">edit_note</span>ผลตรวจสอบฝ่ายบัญชี</h3>
+                    <div class="cf-ro" id="accReadonly" hidden></div>
 
-                  <div class="panel-body">
-                    <div class="accounting-grid">
-                      <div class="field">
-                        <label data-label-for="risk">ระดับความเสี่ยง</label>
-                        <select data-field="risk">
-                          <option value="">-- เลือกความเสี่ยง --</option>
-                          <option value="low">ต่ำ</option>
-                          <option value="medium">ปานกลาง</option>
-                          <option value="high">สูง</option>
-                        </select>
+                    <div id="accForm">
+                      <div class="cf-row2">
+                        <label class="ad-field"><span>วงเงินเครดิตที่ยืนยัน (บาท) <i>*</i></span>
+                          <input id="fVerified" class="cf-input" type="text" inputmode="decimal" placeholder="0.00" /></label>
+                        <label class="ad-field"><span>ยอดค้างชำระรวม (บาท) <small id="fOutSrc"></small></span>
+                          <input id="fOutstanding" class="cf-input" type="text" inputmode="decimal" placeholder="จาก PDF หรือกรอกเอง" /></label>
                       </div>
 
-                      <div class="field">
-                        <label data-label-for="verifiedCredit">วงเงินที่ตรวจสอบ (บาท)</label>
-                        <input
-                          data-field="verifiedCredit"
-                          type="text"
-                          inputmode="numeric"
-                          placeholder="เช่น 50,000"
-                        />
-                      </div>
+                      <div class="cf-calc" id="fCalc"></div>
 
-                      <div class="field full">
-                        <label data-label-for="recommend">ข้อเสนอแนะจากฝ่ายบัญชี</label>
-                        <textarea
-                          data-field="recommend"
-                          maxlength="1000"
-                          placeholder="เช่น แนะนำอนุมัติวงเงินชั่วคราวไม่เกิน ..."
-                        ></textarea>
-                        <span class="small-note">
-                          ข้อความนี้ใช้สำหรับ Manager / Executive — ไม่แสดงในหน้า Sale
-                        </span>
-                      </div>
-                    </div>
-
-                    <!-- ปุ่มบันทึกข้อมูลบัญชี -->
-                    <div class="panel-footer">
-                      <button class="btn btn-outline js-btn-save" type="button">
-                        <span class="material-symbols-outlined" aria-hidden="true">save</span>
-                        บันทึกข้อมูลบัญชี
-                      </button>
-                    </div>
-
-                    <!-- ลายเซ็นอยู่ในการ์ดข้อมูลฝ่ายบัญชี ตามที่บัญชีรับผิดชอบ -->
-                    <div class="accounting-signature-box">
-                      <div class="signature-title">
-                        <span class="material-symbols-outlined" aria-hidden="true">draw</span>
-                        ลายเซ็นผู้ตรวจสอบ (ฝ่ายบัญชี)
-                      </div>
-
-                      <div class="signature-preview-card">
-                        <div class="signature-empty js-signature-empty">
-                          <span class="material-symbols-outlined" aria-hidden="true">gesture</span>
-                          <strong>ยังไม่ได้บันทึกลายเซ็น</strong>
-                          <span>กดปุ่มด้านล่างเพื่อเซ็นชื่อผู้ตรวจสอบ</span>
-                        </div>
-
-                        <div class="signature-image-wrap js-signature-image-wrap hidden">
-                          <img
-                            class="signature-image js-signature-image"
-                            alt="ลายเซ็นผู้ตรวจสอบฝ่ายบัญชี"
-                          />
+                      <div class="ad-field">
+                        <span>ระดับความเสี่ยง <i>*</i> <small class="cf-hint" id="fRiskHint"></small></span>
+                        <div class="cf-risk" role="radiogroup" aria-label="ระดับความเสี่ยง">
+                          <label class="is-low"><input type="radio" name="fRisk" value="low" /><span>ต่ำ</span></label>
+                          <label class="is-medium"><input type="radio" name="fRisk" value="medium" /><span>ปานกลาง</span></label>
+                          <label class="is-high"><input type="radio" name="fRisk" value="high" /><span>สูง</span></label>
                         </div>
                       </div>
 
-                      <div class="signature-actions">
-                        <button class="btn btn-outline js-open-signature" type="button">
-                          <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-                          เซ็นลายเซ็น
-                        </button>
+                      <label class="ad-field"><span>สรุปผลตรวจ</span>
+                        <textarea id="fSummary" rows="2" maxlength="1000" placeholder="เช่น ชำระตรงเวลา 6 เดือนล่าสุด มีบิลค้างเกิน 30 วัน 1 ใบ"></textarea></label>
+                      <label class="ad-field"><span>ความเห็น / ข้อเสนอแนะถึง Manager <i>*</i></span>
+                        <textarea id="fRecommend" rows="3" maxlength="1000" placeholder="เช่น เห็นควรอนุมัติเฉพาะบิลนี้ เมื่อลูกค้าชำระยอดค้าง 60 วันแล้ว"></textarea></label>
 
-                        <button class="btn btn-danger js-clear-signature-display" type="button">
-                          <span class="material-symbols-outlined" aria-hidden="true">delete</span>
-                          ลบลายเซ็น
-                        </button>
+                      <div class="ad-field">
+                        <span>ลงนามผู้ตรวจสอบ (ฝ่ายบัญชี) <i>*</i> <button type="button" class="ad-link" onclick="accSig.clear(); markDirty()">ล้าง</button></span>
+                        <div class="ad-sig" id="fSigWrap">
+                          <canvas id="fSigCanvas" aria-label="ช่องเซ็นชื่อฝ่ายบัญชี"></canvas>
+                          <span class="ad-sig-hint" id="fSigHint"><span class="material-symbols-outlined">draw</span>เซ็นชื่อในกรอบนี้</span>
+                        </div>
+                        <small class="cf-who">ผู้ตรวจสอบ <b id="fWho">-</b></small>
                       </div>
+
+                      <div class="ad-err" id="fErr" hidden></div>
+                      <div class="cf-actions">
+                        <button type="button" class="er-btn is-ghost" id="btnSave"><span class="material-symbols-outlined">save</span>บันทึกร่าง</button>
+                        <button type="button" class="er-btn is-warn" id="btnBack"><span class="material-symbols-outlined">assignment_return</span>ส่งกลับให้เซลล์แก้ไข</button>
+                        <button type="button" class="er-btn cf-primary" id="btnForward"><span class="material-symbols-outlined">send</span>ส่งต่อ Manager</button>
+                      </div>
+                      <small class="cf-dirty" id="fDirty" hidden>มีการแก้ไขที่ยังไม่บันทึก</small>
                     </div>
-                  </div>
-                </section>
+                  </section>
+                </div>
               </div>
-              <!-- /left-stack -->
-
-              <!-- ── Right sticky column: ขั้นตอน + PDF + ส่งต่อ ──────────────────── -->
-              <aside class="right-sticky">
-                <!-- =======================================================
-                     SECTION : ลำดับการดำเนินการ
-                ======================================================= -->
-                <section class="panel panel-flow">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true">timeline</span>
-                      ลำดับการดำเนินการ
-                    </div>
-                  </div>
-
-                  <div class="panel-body">
-                    <div class="flow-vertical">
-                      <div class="flow-step done">
-                        <div class="flow-dot">
-                          <span class="material-symbols-outlined">check</span>
-                        </div>
-                        <div class="flow-content">
-                          <strong>Sale ส่งคำขอ</strong>
-                          <span>ส่งคำขอเรียบร้อยแล้ว</span>
-                        </div>
-                      </div>
-
-                      <div class="flow-step active">
-                        <div class="flow-dot"></div>
-                        <div class="flow-content">
-                          <strong>บัญชีตรวจสอบ</strong>
-                          <span>กำลังดำเนินการ</span>
-                        </div>
-                      </div>
-
-                      <div class="flow-step">
-                        <div class="flow-dot"></div>
-                        <div class="flow-content">
-                          <strong>ผู้จัดการอนุมัติ</strong>
-                          <span>รอดำเนินการ</span>
-                        </div>
-                      </div>
-
-                      <div class="flow-step">
-                        <div class="flow-dot"></div>
-                        <div class="flow-content">
-                          <strong>ผู้บริหารอนุมัติ</strong>
-                          <span>รอดำเนินการ</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <!-- =======================================================
-                     SECTION : เอกสารข้อมูลการเงินภายใน / PDF Upload
-                ======================================================= -->
-                <section class="panel panel-pdf">
-                  <div class="panel-head">
-                    <div class="panel-title">
-                      <span class="material-symbols-outlined" aria-hidden="true">picture_as_pdf</span>
-                      เอกสารข้อมูลการเงินภายใน
-                    </div>
-                  </div>
-
-                  <div class="panel-body">
-                    <div class="upload-drop-card">
-                      <input
-                        data-field="pdfInput"
-                        type="file"
-                        accept="application/pdf,.pdf"
-                        hidden
-                      />
-
-                      <button
-                        class="upload-drop-zone"
-                        type="button"
-                        onclick="
-                          this.closest('[data-request-id]')
-                            .querySelector('[data-field=pdfInput]')
-                            .click()
-                        "
-                      >
-                        <span class="material-symbols-outlined upload-icon">cloud_upload</span>
-                        <strong>ลากไฟล์ PDF มาวางที่นี่</strong>
-                        <span>หรือคลิกเพื่อเลือกไฟล์</span>
-                      </button>
-
-                      <div class="upload-helper-row">
-                        <span>รองรับไฟล์: PDF</span>
-                        <span>ขนาดสูงสุด: 15MB</span>
-                      </div>
-
-                      <div class="uploaded-file-card">
-                        <div class="file-icon-pdf">
-                          <span class="material-symbols-outlined">picture_as_pdf</span>
-                        </div>
-
-                        <div class="uploaded-file-info">
-                          <strong data-bind="pdfName">ยอดคงค้าง คอนเซอร์เทก.pdf</strong>
-                          <span>Private Storage</span>
-
-                          <a
-                            class="file-link js-pdf-link"
-                            href="#"
-                            style="display: none"
-                          >
-                            เปิดไฟล์ PDF
-                          </a>
-                        </div>
-
-                        <button
-                          type="button"
-                          class="pdf-delete-btn js-delete-pdf-btn"
-                          style="display: none"
-                          title="ลบไฟล์ PDF"
-                        >
-                          <span class="material-symbols-outlined">delete</span>
-                        </button>
-                      </div>
-
-                      <button
-                        class="btn btn-analyze upload-full-btn js-analyze-btn"
-                        type="button"
-                        style="display: none"
-                      >
-                        <span class="material-symbols-outlined">auto_awesome</span>
-                        อ่านข้อมูลจาก PDF
-                      </button>
-
-                      <span class="small-note js-no-pdf-note">
-                        อัปโหลด PDF ก่อนเพื่ออ่านข้อมูล
-                      </span>
-                    </div>
-                  </div>
-                </section>
-
-                <!-- =======================================================
-                     SECTION : Action buttons
-                ======================================================= -->
-                <section class="action-box">
-                  <h4>การดำเนินการ</h4>
-                  <div class="action-row">
-                    <button class="btn btn-primary js-btn-forward" type="button">
-                      <span class="material-symbols-outlined" aria-hidden="true">send</span>
-                      ส่งต่อผู้จัดการ
-                    </button>
-                  </div>
-                </section>
-              </aside>
-              <!-- /right-sticky -->
             </div>
-            <!-- /review-layout -->
-          </div>
-          <!-- /request-body -->
-        </div>
-        <!-- /request-content -->
-      </article>
-    </template>
-
-    <!-- ── Template: aging analysis body ──────────────────────────── -->
-    <!--
-    JS จะ clone template นี้ แล้ว fill ข้อมูล aging แต่ละรายการ
-    ใช้แทน renderAnalysisBody() ที่เคย return HTML string
-  -->
-    <template id="tpl-analysis-body">
-      <div class="aging-grid">
-        <!-- JS loop ใส่ .aging-row ทีละแถว โดย clone tpl-aging-row -->
-      </div>
-
-      <div class="aging-meta">
-        <div class="aging-meta-item">
-          <label>ลูกค้า</label>
-          <strong data-bind="customerName"></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>วันที่รายงาน</label>
-          <strong data-bind="reportDate"></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>ค้างเกิน 30 วัน (%)</label>
-          <strong data-bind="overduePct" class="js-overdue-pct"></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>ค้างนานสุด</label>
-          <strong data-bind="oldestOverdue" class="js-oldest-overdue"></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>วงเงินเครดิต</label>
-          <strong data-bind="verifiedCreditLimit"></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>วงเงินคงเหลือ</label>
-          <strong
-            data-bind="creditRemaining"
-            class="js-credit-remaining"
-          ></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>ระดับความเสี่ยง</label>
-          <strong class="risk-badge" data-bind="riskLabel"></strong>
-        </div>
-        <div class="aging-meta-item">
-          <label>สถานะวงเงิน</label>
-          <strong data-bind="creditStatus" class="js-credit-status"></strong>
-        </div>
-      </div>
-
-      <div class="aging-reason js-aging-reason" style="display: none">
-        <span
-          class="material-symbols-outlined"
-          style="font-size: 15px; vertical-align: -3px"
-          aria-hidden="true"
-          >info</span
-        >
-        <span data-bind="riskReason"></span>
-      </div>
-
-      <div class="aging-summary js-aging-summary" style="display: none">
-        <span data-bind="summaryTh"></span>
-      </div>
-
-      <div class="aging-edit-hint">
-        <span
-          class="material-symbols-outlined"
-          style="font-size: 14px; vertical-align: -2px"
-          aria-hidden="true"
-          >edit</span
-        >
-        ตัวเลขด้านล่างถูกกรอกอัตโนมัติแล้ว — ตรวจสอบและแก้ไขได้ก่อนบันทึก
-      </div>
-    </template>
-
-    <!-- ── Template: aging row (1 แถวใน .aging-grid) ──────────────── -->
-    <template id="tpl-aging-row">
-      <div class="aging-row">
-        <span data-bind="label"></span>
-        <span data-bind="value"></span>
-      </div>
-    </template>
-
-
-    <!-- ── Template: forward confirmation modal ── -->
-<template id="tpl-forward-confirm">
-  <div class="modal-overlay forward-confirm-modal js-forward-modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>
-          <span class="material-symbols-outlined" style="vertical-align:-4px;font-size:20px;color:#D97706">warning</span>
-          ยืนยันส่งต่อผู้จัดการ
-        </h3>
-        <button class="modal-close js-forward-close" type="button" aria-label="ปิด">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="color:#64748B;font-size:13px;margin-bottom:14px">
-          กรุณาตรวจสอบข้อมูลด้านล่างก่อนส่งต่อ — แก้ไขได้ในหน้านี้หากพบข้อผิดพลาด
-        </p>
-        <div class="confirm-summary-grid">
-          <div class="confirm-row"><span>ยอดคงค้างรวม</span><strong data-bind="cs-total" class="text-red"></strong></div>
-          <div class="confirm-row"><span>ค้างเกิน 30 วัน</span><strong data-bind="cs-overdue30"></strong></div>
-          <div class="confirm-row"><span>ค้างเกิน 30 วัน (%)</span><strong data-bind="cs-overduePct" class="js-cs-pct"></strong></div>
-          <div class="confirm-row"><span>ค้างนานสุด</span><strong data-bind="cs-oldest" class="js-cs-oldest"></strong></div>
-          <div class="confirm-row"><span>วงเงินที่ตรวจสอบแล้ว</span><strong data-bind="cs-credit"></strong></div>
-          <div class="confirm-row"><span>วงเงินคงเหลือ</span><strong data-bind="cs-remaining" class="js-cs-remaining"></strong></div>
-          <div class="confirm-row"><span>ระดับความเสี่ยง</span><strong data-bind="cs-risk" class="js-cs-risk"></strong></div>
-          <div class="confirm-row"><span>สถานะวงเงิน</span><strong data-bind="cs-status" class="js-cs-status"></strong></div>
-        </div>
-        <div class="confirm-remark-box">
-          <label>ข้อเสนอแนะที่จะส่งให้ผู้จัดการ</label>
-          <p data-bind="cs-recommend" class="confirm-remark-text"></p>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-outline js-forward-cancel" type="button">แก้ไขข้อมูล</button>
-        <button class="btn btn-primary js-forward-confirm" type="button">
-          <span class="material-symbols-outlined" style="font-size:17px">send</span>
-          ยืนยันส่งต่อผู้จัดการ
-        </button>
+          </section>
+        </main>
       </div>
     </div>
-  </div>
-</template>
 
+    <!-- เอกสาร A4 / ยืนยัน -->
+    <div class="cf-modal" id="cfModal" hidden>
+      <div class="cf-modal-box" role="dialog" aria-modal="true" aria-labelledby="cfModalTitle">
+        <div class="cf-modal-head">
+          <h3 id="cfModalTitle">-</h3>
+          <button type="button" class="er-icon-btn" onclick="closeModal()" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="cf-modal-body" id="cfModalBody"></div>
+        <div class="cf-modal-foot" id="cfModalFoot"></div>
+      </div>
+    </div>
 
+    <div class="er-toast" id="erToast" role="status" aria-live="polite"></div>
 
-
-
-
-
-    <!-- ================================================================
-       SCRIPTS
-  ================================================================ -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
     <script src="/js/core/roleConfig.js"></script>
     <script src="/js/core/auth.js"></script>
+    <script src="/js/components/sidebar-manager.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script>
-      if (window.pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-      }
+      if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     </script>
+    <script src="/js/pages/forms/special-price-common.js"></script>
+    <script src="/js/pages/forms/credit-limit-common.js"></script>
     <script src="/js/pages/Accounting/credit-limit-finance.js"></script>
-      <script src="/js/pages/auth/role-theme.js"></script>
-    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof RoleTheme !== "undefined") RoleTheme.init();
+      });
+    </script>
   </body>
 </html>

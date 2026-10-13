@@ -67,15 +67,16 @@
   --sale-side:   linear-gradient(180deg, #052e16 0%, #0f3d22 100%);
   --sale-light:  #86efac;
 
-  /* บัญชี — เขียวน้ำทะเล (Teal) */
-  --accounting:        #0e7490;
-  --accounting-hover:  #155e75;
-  --accounting-soft:   #ecfeff;
-  --accounting-border: #a5f3fc;
-  --accounting-text:   #155e75;
-  --accounting-rgb:    14, 116, 144;
-  --accounting-side:   linear-gradient(180deg, #082f3a 0%, #0e3f4d 100%);
-  --accounting-light:  #67e8f9;
+  /* บัญชี — ครีม / เหลืองทอง (เมนูข้างพื้นครีม: css/components/sidebar-accounting.css)
+     สีหลักใช้เหลืองทองเข้ม (yellow-700) ให้ตัวหนังสือขาวบนปุ่มอ่านได้ (contrast ≈ 4.9:1) */
+  --accounting:        #a16207;
+  --accounting-hover:  #854d0e;
+  --accounting-soft:   #fef9e7;
+  --accounting-border: #fde68a;
+  --accounting-text:   #854d0e;
+  --accounting-rgb:    161, 98, 7;
+  --accounting-side:   linear-gradient(180deg, #422006 0%, #5a3a0c 100%);
+  --accounting-light:  #fcd34d;
 
   /* การตลาด — ชมพูเข้ม */
   --marketing:        #be185d;

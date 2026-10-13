@@ -1,0 +1,52 @@
+/* =====================================================
+   sidebar-accounting.css — ธีมฝ่ายบัญชี: ครีม / เหลืองทอง
+   โหลดต่อจาก sidebar-marketing.css + sidebar-executive.css (หน้า Accounting)
+   เมนูข้างพื้นครีม ตัวหนังสือน้ำตาลเข้ม · เมนูที่เลือก = พื้นเหลืองอ่อน + แถบทองด้านซ้าย
+   พื้นหน้าโทนครีมอ่อน · ปุ่ม/ไอคอนใช้สี role (--accounting* ใน role-colors.css)
+   ===================================================== */
+body.role-accounting {
+  --sb-bg-1: #fffbeb;
+  --sb-bg-2: #fef3c7;
+  --sb-text: #5c4310;
+  --sb-icon: #a16207;
+  --sb-muted: #8a6d3b;
+  --sb-hover: rgba(161, 98, 7, 0.08);
+  --sb-active-bg: #fde68a;
+  --sb-active: #ca8a04;
+  --sb-active-icon: #854d0e;
+  --sb-line: rgba(161, 98, 7, 0.16);
+  --acc-page: #fcf9f1;
+  background: var(--acc-page) !important;
+}
+body.role-accounting .app-main,
+body.role-accounting .app-content { background: var(--acc-page) !important; }
+
+/* พื้นเมนูข้าง (ทับพื้นเข้มของ .ui-role-side) */
+body.role-accounting #appSidebar.app-sidebar.ui-role-side,
+body.role-accounting #appSidebar.app-sidebar {
+  background: linear-gradient(180deg, var(--sb-bg-1) 0%, var(--sb-bg-2) 100%) !important;
+  border-right: 1px solid #f3dfa0 !important;
+  box-shadow: 4px 0 18px rgba(120, 80, 10, 0.08) !important;
+}
+body.role-accounting #appSidebar .sidebar-logo-circle { box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.3) !important; }
+body.role-accounting #appSidebar .sidebar-brand-title { color: #422006 !important; }
+body.role-accounting #appSidebar .sidebar-brand-sub { color: #a16207 !important; }
+
+body.role-accounting #appSidebar .sidebar-nav-item:hover { color: #422006 !important; }
+body.role-accounting #appSidebar .sidebar-nav-item:hover .nav-icon-wrap { color: #854d0e; }
+body.role-accounting #appSidebar.ui-role-side .sidebar-nav-item.active,
+body.role-accounting #appSidebar .sidebar-nav-item.active {
+  background: var(--sb-active-bg) !important;
+  color: #422006 !important;
+}
+body.role-accounting #appSidebar.ui-role-side .sidebar-nav-item.active :is(.material-symbols-outlined, .nav-icon-wrap) { color: var(--sb-active-icon) !important; }
+
+body.role-accounting #appSidebar .sidebar-logout:hover { color: #b91c1c !important; background: #fee2e2 !important; }
+body.role-accounting #appSidebar .sidebar-collapse-btn { border-color: #f3dfa0 !important; }
+body.role-accounting #appSidebar .sidebar-collapse-btn .material-symbols-outlined { color: #a16207 !important; }
+
+/* หัวเว็บโทนครีม */
+body.role-accounting .app-header { background: #fffdf7 !important; border-bottom: 1px solid #f3e6bf !important; }
+body.role-accounting #appSidebar .sidebar-logout,
+body.role-accounting #appSidebar .sidebar-logout .nav-label { color: var(--sb-muted) !important; }
+body.role-accounting #appSidebar .sidebar-logout:hover .nav-label { color: #b91c1c !important; }

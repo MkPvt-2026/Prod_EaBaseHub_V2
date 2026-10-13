@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-dark>
 <head>
     <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
-    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
     <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

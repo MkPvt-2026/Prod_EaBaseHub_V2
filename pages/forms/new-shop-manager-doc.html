@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>EABaseHub | เอกสารขอเปิดร้านค้าใหม่ (Manager)</title>
+    <link rel="icon" href="/assets/icons/icon-192.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/base/layout.css" />
+    <link rel="stylesheet" href="/css/pages/forms/formPlan-ux.css" />
+    <link rel="stylesheet" href="/css/pages/forms/special-price-sale-ux.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+    <!-- หน้าเอกสาร: แบบเดียวกับหน้าเอกสารขออนุมัติของผู้บริหาร -->
+    <link rel="stylesheet" href="/css/pages/executive/executive-Dashboard-ux.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executiveHome.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-ApprovalDoc.css" />
+    <link rel="stylesheet" href="/css/pages/forms/special-price-manager-doc.css" />
+  </head>
+  <body class="role-manager">
+    <header class="app-header ui-role-bar">
+      <div class="logo">
+        <div class="logo-circle"><img src="/assets/icons/icon-192.png" alt="logo" /></div>
+        <h2>EABaseHub</h2>
+      </div>
+      <div class="user-box">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-info"><div class="user-name" id="userName">กำลังโหลด...</div></div>
+        <button id="logoutBtn" class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <main class="ad spmd">
+      <!-- แถบนำทาง -->
+      <div class="ad-bar">
+        <a class="er-btn is-ghost" href="/pages/forms/new-shop-manager.html"><span class="material-symbols-outlined">arrow_back</span>รายการคำขอเปิดร้าน</a>
+        <div class="ad-nav" id="adNav" hidden>
+          <button type="button" class="er-icon-btn" id="adPrev" title="คำขอก่อนหน้า" aria-label="คำขอก่อนหน้า"><span class="material-symbols-outlined">chevron_left</span></button>
+          <span id="adPos">-</span>
+          <button type="button" class="er-icon-btn" id="adNext" title="คำขอถัดไป" aria-label="คำขอถัดไป"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>
+        <div class="er-actions">
+          <button type="button" class="er-btn is-ghost" onclick="window.print()"><span class="material-symbols-outlined">print</span>พิมพ์ / PDF</button>
+        </div>
+      </div>
+
+      <div class="ad-layout">
+        <div class="ad-paper-wrap">
+          <article class="ad-paper" id="adDoc"><div class="ed-state">กำลังโหลดเอกสาร...</div></article>
+        </div>
+
+        <aside class="ad-panel" id="adPanel">
+          <section class="ed-card ad-card">
+            <div class="ad-head">
+              <span class="ad-type"><span class="material-symbols-outlined">add_business</span>เปิดร้านค้าใหม่ · Manager</span>
+              <span class="er-pill" id="adStatus">-</span>
+            </div>
+            <h2 class="ad-title" id="adTitle">-</h2>
+            <small class="ad-no" id="adNo">-</small>
+            <div class="spmd-kpis">
+              <div><span>ประเภทร้าน</span><b id="kType">-</b></div>
+              <div><span>พื้นที่</span><b id="kArea">-</b></div>
+              <div class="is-key"><span>ยอดซื้อคาดการณ์ / เดือน</span><b id="kEst">-</b></div>
+              <div class="is-key"><span>เงื่อนไขชำระ</span><b id="kPay">-</b></div>
+            </div>
+            <div class="spmd-flags" id="adFlags" hidden></div>
+            <ol class="ad-tl" id="adTimeline"></ol>
+          </section>
+
+          <section class="ed-card ad-card" id="adDecide" hidden>
+            <h3><span class="material-symbols-outlined">gavel</span> ความเห็น Manager</h3>
+            <div class="ad-choices" role="radiogroup" aria-label="ผลการพิจารณา">
+              <label class="ad-choice is-ok"><input type="radio" name="adDecision" value="approved"><span class="material-symbols-outlined">send</span>อนุมัติ &amp; ส่งต่อ</label>
+              <label class="ad-choice is-bad"><input type="radio" name="adDecision" value="rejected"><span class="material-symbols-outlined">cancel</span>ไม่อนุมัติ</label>
+              <label class="ad-choice is-warn"><input type="radio" name="adDecision" value="request_more_info"><span class="material-symbols-outlined">help</span>ขอข้อมูลเพิ่ม</label>
+            </div>
+            <label class="ad-field"><span id="adCommentLabel">ความเห็น</span>
+              <textarea id="adComment" rows="3" maxlength="1000" placeholder="เช่น เห็นควรอนุมัติ ร้านศักยภาพดี อยู่ในเส้นทางของเซลล์"></textarea></label>
+            <div class="ad-field">
+              <span>ลงนาม Manager <i id="adSigReq">*</i> <button type="button" class="ad-link" onclick="mgrSig.clear()">ล้าง</button></span>
+              <div class="ad-sig" id="adSigWrap">
+                <canvas id="adSigCanvas" aria-label="ช่องเซ็นชื่อ Manager"></canvas>
+                <span class="ad-sig-hint" id="adSigHint"><span class="material-symbols-outlined">draw</span>เซ็นชื่อในกรอบนี้</span>
+              </div>
+              <small class="spmd-who">ผู้พิจารณา <b id="mgrName">-</b> · <span id="mgrRole">-</span></small>
+            </div>
+            <div class="ad-err" id="adErr" hidden></div>
+            <button type="button" class="er-btn ad-save" id="adSave"><span class="material-symbols-outlined">task_alt</span>บันทึกผลการพิจารณา</button>
+          </section>
+
+          <section class="ed-card ad-card" id="adDone" hidden></section>
+        </aside>
+      </div>
+    </main>
+
+    <div class="er-toast" id="erToast" role="status" aria-live="polite"></div>
+
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/pages/forms/special-price-common.js"></script>
+    <script src="/js/pages/forms/new-shop-common.js"></script>
+    <script src="/js/pages/forms/new-shop-manager-doc.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script>document.addEventListener("DOMContentLoaded", function () { if (typeof RoleTheme !== "undefined") RoleTheme.init(); });</script>
+  </body>
+</html>

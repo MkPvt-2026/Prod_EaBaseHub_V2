@@ -1,2159 +1,662 @@
-// =====================================================
-// executiveHome.js v6 — Sales Table Modal + Comment Popup + View Toggle
-// 1 รายการ = 1 ร้านค้า (รวมสินค้าทั้งหมด)
-// 🆕 คลิก sales card → เปิด modal ตารางทั้งสัปดาห์ของเซลล์คนนั้น
-// 🆕 ปุ่ม comment ในแต่ละแถว → popup เล็กซ้อน
-// 🆕 Toggle: List view / Table by Sales view
-// =====================================================
+// ============================================================
+// executiveHome.js v2.0 — สรุปการเข้าร้านค้า (ผู้บริหาร)
+// ------------------------------------------------------------
+// แยกจากหน้ารายงานของ Marketing/Manager (reportTracker) — เน้น "ติดตาม + สรุป"
+//   ช่วงเวลา (สัปดาห์/เดือน/ไตรมาส/กำหนดเอง) เทียบช่วงก่อนหน้าความยาวเท่ากัน
+//   ตัวเลขหลัก · แนวโน้ม · ต้องติดตาม · ตารางเซลล์ · จังหวัด · สินค้าที่นำเสนอ
+//   กดชื่อเซลล์ → รายงานของคนนั้น (อ่านอย่างเดียว) + ส่งความคิดเห็นถึงเซลล์
+//     ความคิดเห็นเก็บใน report_comments (ตารางเดียวกับ Manager) → เซลล์เห็นในหน้ารายงานของตัวเอง
+// "การเข้าร้าน 1 ครั้ง" = เซลล์ + ร้าน + วัน (รายงาน 1 ใบมีหลายแถวตามสินค้า)
+// ============================================================
 
-"use strict";
+const DAY = 86400000;
+const WATCH_NO_REPORT_DAYS = 3;   // เซลล์ไม่ส่งรายงานเกินกี่วัน → ต้องติดตาม
+const WATCH_SHOP_DAYS = 60;       // ร้านในความดูแลไม่ได้เยี่ยมเกินกี่วัน → ต้องติดตาม
 
-let localUser = null;
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+const fmtN = (n) => Number(n || 0).toLocaleString("th-TH");
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const sod = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const addD = (d, n) => new Date(d.getTime() + n * DAY);
+const TH_MON = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+const TH_DOW = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+const thD = (d) => `${d.getDate()} ${TH_MON[d.getMonth()]}`;
+const thDY = (d) => `${d.getDate()} ${TH_MON[d.getMonth()]} ${String(d.getFullYear() + 543).slice(-2)}`;
+const fromYmd = (s) => new Date(s + "T00:00:00");
 
-let allReports = []; // raw rows from DB
-let groupedReports = []; // grouped by shop visit
-let filteredGroups = []; // after filter
-let profilesMap = {};
-let shopsMap = {};
-let productsMap = {};
-let commentCountsMap = {};
-let replyCountsMap = {};
+const S = {
+  period: "week",
+  range: null, prev: null,
+  visits: [], prevVisits: [], recent: [],   // ช่วงนี้ / ช่วงก่อน / 60 วันล่าสุด (ทุกช่วง)
+  shops: new Map(), products: new Map(), people: new Map(), sales: [],
+  comments: new Map(),                      // report_id → จำนวน
+  rows: [], sort: { key: "visits", dir: -1 },
+  me: null,
+};
 
-const REPLY_READ_KEY = "ea_reply_reads";
-let replyUnreadMap = {};
-
-function getReplyReads() {
-  try {
-    return JSON.parse(localStorage.getItem(REPLY_READ_KEY) || "{}");
-  } catch (e) {
-    return {};
+// ============================================================
+// ช่วงเวลา
+// ============================================================
+function computeRange(period, customFrom, customTo) {
+  const today = sod(new Date());
+  const monday = addD(today, -((today.getDay() + 6) % 7));
+  let from, to, prevFrom, prevTo, label;
+  if (period === "lastweek") {
+    from = addD(monday, -7); to = addD(monday, -1);
+    prevFrom = addD(from, -7); prevTo = addD(to, -7); label = "สัปดาห์ก่อน";
+  } else if (period === "month") {
+    from = new Date(today.getFullYear(), today.getMonth(), 1); to = today;
+    prevFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    prevTo = new Date(prevFrom.getFullYear(), prevFrom.getMonth(), Math.min(today.getDate(), new Date(today.getFullYear(), today.getMonth(), 0).getDate()));
+    label = "เดือนนี้";
+  } else if (period === "lastmonth") {
+    from = new Date(today.getFullYear(), today.getMonth() - 1, 1); to = new Date(today.getFullYear(), today.getMonth(), 0);
+    prevFrom = new Date(today.getFullYear(), today.getMonth() - 2, 1); prevTo = new Date(today.getFullYear(), today.getMonth() - 1, 0);
+    label = "เดือนก่อน";
+  } else if (period === "quarter") {
+    const q = Math.floor(today.getMonth() / 3) * 3;
+    from = new Date(today.getFullYear(), q, 1); to = today;
+    prevFrom = new Date(today.getFullYear(), q - 3, 1);
+    prevTo = addD(prevFrom, Math.round((to - from) / DAY));
+    label = "ไตรมาสนี้";
+  } else if (period === "custom" && customFrom && customTo) {
+    from = sod(customFrom); to = sod(customTo);
+    if (to < from) [from, to] = [to, from];
+    const len = Math.round((to - from) / DAY) + 1;
+    prevTo = addD(from, -1); prevFrom = addD(prevTo, -(len - 1)); label = "ช่วงที่เลือก";
+  } else {
+    from = monday; to = today; prevFrom = addD(monday, -7); prevTo = addD(today, -7); label = "สัปดาห์นี้";
   }
+  return { from, to, prevFrom, prevTo, label, today };
 }
 
-function saveReplyReads(reads) {
-  localStorage.setItem(REPLY_READ_KEY, JSON.stringify(reads));
-}
-
-function markRepliesAsRead(reportIds) {
-  const reads = getReplyReads();
-  const now = new Date().toISOString();
-
-  (reportIds || []).forEach((id) => {
-    reads[id] = now;
-    replyUnreadMap[id] = 0;
-  });
-
-  saveReplyReads(reads);
-}
-
-let isSavingComment = false;
-let isSavingPopupComment = false;
-
-let dateStart = null;
-let dateEnd = null;
-
-let currentPage = 1;
-const PAGE_SIZE = 20;
-
-let activeSalesFilter = null;
-
-// Modal: report detail (เดิม)
-let currentReportId = null;
-let currentGroupKey = null;
-let currentGroupRows = [];
-
-// 🆕 Modal: sales table
-let currentSalesModalId = null;
-
-// 🆕 Modal: comment popup
-let currentPopupGroupKey = null;
-let currentPopupReportId = null;
-
-// 🆕 View mode
-let currentView = "list"; // 'list' | 'table'
-
-// =====================================================
-// 🔧 HELPER: รอ Supabase Client พร้อม
-// =====================================================
-function waitForSupabase(maxAttempts = 50) {
-  return new Promise((resolve, reject) => {
-    let attempts = 0;
-    const check = () => {
-      attempts++;
-      if (typeof supabaseClient !== "undefined" && supabaseClient?.auth) {
-        resolve(supabaseClient);
-      } else if (attempts < maxAttempts) {
-        setTimeout(check, 100);
-      } else {
-        reject(new Error("supabaseClient ไม่พร้อมหลังจากรอนานเกินไป"));
-      }
-    };
-    check();
-  });
-}
-
-// =====================================================
-// 🚀 INIT
-// =====================================================
+// ============================================================
+// เริ่มต้น
+// ============================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("🚀 Report Manager initializing...");
+  const hd = $("headerDateText");
+  if (hd) hd.textContent = new Date().toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
+  bindUi();
+  markChip();
+  for (let i = 0; i < 50 && typeof supabaseClient === "undefined"; i++) await new Promise((r) => setTimeout(r, 100));
+  if (typeof supabaseClient === "undefined") return;
 
-  try {
-    await waitForSupabase();
+  // ⚡ เริ่มโหลดข้อมูลทันที พร้อมกันทุกอย่าง (สิทธิ์เข้าหน้าตรวจโดยตัวตรวจสิทธิ์กลาง auth.js อยู่แล้ว
+  //    ข้อมูลจริงกันด้วย RLS) — เดิมรอตรวจสิทธิ์ → โหลดผู้ใช้ → โหลดร้าน → โหลดรายงาน ทีละขั้น
+  const master = loadMaster().catch((e) => console.error("master:", e));
+  const reports = loadPeriodData(currentRange());
+  loadMe();
+  await master;
+  await loadPeriod(reports);
 
-    const session = await getSessionSafely();
-    if (!session) {
-      showLoginRequired();
-      return;
-    }
-
-    if (typeof protectPage === "function") {
-      try {
-        await protectPage(["admin", "executive", "manager"]);
-      } catch (e) {
-        console.warn("⚠️ protectPage failed:", e.message);
-      }
-    }
-
-    localUser = await loadCurrentUser(session);
-    if (!localUser) {
-      showLoginRequired();
-      return;
-    }
-
-    updateHeaderUI();
-    initDateRange();
-    setupDateControls();
-
-    await Promise.all([loadProfiles(), loadShops(), loadProducts()]);
-    await loadReports();
-
-    setupEventListeners();
-    setupLogout();
-
-    console.log("✅ Report Manager ready");
-  } catch (e) {
-    console.error("❌ Init error:", e);
-    showErrorState(e.message);
-  }
+  // ป้ายตัวเลขงานรออนุมัติบนเมนู (ไม่ต้องรอ)
+  if (typeof loadExecApprovals === "function") loadExecApprovals().then((r) => setExecNavBadge(r.pending.length)).catch(() => {});
 });
 
-// =====================================================
-// 🔐 GET SESSION SAFELY
-// =====================================================
-async function getSessionSafely() {
+async function loadMe() {
   try {
-    const {
-      data: { session },
-      error,
-    } = await supabaseClient.auth.getSession();
-    if (error) {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabaseClient.auth.getUser();
-        if (user && !userError) return { user };
-      } catch (e) {
-        /* ignore */
-      }
-      return null;
+    if (!window.currentUser?.id && typeof loadCurrentUser === "function") await loadCurrentUser();
+  } catch (e) { /* ignore */ }
+  S.me = window.currentUser || null;
+  if ($("userName")) $("userName").textContent = S.me?.display_name || S.me?.username || S.me?.email || "ผู้บริหาร";
+}
+
+function bindUi() {
+  document.querySelectorAll(".er-chip").forEach((b) => b.addEventListener("click", () => {
+    if (S.period === b.dataset.period && S.period !== "custom") return;
+    S.period = b.dataset.period;
+    $("erCustom").hidden = S.period !== "custom";
+    if (S.period === "custom") {
+      if (!$("erFrom").value) { const r = computeRange("month"); $("erFrom").value = ymd(r.from); $("erTo").value = ymd(r.to); }
+      markChip();
+      return;
     }
-    return session;
+    loadPeriod();
+  }));
+  $("erApply").addEventListener("click", () => { if ($("erFrom").value && $("erTo").value) loadPeriod(); });
+  $("erSearch").addEventListener("input", renderTable);
+  document.querySelectorAll(".er-table th[data-sort]").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    S.sort = { key: k, dir: S.sort.key === k ? -S.sort.dir : (k === "name" || k === "last" ? 1 : -1) };
+    renderTable();
+  }));
+  $("erCsv").addEventListener("click", exportCsv);
+  $("dClose").addEventListener("click", closeDrawer);
+  $("drawerBg").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+  $("salesBody").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-id]"); if (tr) openDrawer(tr.dataset.id); });
+  $("watchList").addEventListener("click", (e) => { const a = e.target.closest("[data-sale]"); if (a) { e.preventDefault(); openDrawer(a.dataset.sale); } });
+}
+function markChip() { document.querySelectorAll(".er-chip").forEach((b) => b.classList.toggle("is-on", b.dataset.period === S.period)); }
+
+// ============================================================
+// โหลดข้อมูล
+// ============================================================
+// ⚡ ดึงข้อมูลเกิน 1000 แถวแบบ "ขนาน": หน้าแรกพร้อมนับจำนวนทั้งหมด แล้วยิงหน้าที่เหลือพร้อมกันครั้งละ 6
+//    (เดิมดึงทีละหน้าต่อกัน → ข้อมูล 8 หน้า = รอ 8 รอบ)
+async function fetchAll(build, size = 1000, max = 60000) {
+  const first = await build(true).range(0, size - 1);
+  if (first.error) throw first.error;
+  const out = first.data || [];
+  const total = Math.min(first.count ?? out.length, max);
+  if (out.length < size || total <= size) return out;
+  const starts = [];
+  for (let f = size; f < total; f += size) starts.push(f);
+  const pages = new Array(starts.length);
+  let next = 0;
+  async function worker() {
+    while (next < starts.length) {
+      const i = next++;
+      const { data, error } = await build(false).range(starts[i], starts[i] + size - 1);
+      if (error) throw error;
+      pages[i] = data || [];
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(6, starts.length) }, worker));
+  return out.concat(...pages);
+}
+
+// ข้อมูลหลัก: ร้าน / สินค้า / เซลล์ — เก็บไว้ในแท็บนี้ 15 นาที (เปิดหน้าอีกครั้งไม่ต้องโหลดใหม่)
+const MASTER_KEY = "ea-exec-report-master-v1";
+const MASTER_TTL = 15 * 60 * 1000;
+function applyMaster(m) {
+  S.shops = new Map(m.shops.map((x) => [String(x.id), x]));
+  S.products = new Map(m.products.map((p) => [String(p.id), p.name]));
+  S.people = new Map(m.people.map((p) => [String(p.id), p]));
+  const active = (p) => !p.status || String(p.status).toLowerCase() === "active";
+  S.sales = m.people.filter(active);
+}
+async function loadMaster() {
+  try {
+    const c = JSON.parse(sessionStorage.getItem(MASTER_KEY) || "null");
+    if (c && Date.now() - c.t < MASTER_TTL) { applyMaster(c); return; }
+  } catch (e) { /* ignore */ }
+  const shopsQ = (cols) => (cnt) => supabaseClient.from("shops").select(cols, cnt ? { count: "exact" } : undefined).order("id");
+  const [shops, prods, people] = await Promise.all([
+    fetchAll(shopsQ("id, shop_name, province, sale_id, status")).catch(() => fetchAll(shopsQ("id, shop_name, province"))),
+    supabaseClient.from("products").select("id, name"),
+    supabaseClient.from("profiles").select("id, display_name, username, email, area, role, status").in("role", ["sales", "sale", "Sales"]),
+  ]);
+  const m = { t: Date.now(), shops, products: prods.data || [], people: people.data || [] };
+  applyMaster(m);
+  try { sessionStorage.setItem(MASTER_KEY, JSON.stringify(m)); } catch (e) { /* เกินพื้นที่ → ไม่เก็บ */ }
+}
+
+function dayKey(r) {
+  if (r.report_date) return String(r.report_date).slice(0, 10);
+  const t = r.submitted_at || r.created_at;
+  return t ? ymd(new Date(t)) : null;
+}
+// เข้าพบสำเร็จ = มีผลการเยี่ยมที่ไม่ใช่ "รอ…" (ฟอร์มปัจจุบัน: เข้าพบลูกค้า / รอเข้าพบรอบต่อไป)
+const isMet = (st) => !!st && !/^รอ/.test(String(st).trim());
+const isWait = (st) => !!st && /^รอ/.test(st);
+
+function toVisits(rows) {
+  const m = new Map();
+  rows.forEach((r) => {
+    const d = dayKey(r);
+    if (!d) return;
+    const k = `${r.sale_id}|${r.shop_id}|${d}`;
+    if (!m.has(k)) m.set(k, { key: k, sale_id: String(r.sale_id), shop_id: r.shop_id == null ? null : String(r.shop_id), day: d, rows: [] });
+    m.get(k).rows.push(r);
+  });
+  return [...m.values()].map((v) => {
+    const st = v.rows.map((r) => r.status_visit).filter(Boolean);
+    v.met = st.some(isMet);
+    v.wait = !v.met && st.some(isWait);
+    v.status = st[0] || "";
+    v.ids = v.rows.map((r) => r.id);
+    v.products = [...new Set(v.rows.map((r) => r.product_id).filter(Boolean).map(String))];
+    v.interest = [...new Set(v.rows.map((r) => r.product_interest).filter(Boolean))].join(" · ");
+    v.note = [...new Set(v.rows.map((r) => r.note).filter(Boolean))].join(" · ");
+    v.time = v.rows.map((r) => r.submitted_at || r.created_at).filter(Boolean).sort().pop() || null;
+    return v;
+  });
+}
+
+function currentRange() {
+  return S.period === "custom" ? computeRange("custom", fromYmd($("erFrom").value), fromYmd($("erTo").value)) : computeRange(S.period);
+}
+
+// ⚡ ดึงเฉพาะคอลัมน์ที่ใช้สรุป + เฉพาะช่วงที่ต้องใช้ (ช่วงก่อน → ช่วงนี้)
+//    รายละเอียด (สินค้าที่สนใจ / หมายเหตุ) ดึงตอนเปิดดูเซลล์คนนั้น · ผลลัพธ์เก็บไว้ สลับช่วงกลับมาไม่ต้องโหลดใหม่
+const REPORT_COLS = "id, sale_id, shop_id, report_date, submitted_at, created_at, status_visit, product_id";
+const _rowsCache = new Map();
+function fetchReports(from, to, cols = REPORT_COLS) {
+  const key = `${cols}|${ymd(from)}|${ymd(to)}`;
+  if (_rowsCache.has(key)) return _rowsCache.get(key);
+  const a = ymd(from), b = ymd(to);
+  const ta = from.toISOString(), tb = addD(to, 1).toISOString();
+  const p = fetchAll((cnt) => supabaseClient.from("reports")
+    .select(cols, cnt ? { count: "exact" } : undefined)
+    .or(`and(report_date.gte.${a},report_date.lte.${b}),and(report_date.is.null,submitted_at.gte.${ta},submitted_at.lt.${tb})`)
+    .order("id", { ascending: true }));
+  _rowsCache.set(key, p);
+  p.catch(() => _rowsCache.delete(key));
+  return p;
+}
+function loadPeriodData(R) {
+  return fetchReports(R.prevFrom, R.to).then((rows) => ({ R, rows }));
+}
+
+let _loadSeq = 0;
+async function loadPeriod(pending) {
+  markChip();
+  const seq = ++_loadSeq;
+  const req = pending || loadPeriodData(currentRange());
+  const R0 = currentRange();
+  $("erRange").innerHTML = `${esc(R0.label)} <b>${thDY(R0.from)} – ${thDY(R0.to)}</b> <span>เทียบ ${thD(R0.prevFrom)} – ${thDY(R0.prevTo)}</span>`;
+  document.querySelector(".er").classList.add("is-loading");
+  try {
+    const { R, rows } = await req;
+    if (seq !== _loadSeq) return; // ผู้ใช้เปลี่ยนช่วงไปแล้ว
+    S.range = R;
+    const all = toVisits(rows);
+    const inR = (v, a, b) => v.day >= ymd(a) && v.day <= ymd(b);
+    S.visits = all.filter((v) => inR(v, R.from, R.to));
+    S.prevVisits = all.filter((v) => inR(v, R.prevFrom, R.prevTo));
+    S.comments = new Map();
+    renderAll();
+    // ไม่ต้องรอ: จำนวนความคิดเห็น + ข้อมูล 60 วันสำหรับ "ต้องติดตาม"
+    loadCommentCounts(S.visits.flatMap((v) => v.ids)).then(() => { if (seq === _loadSeq) refreshRows(); });
+    loadRecent().then(() => { if (seq === _loadSeq) { refreshRows(); renderWatch(); } });
   } catch (e) {
-    console.error("❌ getSessionSafely error:", e);
-    return null;
+    console.error("reports:", e);
+    $("salesBody").innerHTML = `<tr><td colspan="9" class="ed-state is-error">โหลดรายงานไม่สำเร็จ: ${esc(e.message || "")} <button type="button" class="er-btn is-ghost" onclick="loadPeriod()">ลองใหม่</button></td></tr>`;
+    $("trendChart").innerHTML = `<div class="ed-state is-error">โหลดรายงานไม่สำเร็จ</div>`;
+  } finally {
+    if (seq === _loadSeq) document.querySelector(".er").classList.remove("is-loading");
   }
 }
 
-// =====================================================
-// 👤 LOAD CURRENT USER
-// =====================================================
-async function loadCurrentUser(session) {
-  try {
-    if (window.currentUser && window.currentUser.id) {
-      return {
-        id: window.currentUser.id,
-        role: window.currentUser.role,
-        area: window.currentUser.area,
-        name:
-          window.currentUser.display_name ||
-          window.currentUser.username ||
-          window.currentUser.email ||
-          "User",
-      };
+// ข้อมูล 60 วันล่าสุด (เฉพาะ เซลล์/ร้าน/วัน) — ใช้กับ "ต้องติดตาม" และ "ส่งล่าสุด" · โหลดครั้งเดียว
+let _recentP = null;
+function loadRecent() {
+  if (_recentP) return _recentP;
+  const today = sod(new Date());
+  _recentP = fetchReports(addD(today, -WATCH_SHOP_DAYS), today, "id, sale_id, shop_id, report_date, submitted_at, created_at")
+    .then((rows) => { S.recent = toVisits(rows); S.recentReady = true; })
+    .catch((e) => { console.warn("recent:", e); _recentP = null; });
+  return _recentP;
+}
+
+function refreshRows() {
+  const days = new Map();
+  S.visits.forEach((v) => { if (!days.has(v.sale_id)) days.set(v.sale_id, new Set()); days.get(v.sale_id).add(v.day); });
+  buildRows(days);
+  renderTable();
+}
+
+// จำนวนความคิดเห็น — ยิงพร้อมกันเป็นชุด ๆ (ชุดละ 150 รายงาน)
+async function loadCommentCounts(ids) {
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 150) chunks.push(ids.slice(i, i + 150));
+  const res = await Promise.all(chunks.map((c) => supabaseClient.from("report_comments").select("report_id").in("report_id", c)));
+  const m = new Map();
+  for (const { data, error } of res) {
+    if (error) { console.warn("comments:", error.message); return; }
+    (data || []).forEach((c) => m.set(String(c.report_id), (m.get(String(c.report_id)) || 0) + 1));
+  }
+  S.comments = m;
+}
+const visitComments = (v) => v.ids.reduce((s, id) => s + (S.comments.get(String(id)) || 0), 0);
+
+// ============================================================
+// คำนวณ + แสดงผล
+// ============================================================
+function deltaHTML(cur, prev, unit = "") {
+  if (!prev) return cur ? `<span class="ed-delta is-up">ใหม่</span> ช่วงก่อนไม่มีข้อมูล` : "ช่วงก่อนไม่มีข้อมูล";
+  const pct = Math.round(((cur - prev) / prev) * 100);
+  const cls = pct > 0 ? "is-up" : pct < 0 ? "is-down" : "";
+  return `<span class="ed-delta ${cls}">${pct > 0 ? "▲" : pct < 0 ? "▼" : "•"} ${Math.abs(pct)}%</span> ช่วงก่อน ${fmtN(prev)}${unit}`;
+}
+
+function assignedShops(saleId) {
+  const out = [];
+  S.shops.forEach((s) => {
+    if (s.sale_id == null || (s.status && String(s.status).toLowerCase() !== "active")) return;
+    if (saleId ? String(s.sale_id) === saleId : S.sales.some((p) => String(p.id) === String(s.sale_id))) out.push(String(s.id));
+  });
+  return out;
+}
+
+function renderAll() {
+  const V = S.visits, P = S.prevVisits;
+  const shopsOf = (list) => new Set(list.map((v) => v.shop_id).filter(Boolean));
+  const curShops = shopsOf(V), prevShops = shopsOf(P);
+
+  $("kVisits").textContent = fmtN(V.length);
+  $("kVisitsSub").innerHTML = deltaHTML(V.length, P.length);
+  $("kShops").textContent = fmtN(curShops.size);
+  $("kShopsSub").innerHTML = deltaHTML(curShops.size, prevShops.size, " ร้าน");
+
+  const assigned = assignedShops(null);
+  if (assigned.length) {
+    const covered = assigned.filter((id) => curShops.has(id)).length;
+    $("kCover").innerHTML = `${Math.round((covered / assigned.length) * 100)}<small>%</small>`;
+    $("kCoverSub").textContent = `${fmtN(covered)} จาก ${fmtN(assigned.length)} ร้าน`;
+  } else {
+    $("kCover").textContent = "—";
+    $("kCoverSub").textContent = "ยังไม่ได้กำหนดเซลล์ดูแลร้าน";
+  }
+
+  const met = V.filter((v) => v.met).length, wait = V.filter((v) => v.wait).length;
+  $("kMet").innerHTML = V.length ? `${Math.round((met / V.length) * 100)}<small>%</small>` : "—";
+  $("kMetSub").textContent = V.length ? `เข้าพบ ${fmtN(met)} · รอรอบต่อไป ${fmtN(wait)}` : "ไม่มีการเข้าร้าน";
+
+  const daysBy = (list) => { const m = new Map(); list.forEach((v) => { if (!m.has(v.sale_id)) m.set(v.sale_id, new Set()); m.get(v.sale_id).add(v.day); }); return m; };
+  const dc = daysBy(V), dp = daysBy(P);
+  const n = Math.max(S.sales.length, dc.size) || 1;
+  const avg = [...dc.values()].reduce((s, x) => s + x.size, 0) / n;
+  const avgP = [...dp.values()].reduce((s, x) => s + x.size, 0) / (Math.max(S.sales.length, dp.size) || 1);
+  $("kDays").textContent = avg.toLocaleString("th-TH", { maximumFractionDigits: 1 });
+  $("kDaysSub").textContent = `จาก ${fmtN(n)} คน · ช่วงก่อน ${avgP.toLocaleString("th-TH", { maximumFractionDigits: 1 })} วัน`;
+
+  renderTrend();
+  buildRows(dc);
+  renderTable();
+  if (S.recentReady) renderWatch(); else $("watchList").innerHTML = `<li class="ed-state">กำลังตรวจ...</li>`;
+  renderProvinces();
+  renderProducts();
+}
+
+function renderTrend() {
+  const R = S.range;
+  const days = Math.round((R.to - R.from) / DAY) + 1;
+  const byDay = new Map();
+  S.visits.forEach((v) => byDay.set(v.day, (byDay.get(v.day) || 0) + 1));
+  let bars = [];
+  if (days <= 31) {
+    for (let i = 0; i < days; i++) {
+      const d = addD(R.from, i);
+      bars.push({ n: byDay.get(ymd(d)) || 0, top: TH_DOW[d.getDay()], bot: d.getDate(), title: thD(d), today: ymd(d) === ymd(R.today), weekend: d.getDay() === 0 || d.getDay() === 6 });
     }
-
-    const userId = session?.user?.id;
-    if (!userId) return null;
-
-    const { data: profile, error } = await supabaseClient
-      .from("profiles")
-      .select("id, display_name, role, area")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      return {
-        id: userId,
-        role: "user",
-        area: null,
-        name: session.user.email || "User",
-      };
+    $("trendHint").textContent = "รายวัน";
+  } else {
+    for (let s = new Date(R.from); s <= R.to; s = addD(s, 7)) {
+      const e = new Date(Math.min(addD(s, 6).getTime(), R.to.getTime()));
+      let n = 0;
+      for (let d = new Date(s); d <= e; d = addD(d, 1)) n += byDay.get(ymd(d)) || 0;
+      bars.push({ n, top: "สัปดาห์", bot: thD(s), title: `${thD(s)} – ${thD(e)}`, today: R.today >= s && R.today <= e });
     }
+    $("trendHint").textContent = "รายสัปดาห์";
+  }
+  const max = Math.max(1, ...bars.map((b) => b.n));
+  $("trendChart").innerHTML = `<div class="ed-bars" style="grid-template-columns:repeat(${bars.length},minmax(0,1fr))">${bars.map((b) => `
+    <div class="ed-bar is-week ${b.today ? "is-today" : ""} ${b.weekend ? "is-weekend" : ""}" title="${esc(b.title)} · ${b.n} ครั้ง">
+      <span class="ed-bar-val">${b.n || ""}</span>
+      <span class="ed-bar-col"><i style="height:${b.n ? Math.max(Math.round((b.n / max) * 100), 4) : 0}%"></i></span>
+      <span class="ed-bar-lbl">${esc(b.top)}<b>${esc(b.bot)}</b></span>
+    </div>`).join("")}</div>`;
+  const workdays = bars.length && days <= 31 ? bars.filter((b, i) => addD(R.from, i).getDay() !== 0 && addD(R.from, i) <= R.today).length || 1 : 0;
+  $("trendFoot").innerHTML = `รวม <b>${fmtN(S.visits.length)}</b> ครั้ง${workdays ? ` · เฉลี่ย <b>${(S.visits.length / workdays).toLocaleString("th-TH", { maximumFractionDigits: 1 })}</b> ครั้ง/วันทำงาน` : ""} · ช่วงก่อน <b>${fmtN(S.prevVisits.length)}</b> ครั้ง`;
+}
 
+function buildRows(daysCur) {
+  const R = S.range;
+  const ids = new Set([...S.sales.map((p) => String(p.id)), ...S.visits.map((v) => v.sale_id)]);
+  const lastAll = new Map();
+  S.recent.concat(S.visits).forEach((v) => { if (!lastAll.has(v.sale_id) || v.day > lastAll.get(v.sale_id)) lastAll.set(v.sale_id, v.day); });
+  S.rows = [...ids].filter((id) => id && id !== "null" && id !== "undefined").map((id) => {
+    const p = S.people.get(id) || {};
+    const mine = S.visits.filter((v) => v.sale_id === id);
+    const prev = S.prevVisits.filter((v) => v.sale_id === id).length;
+    const shops = new Set(mine.map((v) => v.shop_id).filter(Boolean));
+    const asg = assignedShops(id);
+    const met = mine.filter((v) => v.met).length;
+    const last = lastAll.get(id) || null;
     return {
-      id: profile.id,
-      role: profile.role,
-      area: profile.area,
-      name: profile.display_name || session.user.email || "User",
+      id, name: p.display_name || p.username || p.email || "ไม่ทราบชื่อ", area: p.area || "",
+      visits: mine.length, prev, delta: mine.length - prev, shops: shops.size,
+      cover: asg.length ? Math.round((asg.filter((x) => shops.has(x)).length / asg.length) * 100) : null, assigned: asg.length,
+      met: mine.length ? Math.round((met / mine.length) * 100) : null,
+      days: daysCur.get(id)?.size || 0, last,
+      idle: last ? Math.round((R.today - fromYmd(last)) / DAY) : null,
+      comments: mine.reduce((s, v) => s + visitComments(v), 0),
     };
-  } catch (e) {
-    console.error("❌ loadCurrentUser error:", e);
-    return null;
-  }
-}
-
-// =====================================================
-// 🎨 UPDATE HEADER UI
-// =====================================================
-function updateHeaderUI() {
-  const nameEl = document.getElementById("userName");
-  if (nameEl && localUser?.name) nameEl.textContent = localUser.name;
-
-  const avatarEl = document.getElementById("userAvatar");
-  if (avatarEl && localUser?.name)
-    avatarEl.textContent = localUser.name.charAt(0).toUpperCase();
-}
-
-// =====================================================
-// ⚠️ UI STATES
-// =====================================================
-function showLoginRequired() {
-  const container = document.getElementById("reportsContainer");
-  if (container) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🔐</div>
-        <h3>กรุณาเข้าสู่ระบบ</h3>
-        <p>คุณต้องเข้าสู่ระบบก่อนเพื่อดูรายงาน</p>
-        <a href="/pages/auth/login.html" class="btn btn-primary" style="margin-top:1rem;">เข้าสู่ระบบ</a>
-      </div>`;
-  }
-  const salesGrid = document.getElementById("salesGrid");
-  if (salesGrid) salesGrid.innerHTML = "";
-  ["totalReports", "unreadReports", "readReports", "activeSales"].forEach(
-    (id) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = "—";
-    },
-  );
-}
-
-function showErrorState(message) {
-  const container = document.getElementById("reportsContainer");
-  if (container) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <h3>เกิดข้อผิดพลาด</h3>
-        <p>${message}</p>
-        <button onclick="location.reload()" class="btn btn-primary" style="margin-top:1rem;">ลองใหม่อีกครั้ง</button>
-      </div>`;
-  }
-}
-
-// =====================================================
-// 📅 DATE RANGE CONTROLS
-// =====================================================
-function initDateRange() {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-
-  dateStart = monday;
-  dateEnd = sunday;
-
-  const startInput = document.getElementById("dateStart");
-  const endInput = document.getElementById("dateEnd");
-  if (startInput) startInput.value = formatDateForInput(dateStart);
-  if (endInput) endInput.value = formatDateForInput(dateEnd);
-
-  updateDateRangeLabel();
-}
-
-function setupDateControls() {
-  const startInput = document.getElementById("dateStart");
-  const endInput = document.getElementById("dateEnd");
-
-  if (startInput) {
-    startInput.addEventListener("change", () => {
-      dateStart = new Date(startInput.value);
-      dateStart.setHours(0, 0, 0, 0);
-      updateDateRangeLabel();
-      clearQuickRangeActive();
-      loadReports();
-    });
-  }
-
-  if (endInput) {
-    endInput.addEventListener("change", () => {
-      dateEnd = new Date(endInput.value);
-      dateEnd.setHours(23, 59, 59, 999);
-      updateDateRangeLabel();
-      clearQuickRangeActive();
-      loadReports();
-    });
-  }
-
-  document.querySelectorAll(".quick-range-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setQuickRange(btn.dataset.range);
-      document
-        .querySelectorAll(".quick-range-btn")
-        .forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-    });
   });
 }
 
-function clearQuickRangeActive() {
-  document
-    .querySelectorAll(".quick-range-btn")
-    .forEach((b) => b.classList.remove("active"));
+function renderTable() {
+  const q = $("erSearch").value.trim().toLowerCase();
+  const { key, dir } = S.sort;
+  const val = (r) => (key === "name" ? r.name : key === "last" ? r.last || "" : r[key] ?? -1);
+  const rows = S.rows.filter((r) => !q || `${r.name} ${r.area}`.toLowerCase().includes(q))
+    .sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y, "th") : x - y) * dir || b.visits - a.visits; });
+  document.querySelectorAll(".er-table th[data-sort]").forEach((th) => { th.classList.toggle("is-sorted", th.dataset.sort === key); th.dataset.dir = dir > 0 ? "asc" : "desc"; });
+  if (!rows.length) { $("salesBody").innerHTML = `<tr><td colspan="9" class="ed-state">ไม่พบเซลล์</td></tr>`; return; }
+  const max = Math.max(1, ...rows.map((r) => r.visits));
+  $("salesBody").innerHTML = rows.map((r) => {
+    const d = r.delta === 0 ? `<span class="er-dim">0</span>` : `<span class="ed-delta ${r.delta > 0 ? "is-up" : "is-down"}">${r.delta > 0 ? "▲" : "▼"} ${Math.abs(r.delta)}</span>`;
+    const lastTxt = r.last ? `${thD(fromYmd(r.last))}${r.idle >= WATCH_NO_REPORT_DAYS ? ` <em class="er-late">${r.idle} วัน</em>` : ""}` : `<em class="er-late">ไม่มีใน ${WATCH_SHOP_DAYS} วัน</em>`;
+    return `<tr data-id="${esc(r.id)}" class="${r.visits ? "" : "is-zero"}" tabindex="0">
+      <td><span class="er-who"><span class="ed-av">${esc(r.name.trim().charAt(0))}</span><span><b>${esc(r.name)}</b><small>${esc(r.area || "—")}</small></span></span></td>
+      <td class="num"><span class="er-vbar"><i style="width:${Math.round((r.visits / max) * 100)}%"></i></span><b>${fmtN(r.visits)}</b></td>
+      <td class="num">${d}</td>
+      <td class="num">${fmtN(r.shops)}</td>
+      <td class="num">${r.cover == null ? `<span class="er-dim" title="ยังไม่ได้กำหนดร้านในความดูแล">—</span>` : `${r.cover}%<small class="er-dim"> /${r.assigned}</small>`}</td>
+      <td class="num">${r.met == null ? `<span class="er-dim">—</span>` : `${r.met}%`}</td>
+      <td class="num">${fmtN(r.days)}</td>
+      <td>${lastTxt}</td>
+      <td class="num">${r.comments ? `<span class="er-cmt"><span class="material-symbols-outlined">chat</span>${r.comments}</span>` : `<span class="er-dim">—</span>`}</td>
+    </tr>`;
+  }).join("");
 }
 
-function setQuickRange(range) {
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-
-  let start = new Date();
-  start.setHours(0, 0, 0, 0);
-  let end = new Date(today);
-
-  switch (range) {
-    case "today":
-      break;
-    case "7days":
-      start.setDate(start.getDate() - 6);
-      break;
-    case "30days":
-      start.setDate(start.getDate() - 29);
-      break;
-    case "thisWeek": {
-      const d = start.getDay();
-      start.setDate(start.getDate() + (d === 0 ? -6 : 1 - d));
-      break;
-    }
-    case "lastWeek": {
-      const d = start.getDay();
-      start.setDate(start.getDate() + (d === 0 ? -6 : 1 - d) - 7);
-      end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23, 59, 59, 999);
-      break;
-    }
-    case "thisMonth":
-      start = new Date(today.getFullYear(), today.getMonth(), 1);
-      break;
-    case "lastMonth":
-      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      end = new Date(today.getFullYear(), today.getMonth(), 0);
-      end.setHours(23, 59, 59, 999);
-      break;
-    default: {
-      const dd = start.getDay();
-      start.setDate(start.getDate() + (dd === 0 ? -6 : 1 - dd));
-    }
-  }
-
-  dateStart = start;
-  dateEnd = end;
-
-  const startInput = document.getElementById("dateStart");
-  const endInput = document.getElementById("dateEnd");
-  if (startInput) startInput.value = formatDateForInput(dateStart);
-  if (endInput) endInput.value = formatDateForInput(dateEnd);
-
-  updateDateRangeLabel();
-  loadReports();
-}
-
-function updateDateRangeLabel() {
-  const label = document.getElementById("dateRangeLabel");
-  if (!label) return;
-  const days = Math.ceil((dateEnd - dateStart) / (1000 * 60 * 60 * 24)) + 1;
-  const fmt = (d) =>
-    d.toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-      year: "2-digit",
-    });
-  label.textContent = `${fmt(dateStart)} – ${fmt(dateEnd)} (${days} วัน)`;
-}
-
-function formatDateForInput(date) {
-  return date.toISOString().split("T")[0];
-}
-
-// =====================================================
-// 👥 LOAD PROFILES
-// =====================================================
-async function loadProfiles() {
-  try {
-    const { data: salesData } = await supabaseClient
-      .from("profiles")
-      .select("id, display_name, role, area")
-      .in("role", ["sales", "user"]);
-
-    const { data: mgrData } = await supabaseClient
-      .from("profiles")
-      .select("id, display_name, role, area")
-      .in("role", ["manager"]);
-
-    const { data: execData } = await supabaseClient
-      .from("profiles")
-      .select("id, display_name, role, area")
-      .in("role", ["admin", "executive"]);
-
-    const allProfiles = [
-      ...(salesData || []),
-      ...(mgrData || []),
-      ...(execData || []),
-    ];
-    profilesMap = Object.fromEntries(allProfiles.map((p) => [p.id, p]));
-
-    const selectSales = document.getElementById("filterSales");
-    if (selectSales) {
-      selectSales.innerHTML = '<option value="">— ทั้งหมด —</option>';
-      (salesData || []).forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.display_name || p.id;
-        selectSales.appendChild(opt);
-      });
-    }
-
-    const selectMgr = document.getElementById("filterManager");
-    if (selectMgr) {
-      selectMgr.innerHTML = '<option value="">— ทั้งหมด —</option>';
-      (mgrData || []).forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.display_name || p.id;
-        selectMgr.appendChild(opt);
-      });
-    }
-  } catch (e) {
-    console.error("❌ loadProfiles error:", e);
-  }
-}
-
-// =====================================================
-// 🏪 LOAD SHOPS
-// =====================================================
-async function loadShops() {
-  try {
-    const { data, error } = await supabaseClient
-      .from("shops")
-      .select("id, shop_name, province")
-      .order("shop_name");
-    if (error) throw error;
-    shopsMap = Object.fromEntries(
-      (data || []).map((s) => [
-        s.id,
-        {
-          name: s.shop_name,
-          province: s.province || "—",
-        },
-      ]),
-    );
-  } catch (e) {
-    console.error("❌ loadShops error:", e);
-  }
-}
-
-// =====================================================
-// 📦 LOAD PRODUCTS
-// =====================================================
-async function loadProducts() {
-  try {
-    const { data, error } = await supabaseClient
-      .from("products")
-      .select("id, name");
-    if (error) throw error;
-    if (data)
-      data.forEach((p) => {
-        productsMap[p.id] = p.name;
-      });
-  } catch (e) {
-    console.error("❌ loadProducts error:", e);
-  }
-}
-
-// =====================================================
-// 💬 LOAD COMMENT COUNTS
-// =====================================================
-async function loadCommentCounts(reportIds) {
-  commentCountsMap = {};
-  if (!reportIds || !reportIds.length) return;
-  try {
-    const { data, error } = await supabaseClient
-      .from("report_comments")
-      .select("report_id")
-      .in("report_id", reportIds);
-    if (error) throw error;
-    (data || []).forEach((c) => {
-      commentCountsMap[c.report_id] = (commentCountsMap[c.report_id] || 0) + 1;
-    });
-  } catch (e) {
-    console.error("❌ loadCommentCounts error:", e);
-  }
-}
-
-
-async function loadReplyCounts(reportIds) {
-  replyCountsMap = {};
-  replyUnreadMap = {};
-
-  if (!reportIds || !reportIds.length) return;
-
-  const reads = getReplyReads();
-
-  try {
-    const { data, error } = await supabaseClient
-      .from("report_comments")
-      .select("report_id, created_at, manager_id, profiles:manager_id(role)")
-      .in("report_id", reportIds);
-
-    if (error) throw error;
-
-    (data || []).forEach((c) => {
-      const profile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
-      const role = profile?.role;
-
-      if (role === "sales" || role === "user") {
-        replyCountsMap[c.report_id] = (replyCountsMap[c.report_id] || 0) + 1;
-
-        const lastRead = reads[c.report_id];
-        if (!lastRead || new Date(c.created_at) > new Date(lastRead)) {
-          replyUnreadMap[c.report_id] = (replyUnreadMap[c.report_id] || 0) + 1;
-        }
-      }
-    });
-  } catch (e) {
-    console.error("❌ loadReplyCounts error:", e);
-  }
-}
-
-// =====================================================
-// 🔗 GROUP REPORTS
-// =====================================================
-function makeGroupKey(r) {
-  const dateKey =
-    r.report_date ||
-    (r.submitted_at ? r.submitted_at.split("T")[0] : "no-date");
-  return `${r.sale_id}__${r.shop_id}__${dateKey}`;
-}
-
-function groupReportRows(reports) {
-  const map = new Map();
-
-  for (const r of reports) {
-    const key = makeGroupKey(r);
-
-    if (!map.has(key)) {
-      map.set(key, {
-        key,
-        sale_id: r.sale_id,
-        shop_id: r.shop_id,
-        report_date: r.report_date,
-        submitted_at: r.submitted_at,
-        created_at: r.created_at,
-        status_visit: r.status_visit,
-        note: r.note,
-        product_interest: r.product_interest,
-        source: r.source,
-        manager_acknowledged: r.manager_acknowledged,
-        products: [],
-        reportIds: [],
-      });
-    }
-
-    const group = map.get(key);
-    group.reportIds.push(r.id);
-
-    if (r.product_id) {
-      group.products.push({
-        product_id: r.product_id,
-        attributes: r.attributes || {},
-        quantity: r.quantity,
-      });
-    }
-
-    if (!group.note && r.note) group.note = r.note;
-    if (!group.product_interest && r.product_interest)
-      group.product_interest = r.product_interest;
-    if (!group.status_visit && r.status_visit)
-      group.status_visit = r.status_visit;
-
-    if (!r.manager_acknowledged) {
-      group.manager_acknowledged = false;
-    }
-  }
-
-  return [...map.values()].sort((a, b) => {
-    const da = new Date(a.submitted_at || a.report_date || a.created_at || 0);
-    const db = new Date(b.submitted_at || b.report_date || b.created_at || 0);
-    return db - da;
+function renderWatch() {
+  const items = [];
+  // 1) เซลล์ไม่ส่งรายงาน
+  S.rows.filter((r) => r.idle == null || r.idle >= WATCH_NO_REPORT_DAYS).sort((a, b) => (b.idle ?? 999) - (a.idle ?? 999)).slice(0, 5).forEach((r) => {
+    items.push(`<li><a href="#" data-sale="${esc(r.id)}" class="er-w is-bad"><span class="material-symbols-outlined">person_alert</span>
+      <span><b>${esc(r.name)}</b><small>${r.idle == null ? `ไม่มีรายงานใน ${WATCH_SHOP_DAYS} วัน` : `ไม่ส่งรายงาน ${r.idle} วัน`}</small></span></a></li>`);
   });
-}
-
-// =====================================================
-// 💬 COUNT COMMENTS PER GROUP
-// =====================================================
-function getGroupCommentCount(group) {
-  let total = 0;
-  for (const rid of group.reportIds) {
-    total += commentCountsMap[rid] || 0;
-  }
-  return total;
-}
-
-
-
-function getGroupReplyCount(group) {
-  let total = 0;
-
-  for (const rid of group.reportIds) {
-    total += replyCountsMap[rid] || 0;
-  }
-
-  return total;
-}
-
-function getGroupUnreadReplyCount(group) {
-  let total = 0;
-
-  for (const rid of group.reportIds) {
-    total += replyUnreadMap[rid] || 0;
-  }
-
-  return total;
-}
-// =====================================================
-// 📊 LOAD REPORTS
-// =====================================================
-async function loadReports() {
-  const container = document.getElementById("reportsContainer");
-  if (container)
-    container.innerHTML = '<div class="loading">กำลังโหลดรายงาน...</div>';
-
-  try {
-    let query = supabaseClient
-      .from("reports")
-      .select("*")
-      .order("submitted_at", { ascending: false, nullsLast: true })
-      .order("report_date", { ascending: false, nullsLast: true });
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    const startTime = dateStart.getTime();
-    const endTime = dateEnd.getTime();
-
-    allReports = (data || []).filter((r) => {
-      const date = r.submitted_at || r.report_date || r.created_at;
-      if (!date) return false;
-      const t = new Date(date).getTime();
-      return t >= startTime && t <= endTime;
-    });
-
-    const reportIds = allReports.map((r) => r.id);
-
-await Promise.all([
-  loadCommentCounts(reportIds),
-  loadReplyCounts(reportIds),
-]);
-
-    groupedReports = groupReportRows(allReports);
-    filteredGroups = [...groupedReports];
-    activeSalesFilter = null;
-
-    updateSummaryCards();
-    updateManagerGrid();
-    updateSalesGrid();
-    updateSalesQuickPick(); // 🆕
-    currentPage = 1;
-    renderReports();
-
-    console.log(
-      `✅ Loaded ${allReports.length} rows → ${groupedReports.length} shop visits`,
-    );
-  } catch (e) {
-    console.error("❌ loadReports error:", e);
-    if (container) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">⚠️</div>
-          <h3>เกิดข้อผิดพลาด</h3>
-          <p>${e.message}</p>
-          <button onclick="loadReports()" class="btn btn-primary" style="margin-top:1rem;">ลองใหม่</button>
-        </div>`;
-    }
-  }
-}
-
-// =====================================================
-// 📈 UPDATE SUMMARY CARDS
-// =====================================================
-function updateSummaryCards() {
-  const total = groupedReports.length;
-  const unread = groupedReports.filter((g) => !g.manager_acknowledged).length;
-  const read = groupedReports.filter((g) => g.manager_acknowledged).length;
-  const commented = groupedReports.filter(
-    (g) => getGroupCommentCount(g) > 0,
-  ).length;
-
-  const el = (id) => document.getElementById(id);
-  if (el("totalReports")) el("totalReports").textContent = total;
-  if (el("unreadReports")) el("unreadReports").textContent = unread;
-  if (el("readReports")) el("readReports").textContent = read;
-  if (el("commentedReports")) el("commentedReports").textContent = commented;
-}
-
-// =====================================================
-// 👔 UPDATE MANAGER GRID
-// =====================================================
-function updateManagerGrid() {
-  const grid = document.getElementById("managerGrid");
-  if (!grid) return;
-
-  const managers = Object.entries(profilesMap).filter(
-    ([, p]) => p.role === "manager",
-  );
-
-  if (!managers.length) {
-    grid.innerHTML =
-      '<div class="empty-state"><p>ไม่มีข้อมูลผู้จัดการ</p></div>';
-    return;
-  }
-
-  grid.innerHTML = managers
-    .map(([id, profile]) => {
-      const displayName = profile.display_name || "—";
-      return `
-      <div class="sales-card" onclick="filterByManager('${id}')">
-        <div class="sales-avatar">${displayName.charAt(0).toUpperCase()}</div>
-        <div class="sales-name">${escapeHtml(displayName)}</div>
-        <div class="sales-stats">
-          <div class="stat-item">
-            <span class="stat-label">ผู้จัดการ</span>
-          </div>
-        </div>
-      </div>`;
-    })
-    .join("");
-}
-
-// =====================================================
-// 👥 UPDATE SALES GRID
-// 🆕 คลิกการ์ด → เปิด Sales Table Modal
-// =====================================================
-function updateSalesGrid() {
-  const grid = document.getElementById("salesGrid");
-  if (!grid) return;
-
-  const salesEntries = Object.entries(profilesMap).filter(
-    ([, p]) => p.role === "sales" || p.role === "user",
-  );
-
-  if (!salesEntries.length) {
-    grid.innerHTML = '<div class="empty-state"><p>ไม่มีข้อมูลเซลล์</p></div>';
-    return;
-  }
-
-  grid.innerHTML = salesEntries
-    .map(([id, profile]) => {
-      const groups = groupedReports.filter((g) => g.sale_id === id);
-      const total = groups.length;
-      const unread = groups.filter((g) => !g.manager_acknowledged).length;
-      const isActive = activeSalesFilter === id;
-      const displayName = profile.display_name || "—";
-
-      return `
-      <div class="sales-card ${isActive ? "active" : ""} ${unread > 0 ? "has-unread" : ""}"
-           onclick="openSalesTableModal('${id}')"
-           title="คลิกเพื่อดูรายงานทั้งหมดของ ${escapeHtml(displayName)}">
-        <div class="sales-card-header">
-          <div class="sales-avatar">${displayName.charAt(0).toUpperCase()}</div>
-          <button class="sales-filter-btn"
-                  onclick="event.stopPropagation(); filterBySale('${id}')"
-                  title="กรองในรายการด้านล่าง">
-            <span class="material-symbols-outlined icon-sm">filter_alt</span>
-          </button>
-        </div>
-        <div class="sales-name">${escapeHtml(displayName)}</div>
-        <div class="sales-stats">
-          <div class="stat-item">
-            <span class="stat-value">${total}</span>
-            <span class="stat-label">ร้านค้า</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value" style="color:${unread > 0 ? "var(--danger, #ef4444)" : "var(--info, #0093ad)"}">
-              ${unread}
-            </span>
-            <span class="stat-label">ยังไม่อ่าน</span>
-          </div>
-        </div>
-      </div>`;
-    })
-    .join("");
-}
-
-// =====================================================
-// 🆕 UPDATE SALES QUICK PICK (สำหรับ Table view)
-// =====================================================
-function updateSalesQuickPick() {
-  const container = document.getElementById("salesQuickPick");
-  if (!container) return;
-
-  const salesEntries = Object.entries(profilesMap).filter(
-    ([, p]) => p.role === "sales" || p.role === "user",
-  );
-
-  if (!salesEntries.length) {
-    container.innerHTML =
-      '<div class="empty-state"><p>ไม่มีข้อมูลเซลล์</p></div>';
-    return;
-  }
-
-  // เรียงตามจำนวนรายงาน (มาก→น้อย)
-  const enriched = salesEntries
-    .map(([id, profile]) => {
-      const groups = groupedReports.filter((g) => g.sale_id === id);
-      const total = groups.length;
-      const unread = groups.filter((g) => !g.manager_acknowledged).length;
-      return { id, profile, total, unread };
-    })
-    .sort((a, b) => b.total - a.total);
-
-  container.innerHTML = enriched
-    .map(({ id, profile, total, unread }) => {
-      const displayName = profile.display_name || "—";
-      const disabled = total === 0 ? "disabled" : "";
-      return `
-      <button class="quick-pick-card ${disabled} ${unread > 0 ? "has-unread" : ""}"
-              ${total === 0 ? "" : `onclick="openSalesTableModal('${id}')"`}
-              title="${total === 0 ? "ไม่มีรายงานในช่วงเวลานี้" : "ดูตารางรายงาน"}">
-        <div class="qp-avatar">${displayName.charAt(0).toUpperCase()}</div>
-        <div class="qp-info">
-          <div class="qp-name">${escapeHtml(displayName)}</div>
-          <div class="qp-meta">
-            <span>${total} ร้าน</span>
-            ${unread > 0 ? `<span class="qp-unread">${unread} ยังไม่อ่าน</span>` : ""}
-          </div>
-        </div>
-        <span class="material-symbols-outlined qp-arrow">arrow_forward</span>
-      </button>`;
-    })
-    .join("");
-}
-
-// =====================================================
-// 🆕 SWITCH VIEW
-// =====================================================
-function switchView(view) {
-  currentView = view;
-
-  document.querySelectorAll(".view-toggle-btn").forEach((b) => {
-    b.classList.toggle("active", b.dataset.view === view);
+  // 2) ยอดเข้าร้านลดลงมาก
+  S.rows.filter((r) => r.prev >= 3 && r.visits <= r.prev * 0.6).slice(0, 3).forEach((r) => {
+    items.push(`<li><a href="#" data-sale="${esc(r.id)}" class="er-w is-warn"><span class="material-symbols-outlined">trending_down</span>
+      <span><b>${esc(r.name)}</b><small>เข้าร้านลดลง ${r.prev} → ${r.visits} ครั้ง</small></span></a></li>`);
   });
-
-  document.getElementById("listView").classList.toggle("active", view === "list");
-  document.getElementById("tableView").classList.toggle("active", view === "table");
-}
-
-// =====================================================
-// 🔍 FILTERS
-// =====================================================
-function filterBySale(saleId) {
-  if (activeSalesFilter === saleId) {
-    activeSalesFilter = null;
-    document.getElementById("filterSales").value = "";
-  } else {
-    activeSalesFilter = saleId;
-    document.getElementById("filterSales").value = saleId;
+  // 3) ร้านในความดูแลที่ไม่ได้เยี่ยมนาน
+  const lastShop = new Map();
+  S.recent.forEach((v) => { if (v.shop_id && (!lastShop.has(v.shop_id) || v.day > lastShop.get(v.shop_id))) lastShop.set(v.shop_id, v.day); });
+  const stale = assignedShops(null).filter((id) => !lastShop.has(id));
+  if (stale.length) {
+    const bySale = new Map();
+    stale.forEach((id) => { const sid = String(S.shops.get(id)?.sale_id); bySale.set(sid, (bySale.get(sid) || 0) + 1); });
+    const top = [...bySale.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([sid, c]) => `${esc((S.people.get(sid)?.display_name) || "—")} ${c}`).join(" · ");
+    items.push(`<li><span class="er-w is-warn"><span class="material-symbols-outlined">store</span>
+      <span><b>ร้านในความดูแล ${fmtN(stale.length)} ร้าน</b><small>ไม่ได้เยี่ยมเกิน ${WATCH_SHOP_DAYS} วัน · ${top}</small></span></span></li>`);
   }
-  // ให้ filter ทำงานในมุมมอง list
-  switchView("list");
-  updateSalesGrid();
-  applyFilter();
+  // 4) รอเข้าพบรอบต่อไป
+  const wait = S.visits.filter((v) => v.wait).length;
+  if (wait) items.push(`<li><span class="er-w"><span class="material-symbols-outlined">schedule</span>
+      <span><b>รอเข้าพบรอบต่อไป ${fmtN(wait)} ร้าน</b><small>ในช่วงที่เลือก</small></span></span></li>`);
 
-  // scroll ไปยัง list
-  const listEl = document.getElementById("listView");
-  if (listEl) listEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  $("watchList").innerHTML = items.length ? items.join("") : `<li class="ed-state is-ok"><span class="material-symbols-outlined">check_circle</span> ไม่มีเรื่องที่ต้องติดตาม</li>`;
 }
 
-function filterByManager(mgrId) {
-  const select = document.getElementById("filterManager");
-  if (select) select.value = mgrId;
-  applyFilter();
+function hbars(list, empty) {
+  if (!list.length) return `<li class="ed-state">${empty}</li>`;
+  const max = Math.max(1, ...list.map((x) => x.n));
+  return list.map((x, i) => `<li><span class="er-rank">${i + 1}</span><span class="er-hb-name" title="${esc(x.name)}">${esc(x.name)}</span>
+    <span class="er-hb-bar"><i style="width:${Math.round((x.n / max) * 100)}%"></i></span><b>${fmtN(x.n)}</b></li>`).join("");
+}
+function renderProvinces() {
+  const m = new Map();
+  S.visits.forEach((v) => { const p = S.shops.get(v.shop_id)?.province || v.rows[0]?.province || "ไม่ระบุ"; m.set(p, (m.get(p) || 0) + 1); });
+  $("provList").innerHTML = hbars([...m.entries()].map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n).slice(0, 10), "ไม่มีข้อมูล");
+}
+function renderProducts() {
+  const m = new Map();
+  S.visits.forEach((v) => v.products.forEach((p) => m.set(p, (m.get(p) || 0) + 1)));
+  $("prodList").innerHTML = hbars([...m.entries()].map(([id, n]) => ({ name: S.products.get(id) || `สินค้า #${id}`, n })).sort((a, b) => b.n - a.n).slice(0, 10), "ยังไม่มีการบันทึกสินค้า");
 }
 
-function applyFilter() {
-  const salesId = document.getElementById("filterSales")?.value || "";
-  const mgrId = document.getElementById("filterManager")?.value || "";
-  const status = document.getElementById("filterStatus")?.value || "";
-  const search = (
-    document.getElementById("searchInput")?.value || ""
-  ).toLowerCase();
-
-  filteredGroups = groupedReports.filter((g) => {
-    if (salesId && g.sale_id !== salesId) return false;
-
-    if (status === "unread" && g.manager_acknowledged) return false;
-    if (status === "read" && !g.manager_acknowledged) return false;
-    if (status === "commented" && getGroupCommentCount(g) === 0) return false;
-
-    if (search) {
-      const shopData = shopsMap[g.shop_id];
-      const shopName = shopData?.name || "";
-      const province = shopData?.province || "";
-      const salesName = profilesMap[g.sale_id]?.display_name || "";
-      const note = g.note || "";
-      const productNames = g.products
-        .map((p) => productsMap[p.product_id] || "")
-        .join(" ");
-      const productInterest = g.product_interest || "";
-
-      const searchText = [
-        shopName,
-        province,
-        salesName,
-        note,
-        productNames,
-        productInterest,
-      ]
-        .join(" ")
-        .toLowerCase();
-      if (!searchText.includes(search)) return false;
-    }
-
+// ============================================================
+// รายละเอียดเซลล์ + ความคิดเห็น
+// ============================================================
+let _drawerSale = null;
+function openDrawer(saleId) {
+  const r = S.rows.find((x) => x.id === saleId);
+  if (!r) return;
+  _drawerSale = saleId;
+  $("dAv").textContent = r.name.trim().charAt(0);
+  $("dName").textContent = r.name;
+  $("dSub").textContent = `${r.area || "—"} · ${S.range.label} ${thD(S.range.from)} – ${thDY(S.range.to)}`;
+  $("dStats").innerHTML = [
+    ["เข้าร้าน", fmtN(r.visits)], ["ร้าน", fmtN(r.shops)], ["วันลงพื้นที่", fmtN(r.days)],
+    ["เข้าพบสำเร็จ", r.met == null ? "—" : r.met + "%"], ["ครอบคลุม", r.cover == null ? "—" : r.cover + "%"],
+  ].map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join("");
+  const mine = S.visits.filter((v) => v.sale_id === saleId).sort((a, b) => (b.day + (b.time || "")).localeCompare(a.day + (a.time || "")));
+  $("dList").innerHTML = mine.length ? mine.map(visitCard).join("") : `<div class="ed-state">ไม่มีรายงานในช่วงนี้</div>`;
+  loadDetails(mine).then((changed) => { if (changed && _drawerSale === saleId) $("dList").innerHTML = mine.map(visitCard).join(""); });
+  $("drawerBg").hidden = false;
+  $("drawer").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+// รายละเอียด (สินค้าที่ร้านสนใจ / หมายเหตุ) — ดึงเฉพาะรายงานของเซลล์ที่เปิดดู
+async function loadDetails(visits) {
+  const need = visits.filter((v) => !v.detailLoaded);
+  if (!need.length) return false;
+  const ids = need.flatMap((v) => v.ids);
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 150) chunks.push(ids.slice(i, i + 150));
+  try {
+    const res = await Promise.all(chunks.map((c) => supabaseClient.from("reports").select("id, product_interest, note").in("id", c)));
+    const byId = new Map();
+    for (const { data, error } of res) { if (error) throw error; (data || []).forEach((r) => byId.set(String(r.id), r)); }
+    need.forEach((v) => {
+      const d = v.ids.map((id) => byId.get(String(id))).filter(Boolean);
+      v.interest = [...new Set(d.map((r) => r.product_interest).filter(Boolean))].join(" · ");
+      v.note = [...new Set(d.map((r) => r.note).filter(Boolean))].join(" · ");
+      v.detailLoaded = true;
+    });
     return true;
-  });
-
-  currentPage = 1;
-  renderReports();
+  } catch (e) { console.warn("details:", e); return false; }
 }
 
-function resetFilter() {
-  ["filterSales", "filterManager", "filterStatus"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) searchInput.value = "";
-
-  activeSalesFilter = null;
-  filteredGroups = [...groupedReports];
-  currentPage = 1;
-
-  updateSalesGrid();
-  renderReports();
+function closeDrawer() {
+  if ($("drawer").hidden) return;
+  $("drawer").hidden = true;
+  $("drawerBg").hidden = true;
+  document.body.style.overflow = "";
+  _drawerSale = null;
 }
 
-// =====================================================
-// 🎨 RENDER REPORTS — list view (เดิม)
-// =====================================================
-function renderReports() {
-  const container = document.getElementById("reportsContainer");
-  if (!container) return;
-
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageGroups = filteredGroups.slice(start, start + PAGE_SIZE);
-
-  const countEl = document.getElementById("reportCount");
-  if (countEl) {
-    countEl.textContent =
-      filteredGroups.length !== groupedReports.length
-        ? `(${filteredGroups.length} / ${groupedReports.length} ร้านค้า)`
-        : `(${groupedReports.length} ร้านค้า)`;
-  }
-
-  if (!pageGroups.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <span class="material-symbols-outlined empty-icon-mat">inbox</span>
-        <h3>ไม่พบรายงาน</h3>
-        <p>ไม่มีรายงานในช่วงเวลาที่เลือก</p>
-      </div>`;
-    renderPagination();
-    return;
-  }
-
-  container.innerHTML = pageGroups
-    .map((g) => {
-      const profile = profilesMap[g.sale_id];
-      const salesName = profile?.display_name || "—";
-      const shopData = shopsMap[g.shop_id];
-      const shopName = shopData?.name || "—";
-      const province = shopData?.province || "";
-      const isUnread = !g.manager_acknowledged;
-
-      const productCount = g.products.length;
-      let productSummary = "—";
-      if (productCount === 1) {
-        productSummary = productsMap[g.products[0].product_id] || "—";
-      } else if (productCount > 1) {
-        const firstName = productsMap[g.products[0].product_id] || "—";
-        productSummary = `${firstName} +${productCount - 1} รายการ`;
-      } else if (productCount === 0) {
-        productSummary = "ไม่มีสินค้า";
-      }
-
-      const commentCount = getGroupCommentCount(g);
-      const replyCount = getGroupReplyCount(g);
-      const unreadReplyCount = getGroupUnreadReplyCount(g);
-      const commentBadge = `
-  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-
-    ${
-      commentCount > 0
-        ? `
-      <span class="badge-comment" title="${commentCount} ความคิดเห็น">
-        <span class="material-symbols-outlined icon-sm icon-blue">
-          chat_bubble
-        </span>
-        ${commentCount}
-      </span>
-    `
-        : ""
-    }
-
-   ${
-  replyCount > 0
-    ? `
-  <span class="badge-comment badge-reply ${unreadReplyCount > 0 ? "has-new-reply" : ""}"
-        title="${replyCount} การตอบกลับ${unreadReplyCount > 0 ? ` • ใหม่ ${unreadReplyCount}` : ""}">
-    ${unreadReplyCount > 0 ? `<span class="reply-pulse-dot"></span>` : ""}
-    <span class="material-symbols-outlined icon-sm">
-      reply
-    </span>
-    ${replyCount}
-  </span>
-`
-    : ""
+function visitCard(v) {
+  const shop = S.shops.get(v.shop_id) || {};
+  const prods = v.products.map((p) => S.products.get(p) || `#${p}`);
+  const n = visitComments(v);
+  const st = v.met ? `<span class="er-pill is-ok">${esc(v.status || "เข้าพบ")}</span>` : v.wait ? `<span class="er-pill is-warn">${esc(v.status)}</span>` : v.status ? `<span class="er-pill">${esc(v.status)}</span>` : "";
+  return `<article class="er-visit" data-key="${esc(v.key)}">
+    <header><b>${esc(shop.shop_name || "ร้านไม่ระบุ")}</b>${st}</header>
+    <small class="er-visit-meta"><span class="material-symbols-outlined">event</span>${thDY(fromYmd(v.day))}${shop.province ? ` · <span class="material-symbols-outlined">location_on</span>${esc(shop.province)}` : ""}</small>
+    ${prods.length ? `<div class="er-tags">${prods.map((p) => `<span>${esc(p)}</span>`).join("")}</div>` : ""}
+    ${v.interest ? `<p><em>ร้านสนใจ:</em> ${esc(v.interest)}</p>` : ""}
+    ${v.note ? `<p><em>หมายเหตุ:</em> ${esc(v.note)}</p>` : ""}
+    <button type="button" class="er-cmt-toggle" onclick="toggleComments(this)"><span class="material-symbols-outlined">chat</span>${n ? `ความคิดเห็น ${n}` : "แสดงความคิดเห็น"}</button>
+    <div class="er-cmt-box" hidden></div>
+  </article>`;
 }
 
-  </div>
-`;
-
-      const provinceHtml = province
-        ? `
-        <span class="report-province">
-          <span class="material-symbols-outlined icon-sm icon-red">location_on</span>
-          ${escapeHtml(province)}
-        </span>
-      `
-        : "";
-
-      return `
-      <div class="report-item ${isUnread ? "unread" : ""}"
-           onclick="openGroupModal('${g.key}')">
-
-        <div class="report-icon">${salesName.charAt(0).toUpperCase()}</div>
-
-        <div class="report-info">
-
-          <div class="report-header">
-            <span class="report-sales">${escapeHtml(salesName)}</span>
-            <span class="report-date">
-              <span class="material-symbols-outlined icon-sm icon-blue-dark">calendar_month</span>
-              ${formatDate(g.report_date || g.submitted_at)}
-            </span>
-          </div>
-
-          <div class="report-details">
-            <div class="report-detail-item">
-              <span class="material-symbols-outlined icon-sm icon-blue">storefront</span>
-              ${escapeHtml(shopName)}
-            </div>
-            ${provinceHtml}
-            <div class="report-detail-item">
-              <span class="material-symbols-outlined icon-sm icon-brown">inventory_2</span>
-              ${escapeHtml(productSummary)}
-            </div>
-          </div>
-
-        </div>
-
-        <div class="report-status">
-  ${commentBadge}
-  <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
-    <span class="emoji-status">
-      ${isUnread ? "⏰" : "✅"}
-    </span>
-    ${isUnread ? "ยังไม่อ่าน" : "อ่านแล้ว"}
-  </span>
-</div>
-
-      </div>`;
-    })
-    .join("");
-
-  renderPagination();
+async function toggleComments(btn) {
+  const card = btn.closest(".er-visit");
+  const box = card.querySelector(".er-cmt-box");
+  box.hidden = !box.hidden;
+  if (box.hidden || box.dataset.loaded) return;
+  const v = S.visits.find((x) => x.key === card.dataset.key);
+  box.innerHTML = `<div class="ed-state">กำลังโหลด...</div>`;
+  await renderComments(box, v);
+  box.dataset.loaded = "1";
 }
 
-// =====================================================
-// 📄 PAGINATION
-// =====================================================
-function renderPagination() {
-  const el = document.getElementById("pagination");
-  if (!el) return;
-
-  const totalPages = Math.ceil(filteredGroups.length / PAGE_SIZE);
-  if (totalPages <= 1) {
-    el.innerHTML = "";
-    return;
-  }
-
-  let html = "";
-  if (currentPage > 1)
-    html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
-
-  for (let i = 1; i <= totalPages; i++) {
-    if (
-      i === 1 ||
-      i === totalPages ||
-      (i >= currentPage - 2 && i <= currentPage + 2)
-    ) {
-      html += `<button class="page-btn ${i === currentPage ? "active" : ""}" onclick="goToPage(${i})">${i}</button>`;
-    } else if (i === currentPage - 3 || i === currentPage + 3) {
-      html += '<span class="page-dots">...</span>';
-    }
-  }
-
-  if (currentPage < totalPages)
-    html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
-  el.innerHTML = html;
-}
-
-function goToPage(page) {
-  currentPage = page;
-  renderReports();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// =====================================================
-// 🆕 OPEN SALES TABLE MODAL — ตารางทั้งสัปดาห์ของเซลล์
-// =====================================================
-function openSalesTableModal(saleId) {
-  const profile = profilesMap[saleId];
-  if (!profile) {
-    showToast("❌ ไม่พบข้อมูลเซลล์");
-    return;
-  }
-
-  currentSalesModalId = saleId;
-  const displayName = profile.display_name || "—";
-
-  // Header
-  const titleEl = document.getElementById("salesModalTitle");
-  if (titleEl) titleEl.textContent = `รายงานของ ${displayName}`;
-
-  const avatarEl = document.getElementById("salesModalAvatar");
-  if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
-
-  const subtitleEl = document.getElementById("salesModalSubtitle");
-  if (subtitleEl) {
-    const fmt = (d) =>
-      d.toLocaleDateString("th-TH", {
-        day: "numeric",
-        month: "short",
-        year: "2-digit",
-      });
-    subtitleEl.textContent = `ช่วงเวลา ${fmt(dateStart)} – ${fmt(dateEnd)}`;
-  }
-
-  // Render table
-  renderSalesTable(saleId);
-
-  // Show modal
-  const modal = document.getElementById("salesTableModal");
-  if (modal) {
-    modal.classList.add("show");
-    document.body.style.overflow = "hidden";
-  }
-}
-
-// =====================================================
-// 🆕 RENDER SALES TABLE
-// =====================================================
-function renderSalesTable(saleId) {
-  const tbody = document.getElementById("salesTableBody");
-  if (!tbody) return;
-
-  // ดึงเฉพาะของเซลล์คนนี้ + เรียงตามวันที่ (เก่า→ใหม่ เพื่ออ่านลำดับเวลา)
-  const groups = groupedReports
-    .filter((g) => g.sale_id === saleId)
-    .sort((a, b) => {
-      const da = new Date(a.report_date || a.submitted_at || a.created_at || 0);
-      const db = new Date(b.report_date || b.submitted_at || b.created_at || 0);
-      return da - db;
-    });
-
-  // อัปเดต mini summary
-  const totalShops = groups.length;
-  const provinces = new Set(
-    groups.map((g) => shopsMap[g.shop_id]?.province).filter(Boolean),
-  ).size;
-  const unread = groups.filter((g) => !g.manager_acknowledged).length;
-  const commented = groups.filter(
-    (g) => getGroupCommentCount(g) > 0,
-  ).length;
-
-  const setText = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-  };
-  setText("stShops", totalShops);
-  setText("stProvinces", provinces);
-  setText("stUnread", unread);
-  setText("stCommented", commented);
-  setText("salesModalCount", `${totalShops} ร้าน`);
-
-  if (!groups.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="8">
-          <div class="empty-state" style="padding:32px 20px;">
-            <span class="material-symbols-outlined empty-icon-mat">inbox</span>
-            <h3>ไม่มีรายงาน</h3>
-            <p>เซลล์คนนี้ไม่มีรายงานในช่วงเวลาที่เลือก</p>
-          </div>
-        </td>
-      </tr>`;
-    return;
-  }
-
-  tbody.innerHTML = groups
-    .map((g) => {
-      const shopData = shopsMap[g.shop_id];
-      const shopName = shopData?.name || "—";
-      const province = shopData?.province || "—";
-      const isUnread = !g.manager_acknowledged;
-
-      // สินค้าที่จำหน่าย (chips) — ห่อใน wrapper เพื่อไม่ให้ td flex กระทบ row height
-      let productHtml = '<span class="muted-text">—</span>';
-      if (g.products.length > 0) {
-        const chipsInner = g.products
-          .slice(0, 3)
-          .map(
-            (p) =>
-              `<span class="product-chip">${escapeHtml(productsMap[p.product_id] || "—")}</span>`,
-          )
-          .join("");
-        const moreChip =
-          g.products.length > 3
-            ? `<span class="product-chip more-chip">+${g.products.length - 3}</span>`
-            : "";
-        productHtml = `<div class="product-chips">${chipsInner}${moreChip}</div>`;
-      }
-
-      // รายละเอียดการเข้าเยี่ยม — ขยายได้เมื่อยาว
-      let noteHtml;
-      if (!g.note) {
-        noteHtml = `<div class="note-cell"><span class="muted-text">—</span></div>`;
-      } else {
-        const noteText = String(g.note);
-        // ถ้ายาวพอควร (>140 ตัวอักษร) หรือมีหลายบรรทัด → ใส่ปุ่มขยาย
-        const isLong =
-          noteText.length > 140 || (noteText.match(/\n/g) || []).length >= 2;
-        if (isLong) {
-          noteHtml = `
-            <div class="note-cell collapsed" data-note-cell>${escapeHtml(noteText)}</div>
-            <button type="button" class="note-toggle-btn" onclick="toggleNote(this)">
-              <span>ดูเพิ่ม</span>
-              <span class="material-symbols-outlined">expand_more</span>
-            </button>`;
-        } else {
-          noteHtml = `<div class="note-cell">${escapeHtml(noteText)}</div>`;
-        }
-      }
-
-      const commentCount = getGroupCommentCount(g);
-      const commentBtnContent =
-        commentCount > 0
-          ? `<span class="material-symbols-outlined icon-sm">chat_bubble</span>
-             <span class="cmt-count">${commentCount}</span>`
-          : `<span class="material-symbols-outlined icon-sm">add_comment</span>`;
-
-      return `
-      <tr class="${isUnread ? "row-unread" : ""}" data-key="${g.key}">
-        <td class="td-date">
-          <div class="td-date-main">${formatDateShort(g.report_date || g.submitted_at)}</div>
-          <div class="td-date-sub">${formatWeekday(g.report_date || g.submitted_at)}</div>
-        </td>
-        <td class="td-shop">
-          <div class="shop-name">${escapeHtml(shopName)}</div>
-        </td>
-        <td class="td-province">
-          <span class="material-symbols-outlined icon-sm icon-red">location_on</span>
-          ${escapeHtml(province)}
-        </td>
-        <td class="td-products">${productHtml}</td>
-        <td class="td-interest">
-          ${g.product_interest ? escapeHtml(g.product_interest) : '<span class="muted-text">—</span>'}
-        </td>
-        <td class="td-note">
-          ${noteHtml}
-        </td>
-        <td class="col-status">
-          <span class="badge ${isUnread ? "badge-unread" : "badge-read"}">
-            <span class="emoji-status">${isUnread ? "⏰" : "✅"}</span>
-          </span>
-        </td>
-        <td class="col-action">
-          <button class="row-comment-btn ${commentCount > 0 ? "has-comments" : ""}"
-                  onclick="openCommentPopup('${g.key}')"
-                  title="${commentCount > 0 ? `${commentCount} ความคิดเห็น` : "เพิ่ม Comment"}">
-            ${commentBtnContent}
-          </button>
-        </td>
-      </tr>`;
-    })
-    .join("");
-}
-
-// 🆕 Toggle expand/collapse note cell
-function toggleNote(btn) {
-  if (!btn) return;
-  const tr = btn.closest("tr");
-  if (!tr) return;
-  const cell = tr.querySelector("[data-note-cell]");
-  if (!cell) return;
-
-  const isCollapsed = cell.classList.contains("collapsed");
-  if (isCollapsed) {
-    cell.classList.remove("collapsed");
-    btn.classList.add("expanded");
-    const labelEl = btn.querySelector("span:not(.material-symbols-outlined)");
-    if (labelEl) labelEl.textContent = "ย่อ";
-  } else {
-    cell.classList.add("collapsed");
-    btn.classList.remove("expanded");
-    const labelEl = btn.querySelector("span:not(.material-symbols-outlined)");
-    if (labelEl) labelEl.textContent = "ดูเพิ่ม";
-  }
-}
-
-function closeSalesTableModal() {
-  const modal = document.getElementById("salesTableModal");
-  if (modal) {
-    modal.classList.remove("show");
-    // ถ้า popup ก็ไม่เปิด → ปลดล็อก scroll
-    const popup = document.getElementById("commentPopupModal");
-    if (!popup || !popup.classList.contains("show")) {
-      document.body.style.overflow = "";
-    }
-  }
-  currentSalesModalId = null;
-}
-
-// =====================================================
-// 🆕 OPEN COMMENT POPUP (เล็ก ซ้อนบน sales table modal)
-// =====================================================
-async function openCommentPopup(groupKey) {
-  const group = groupedReports.find((g) => g.key === groupKey);
-  if (!group) {
-    showToast("❌ ไม่พบรายงาน");
-    return;
-  }
-
-  currentPopupGroupKey = groupKey;
-  currentPopupReportId = group.reportIds[0];
-
-  const shopData = shopsMap[group.shop_id];
-
-  // Fill info
-  const setText = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val || "—";
-  };
-  setText("pShopName", shopData?.name || "—");
-  setText("pProvince", shopData?.province || "—");
-  setText("pReportDate", formatDate(group.report_date || group.submitted_at));
-
-  // Status badge
-  const statusBadge = document.getElementById("popupStatus");
-  if (statusBadge) {
-    statusBadge.className = `badge ${group.manager_acknowledged ? "badge-read" : "badge-unread"}`;
-    statusBadge.textContent = group.manager_acknowledged
-      ? "✅ อ่านแล้ว"
-      : "🕐 ยังไม่อ่าน";
-  }
-
-  // Load comments into popup
-  await loadCommentsIntoElement(
-    group.reportIds,
-    document.getElementById("popupCommentsHistory"),
-  );
-
-  const input = document.getElementById("popupCommentInput");
-  if (input) input.value = "";
-
-  const popup = document.getElementById("commentPopupModal");
-  if (popup) {
-    popup.classList.add("show");
-    document.body.style.overflow = "hidden";
-  }
-}
-
-function closeCommentPopup() {
-  const popup = document.getElementById("commentPopupModal");
-  if (popup) popup.classList.remove("show");
-
-  // ถ้า sales modal ยังเปิด → คง scroll lock
-  const salesModal = document.getElementById("salesTableModal");
-  if (!salesModal || !salesModal.classList.contains("show")) {
-    document.body.style.overflow = "";
-  }
-
-  currentPopupGroupKey = null;
-  currentPopupReportId = null;
-}
-
-// =====================================================
-// 🆕 SAVE COMMENT (popup version)
-// =====================================================
-async function savePopupComment() {
-  if (isSavingPopupComment) return;
-  if (!currentPopupReportId) return;
-
-  const input = document.getElementById("popupCommentInput");
-  const text = input?.value?.trim();
-
-  if (!text) {
-    showToast("⚠️ กรุณาพิมพ์ความคิดเห็น");
-    return;
-  }
-
-  isSavingPopupComment = true;
-
+const ROLE_TXT = { executive: "ผู้บริหาร", manager: "Manager", admin: "Admin", sales: "เซลล์", sale: "เซลล์", user: "เซลล์", marketing: "การตลาด" };
+async function renderComments(box, v) {
+  let list = [];
   try {
-    const session = await getSessionSafely();
-    if (!session?.user?.id) {
-      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
-      return;
-    }
-
-    const { error } = await supabaseClient.from("report_comments").insert([
-      {
-        report_id: currentPopupReportId,
-        manager_id: session.user.id,
-        comment: text,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-
+    const { data, error } = await supabaseClient.from("report_comments")
+      .select("id, report_id, comment, created_at, manager_id, profiles:manager_id(display_name, role)")
+      .in("report_id", v.ids).order("created_at", { ascending: true });
     if (error) throw error;
-
-    showToast("💬 บันทึกความคิดเห็นแล้ว");
-    input.value = "";
-
-    commentCountsMap[currentPopupReportId] =
-      (commentCountsMap[currentPopupReportId] || 0) + 1;
-
-    const group = groupedReports.find((g) => g.key === currentPopupGroupKey);
-    if (group) {
-      await loadCommentsIntoElement(
-        group.reportIds,
-        document.getElementById("popupCommentsHistory"),
-      );
-    }
-
-    if (currentSalesModalId) renderSalesTable(currentSalesModalId);
-
-    await loadReplyCounts(allReports.map((r) => r.id));
-
-
-    updateSummaryCards();
-    renderReports();
+    list = data || [];
   } catch (e) {
-    console.error("❌ savePopupComment error:", e);
-    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
+    box.innerHTML = `<div class="ed-state is-error">โหลดความคิดเห็นไม่สำเร็จ</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="er-cmts">${list.length ? list.map((c) => {
+      const p = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+      const role = p?.role || "";
+      const t = c.created_at ? new Date(c.created_at) : null;
+      return `<div class="er-cmt-item r-${esc(String(role).toLowerCase())}">
+        <div><b>${esc(p?.display_name || "ผู้ใช้")}</b><span class="er-role">${esc(ROLE_TXT[role] || role || "-")}</span><time>${t ? `${thD(t)} ${pad(t.getHours())}:${pad(t.getMinutes())}` : ""}</time></div>
+        <p>${esc(c.comment)}</p></div>`;
+    }).join("") : `<div class="er-dim er-cmt-empty">ยังไม่มีความคิดเห็น</div>`}</div>
+    <div class="er-cmt-form">
+      <textarea rows="2" maxlength="1000" placeholder="พิมพ์ความคิดเห็นถึง ${esc(S.people.get(v.sale_id)?.display_name || "เซลล์")}..."></textarea>
+      <button type="button" class="er-btn" onclick="sendComment(this)"><span class="material-symbols-outlined">send</span>ส่ง</button>
+    </div>`;
+}
+
+async function sendComment(btn) {
+  const card = btn.closest(".er-visit");
+  const box = card.querySelector(".er-cmt-box");
+  const ta = box.querySelector("textarea");
+  const text = ta.value.trim();
+  if (!text) { ta.focus(); return; }
+  const v = S.visits.find((x) => x.key === card.dataset.key);
+  const me = S.me?.id || (await supabaseClient.auth.getSession()).data?.session?.user?.id;
+  if (!me) { toast("กรุณาเข้าสู่ระบบใหม่", true); return; }
+  btn.disabled = true;
+  try {
+    const { data, error } = await supabaseClient.from("report_comments")
+      .insert({ report_id: v.ids[0], manager_id: me, comment: text, created_at: new Date().toISOString() })
+      .select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("ไม่มีสิทธิ์บันทึกความคิดเห็น");
+    S.comments.set(String(v.ids[0]), (S.comments.get(String(v.ids[0])) || 0) + 1);
+    await renderComments(box, v);
+    const n = visitComments(v);
+    card.querySelector(".er-cmt-toggle").innerHTML = `<span class="material-symbols-outlined">chat</span>ความคิดเห็น ${n}`;
+    buildRows(new Map(S.rows.map((r) => [r.id, { size: r.days }])));
+    renderTable();
+    toast("ส่งความคิดเห็นถึงเซลล์แล้ว");
+  } catch (e) {
+    console.error("comment:", e);
+    toast("ส่งไม่สำเร็จ: " + (e.message || ""), true);
   } finally {
-    isSavingPopupComment = false;
-  }
-}
-// =====================================================
-// 🆕 MARK AS READ (popup version)
-// =====================================================
-async function markPopupAsRead() {
-  if (!currentPopupGroupKey) return;
-
-  const group = groupedReports.find((g) => g.key === currentPopupGroupKey);
-  if (!group) return;
-
-  try {
-    const session = await getSessionSafely();
-    if (!session?.user?.id) {
-      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
-      return;
-    }
-
-    const commentInput = document.getElementById("popupCommentInput");
-    const text = commentInput?.value?.trim();
-    if (text) await savePopupComment();
-
-    const { error } = await supabaseClient
-      .from("reports")
-      .update({
-        manager_acknowledged: true,
-        acknowledged_by: session.user.id,
-        acknowledged_at: new Date().toISOString(),
-      })
-      .in("id", group.reportIds);
-
-    if (error) throw error;
-
-    group.manager_acknowledged = true;
-    for (const rid of group.reportIds) {
-      const r = allReports.find((x) => x.id === rid);
-      if (r) r.manager_acknowledged = true;
-    }
-
-    const fg = filteredGroups.find((g) => g.key === currentPopupGroupKey);
-    if (fg) fg.manager_acknowledged = true;
-
-    showToast("✅ ทำเครื่องหมายว่าอ่านแล้ว");
-
-    updateSummaryCards();
-    updateSalesGrid();
-    updateSalesQuickPick();
-    renderReports();
-
-    // refresh sales table
-    if (currentSalesModalId) renderSalesTable(currentSalesModalId);
-
-    closeCommentPopup();
-  } catch (e) {
-    console.error("❌ markPopupAsRead error:", e);
-    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
+    btn.disabled = false;
   }
 }
 
-// =====================================================
-// 📋 OPEN GROUP MODAL (เดิม - ใช้กับ list view)
-// =====================================================
-async function openGroupModal(groupKey) {
-  const group = groupedReports.find((g) => g.key === groupKey);
-  if (!group) {
-    showToast("❌ ไม่พบรายงาน");
-    return;
-  }
-
-  // mark ว่าอ่านแล้ว
-markRepliesAsRead(group.reportIds);
-
-// refresh badge
-renderReports();
-
-  currentGroupKey = groupKey;
-  currentGroupRows = allReports.filter((r) => group.reportIds.includes(r.id));
-  currentReportId = group.reportIds[0];
-
-  const profile = profilesMap[group.sale_id];
-  const salesName = profile?.display_name || "—";
-  const shopData = shopsMap[group.shop_id];
-
-  const modalTitle = document.getElementById("modalTitle");
-  if (modalTitle) modalTitle.textContent = `รายงานของ ${salesName}`;
-
-  const statusBadge = document.getElementById("modalStatus");
-  if (statusBadge) {
-    statusBadge.className = `badge ${group.manager_acknowledged ? "badge-read" : "badge-unread"}`;
-    statusBadge.textContent = group.manager_acknowledged
-      ? "✅ อ่านแล้ว"
-      : "🕐 ยังไม่อ่าน";
-  }
-
-  const set = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val || "—";
-  };
-
-  set("mReportDate", formatDate(group.report_date || group.submitted_at));
-  set("mSalesName", salesName);
-  set("mShopName", shopData?.name || "—");
-  set("mProvince", shopData?.province || "—");
-  set("mSource", group.source || "—");
-  set("mProductInterest", group.product_interest || "—");
-  set("mNote", group.note || "ไม่มีหมายเหตุ");
-
-  const productEl = document.getElementById("mProduct");
-  if (productEl) {
-    if (group.products.length === 0) {
-      productEl.innerHTML = '<span style="color:#999;">ไม่มีสินค้า</span>';
-    } else {
-      productEl.innerHTML = group.products
-        .map((p) => {
-          const name = productsMap[p.product_id] || "—";
-          const attrParts = [];
-          if (p.attributes && Object.keys(p.attributes).length) {
-            Object.values(p.attributes).forEach((v) => {
-              if (v) attrParts.push(v);
-            });
-          }
-          const attrText = attrParts.length
-            ? ` <span style="color:#888;font-size:12px;">(${escapeHtml(attrParts.join(", "))})</span>`
-            : "";
-          return `<div style="padding:2px 0;">• ${escapeHtml(name)}${attrText}</div>`;
-        })
-        .join("");
-    }
-  }
-
-  const qtyEl = document.getElementById("mQty");
-  if (qtyEl) {
-    const totalQty = group.products.reduce(
-      (sum, p) => sum + (p.quantity || 0),
-      0,
-    );
-    if (totalQty > 0) {
-      qtyEl.textContent = totalQty.toLocaleString("th-TH") + " ชิ้น";
-      const row = qtyEl.closest(".info-item");
-      if (row) row.style.display = "";
-    } else {
-      const row = qtyEl.closest(".info-item");
-      if (row) row.style.display = "none";
-    }
-  }
-
-  await loadCommentsForGroup(group.reportIds);
-
-  const commentInput = document.getElementById("commentInput");
-  if (commentInput) commentInput.value = "";
-
-  const modal = document.getElementById("reportModal");
-  if (modal) {
-    modal.classList.add("show");
-    document.body.style.overflow = "hidden";
-  }
-}
-
-
-
-
-function renderCommentText(rawText) {
-  const text = String(rawText || "");
-
-  if (!text.startsWith("↳ ตอบกลับ ")) {
-    return `
-      <div style="
-        font-size:13px;
-        color:#334155;
-        line-height:1.35;
-        white-space:pre-wrap;
-        word-break:break-word;
-        margin-top:2px;
-      ">
-        ${escapeHtml(text)}
-      </div>
-    `;
-  }
-
-  const lines = text.split("\n");
-  const replyLine = lines[0] || "";
-  const mainText = lines.slice(1).join("\n");
-
-  return `
-    <div style="
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      margin-top:3px;
-    ">
-
-      <div style="
-        display:inline-flex;
-        align-items:center;
-        width:fit-content;
-        max-width:420px;
-        padding:3px 8px;
-        border-left:3px solid #7eadf8;
-        background:#eff6ff;
-        border-radius:7px;
-        font-size:12px;
-        font-weight:400;
-        color:#1d4ed8;
-        line-height:1.25;
-        word-break:break-word;
-      ">
-        ${escapeHtml(replyLine)
-  .replace("Admin", "<strong style='color:#dc2626;'>Admin</strong>")
-  .replace("Executive", "<strong style='color:#f59e0b;'>Executive</strong>")
-  .replace("Manager", "<strong style='color:#0891b2;'>Manager</strong>")
-  .replace("Sale", "<strong style='color:#16a34a;'>Sale</strong>")
-}
-      </div>
-
-      <div style="
-        font-size:13px;
-        color:#1e293b;
-        line-height:1.35;
-        white-space:pre-wrap;
-        word-break:break-word;
-        margin-top:1px;
-      ">
-        ${escapeHtml(mainText)}
-      </div>
-
-    </div>
-  `;
-}
-
-
-// =====================================================
-// 💬 LOAD COMMENTS — generic (เพิ่ม element target)
-// =====================================================
-async function loadCommentsIntoElement(reportIds, container) {
-  if (!container) return;
-
-  try {
-    const { data, error } = await supabaseClient
-      .from("report_comments")
-      .select("comment, created_at, report_id, profiles(display_name, role)")
-      .in("report_id", reportIds)
-      .order("created_at", { ascending: true });
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      container.innerHTML =
-        '<div class="no-comments">ยังไม่มีความคิดเห็น</div>';
-      return;
-    }
-
-    const seen = new Set();
-    const unique = data.filter((c) => {
-      const key = `${c.created_at}__${c.comment}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    container.innerHTML = unique
-      .map((c) => {
-        const role = c.profiles?.role || "manager";
-        const displayName = c.profiles?.display_name || "ผู้ใช้";
-
-        let roleBadge, roleClass;
-        if (typeof getRoleMeta === "function") {
-          const meta = getRoleMeta(role);
-          roleBadge = meta.label;
-          roleClass = meta.cssClass;
-        } else {
-          if (role === "admin") {
-            roleBadge = "Admin";
-            roleClass = "comment-admin";
-          } else if (role === "executive") {
-            roleBadge = "Executive";
-            roleClass = "comment-executive";
-          } else if (role === "manager") {
-            roleBadge = "Manager";
-            roleClass = "comment-manager";
-          } else {
-            roleBadge = "👤 " + role;
-            roleClass = "comment-user";
-          }
-        }
-
-        return `
-        <div class="comment-item ${roleClass}" style="padding:8px 10px;margin-bottom:6px;">
-          <div class="comment-meta">
-            <span class="comment-author">${escapeHtml(displayName)}</span>
-            <span class="comment-role-badge ${roleClass}">${roleBadge}</span>
-            <span class="comment-date">${formatDateTime(c.created_at)}</span>
-          </div>
-          <div class="comment-text" style="margin-top:4px;">${renderCommentText(c.comment)}</div>
-        </div>`;
-      })
-      .join("");
-  } catch (e) {
-    console.error("❌ loadCommentsIntoElement error:", e);
-    container.innerHTML =
-      '<div class="error-text">เกิดข้อผิดพลาดในการโหลดความคิดเห็น</div>';
-  }
-}
-
-// เก็บเดิมไว้สำหรับ list view modal
-async function loadCommentsForGroup(reportIds) {
-  await loadCommentsIntoElement(
-    reportIds,
-    document.getElementById("commentsHistory"),
-  );
-}
-
-// =====================================================
-// 💬 SAVE COMMENT (เดิม - list view modal)
-// =====================================================
-async function saveComment() {
-  if (isSavingComment) return;
-  if (!currentReportId) return;
-
-  const input = document.getElementById("commentInput");
-  const text = input?.value?.trim();
-
-  if (!text) {
-    showToast("⚠️ กรุณาพิมพ์ความคิดเห็น");
-    return;
-  }
-
-  isSavingComment = true;
-
-  try {
-    const session = await getSessionSafely();
-    if (!session?.user?.id) {
-      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
-      return;
-    }
-
-    const { error } = await supabaseClient.from("report_comments").insert([
-      {
-        report_id: currentReportId,
-        manager_id: session.user.id,
-        comment: text,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-
-    if (error) throw error;
-
-    commentCountsMap[currentReportId] =
-      (commentCountsMap[currentReportId] || 0) + 1;
-
-    showToast("💬 บันทึกความคิดเห็นแล้ว");
-    input.value = "";
-
-    const group = groupedReports.find((g) => g.key === currentGroupKey);
-    if (group) {
-      await loadCommentsForGroup(group.reportIds);
-    }
-
-    await loadReplyCounts(allReports.map((r) => r.id));
-
-    updateSummaryCards();
-    renderReports();
-  } catch (e) {
-    console.error("❌ saveComment error:", e);
-    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
-  } finally {
-    isSavingComment = false;
-  }
-}
-
-// =====================================================
-// ✅ MARK AS READ (เดิม)
-// =====================================================
-async function markAsRead() {
-  if (!currentGroupKey) return;
-
-  const group = groupedReports.find((g) => g.key === currentGroupKey);
-  if (!group) return;
-
-  try {
-    const session = await getSessionSafely();
-    if (!session?.user?.id) {
-      showToast("❌ กรุณาเข้าสู่ระบบใหม่");
-      return;
-    }
-
-    const commentInput = document.getElementById("commentInput");
-    const text = commentInput?.value?.trim();
-    if (text) await saveComment();
-
-    const { error } = await supabaseClient
-      .from("reports")
-      .update({
-        manager_acknowledged: true,
-        acknowledged_by: session.user.id,
-        acknowledged_at: new Date().toISOString(),
-      })
-      .in("id", group.reportIds);
-
-    if (error) throw error;
-
-    group.manager_acknowledged = true;
-    for (const rid of group.reportIds) {
-      const r = allReports.find((x) => x.id === rid);
-      if (r) r.manager_acknowledged = true;
-    }
-
-    const fg = filteredGroups.find((g) => g.key === currentGroupKey);
-    if (fg) fg.manager_acknowledged = true;
-
-    showToast("✅ ทำเครื่องหมายว่าอ่านแล้ว");
-
-    updateSummaryCards();
-    updateSalesGrid();
-    updateSalesQuickPick();
-    renderReports();
-    closeModal();
-  } catch (e) {
-    console.error("❌ markAsRead error:", e);
-    showToast("❌ เกิดข้อผิดพลาด: " + e.message);
-  }
-}
-
-// =====================================================
-// ✕ CLOSE MODAL (เดิม)
-// =====================================================
-function closeModal() {
-  const modal = document.getElementById("reportModal");
-  if (modal) {
-    modal.classList.remove("show");
-    document.body.style.overflow = "";
-  }
-  currentGroupKey = null;
-  currentGroupRows = [];
-  currentReportId = null;
-}
-
-// =====================================================
-// 📥 EXPORT CSV
-// =====================================================
-function exportCSV() {
-  if (!filteredGroups.length) {
-    showToast("⚠️ ไม่มีข้อมูลสำหรับ export");
-    return;
-  }
-
-  const headers = [
-    "วันที่",
-    "เซลล์",
-    "ร้านค้า",
-    "จังหวัด",
-    "สินค้า",
-    "จำนวนสินค้า",
-    "หมายเหตุ",
-    "สินค้าที่ร้านแนะนำ",
-    "สถานะ",
-  ];
-
-  const rows = filteredGroups.map((g) => {
-    const shopData = shopsMap[g.shop_id];
-    const productNames =
-      g.products.map((p) => productsMap[p.product_id] || "—").join(", ") ||
-      "ไม่มีสินค้า";
-
-    return [
-      formatDate(g.report_date || g.submitted_at),
-      profilesMap[g.sale_id]?.display_name || "—",
-      shopData?.name || "—",
-      shopData?.province || "—",
-      productNames,
-      g.products.length,
-      (g.note || "—").replace(/[\r\n]+/g, " ").replace(/"/g, '""'),
-      (g.product_interest || "—").replace(/[\r\n]+/g, " ").replace(/"/g, '""'),
-      g.manager_acknowledged ? "อ่านแล้ว" : "ยังไม่อ่าน",
-    ];
-  });
-
-  const csv =
-    "\uFEFF" +
-    [
-      headers.join(","),
-      ...rows.map((r) => r.map((v) => `"${v}"`).join(",")),
-    ].join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
+// ============================================================
+// ส่งออก / แจ้งเตือน
+// ============================================================
+function exportCsv() {
+  const R = S.range;
+  const head = ["เซลล์", "พื้นที่", "เข้าร้าน (ครั้ง)", "ช่วงก่อน", "เปลี่ยนแปลง", "ร้าน", "ร้านในความดูแล", "ครอบคลุม %", "เข้าพบสำเร็จ %", "วันลงพื้นที่", "ส่งล่าสุด", "ความคิดเห็น"];
+  const lines = [[`สรุปการเข้าร้านค้า ${R.label} ${ymd(R.from)} ถึง ${ymd(R.to)}`], head].concat(
+    [...S.rows].sort((a, b) => b.visits - a.visits).map((r) => [r.name, r.area, r.visits, r.prev, r.delta, r.shops, r.assigned, r.cover ?? "", r.met ?? "", r.days, r.last || "", r.comments]));
+  const csv = "﻿" + lines.map((l) => l.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const a = document.createElement("a");
-  a.href = url;
-  a.download = `reports_${formatDateForInput(dateStart)}_${formatDateForInput(dateEnd)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-
-  showToast("📥 Export สำเร็จ");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `สรุปการเข้าร้านค้า_${ymd(R.from)}_${ymd(R.to)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-// =====================================================
-// 🔧 SETUP EVENT LISTENERS
-// =====================================================
-function setupEventListeners() {
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") applyFilter();
-    });
-  }
-
-  const modal = document.getElementById("reportModal");
-  if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModal();
-    });
-  }
-
-  // 🆕 sales table modal — click outside to close
-  const salesModal = document.getElementById("salesTableModal");
-  if (salesModal) {
-    salesModal.addEventListener("click", (e) => {
-      if (e.target === salesModal) closeSalesTableModal();
-    });
-  }
-
-  // 🆕 comment popup — click outside to close
-  const popup = document.getElementById("commentPopupModal");
-  if (popup) {
-    popup.addEventListener("click", (e) => {
-      if (e.target === popup) closeCommentPopup();
-    });
-  }
-
-  // ESC key — close topmost modal first
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    const popupOpen = document
-      .getElementById("commentPopupModal")
-      ?.classList.contains("show");
-    const salesOpen = document
-      .getElementById("salesTableModal")
-      ?.classList.contains("show");
-    const detailOpen = document
-      .getElementById("reportModal")
-      ?.classList.contains("show");
-
-    if (popupOpen) closeCommentPopup();
-    else if (salesOpen) closeSalesTableModal();
-    else if (detailOpen) closeModal();
-  });
-}
-
-// =====================================================
-// 🚪 SETUP LOGOUT
-// =====================================================
-function setupLogout() {
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      window.location.href = "/pages/auth/login.html";
-    });
-  }
-}
-
-// =====================================================
-// 🔧 HELPERS
-// =====================================================
-function formatDate(dateStr) {
-  if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch (e) {
-    return "—";
-  }
-}
-
-function formatDateShort(dateStr) {
-  if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-    });
-  } catch (e) {
-    return "—";
-  }
-}
-
-function formatWeekday(dateStr) {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("th-TH", { weekday: "short" });
-  } catch (e) {
-    return "";
-  }
-}
-
-function formatDateTime(dateStr) {
-  if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch (e) {
-    return "—";
-  }
-}
-
-function escapeHtml(text) {
-  if (text === null || text === undefined) return "";
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3000);
+let _toastT = null;
+function toast(msg, bad) {
+  const el = $("erToast");
+  el.textContent = msg;
+  el.classList.toggle("is-err", !!bad);
+  el.classList.add("is-show");
+  clearTimeout(_toastT);
+  _toastT = setTimeout(() => el.classList.remove("is-show"), 3000);
 }
 
 async function logout() {
-  try {
-    await supabaseClient.auth.signOut();
-    window.location.href = "/pages/auth/login.html";
-  } catch (e) {
-    window.location.href = "/pages/auth/login.html";
-  }
+  try { await supabaseClient.auth.signOut(); } catch (e) { /* ignore */ }
+  location.href = "/pages/auth/login.html";
 }
-
-
-
-
-// =====================================================
-// 🌐 GLOBAL FUNCTIONS
-// =====================================================
-window.filterBySale = filterBySale;
-window.filterByManager = filterByManager;
-window.applyFilter = applyFilter;
-window.resetFilter = resetFilter;
-window.goToPage = goToPage;
-window.openGroupModal = openGroupModal;
-window.saveComment = saveComment;
-window.markAsRead = markAsRead;
-window.closeModal = closeModal;
-window.exportCSV = exportCSV;
-window.loadReports = loadReports;
-window.logout = logout;
-
-// 🆕
-window.openSalesTableModal = openSalesTableModal;
-window.closeSalesTableModal = closeSalesTableModal;
-window.openCommentPopup = openCommentPopup;
-window.closeCommentPopup = closeCommentPopup;
-window.savePopupComment = savePopupComment;
-window.markPopupAsRead = markPopupAsRead;
-window.switchView = switchView;
-window.toggleNote = toggleNote;

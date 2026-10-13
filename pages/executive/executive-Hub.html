@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+  <head>
+    <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
+    <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EABaseHub | หน้าหลักผู้บริหาร</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <!-- โครงหน้าผู้บริหาร (sidebar + header) + การ์ดเมนูแบบ Form Hub (marketingHome.css) -->
+    <link rel="stylesheet" href="/css/base/role-colors.css" />
+    <link rel="stylesheet" href="/css/base/baseExecutive.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Approval.css" />
+    <link rel="stylesheet" href="/css/pages/marketing/marketingHome.css" />
+    <!-- sidebar แบบเดียวกับหน้า Marketing -->
+    <link rel="stylesheet" href="/css/components/sidebar-marketing.css" />
+    <link rel="stylesheet" href="/css/components/sidebar-executive.css" />
+    <link rel="stylesheet" href="/css/base/ui-cards.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Dashboard-ux.css" />
+    <link rel="stylesheet" href="/css/pages/executive/executive-Hub.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+
+  <body class="role-executive ex-hub-page">
+    <div class="app-layout">
+      <!-- ================= SIDEBAR (ชุดเดียวกับหน้าผู้บริหารอื่น) ================= -->
+      <aside class="app-sidebar ui-role-side expanded" id="appSidebar">
+        <a class="sidebar-logo" href="/pages/executive/executive-Hub.html" title="หน้าหลักผู้บริหาร">
+          <div class="sidebar-logo-circle">
+            <img src="/assets/icons/icon-192.png" alt="EABaseHub logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+            <span style="display: none">E</span>
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-title">EABaseHub</div>
+            <div class="sidebar-brand-sub">Executive</div>
+          </div>
+        </a>
+        <nav class="sidebar-nav" id="sidebarNav">
+          <!-- เมนูผู้บริหาร (เหมือนกันทุกหน้า: หน้าหลัก / ภาพรวม / อนุมัติงาน / รายงานเข้าร้านค้า) -->
+          <a href="/pages/executive/executive-Hub.html" class="sidebar-nav-item active" title="หน้าหลัก">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">home</span></div>
+            <span class="nav-label">หน้าหลัก</span>
+          </a>
+          <a href="/pages/executive/executive-Dashboard.html" class="sidebar-nav-item" title="ภาพรวม">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">space_dashboard</span></div>
+            <span class="nav-label">ภาพรวม</span>
+          </a>
+          <a href="/pages/executive/executive-Approval.html" class="sidebar-nav-item" title="อนุมัติงาน">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">approval_delegation</span><b class="ed-nav-badge" id="navPendingBadge" hidden>0</b></div>
+            <span class="nav-label">อนุมัติงาน</span>
+          </a>
+          <a href="/pages/executive/executiveHome.html" class="sidebar-nav-item" title="รายงานเข้าร้านค้า">
+            <div class="nav-icon-wrap"><span class="material-symbols-outlined">assignment</span></div>
+            <span class="nav-label">รายงานเข้าร้านค้า</span>
+          </a>
+        </nav>
+        <div class="sidebar-collapse-btn" onclick="toggleSidebar()" title="ย่อ/ขยาย">
+          <span class="material-symbols-outlined" id="collapseIcon">chevron_right</span>
+        </div>
+        <div class="sidebar-divider"></div>
+        <button class="sidebar-logout" id="logoutBtn" type="button" onclick="logout()" title="ออกจากระบบ">
+          <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+          <span class="nav-label">ออกจากระบบ</span>
+        </button>
+      </aside>
+
+      <div class="app-main">
+        <header class="app-header">
+          <div class="header-left">
+            <div class="header-system-name">
+              <div class="header-icon"><span class="material-symbols-outlined">home</span></div>
+              <span>หน้าหลัก</span>
+            </div>
+            <div class="header-subtitle">เมนูงานผู้บริหาร · อนุมัติขั้นสุดท้าย · รายงาน</div>
+          </div>
+          <div class="header-right">
+            <div class="page-header-badge" title="สิทธิ์การใช้งาน">
+              <span class="material-symbols-outlined" style="font-size: 20px; color: #d97706">workspace_premium</span>
+              <span>ผู้บริหาร</span>
+            </div>
+            <div class="header-date-pill">
+              <span class="material-symbols-outlined">calendar_month</span>
+              <span id="headerDateText">—</span>
+            </div>
+            <div class="header-user">
+              <div class="header-user-avatar" id="userAvatar"><span class="material-symbols-outlined" style="font-size: 16px !important; color: white !important">person</span></div>
+              <span class="header-user-name" id="userName">กำลังโหลด...</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="app-content mk-content ex-hub">
+          <!-- ทักทาย + งานค้าง + ค้นหาเมนู -->
+          <section class="mk-hero ui-role-hero">
+            <div class="mk-hero-text">
+              <h1 id="mkGreeting">สวัสดี</h1>
+              <p id="exHeroSub">เลือกเมนูด้านล่าง หรือพิมพ์ค้นหาชื่อเมนู</p>
+              <a class="ex-hero-pill" id="exPendingPill" href="/pages/executive/executive-Approval.html?status=pending" hidden>
+                <span class="material-symbols-outlined">notifications_active</span>
+                <span id="exPendingText">มีงานรออนุมัติ</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </a>
+            </div>
+            <label class="mk-search">
+              <span class="material-symbols-outlined">search</span>
+              <input type="search" id="mkSearch" placeholder="ค้นหาเมนู เช่น ราคาพิเศษ, วงเงิน, รายงาน" autocomplete="off" />
+              <kbd>/</kbd>
+            </label>
+          </section>
+
+          <!-- ใช้ล่าสุด (จำในเครื่องนี้) -->
+          <section class="mk-recent" id="mkRecentWrap" hidden>
+            <h2 class="mk-group-title"><span class="material-symbols-outlined">history</span> ใช้ล่าสุด</h2>
+            <div class="mk-recent-list" id="mkRecent"></div>
+          </section>
+
+          <!-- กลุ่มเมนู (สร้างจาก EXEC_MENU ใน executive-Hub.js) -->
+          <div class="mk-groups" id="mkGroups"><div class="mk-loading">กำลังโหลดเมนู...</div></div>
+          <div class="mk-empty" id="mkEmpty" hidden><span class="material-symbols-outlined">search_off</span> ไม่พบเมนูที่ค้นหา</div>
+        </main>
+      </div>
+    </div>
+
+    <script src="/js/core/supabaseClient.js"></script>
+    <script src="/js/core/userService.js"></script>
+    <script src="/js/core/roleConfig.js"></script>
+    <script src="/js/core/auth.js"></script>
+    <script src="/js/components/sidebar-manager.js"></script>
+    <script src="/js/pages/auth/role-theme.js"></script>
+    <script src="/js/pages/executive/executive-rules.js"></script>
+    <script src="/js/pages/executive/executive-Hub.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof RoleTheme !== "undefined") RoleTheme.init();
+      });
+    </script>
+  </body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="th">
   <head>
     <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
-    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
     <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <meta charset="UTF-8" />
@@ -30,12 +30,12 @@
       </div>
     </header>
 
-    <main class="fp sp spm">
+    <main class="fp sp spm spm-list">
       <section class="fp-head ui-role-hero sp-head">
         <div>
           <a class="fp-back" href="/pages/marketing/marketingHome.html"><span class="material-symbols-outlined">arrow_back</span>งานการตลาด</a>
           <h1>อนุมัติราคาพิเศษ <span class="fp-no">Manager · ขั้นที่ 1</span></h1>
-          <p>พิจารณาคำขอจากทีมขาย · อนุมัติแล้วระบบส่งต่อให้ผู้บริหารพิจารณาขั้นสุดท้ายอัตโนมัติ</p>
+          <p>พิจารณาคำขอจากทีมขาย · กดคำขอเพื่อเปิดเอกสาร ลงความเห็นและลงนาม · อนุมัติแล้วระบบส่งต่อผู้บริหารอัตโนมัติ</p>
         </div>
         <ol class="sp-steps" aria-label="ขั้นตอน">
           <li><b>1</b>ผู้ขอส่ง</li>
@@ -65,72 +65,6 @@
           </section>
         </aside>
 
-        <!-- ===================== รายละเอียด ===================== -->
-        <section class="fp-card fp-form" id="detailCard">
-          <div class="spm-detail-empty" id="detailEmpty">
-            <span class="material-symbols-outlined">fact_check</span>
-            <b>เลือกคำขอจากรายการ</b>
-            <span>เพื่อดูรายละเอียดและพิจารณา</span>
-          </div>
-          <div id="detailBody" hidden>
-            <div class="fp-sec">
-              <div class="fp-sec-head">
-                <h2 class="fp-sec-title" id="dTitle">-</h2>
-                <span class="fp-badge" id="dBadge">-</span>
-              </div>
-              <div id="dTimeline"></div>
-            </div>
-            <div class="fp-sec">
-              <div class="spm-kpis">
-                <div><span>มูลค่าราคาปกติ</span><b id="kNormal">0.00</b></div>
-                <div><span>มูลค่าราคาที่ขอ</span><b id="kRequest">0.00</b></div>
-                <div class="is-key"><span>ส่วนต่างรวม (บาท)</span><b id="kDiff">0.00</b></div>
-                <div class="is-key"><span>ส่วนลดเฉลี่ย</span><b id="kPct">0.00%</b></div>
-              </div>
-              <div class="fp-warn" id="dFlags" hidden></div>
-            </div>
-            <div class="fp-sec">
-              <div class="fp-sec-head">
-                <h2 class="fp-sec-title"><span class="material-symbols-outlined" style="color:var(--role-color)">description</span> เอกสารคำขอ</h2>
-                <button type="button" class="fp-link-btn" onclick="printCurrent()">พิมพ์ / PDF</button>
-              </div>
-              <div class="spm-doc" id="dDoc"></div>
-            </div>
-
-            <!-- การพิจารณา -->
-            <div class="fp-sec" id="decideSec">
-              <div class="fp-sec-head">
-                <h2 class="fp-sec-title"><b>✓</b> ความเห็นและลายเซ็น Manager</h2>
-                <button type="button" class="fp-link-btn" id="sigClearBtn" onclick="mgrSig.clear()">ล้างลายเซ็น</button>
-              </div>
-              <div class="spm-decide-note" id="decideNote" hidden></div>
-              <div id="decideForm">
-                <div class="fp-field sp-reason">
-                  <label for="mgrComment">ความเห็น (จำเป็นเมื่อไม่อนุมัติหรือขอข้อมูลเพิ่ม)</label>
-                  <textarea id="mgrComment" rows="3" maxlength="1000" placeholder="เช่น เห็นควรอนุมัติ ลูกค้าประจำ ยอดสั่งต่อเนื่อง"></textarea>
-                </div>
-                <div class="sp-sign" style="margin-top:12px">
-                  <div class="sp-sign-pad" id="mgrSigWrap">
-                    <canvas id="mgrSigCanvas" aria-label="ช่องเซ็นชื่อ Manager"></canvas>
-                    <span class="sp-sign-hint" id="mgrSigHint"><span class="material-symbols-outlined">draw</span>เซ็นชื่อในกรอบนี้</span>
-                  </div>
-                  <div class="sp-sign-meta">
-                    <div><span>ผู้พิจารณา</span><b id="mgrName">-</b></div>
-                    <div><span>ตำแหน่ง</span><b id="mgrRole">-</b></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="fp-actionbar" id="decideBar">
-              <span class="fp-status" id="decideStatus">ยังไม่ได้พิจารณา</span>
-              <div class="spm-actions">
-                <button type="button" class="fp-btn-danger" onclick="decide('rejected')"><span class="material-symbols-outlined">close</span>ไม่อนุมัติ</button>
-                <button type="button" class="fp-btn-warn" onclick="decide('request_more_info')"><span class="material-symbols-outlined">help</span>ขอข้อมูลเพิ่ม</button>
-                <button type="button" class="fp-btn-primary" onclick="decide('approved')"><span class="material-symbols-outlined">send</span>อนุมัติ &amp; ส่งต่อผู้บริหาร</button>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
 

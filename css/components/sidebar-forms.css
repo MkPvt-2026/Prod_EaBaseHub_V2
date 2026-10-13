@@ -1,0 +1,105 @@
+/* =====================================================
+   sidebar-forms.css — เมนูด้านข้างชุดแบบฟอร์ม (js/components/form-sidebar.js)
+   แท็บเล็ตเป็นหลัก: ปุ่มสูง ≥ 48px กดง่าย · สีตาม role (--role-*)
+   ≥1100px เมนูเต็ม 240px · 768–1099px แถบไอคอน 88px · <768px ซ่อน (ปุ่ม ☰ เปิดเป็นลิ้นชัก)
+   ===================================================== */
+:root { --fs-top: 64px; --fs-w: 240px; }
+
+.fs-shell { display: grid; grid-template-columns: var(--fs-w) minmax(0, 1fr); align-items: start; }
+.fs-shell > main { min-width: 0; }
+
+.fs {
+  position: sticky; top: var(--fs-top); z-index: 900;
+  height: calc(100vh - var(--fs-top)); height: calc(100dvh - var(--fs-top));
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 14px 12px 18px; overflow-y: auto; overscroll-behavior: contain;
+  background: #fff; border-right: 1px solid #e5e7eb;
+  font-family: "Kanit", sans-serif;
+}
+.fs .material-symbols-outlined { font-size: 22px; }
+.fs .fs-s { display: none; }
+
+/* กลับหน้าหลัก */
+.fs-home {
+  display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px;
+  border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 500;
+  color: var(--role-text, #166534); background: var(--role-soft, #f0fdf4); border: 1px solid var(--role-border, #bbf7d0);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.fs-home:hover { background: #fff; box-shadow: 0 2px 8px rgba(var(--role-rgb, 22, 163, 74), 0.18); }
+.fs-home:focus-visible, .fs-item:focus-visible { outline: 3px solid rgba(var(--role-rgb, 22, 163, 74), 0.35); outline-offset: 1px; }
+
+.fs-title {
+  display: flex; align-items: center; gap: 8px; margin: 12px 6px 2px; padding-bottom: 8px;
+  border-bottom: 1px solid #eef0f4; font-size: 16px; font-weight: 600; color: #0f172a;
+}
+.fs-title .material-symbols-outlined { color: var(--role-color, #16a34a); }
+
+.fs-nav { display: flex; flex-direction: column; gap: 8px; }
+.fs-group[hidden] { display: none; }
+.fs-gtitle { margin: 6px 8px 4px; font-size: 12px; font-weight: 500; color: #94a3b8; letter-spacing: 0.02em; }
+.fs ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.fs li[hidden] { display: none; }
+
+.fs-item {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 4px 10px;
+  border-radius: 12px; text-decoration: none; color: #334155; font-size: 14.5px;
+  transition: background 0.15s, color 0.15s;
+}
+.fs-item:hover { background: #f8fafc; color: #0f172a; }
+.fs-item.is-active { background: var(--role-soft, #f0fdf4); color: var(--role-text, #166534); font-weight: 600; }
+.fs-item.is-active::before { content: ""; position: absolute; left: -12px; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0; background: var(--role-color, #16a34a); }
+
+.fs-ic { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: #f1f5f9; color: #475569; }
+.fs-ic .material-symbols-outlined { font-size: 20px; }
+.fs-ic.c-blue { background: #dbeafe; color: #1d4ed8; }
+.fs-ic.c-green { background: #dcfce7; color: #15803d; }
+.fs-ic.c-orange { background: #ffedd5; color: #c2410c; }
+.fs-ic.c-purple { background: #ede9fe; color: #6d28d9; }
+.fs-ic.c-teal { background: #ccfbf1; color: #0f766e; }
+.fs-item.is-active .fs-ic { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--role-color, #16a34a); }
+
+/* ปุ่ม ☰ บนหัวเว็บ (จอเล็ก) */
+.fs-burger {
+  display: none; flex: 0 0 auto; width: 44px; height: 44px; margin-right: 6px; border: 0; border-radius: 12px;
+  align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.14); color: #fff; cursor: pointer;
+}
+.fs-burger .material-symbols-outlined { font-size: 26px; }
+.fs-scrim { display: none; }
+
+/* ในชุดแบบฟอร์ม เมนูด้านข้างทำหน้าที่ปุ่มย้อนกลับแล้ว */
+.fs-on .fp-back { display: none; }
+
+/* ---------- แท็บเล็ตแนวตั้ง / จอแคบ: แถบไอคอน ---------- */
+@media (min-width: 768px) and (max-width: 1099px) {
+  :root { --fs-w: 88px; }
+  .fs { padding: 10px 6px 16px; align-items: stretch; }
+  .fs .fs-l { display: none; }
+  .fs .fs-s { display: block; font-size: 11.5px; line-height: 1.2; text-align: center; }
+  .fs-home, .fs-item { flex-direction: column; justify-content: center; gap: 3px; min-height: 64px; padding: 6px 2px; }
+  .fs-home .material-symbols-outlined { font-size: 24px; }
+  .fs-title { justify-content: center; margin: 8px 0 0; padding-bottom: 6px; }
+  .fs-gtitle { margin: 4px 0 2px; text-align: center; font-size: 10.5px; }
+  .fs-item.is-active::before { left: -6px; }
+  .fs-item.is-active { font-weight: 500; }
+}
+
+/* ---------- มือถือ: ลิ้นชัก ---------- */
+@media (max-width: 767px) {
+  .fs-shell { display: block; }
+  .fs-burger { display: inline-flex; }
+  .fs {
+    position: fixed; top: 0; left: 0; bottom: 0; height: auto; width: min(300px, 86vw); z-index: 1200;
+    transform: translateX(-102%); transition: transform 0.22s ease; box-shadow: 8px 0 30px rgba(15, 23, 42, 0.18);
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  .fs-scrim { display: block; position: fixed; inset: 0; z-index: 1150; background: rgba(15, 23, 42, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  body.fs-open .fs { transform: none; }
+  body.fs-open .fs-scrim { opacity: 1; pointer-events: auto; }
+  body.fs-open { overflow: hidden; }
+}
+
+@media print {
+  .fs, .fs-burger, .fs-scrim { display: none !important; }
+  .fs-shell { display: block; }
+}

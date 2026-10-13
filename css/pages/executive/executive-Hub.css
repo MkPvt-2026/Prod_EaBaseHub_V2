@@ -1,0 +1,27 @@
+/* =====================================================
+   executive-Hub.css — หน้าหลักผู้บริหาร
+   การ์ดเมนูใช้ .mk-card จาก marketingHome.css (แบบเดียวกับ Form Hub / Marketing Home)
+   ไฟล์นี้ปรับเฉพาะสีหัวกลุ่ม + ป้ายตัวเลขงานรออนุมัติ · โน้ตบุ๊กเป็นหลัก
+   ===================================================== */
+
+.ex-hub { font-family: "Kanit", sans-serif; }
+.ex-hub .mk-group-title .material-symbols-outlined { color: var(--role-color); }
+.ex-hub .mk-hero { align-items: center; }
+
+/* ป้าย "มีงานรออนุมัติ" ใน hero */
+.ex-hero-pill {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px 6px 10px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff; font-size: 13.5px; font-weight: 500; text-decoration: none; transition: background 0.15s;
+}
+.ex-hero-pill:hover { background: rgba(255, 255, 255, 0.28); }
+.ex-hero-pill .material-symbols-outlined { font-size: 18px; color: #fff; }
+.ex-hero-pill[hidden] { display: none; }
+
+/* ตัวเลขงานรออนุมัติบนการ์ด */
+.ex-hub .mk-card { position: relative; }
+.ex-badge {
+  position: absolute; top: 10px; right: 10px; min-width: 24px; height: 24px; padding: 0 7px; box-sizing: border-box;
+  border-radius: 999px; background: #ea580c; color: #fff; font-size: 12.5px; font-weight: 600; line-height: 24px; text-align: center;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35);
+}

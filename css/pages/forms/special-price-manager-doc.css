@@ -1,0 +1,32 @@
+/* =====================================================
+   special-price-manager-doc.css — เอกสารขออนุมัติราคาพิเศษ (Manager)
+   โครงหน้าใช้ executive-ApprovalDoc.css (.ad-*) ร่วมกับหน้าผู้บริหาร · สีตาม role (Manager = น้ำเงิน)
+   ===================================================== */
+.spmd { padding-top: 16px; }
+.spmd .ad-bar { flex-wrap: wrap; }
+.spmd .ad-panel { top: 12px; }
+
+.spmd-kpis { display: grid; grid-template-columns: 1fr 1fr; margin: 12px 0 4px; border: 1px solid var(--ui-line); border-radius: 10px; overflow: hidden; }
+.spmd-kpis > div { display: flex; flex-direction: column; padding: 7px 10px; border-top: 1px solid var(--ui-divider); border-left: 1px solid var(--ui-divider); }
+.spmd-kpis > div:nth-child(-n+2) { border-top: 0; }
+.spmd-kpis > div:nth-child(odd) { border-left: 0; }
+.spmd-kpis span { font-size: 11.5px; color: var(--ui-label); }
+.spmd-kpis b { font-size: 15.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.spmd-kpis .is-key { background: var(--role-soft); }
+.spmd-kpis .is-key b { color: var(--role-text); }
+.spmd-kpis b.is-high { color: #b91c1c; }
+
+.spmd-flags { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: 12.5px; }
+.spmd-flags[hidden] { display: none; }
+.spmd-flags b { display: flex; align-items: center; gap: 4px; }
+.spmd-flags b .material-symbols-outlined { font-size: 17px; }
+.spmd-flags ul { margin: 4px 0 0; padding-left: 18px; }
+
+.spmd-who { font-size: 12px; color: var(--ui-label); }
+.spmd-who b { color: var(--ui-num); font-weight: 500; }
+#adSigReq[hidden] { display: none; }
+
+@media print { .app-header { display: none !important; } }
+
+/* เปิดร้านค้าใหม่ (new-shop-manager-doc) — ขอเครดิต = สีส้ม (ให้สังเกต ไม่ใช่ผิดพลาด) */
+#kPay.is-high { color: #c2410c; }

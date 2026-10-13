@@ -5,7 +5,7 @@
 // 2) special_price          = ขออนุมัติราคา (กรณีพิเศษ)
 // 3) claim                  = เคลมสินค้า
 // 4) promotion              = โปรโมชั่น
-// 5) new_area_shop          = เปิดร้านค้าในเขตใหม่
+// 5) new_area_shop          = เปิดร้านค้าใหม่ (เซลล์ → Manager → ผู้บริหาร)
 
 const APPROVAL_TYPE_META = {
   temp_credit_limit: {
@@ -45,9 +45,9 @@ const APPROVAL_TYPE_META = {
     className: "type-promotion",
   },
   new_area_shop: {
-    label: "เปิดร้านค้าในเขตใหม่",
-    shortLabel: "เปิดเขตใหม่",
-    icon: "storefront",
+    label: "ขอเปิดร้านค้าใหม่",
+    shortLabel: "เปิดร้านใหม่",
+    icon: "add_business",
     className: "type-shop",
   },
 };
@@ -144,7 +144,7 @@ function val(...items) {
 
 function normalizeApprovalType(type) {
   const raw = String(type || "other").trim();
-  if (raw === "temporary_credit_limit" || raw === "credit_limit") return "temp_credit_limit";
+  if (raw === "temporary_credit_limit" || raw === "credit_limit" || raw === "credit_limit_temp") return "temp_credit_limit";
   return raw || "other";
 }
 
@@ -168,7 +168,10 @@ function mapQcStatusToRequestStatus(qcStatus) {
 }
 
 function getApprovalStatus(row) {
-  if (row?.request_status) return row.request_status;
+  const rs = row?.request_status;
+  // สถานะระหว่างทาง (วงเงิน: accounting_review / executive_review ฯลฯ) ที่มาถึงผู้บริหารแล้ว = รอพิจารณา
+  if (rs && ["waiting_ceo", "executive_review", "accounting_review", "manager_review"].includes(rs)) return "pending";
+  if (rs) return rs;
   if (row?.exec_status) return row.exec_status;
   if (row?.qc_status) return mapQcStatusToRequestStatus(row.qc_status);
   return "pending";
@@ -315,8 +318,16 @@ function getRequesterText(row) {
 }
 
 // คำขอราคาพิเศษจากฟอร์มใหม่มีขั้น Manager ก่อน — แสดงให้ผู้บริหารเมื่อ Manager อนุมัติแล้วเท่านั้น
+// วงเงินชั่วคราว: บัญชี → Manager → ผู้บริหาร (ดูจาก status) — แสดงเมื่อถึงขั้นผู้บริหาร หรือผู้บริหารตัดสินแล้ว
+// (กฎเดียวกับหน้าภาพรวมผู้บริหาร executive-Dashboard.js · atExecStage)
 function isVisibleToExecutive(row) {
-  if (normalizeApprovalType(row?.request_type) !== "special_price") return true;
+  const type = normalizeApprovalType(row?.request_type);
+  if (type === "temp_credit_limit") {
+    if (["approved", "rejected"].includes(row?.request_status)) return true;
+    const st = row?.status;
+    return !st || ["executive_review", "waiting_ceo"].includes(st);
+  }
+  if (type !== "special_price" && type !== "new_area_shop") return true; // 2 ประเภทนี้มีขั้น Manager ก่อน
   if (row?.request_status === "waiting_manager") return false;
   const m = row?.payload?.manager;
   if (m && m.decision !== "approved") return false; // Manager ไม่อนุมัติ / ขอข้อมูลเพิ่ม → จบที่ Manager
@@ -342,6 +353,13 @@ function getApprovalDetail(row) {
   );
 }
 
+function specialPriceTotal(row) {
+  const items = row?.payload?.items;
+  if (!Array.isArray(items) || !items.length) return "";
+  const t = items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.request_price || 0), 0);
+  return t > 0 ? t : "";
+}
+
 function getApprovalAmount(row) {
   return val(
     row?.amount,
@@ -349,6 +367,7 @@ function getApprovalAmount(row) {
     row?.credit_amount,
     row?.price_amount,
     row?.request_amount, // คำขอวงเงินชั่วคราว / ราคาพิเศษ
+    specialPriceTotal(row), // ราคาพิเศษ (ฟอร์มใหม่): รวมจำนวน × ราคาที่ขอ
     ""
   );
 }
@@ -419,10 +438,10 @@ async function loadExecClaims() {
   }
 
   try {
-    const approvalQuery = supabaseClient
-      .from("approval_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
+    // ⚡ รายการแบบเบา (ไม่ดึงลายเซ็น) — ลายเซ็นดึงตอนเปิดดูรายการ (executive-rules.js)
+    const approvalQuery = typeof execFetchApprovals === "function"
+      ? execFetchApprovals((sel) => supabaseClient.from("approval_requests").select(sel).order("created_at", { ascending: false }))
+      : supabaseClient.from("approval_requests").select("*").order("created_at", { ascending: false });
 
     const claimsQuery = supabaseClient
       .from("claims")
@@ -467,7 +486,25 @@ async function loadExecClaims() {
 
     allExecClaims = merged;
     updateExecSummary();
+
+    // เปิดจากหน้าหลักผู้บริหาร: ?type=special_price&status=pending → ตั้งตัวกรองให้ (ครั้งแรกครั้งเดียว)
+    if (!window.__execParamsApplied) {
+      window.__execParamsApplied = true;
+      const sp = new URLSearchParams(location.search);
+      const t = sp.get("type"), st = sp.get("status");
+      const ts = document.getElementById("filterScope"), ss = document.getElementById("filterExecStatus");
+      if (t && ts && [...ts.options].some((o) => o.value === t)) ts.value = t;
+      if (st && ss && [...ss.options].some((o) => o.value === st)) ss.value = st;
+      if ((t || st) && document.getElementById("advanceFilterPanel")) document.getElementById("advanceFilterPanel").classList.add("show");
+    }
     applyFilters();
+
+    // เปิดจากหน้าภาพรวม (?id=...) → เปิดรายการนั้นทันที (ครั้งเดียว)
+    const _qid = new URLSearchParams(location.search).get("id");
+    if (_qid && !window.__execOpenedFromLink) {
+      window.__execOpenedFromLink = true;
+      if (_ceoClaimsCache.has(_qid)) { location.replace(approvalDocUrl(_ceoClaimsCache.get(_qid))); return; }
+    }
   } catch (err) {
     console.error("loadExecClaims error:", err);
     if (tbody) {
@@ -651,6 +688,9 @@ function updateExecSummary() {
   const r = document.getElementById("sumExecRejected");
 
   if (w) w.textContent = wait;
+  // ป้ายตัวเลขบนเมนู "อนุมัติงาน"
+  const nb = document.getElementById("navPendingBadge");
+  if (nb) { nb.hidden = !wait; nb.textContent = wait > 99 ? "99+" : wait; }
   if (a) a.textContent = approved;
   if (r) r.textContent = rejected;
 
@@ -1227,10 +1267,11 @@ async function renderHeaderUser() {
   if (!nameEl || !avatarEl) return;
 
   try {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
+    // ใช้โปรไฟล์ที่ดึงครั้งเดียวต่อหน้า (เดิม auth.getUser ยิงเซิร์ฟเวอร์อีกรอบ และได้แค่ชื่อจากอีเมล)
+    const shared = typeof eaGetMyProfile === "function" ? await eaGetMyProfile() : null;
+    const user = shared?.session?.user || (await supabaseClient.auth.getSession()).data?.session?.user;
     const name =
+      shared?.profile?.display_name ||
       user?.user_metadata?.display_name ||
       user?.user_metadata?.full_name ||
       user?.email?.split("@")[0] ||
@@ -1247,9 +1288,20 @@ async function renderHeaderUser() {
 /* ================================================================
    OPEN MODAL BY ID
 ================================================================ */
+// "ดู/อนุมัติ" → เปิดหน้าเอกสารขออนุมัติ (executive-ApprovalDoc.html) แทนป๊อปอัป
+function approvalDocUrl(row) {
+  return `/pages/executive/executive-ApprovalDoc.html?id=${encodeURIComponent(row.id)}${row._legacy_claim ? "&src=claim" : ""}`;
+}
 async function openCeoModalByApprovalId(rowId) {
   const row = _ceoClaimsCache.get(rowId);
+  if (row) { location.href = approvalDocUrl(row); return; }
+  return openCeoModalLegacy(rowId);
+}
+// ป๊อปอัปเดิม (เก็บไว้ ไม่ได้ใช้จากรายการแล้ว)
+async function openCeoModalLegacy(rowId) {
+  const row = _ceoClaimsCache.get(rowId);
   if (!row) return;
+  if (row._light && typeof execEnsureFullRow === "function") await execEnsureFullRow(row); // ดึงลายเซ็น/ข้อมูลเต็มของรายการนี้
 
   const type = normalizeApprovalType(row.request_type);
 
@@ -1704,6 +1756,7 @@ function buildApprovalDocumentHtml(row, approverName) {
 }
 
 async function openApprovalDocument(row) {
+  if (row?._light && typeof execEnsureFullRow === "function") await execEnsureFullRow(row);
   if (!row) return;
 
   const type = normalizeApprovalType(row?.request_type);
@@ -2119,18 +2172,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ตรวจสิทธิ์: หน้าอนุมัติของผู้บริหาร
-  if (typeof protectPage === "function") {
-    await protectPage(["admin", "executive"]);
-  }
-
   // 3) ตั้งค่า header date + user
   initExecutiveHeader();
 
   // 4) hydrate filter dropdown
   hydrateApprovalTypeFilter();
 
-  // 5) โหลดข้อมูลตาราง  ← บรรทัดนี้หายไปจากไฟล์เดิม
+  // 5) ⚡ โหลดข้อมูลตารางทันที (สิทธิ์เข้าหน้าตรวจโดย auth.js อยู่แล้ว · protectPage ใช้โปรไฟล์ที่ดึงครั้งเดียวต่อหน้า จึงไม่ต้องรอกัน)
+  if (typeof protectPage === "function") protectPage(["admin", "executive"]);
   await loadExecClaims();
 
   // 6) Bind filter inputs

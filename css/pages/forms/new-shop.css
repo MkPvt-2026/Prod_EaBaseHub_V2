@@ -1,0 +1,45 @@
+/* =====================================================
+   new-shop.css — ขอเปิดร้านค้าใหม่ (หน้าเซลล์ · ต่อจาก formPlan-ux.css + special-price-sale-ux.css)
+   ===================================================== */
+.ns .sp-chips { margin-bottom: 0; }
+.ns-grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ร้านชื่อคล้ายกันในระบบ */
+.ns-dup { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: 13px; }
+.ns-dup[hidden] { display: none; }
+.ns-dup > .material-symbols-outlined { font-size: 19px; color: #ea580c; }
+.ns-dup ul { margin: 2px 0 0; padding-left: 18px; }
+
+/* พิกัด */
+.ns-gps { display: flex; gap: 6px; }
+.ns-gps input { flex: 1; min-width: 0; }
+.ns-gps button { flex: 0 0 auto; white-space: nowrap; }
+.ns-maplink { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 13px; color: var(--role-text); text-decoration: none; }
+.ns-maplink[hidden] { display: none; }
+.ns-maplink .material-symbols-outlined { font-size: 17px; }
+
+/* รูปร้าน */
+.ns-photos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.ns-photo { position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; border: 1px solid var(--fp-line, #e2e8f0); background: #f8fafc; }
+.ns-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ns-photo figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 8px; font-size: 12px; color: #fff; background: linear-gradient(transparent, rgba(15, 23, 42, 0.7)); }
+.ns-photo button {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border: 0; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(15, 23, 42, 0.65); color: #fff; cursor: pointer;
+}
+.ns-photo button .material-symbols-outlined { font-size: 18px; }
+.ns-photo-add {
+  aspect-ratio: 4 / 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border: 1.5px dashed #cbd5e1; border-radius: 12px; background: #fcfdff; color: #64748b;
+  font-family: inherit; font-size: 13.5px; cursor: pointer;
+}
+.ns-photo-add:hover { border-color: var(--role-color); color: var(--role-text); background: var(--role-soft); }
+.ns-photo-add .material-symbols-outlined { font-size: 28px; }
+
+@media (max-width: 900px) {
+  .ns-grid3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .ns-grid3 { grid-template-columns: 1fr; }
+  .ns-photos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -2,7 +2,7 @@
 <html lang="th">
   <head>
     <!-- ea-guard: ซ่อนหน้าระหว่างตรวจสิทธิ์ (auth.js · roleConfig.js) -->
-    <style>html.ea-guarding body{visibility:hidden!important}</style>
+    <style>html.ea-guarding{background:#f1f5f9!important}html.ea-guarding[data-dark]{background:#0f1923!important}html.ea-guarding body{visibility:hidden!important;opacity:0!important}</style>
     <script>document.documentElement.classList.add("ea-guarding");setTimeout(function(){if(document.documentElement.classList.contains("ea-guarding")&&!window.__eaGuard){document.documentElement.classList.remove("ea-guarding");document.body.innerHTML='<p style="font-family:sans-serif;text-align:center;margin-top:20vh">ตรวจสอบสิทธิ์ไม่สำเร็จ — <a href="javascript:location.reload()">ลองใหม่</a></p>';}},10000);</script>
     <link rel="stylesheet" href="/css/base/role-colors.css" />
     <meta charset="UTF-8" />
@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="/css/base/ui-cards.css" />
   </head>
 
-  <body>
+  <body data-form-nav="home">
     <header class="app-header ui-role-bar">
       <div class="logo">
         <div class="logo-circle">
@@ -38,18 +38,15 @@
       </div>
     </header>
 
-    <nav class="app-nav">
-      <a href="/index.html">หน้าแรก</a>
-      <a href="/pages/reports/report.html">รายงานเยี่ยมร้านค้า</a>
-      <a href="/pages/forms/formClaim.html">แจ้งเคลมสินค้า</a>
-      <a href="/pages/forms/formHub.html" class="active">แบบฟอร์ม</a>
-      <a href="/pages/forms/shopUser.html">ร้านของฉัน</a>
-    </nav>
 
     <main class="fh">
       <section class="fh-head ui-role-hero">
-        <h1><span class="material-symbols-outlined">assignment</span> แบบฟอร์ม</h1>
-        <p>เลือกแบบฟอร์มที่ต้องการ — แผนเดินทาง เบิกค่าใช้จ่าย และขออนุมัติต่าง ๆ</p>
+        <div>
+          <h1><span class="material-symbols-outlined">assignment</span> แบบฟอร์ม</h1>
+          <p>เลือกแบบฟอร์มที่ต้องการ — แผนเดินทาง เบิกค่าใช้จ่าย และขออนุมัติต่าง ๆ</p>
+        </div>
+        <!-- ไปหน้าแรกของ role (ตั้งโดย form-sidebar.js) -->
+        <a class="fh-home" data-fs-home href="/index.html"><span class="material-symbols-outlined">home</span>กลับหน้าหลัก</a>
       </section>
 
       <!-- เมนูแบบฟอร์ม (คงรูปแบบเดิม: การ์ดไอคอนใหญ่ กดง่าย) -->
@@ -85,8 +82,17 @@
           <h3>ขออนุมัติวงเงินเพิ่ม</h3>
           <p>สำหรับขอเพิ่มวงเงินชั่วคราว</p>
         </a>
+
+        <a class="form-card" href="/pages/forms/new-shop-sale.html">
+          <div class="form-icon teal">
+            <span class="material-symbols-outlined">add_business</span>
+          </div>
+          <h3>เปิดร้านค้าใหม่</h3>
+          <p>ขอเปิดลูกค้า / ร้านค้าใหม่ในระบบ</p>
+        </a>
       </section>
     </main>
+    <script src="/js/components/form-sidebar.js"></script>
 
     <script src="/js/core/supabaseClient.js"></script>
     <script src="/js/core/roleConfig.js"></script>

@@ -59,7 +59,7 @@ const adminMenus = [
       },
       {
         title: "Marketing Home",
-        desc: "เมนูรวมงานการตลาด (RFM, โปรโมชั่น, ประกาศ)",
+        desc: "เมนูรวมงานการตลาด (โปรโมชั่น, ประกาศ)",
         icon: "campaign",
         url: "/pages/marketing/marketingHome.html"
       },
