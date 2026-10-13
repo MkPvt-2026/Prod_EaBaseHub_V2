@@ -68,10 +68,17 @@ const PAGE_ACCESS = {
 
   // ---------- วงเงินชั่วคราว ----------
   "/pages/forms/credit-limit-sale.html":        ["sales", "manager"], // ผู้ขอ (เซลล์) · บัญชี/ผู้บริหารมีหน้าของตัวเอง
+  // หน้าเก่า (ตัวอย่างข้อมูลตายตัว) → ทางผ่านไปหน้าจริงตาม role (js/core/legacy-redirect.js)
   "/pages/forms/credit-limit-detail.html":      ["sales", "manager", "accounting", "executive"],
   "/pages/forms/credit-limit-tracking.html":    ["sales", "manager", "accounting", "executive"],
   "/pages/forms/credit-limit-a4-document.html": ["sales", "manager", "accounting", "executive"],
   "/pages/forms/credit-limit-signature.html":   ["sales", "manager", "accounting", "executive"],
+  "/pages/forms/Credit-Limit.html":             ["sales", "manager", "accounting", "executive"],
+  "/pages/Accounting/credit-limit-finance2.html": ["accounting"],
+  "/pages/forms/special-price-tracking.html":   ["sales", "marketing", "manager", "executive"],
+  "/pages/forms/special-price-document.html":   ["sales", "marketing", "manager", "executive"],
+  "/pages/forms/special-price-executive.html":  ["sales", "marketing", "manager", "executive"],
+  "/pages/forms/Special-Price.html":            ["sales", "marketing", "manager", "executive"],
   "/pages/forms/credit-limit-approval.html":    ["manager", "executive"],
   "/pages/Accounting/credit-limit-finance.html":["accounting"],
 
@@ -108,7 +115,8 @@ const PAGE_ACCESS = {
   "/pages/admin/AddProductSpec.html":           [],
   "/pages/admin/Adminannouncements.html":       [], // ประชาสัมพันธ์ ฝั่ง Admin — ประกาศชุดเดียวกับฝั่งการตลาด แสดงที่การ์ดหน้าแรกเซลล์
   "/pages/admin/merge-customers.html":          [],
-  // หน้าอื่นที่ไม่อยู่ในรายการ (หน้าตัวอย่าง/หน้าเก่า เช่น special-price-executive, Credit-Limit.html) = Admin เท่านั้น
+  "/pages/admin/newShopRequests.html":          [], // คำขอเปิดร้านที่อนุมัติแล้ว → Admin สร้างร้าน
+  // หน้าอื่นที่ไม่อยู่ในรายการ = Admin เท่านั้น
 };
 
 // ======================================================

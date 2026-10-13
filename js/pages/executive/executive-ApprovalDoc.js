@@ -100,6 +100,7 @@ async function loadRow(id) {
       A.claim = c || null;
     }
     await loadNames();
+    if (A.type === "new_area_shop" && typeof nsResolvePhotos === "function") await nsResolvePhotos(A.row); // รูปร้านใน Storage
     render();
   } catch (e) {
     console.error("loadRow:", e);
@@ -418,6 +419,8 @@ async function save() {
       A.claim = { ...(A.claim || {}), ...data[0] };
       if (A.legacy) Object.assign(r, { request_status: decision, approval_comment: comment, approval_signature: sig, approved_by: me, approved_at: now });
     }
+    // แจ้งเซลล์ผู้ขอ (ราคาพิเศษ / วงเงิน / เปิดร้าน)
+    if (!A.legacy && A.type !== "claim") window.eaApprovalNotify?.notifyDecision({ type: A.type === "temp_credit_limit" ? "credit_limit_temp" : A.type, requesterId: r.request_by || r.created_by, shopName: r.shop_name, decision, by: "ผู้บริหาร", comment });
     A.pending = A.pending.filter((p) => String(p.id) !== String(r.id));
     setExecNavBadge(A.pending.length);
     await loadNames();

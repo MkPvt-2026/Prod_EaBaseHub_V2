@@ -435,8 +435,9 @@ async function submitRequest() {
       created_at: now,
       updated_at: now,
     };
-    const { error } = await supabaseClient.from("approval_requests").insert(row);
+    const { data: ins, error } = await supabaseClient.from("approval_requests").insert(row).select("id");
     if (error) throw error;
+    window.eaApprovalNotify?.notifyNewRequest({ type: SP_TYPE, id: ins?.[0]?.id, requesterId: me.id, requesterName: me.name, shopName: row.shop_name }); // แจ้ง Manager
     if (currentDraftKey) { try { localStorage.removeItem(currentDraftKey); } catch (e) { /* ignore */ } }
     resetForm();
     closePreview();

@@ -768,3 +768,110 @@ npm run build    # สร้าง dist/ สำหรับ deploy
   - แก้เมนูที่เดียวที่ `FS_MENU`
 - ใช้กับ 6 หน้า: `formHub`, `formPlan`, `formActual`, `special-price-sale`, `credit-limit-sale`, `new-shop-sale` — เอาแถบเมนูบนออก, ซ่อนลิงก์ย้อนกลับในหัวหน้า (เมนูด้านข้างทำหน้าที่แทน)
 - หน้าแจ้งเคลม (`formClaim`) ไม่ได้อยู่ในชุดแบบฟอร์ม จึงคงแถบเมนูเดิม
+
+---
+
+## รอบ 46 — Form Hub: ไม่ใช้เมนูด้านข้าง เหลือปุ่ม "กลับหน้าหลัก"
+
+- `pages/forms/formHub.html` — เอาเมนูด้านข้างออก (การ์ดใหญ่คือเมนูอยู่แล้ว) · เพิ่มปุ่ม **กลับหน้าหลัก** ในแถบหัวหน้า (`<body data-form-nav="home">`, ปุ่ม `[data-fs-home]`)
+- `js/components/form-sidebar.js` — โหมด `data-form-nav="home"`: ไม่สร้างเมนู ตั้งเฉพาะปลายทางปุ่มกลับหน้าหลักตาม role (เซลล์ → หน้าแรก, Manager/การตลาด → Marketing Home)
+- `css/pages/forms/formHub-ux.css` — ปุ่มขาวมน สูง 48px (กดง่ายบนแท็บเล็ต) · มือถือเต็มความกว้างใต้หัวข้อ
+- หน้าแบบฟอร์มอื่น 5 หน้ายังมีเมนูด้านข้างตามรอบ 45
+
+---
+
+## รอบ 47 — ฝ่ายบัญชี: ตรวจสอบวงเงินชั่วคราว (`pages/Accounting/credit-limit-finance`) ให้ตรงกับระบบ
+
+**ปัญหาเดิม**
+- ปุ่ม "เซ็นลายเซ็น" กดแล้วไม่มีอะไรเกิดขึ้น (ไม่มีช่องเซ็นในหน้า) → ส่งต่อได้โดยไม่มีลายเซ็นบัญชี
+- ไม่มีปุ่ม "ส่งกลับให้เซลล์แก้ไข" (มีโค้ดแต่ไม่มีปุ่ม) → เซลล์ไม่เคยได้รับคำขอกลับไปแก้ ทั้งที่หน้าเซลล์รองรับแล้ว (รอบ 42)
+- ไม่เห็นเหตุผลของเซลล์ / เครดิต (วัน) / วิธีชำระ / วันที่เอกสาร
+- กด "บันทึก" หรือ "อัปโหลด PDF" กับคำขอที่ส่งต่อ Manager ไปแล้ว → สถานะถูกดึงกลับมาเป็น "รอบัญชีตรวจ" (ไม่มีการกันขั้น)
+- ไม่มีคำขอที่เซลล์แก้แล้วส่งกลับให้แยกเห็น · ไม่มีรายการที่ส่งกลับ / ปิดแล้ว
+- เลขที่เอกสาร `CRD-xxxx` ไม่ตรงกับหน้าเซลล์ / ผู้บริหาร (`APP-ปี-CREDIT-xxxx`)
+- โหลดช้า: ขอลิงก์ PDF ของทุกคำขอตอนเปิดหน้า + ดึงทุกคอลัมน์ (ลายเซ็น / ผลวิเคราะห์) ของทุกรายการ
+- เมนู "หน้าหลัก" ไปหน้าที่บัญชีเปิดไม่ได้ · "ติดตามคำขอ" เป็นหน้าตัวอย่าง · sidebar ไม่เต็มความสูง
+
+**หน้าใหม่ (โครงเดียวกับหน้าผู้บริหาร / Marketing · โน้ตบุ๊กเป็นหลัก)**
+- ซ้าย: รายการแบ่งแท็บ **รอตรวจสอบ / ส่งกลับแก้ไข / ส่งต่อแล้ว / ปิดแล้ว** พร้อมจำนวน · ค้นหา · รอตรวจเรียงมาก่อนตรวจก่อน แสดง "รอ X วัน" · ป้าย "เซลล์แก้ไขแล้วส่งกลับ" · % ยอดบิลเทียบวงเงิน
+- ขวา: หัวคำขอ + ลำดับ 4 ขั้น · ข้อมูลจากเซลล์ครบ (รวมเหตุผล) · รายงานลูกหนี้ PDF (อัปโหลด/ลากวาง, เปิด, ลบ, อ่านตัวเลขอัตโนมัติ — ไม่บังคับ กรอกยอดค้างเองได้)
+- ผลตรวจ: วงเงินที่ยืนยัน, ยอดค้างชำระ → คำนวณ **วงเงินคงเหลือ / คงเหลือหลังเปิดบิลนี้ / สถานะวงเงิน** ทันที · ความเสี่ยง ต่ำ/ปานกลาง/สูง · สรุปผลตรวจ · ความเห็นถึง Manager · **ลงนามในหน้าได้จริง**
+- ปุ่ม: **บันทึกร่าง** · **ส่งกลับให้เซลล์แก้ไข** (ต้องเขียนสิ่งที่ต้องแก้ เซลล์เห็นข้อความนี้ · เก็บประวัติการส่งกลับ) · **ส่งต่อ Manager** (ตรวจครบ: วงเงิน ความเสี่ยง ความเห็น ลายเซ็น + หน้าต่างยืนยันสรุปตัวเลข)
+- **ดูเอกสาร A4** แบบเดียวกับหน้าเซลล์/ผู้บริหาร (รวมค่าที่กรอกอยู่) + พิมพ์ / PDF
+- คำขอที่ไม่อยู่ขั้นบัญชีแล้ว = ดูอย่างเดียว (ผลตรวจ, ลายเซ็น, ประวัติการส่งกลับ)
+- เปิดตรงคำขอได้ด้วย `?id=`
+
+**การบันทึก (approval_requests)**
+- ทุกการแก้ไข: อัปเดตเฉพาะเมื่อ `status` ยังเป็น `accounting_review` / `pending` และตรวจว่ามีแถวถูกแก้จริง (กันกดซ้ำ / ทับขั้นถัดไป / RLS เงียบ)
+- ส่งต่อ: `status` + `request_status` = `manager_review`, `accounting_status` = `forwarded_to_manager`
+- ส่งกลับ: `status` + `request_status` = `revision_required`, `accounting_status` = `sent_back_to_sale`, ข้อความถึงเซลล์ใน `accounting_recommendation`, ประวัติใน `financial_analysis.sendbacks`
+- ผลตรวจ: `accounting_verified_credit_limit`, `credit_remaining`, `credit_status`, `accounting_risk_level`, `accounting_summary`, `accounting_recommendation`, `financial_analysis` (คงข้อมูลจาก PDF เดิมไว้ · ลายเซ็นบัญชี `accounting_signature_data`)
+
+**ไฟล์**: `pages/Accounting/credit-limit-finance.html`, `js/pages/Accounting/credit-limit-finance.js` (เขียนใหม่ · ตัวอ่าน PDF Aging คงหลักเดิม), ใหม่ `css/pages/Accounting/credit-limit-finance-ux.css` (ไฟล์ `credit-limit-finance.css` เดิมไม่ได้ใช้แล้ว)
+
+**ยังค้าง**: ขั้น Manager ของวงเงินชั่วคราว (`credit-limit-approval.html`) ยังเป็นหน้าตัวอย่าง → คำขอที่บัญชีส่งต่อจะค้างที่ "รอ Manager อนุมัติ"
+
+---
+
+## รอบ 48 — ธีมฝ่ายบัญชี: ครีม / เหลืองทอง (เดิมเขียวน้ำทะเล)
+
+- `css/base/role-colors.css` — สีฝ่ายบัญชีใหม่: สีหลัก `#a16207` (เหลืองทองเข้ม — ตัวหนังสือขาวบนปุ่มอ่านได้), พื้นอ่อน `#fef9e7` (ครีม), เส้นขอบ `#fde68a`, ตัวหนังสือบนพื้นอ่อน `#854d0e`, สีเน้นบนพื้นเข้ม `#fcd34d`
+- ใหม่ `css/components/sidebar-accounting.css` — เมนูข้างพื้นครีม (ตัวหนังสือน้ำตาลเข้ม · เมนูที่เลือก = พื้นเหลืองอ่อน + แถบทอง), หัวเว็บ/พื้นหน้าโทนครีม
+- `pages/Accounting/credit-limit-finance.html` — โหลด `sidebar-accounting.css`
+- `css/pages/admin/admintor.css` — ป้าย role "accounting" ในหน้าจัดการผู้ใช้ (Admin) เป็นสีเหลือง
+- ปุ่ม/ไอคอน/แท็บ/ไทม์ไลน์ในหน้าบัญชีใช้สี role อยู่แล้ว จึงเปลี่ยนตามทั้งหมด · สีสถานะ (เขียว=ผ่าน, ส้ม=ส่งกลับ, แดง=เกินวงเงิน) คงเดิม
+
+---
+
+## รอบ 49 — ทำต่อข้อ 4–8: สร้างร้านจากคำขอ · แจ้งเตือน · หน้าเก่า · รูปร้านใน Storage · ล้างไฟล์
+
+### 4) เปิดร้านค้าใหม่ → Admin สร้างร้านในระบบ
+- ใหม่ `pages/admin/newShopRequests.html` + `js/pages/admin/newShopRequests.js` + `css/pages/admin/newShopRequests.css` (เมนู Admin “คำขอเปิดร้านใหม่”)
+  - แท็บ รอสร้างร้าน / สร้างแล้ว / กำลังพิจารณา / ไม่อนุมัติ-ขอข้อมูลเพิ่ม · ดูเอกสาร A4 · พิมพ์
+  - **สร้างร้าน**: กรอกข้อมูลจากคำขอให้แล้ว (ชื่อ จังหวัด ที่อยู่ ผู้ติดต่อ โทร LINE ลิงก์แผนที่ เซลล์ผู้ขอ) ใส่รหัสลูกค้า → insert `shops` (status active) + `shop_details` (ใช้รูปร้านจากคำขอเป็นรูปร้าน) → บันทึก `payload.shop_created` ในคำขอ (กันสร้างซ้ำ) → แจ้งเตือนเซลล์
+  - เตือนร้านชื่อคล้ายกัน · กันรหัสลูกค้าซ้ำ
+- หน้าเซลล์ “คำขอของฉัน”: คำขอที่อนุมัติแล้วแสดง “รอ Admin เปิดร้านในระบบ” หรือ “เปิดร้านในระบบแล้ว · รหัส …”
+- `roleConfig.js` (Admin เท่านั้น) · `pages/components/nav-admin.html`
+
+### 5) แจ้งเตือนงานอนุมัติ (ตาราง notifications เดิม)
+- ใหม่ `js/services/approval-notify.js` — ส่งไม่ได้ไม่ทำให้การบันทึกหลักล้ม
+- เซลล์ส่งคำขอ / ส่งใหม่หลังแก้ → **Manager ของเซลล์** (profiles.manager_id) — ราคาพิเศษ, เปิดร้านค้าใหม่ · วงเงิน: เมื่อบัญชีส่งต่อ
+- ผลพิจารณา → **เซลล์ผู้ขอ**: Manager (ส่งต่อ / ไม่อนุมัติ / ขอข้อมูลเพิ่ม), ฝ่ายบัญชี (ผ่าน / ส่งกลับแก้ไข), ผู้บริหาร (อนุมัติ / ไม่อนุมัติ / ขอข้อมูลเพิ่ม), Admin (เปิดร้านแล้ว)
+- กดแจ้งเตือน → ไปหน้าคำขอ (เซลล์) / หน้าเอกสาร (Manager) · ไอคอนใหม่ในหน้าแจ้งเตือน (`js/services/notifications.js`)
+- ต่อเข้า: special-price-sale, special-price-manager-doc, new-shop-sale, new-shop-manager-doc, credit-limit-finance, executive-ApprovalDoc
+
+### 6) หน้าเก่าที่เป็นตัวอย่างข้อมูลตายตัว → ทางผ่านไปหน้าจริงตาม role
+- ใหม่ `js/core/legacy-redirect.js` · ลิงก์ / bookmark เดิมยังใช้ได้ (ส่ง `?id=` ต่อให้)
+- credit-limit-tracking / -detail / -a4-document / -signature, Credit-Limit → เซลล์·Manager: ขอวงเงิน · บัญชี: ตรวจวงเงิน · ผู้บริหาร: อนุมัติงาน (วงเงิน)
+- Accounting/credit-limit-finance2 → credit-limit-finance
+- special-price-tracking / -document / -executive, Special-Price → เซลล์·การตลาด: ขอราคาพิเศษ · Manager: อนุมัติราคาพิเศษ · ผู้บริหาร: อนุมัติงาน (ราคาพิเศษ)
+- (credit-limit-approval ยังเป็นหน้าตัวอย่าง — รอทำข้อ 1)
+
+### 7) รูปร้านในคำขอเปิดร้าน → Storage
+- อัปโหลดไป bucket **`shop-images`** (bucket เดิมของรูปร้าน) ที่ `new-shop/<uid>/...` · คำขอเก็บแค่ `{ path, name }` · แสดงด้วยลิงก์ชั่วคราว 1 ชม.
+- อัปโหลดไม่ได้ → เก็บรูป (ย่อแล้ว) ในคำขอแทนเหมือนเดิม ส่งคำขอได้ปกติ · คำขอเก่าที่เก็บรูปในคำขอยังแสดงได้
+- ตอน Admin สร้างร้าน ใช้ path เดิมเป็นรูปร้านใน `shop_details.images` ได้ทันที (ไม่ต้องอัปโหลดซ้ำ)
+- `new-shop-common.js` (nsUploadPhotos / nsResolvePhotos), new-shop-sale.js, new-shop-manager-doc.js, executive-ApprovalDoc.js
+
+### 8) ล้างไฟล์ที่ไม่ใช้แล้ว
+- ใหม่ `scripts/cleanup-legacy.mjs` — `node scripts/cleanup-legacy.mjs` (ดูรายการ) · `--apply` (ลบจริง · ข้ามไฟล์ที่ยังมีหน้าอ้างถึง)
+- ลบ 32 ไฟล์: CSS เดิมที่ถูกแทนด้วย -ux (credit-limit-finance, formHub, formPlan, formActual, credit-limit-sale, special-price-sale/manager, executive-Dashboard ฯลฯ) + JS/CSS ของหน้าตัวอย่างข้อ 6
+- ⚠️ แพตช์ zip ลบไฟล์ให้ไม่ได้ → หลังแตกไฟล์ให้รัน `node scripts/cleanup-legacy.mjs --apply` ที่โฟลเดอร์โปรเจกต์
+- ไฟล์อื่นที่ดูเหมือนไม่ได้ใช้ (ยังไม่ลบ ควรตรวจก่อน): css/base/variables.css, css/components/{buttons,buttonPills,cards,forms,modal,toggle-button}.css, css/pages/admin/{admin-Console,admin-Index,adminTheme,AddProductSpec}.css, js/pages/admin/{admin-Console,admin-Index}.js, js/pages/dashboard/{LookerDashboard,executiveDashboard}.*, js/services/{Patch-adminqc,reports.service}.js, js/utils/uploadClaimMedia.js
+
+### SQL ที่ต้องตั้งใน Supabase (ถ้ายังไม่มี)
+```sql
+-- แจ้งเตือน: ลิงก์ + ให้ผู้ใช้ส่งแจ้งเตือนถึงผู้อื่นได้
+alter table public.notifications add column if not exists link text;
+create policy "approval notify insert" on public.notifications
+  for insert to authenticated with check (true);
+
+-- รูปร้านจากคำขอเปิดร้าน (bucket shop-images): อัปโหลดได้เฉพาะโฟลเดอร์ของตัวเอง / อ่านได้เมื่อล็อกอิน
+create policy "new-shop photo upload" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'shop-images' and (storage.foldername(name))[1] = 'new-shop'
+              and (storage.foldername(name))[2] = auth.uid()::text);
+create policy "shop-images read" on storage.objects
+  for select to authenticated using (bucket_id = 'shop-images');
+```
+(Admin ต้อง insert `shops` / upsert `shop_details` / update `approval_requests` ได้ — ตามสิทธิ์ Admin เดิม)

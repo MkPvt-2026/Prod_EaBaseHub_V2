@@ -8,7 +8,9 @@
 //      ไม่อนุมัติ → "rejected" / "manager_rejected" · ขอข้อมูลเพิ่ม → "request_more_info" / "manager_more_info"
 //   3) ผู้บริหาร          → "approved" / "rejected" / "request_more_info" (executive-ApprovalDoc)
 //   ขอข้อมูลเพิ่ม (ขั้นใดก็ได้) → เซลล์ "แก้ไขแล้วส่งใหม่" = อัปเดตคำขอเดิม กลับไปขั้น Manager (ผลเดิมเก็บใน payload.history)
-// ข้อมูลร้านเก็บใน payload.shop_new · รูปร้าน (ย่อขนาดแล้ว) ใน payload.photos · ผล Manager ใน payload.manager
+// ข้อมูลร้านเก็บใน payload.shop_new · ผล Manager ใน payload.manager
+// รูปร้าน (ย่อขนาดแล้ว) อัปโหลดไป Storage bucket "shop-images" (ส่วนตัว · bucket เดียวกับรูปร้านใน shop_details)
+//   payload.photos = [{ path, name }] · แสดงด้วยลิงก์ชั่วคราว (nsResolvePhotos) · อัปโหลดไม่ได้ → เก็บเป็น data URL ในคำขอแทน (คำขอรุ่นแรกก็เป็นแบบนี้)
 // =====================================================
 "use strict";
 
@@ -27,8 +29,51 @@ function nsDocNo(r) {
   return `APP-${y}-NEWSHOP-${String(r?.id || "").slice(0, 8).toUpperCase()}`;
 }
 function nsShop(r) { return r?.payload?.shop_new || {}; }
-function nsPhotos(r) { return Array.isArray(r?.payload?.photos) ? r.payload.photos.filter((p) => p && (p.url || p.data)) : []; }
-const nsPhotoSrc = (p) => p.url || p.data;
+const NS_PHOTO_BUCKET = "shop-images";
+const NS_SIGNED = {}; // path → ลิงก์ชั่วคราว (ไม่บันทึกลงฐานข้อมูล)
+function nsPhotos(r) { return Array.isArray(r?.payload?.photos) ? r.payload.photos.filter((p) => p && (p.path || p.url || p.data)) : []; }
+const nsPhotoSrc = (p) => (p.path && NS_SIGNED[p.path]) || p.url || p.data || "";
+
+// ขอลิงก์ชั่วคราวของรูปที่เก็บใน Storage (ทำก่อนสร้างเอกสาร / แสดงรูป)
+async function nsResolvePhotos(rowOrList) {
+  const list = Array.isArray(rowOrList) ? rowOrList : nsPhotos(rowOrList);
+  const paths = [...new Set(list.map((p) => p?.path).filter((x) => x && !NS_SIGNED[x]))];
+  if (!paths.length || typeof supabaseClient === "undefined") return;
+  try {
+    const { data, error } = await supabaseClient.storage.from(NS_PHOTO_BUCKET).createSignedUrls(paths, 60 * 60);
+    if (error) throw error;
+    (data || []).forEach((d) => { if (d?.signedUrl && d.path) NS_SIGNED[d.path] = d.signedUrl; });
+  } catch (e) {
+    console.warn("nsResolvePhotos (batch):", e.message || e);
+    await Promise.all(paths.map(async (path) => {
+      try { const { data } = await supabaseClient.storage.from(NS_PHOTO_BUCKET).createSignedUrl(path, 60 * 60); if (data?.signedUrl) NS_SIGNED[path] = data.signedUrl; } catch (e2) { /* ignore */ }
+    }));
+  }
+}
+
+// อัปโหลดรูปที่ยังเป็น data URL → [{ path, name }] · ที่อัปโหลดไม่ได้คงเป็น { data, name } (ไม่ทำให้ส่งคำขอล้ม)
+async function nsUploadPhotos(list, userId) {
+  const out = [];
+  let failed = 0;
+  for (let i = 0; i < (list || []).length; i++) {
+    const p = list[i];
+    if (!p) continue;
+    if (p.path || p.url || !p.data) { out.push(p.path ? { path: p.path, name: p.name || "" } : { ...p }); continue; }
+    try {
+      const blob = await (await fetch(p.data)).blob();
+      const path = `new-shop/${userId || "anon"}/${Date.now()}-${i}.jpg`;
+      const { error } = await supabaseClient.storage.from(NS_PHOTO_BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false });
+      if (error) throw error;
+      NS_SIGNED[path] = p.data; // แสดงจากรูปในเครื่องได้ทันที
+      out.push({ path, name: p.name || "" });
+    } catch (e) {
+      failed++;
+      console.warn("nsUploadPhotos:", e.message || e);
+      out.push({ data: p.data, name: p.name || "" });
+    }
+  }
+  return { photos: out, failed };
+}
 function nsMapUrl(s) { return s?.lat && s?.lng ? `https://www.google.com/maps?q=${encodeURIComponent(s.lat)},${encodeURIComponent(s.lng)}` : ""; }
 function nsAddress(s) { return [s.address, s.district ? `อ.${s.district}` : "", s.province ? `จ.${s.province}` : "", s.postcode].filter(Boolean).join(" "); }
 function nsPayText(s) {

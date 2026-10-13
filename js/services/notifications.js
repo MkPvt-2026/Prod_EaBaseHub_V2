@@ -119,7 +119,13 @@ function getIcon(type) {
     like: "❤️",
     follow: "👤",
     mention: "@",
-    general: "🔔"
+    general: "🔔",
+    // งานอนุมัติ (approval-notify.js)
+    approval: "📄",
+    approval_new: "📥",
+    approval_ok: "✅",
+    approval_bad: "⛔",
+    approval_info: "📝"
   };
   return icons[type] || "🔔";
 }

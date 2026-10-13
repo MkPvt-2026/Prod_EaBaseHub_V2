@@ -212,6 +212,7 @@ async function save() {
     if (error) throw error;
     if (!data || !data.length) throw new Error("คำขอนี้ถูกพิจารณาไปแล้ว หรือไม่มีสิทธิ์แก้ไข — กรุณารีเฟรช");
     Object.assign(R, data[0].payload ? data[0] : update);
+    window.eaApprovalNotify?.notifyDecision({ type: SP_TYPE, requesterId: R.request_by, shopName: R.shop_name, decision: decision === "approved" ? "forwarded" : decision, by: `Manager ${me.name || ""}`.trim(), comment }); // แจ้งเซลล์
     _queue = _queue.filter((q) => String(q.id) !== String(R.id));
     $("adComment").value = ""; mgrSig.clear();
     render();

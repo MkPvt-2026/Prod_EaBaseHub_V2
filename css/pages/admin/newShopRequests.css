@@ -1,0 +1,13 @@
+/* =====================================================
+   newShopRequests.css — Admin: คำขอเปิดร้านค้าใหม่ → สร้างร้าน
+   ใช้ชุดเดียวกับหน้าผู้ใช้งาน/ประชาสัมพันธ์ของ Admin (admintor-ux.css · .at-*)
+   ===================================================== */
+.nsr .at-modal[hidden], .at-modal[hidden] { display: none !important; }
+.nsr .at-table td { vertical-align: top; }
+.nsr .at-table td small { font-size: 12px; }
+.nsr .c-act { width: 1%; white-space: nowrap; }
+.nsr .at-actions .at-btn-ghost, .nsr .at-actions .at-btn-primary { height: 34px; padding: 0 10px; font-size: 13px; }
+.nsr-doc-box { width: min(880px, 100%) !important; }
+.nsr-paper-wrap { background: #e2e8f0; }
+.nsr-paper { max-width: 794px; margin: 0 auto; padding: 30px 34px; background: #fff; color: #1a1a1a; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+#fPhotosWrap[hidden] { display: none; }

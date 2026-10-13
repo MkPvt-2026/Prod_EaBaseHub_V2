@@ -286,7 +286,10 @@ async function submitRequest() {
   try {
     const now = new Date().toISOString();
     const requester = { id: me.id, name: me.name, role: me.role, area: me.area, position: me.position };
-    const pPhotos = photos.map((p) => (p.url ? { url: p.url, name: p.name } : { data: p.data, name: p.name }));
+    // รูปร้าน → Storage (อัปโหลดไม่ได้จะเก็บในคำขอแทน ไม่ทำให้ส่งไม่ผ่าน)
+    const up = await nsUploadPhotos(photos, me.id);
+    const pPhotos = up.photos;
+    if (up.failed) console.warn(`อัปโหลดรูป ${up.failed} รูปไม่สำเร็จ — เก็บในคำขอแทน`);
     if (editingId) {
       // อัปเดตคำขอเดิม (เฉพาะที่ถูกขอข้อมูลเพิ่ม) · เก็บผลรอบก่อนไว้ใน history แล้วกลับไปขั้น Manager
       const old = editingRow?.payload || {};
@@ -298,12 +301,14 @@ async function submitRequest() {
         .eq("id", editingId).eq("request_status", "request_more_info").select("id");
       if (error) throw error;
       if (!data || !data.length) throw new Error("คำขอนี้ไม่ได้อยู่ในสถานะ “ขอข้อมูลเพิ่ม” แล้ว หรือไม่มีสิทธิ์แก้ไข");
+      window.eaApprovalNotify?.notifyNewRequest({ type: NS_TYPE, id: editingId, requesterId: me.id, requesterName: me.name, shopName: s.shop_name, resubmit: true });
     } else {
       const payload = { form_version: "new-shop-v1", requester, shop_new: s, photos: pPhotos, manager: null };
-      const { error } = await supabaseClient.from("approval_requests").insert({
+      const { data: ins, error } = await supabaseClient.from("approval_requests").insert({
         ...rowFromForm(), payload, sale_id: me.id, created_by: me.id, request_by: me.id, created_at: now, updated_at: now,
-      });
+      }).select("id");
       if (error) throw error;
+      window.eaApprovalNotify?.notifyNewRequest({ type: NS_TYPE, id: ins?.[0]?.id, requesterId: me.id, requesterName: me.name, shopName: s.shop_name }); // แจ้ง Manager
       try { localStorage.removeItem(DRAFT_KEY()); } catch (e) { /* ignore */ }
     }
     const wasEdit = !!editingId;
@@ -339,10 +344,10 @@ async function startRevise(id) {
 // =====================================================
 // 📋 คำขอของฉัน (ดึงแบบเบา — ไม่ดึงรูป/ลายเซ็น)
 // =====================================================
-const LIST_COLS = "id, request_type, request_status, status, shop_name, province, sale_name, request_detail, approval_comment, approved_at, created_at, updated_at, pl_type:payload->shop_new->>shop_type, pl_district:payload->shop_new->>district, pl_m_decision:payload->manager->>decision, pl_m_name:payload->manager->>name, pl_m_comment:payload->manager->>comment, pl_m_at:payload->manager->>at";
+const LIST_COLS = "id, request_type, request_status, status, shop_name, province, sale_name, request_detail, approval_comment, approved_at, created_at, updated_at, pl_type:payload->shop_new->>shop_type, pl_district:payload->shop_new->>district, pl_m_decision:payload->manager->>decision, pl_m_name:payload->manager->>name, pl_m_comment:payload->manager->>comment, pl_m_at:payload->manager->>at, pl_sc_code:payload->shop_created->>shop_code, pl_sc_at:payload->shop_created->>at";
 function liftLight(r) {
   if (!("pl_m_decision" in r)) return r;
-  r.payload = { shop_new: { shop_type: r.pl_type, district: r.pl_district }, manager: r.pl_m_decision ? { decision: r.pl_m_decision, name: r.pl_m_name, comment: r.pl_m_comment, at: r.pl_m_at } : null };
+  r.payload = { shop_new: { shop_type: r.pl_type, district: r.pl_district }, manager: r.pl_m_decision ? { decision: r.pl_m_decision, name: r.pl_m_name, comment: r.pl_m_comment, at: r.pl_m_at } : null, shop_created: r.pl_sc_at ? { shop_code: r.pl_sc_code, at: r.pl_sc_at } : null };
   Object.keys(r).filter((k) => k.startsWith("pl_")).forEach((k) => delete r[k]);
   return r;
 }
@@ -372,6 +377,9 @@ function renderRequests() {
     const st = nsStatus(r), id = escHtml(r.id), m = spManager(r);
     const notes = [];
     if (m?.comment && m.decision !== "approved") notes.push(`<span class="sp-comment is-warn"><span class="material-symbols-outlined">forum</span><b>Manager:</b> ${escHtml(m.comment)}</span>`);
+    if (st.key === "approved") notes.push(r.payload?.shop_created
+      ? `<span class="sp-comment"><span class="material-symbols-outlined">storefront</span><b>เปิดร้านในระบบแล้ว</b>${r.payload.shop_created.shop_code ? " · รหัส " + escHtml(r.payload.shop_created.shop_code) : ""} — ดูได้ที่ “ร้านของฉัน”</span>`
+      : `<span class="sp-comment"><span class="material-symbols-outlined">hourglass_top</span>รอ Admin เปิดร้านในระบบ</span>`);
     if (st.done && r.approval_comment && spReachedExec(r)) notes.push(`<span class="sp-comment"><span class="material-symbols-outlined">forum</span><b>ผู้บริหาร:</b> ${escHtml(r.approval_comment)}</span>`);
     return `
       <div class="fp-item${st.action ? " is-attn" : ""}">
@@ -431,6 +439,7 @@ function printPreview() { spOpenPrint(nsPrintPage(nsBuildDocHTML(docFromForm()))
 async function fullRow(id) {
   const { data, error } = await supabaseClient.from("approval_requests").select("*").eq("id", id).maybeSingle();
   if (error || !data) throw error || new Error("ไม่พบคำขอ");
+  await nsResolvePhotos(data); // ลิงก์ชั่วคราวของรูปร้านใน Storage
   return data;
 }
 async function printRequestById(id) {

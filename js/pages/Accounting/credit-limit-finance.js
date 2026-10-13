@@ -362,6 +362,9 @@ async function doForward() {
   busy = true; setBusy(true); $("mOk").disabled = true;
   try {
     const row = await writeAcc({ ...collect(), status: "manager_review", request_status: "manager_review", accounting_status: "forwarded_to_manager" });
+    // แจ้ง Manager ของเซลล์ (คำขอผ่านบัญชีแล้ว) + แจ้งเซลล์ว่าผ่านขั้นบัญชี
+    window.eaApprovalNotify?.notifyNewRequest({ type: "credit_limit_temp", id: R.id, requesterId: R.request_by, requesterName: R.sale_name, shopName: R.shop_name });
+    window.eaApprovalNotify?.notifyDecision({ type: "credit_limit_temp", requesterId: R.request_by, shopName: R.shop_name, decision: "forwarded", by: "ฝ่ายบัญชี" });
     closeModal();
     await afterWrite(row, "ส่งต่อ Manager แล้ว");
   } catch (e) { closeModal(); err("ส่งต่อไม่สำเร็จ: " + (e.message || e)); }
@@ -391,6 +394,7 @@ async function doSendBack() {
     const fa = { ...p.financial_analysis, sendbacks: [...(R.financial_analysis?.sendbacks || []), { at: new Date().toISOString(), by: me.id, by_name: me.name, note }] };
     // ข้อความถึงเซลล์ใช้ช่อง accounting_recommendation (หน้าเซลล์แสดงช่องนี้)
     const row = await writeAcc({ ...p, financial_analysis: fa, accounting_recommendation: note, status: "revision_required", request_status: "revision_required", accounting_status: "sent_back_to_sale" });
+    window.eaApprovalNotify?.notifyDecision({ type: "credit_limit_temp", requesterId: R.request_by, shopName: R.shop_name, decision: "revision", by: "ฝ่ายบัญชี", comment: note });
     closeModal();
     await afterWrite(row, "ส่งกลับให้เซลล์แก้ไขแล้ว");
   } catch (e) { $("mErr").textContent = "ส่งกลับไม่สำเร็จ: " + (e.message || e); $("mErr").hidden = false; }
